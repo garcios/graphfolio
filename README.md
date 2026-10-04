@@ -8,6 +8,7 @@ A modern portfolio tracker built for serious investors. GraphFolio accurately me
 
 - **Consolidated Dashboard**: View all your investments across multiple asset classes in a single, unified view.
 - **Exact Decimal Arithmetic**: Zero floating-point drift. All money, quantities, prices, and rates use fixed-point decimal arithmetic from database to browser.
+- **Interactive Performance Chart**: Timeframe-selectable SVG performance chart (1D, 1W, 1M, YTD, 1Y, ALL) rendering cubic Bezier curves, dynamic profit/loss color gradients, crosshair tracking, inspection tooltips, and exact period returns.
 - **Interactive Transaction Logging**: Record Buys, Sells, Cash Deposits, Withdrawals, and Dividends directly in the UI. Holding quantities, cost bases, cash balances, and returns re-project deterministically in real time.
 - **Transaction-Ledger Architecture**: Immutable transaction ledger acts as the authoritative source of truth, deterministically projecting holdings, cash balances, and valuations.
 - **Flexible Cost Basis Accounting**: Native support for both **Average Cost** (`AVERAGE_COST`, default) and **FIFO** (`FIFO`) tax lot relief strategies.
@@ -124,7 +125,7 @@ make run
 GraphFolio enforces a strict separation of concerns across layered boundaries:
 
 ```text
-React Component (Dashboard, AddTransactionModal)
+React Component (Dashboard, AddTransactionModal, PerformanceChart)
       │
       ▼  (Typed queries & mutations via GenQL)
 GraphQL Backend-for-Frontend (BFF)  [localhost:8080]
@@ -165,23 +166,24 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 ```text
 ├── proto/                        # Single Source of Truth for APIs (Protobuf definitions)
 │   ├── common/v1/decimal.proto   # Decimal and Money contracts
-│   └── portfolio/v1/             # Portfolio gRPC service (GetPortfolio, AddTransaction, ListInstruments)
+│   └── portfolio/v1/             # Portfolio gRPC service (GetPortfolio, AddTransaction, ListInstruments, GetPortfolioHistory)
 ├── pkg/                          # Shared Go infrastructure
 │   ├── database/                 # pgx connection pooling, auto .env loading, migration runner
 │   └── decimalpb/                # Decimal/Money conversions between proto and shopspring
 ├── scripts/db/                   # Database bootstrap and teardown scripts
 ├── services/                     # Domain Microservices
-│   ├── portfolio-api/            # Portfolio business logic, ledger replay, migrations, seeds
+│   ├── portfolio-api/            # Portfolio business logic, ledger replay, valuations, migrations, seeds
 │   │   ├── cmd/server/           # Application entrypoint
-│   │   ├── internal/             # Domain entities, repository, service, and gRPC server
+│   │   ├── internal/             # Domain entities (history, holding, etc.), repository, service, and gRPC server
 │   │   ├── migrations/           # Versioned schema migrations (000001 - 000006)
-│   │   └── seeds/                # Seed fixtures (dev_seed.sql)
+│   │   └── seeds/                # Seed fixtures (dev_seed.sql with 365-day history)
 │   └── user-api/                 # User domain microservice and migrations
 ├── bff/                          # GraphQL Backend-for-Frontend (gqlgen)
-│   ├── graph/                    # Schema, resolvers (portfolio, instruments, addTransaction), helpers
+│   ├── graph/                    # Schema, resolvers (portfolio, instruments, addTransaction, portfolioHistory), helpers
 │   └── cmd/server/               # BFF entrypoint
 ├── web/                          # Frontend React application
-│   ├── src/components/           # Reusable UI elements (Dashboard, AddTransactionModal, etc.)
+│   ├── src/components/           # Reusable UI elements (Dashboard, AddTransactionModal, PerformanceChart)
+│   ├── src/graphql/              # Shared typed client wrapper (client.ts)
 │   └── src/generated/            # Auto-generated typed GenQL client
 ├── docs/                         # Implementation plans and guides
 │   ├── features.md               # Master features matrix & roadmap (completed & planned)
@@ -189,6 +191,8 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   ├── portfolio-service-implementation-plan.md
 │   ├── add-transactions-implementation-plan.md
 │   ├── performance-chart-implementation-plan.md
+│   ├── portfolio-valuation-engine-implementation-plan.md
+│   ├── market-data-ingestion-implementation-plan.md
 │   ├── transaction-history-implementation-plan.md
 │   ├── cost-basis-switching-implementation-plan.md
 │   ├── user-preferences-implementation-plan.md
@@ -252,5 +256,8 @@ make generate
 - **Database Architecture & Schema Design**: [`docs/db-implementation-plan.md`](./docs/db-implementation-plan.md)
 - **Portfolio Service Implementation Plan**: [`docs/portfolio-service-implementation-plan.md`](./docs/portfolio-service-implementation-plan.md)
 - **Add Transactions Implementation Plan**: [`docs/add-transactions-implementation-plan.md`](./docs/add-transactions-implementation-plan.md)
+- **Performance Chart Implementation Plan**: [`docs/performance-chart-implementation-plan.md`](./docs/performance-chart-implementation-plan.md)
+- **Portfolio Valuation Engine Plan**: [`docs/portfolio-valuation-engine-implementation-plan.md`](./docs/portfolio-valuation-engine-implementation-plan.md)
+- **Market Data Ingestion Plan**: [`docs/market-data-ingestion-implementation-plan.md`](./docs/market-data-ingestion-implementation-plan.md)
 - **Frontend GraphQL Setup**: [`docs/genql-usage.md`](./docs/genql-usage.md)
 
