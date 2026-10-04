@@ -2,6 +2,38 @@
 
 package model
 
+import (
+	"bytes"
+	"fmt"
+	"io"
+	"strconv"
+)
+
+type AddTransactionInput struct {
+	Type         TransactionType `json:"type"`
+	Symbol       *string         `json:"symbol,omitempty"`
+	TradeDate    string          `json:"tradeDate"`
+	Quantity     *Decimal        `json:"quantity,omitempty"`
+	Price        *Decimal        `json:"price,omitempty"`
+	Amount       *Decimal        `json:"amount,omitempty"`
+	CurrencyCode *string         `json:"currencyCode,omitempty"`
+	Fee          *Decimal        `json:"fee,omitempty"`
+	Notes        *string         `json:"notes,omitempty"`
+}
+
+type AddTransactionPayload struct {
+	TransactionID string     `json:"transactionId"`
+	Portfolio     *Portfolio `json:"portfolio"`
+}
+
+type Instrument struct {
+	ID           string `json:"id"`
+	Symbol       string `json:"symbol"`
+	Name         string `json:"name"`
+	CurrencyCode string `json:"currencyCode"`
+	AssetClass   string `json:"assetClass"`
+}
+
 type Investment struct {
 	ID                 string  `json:"id"`
 	Ticker             string  `json:"ticker"`
@@ -20,6 +52,9 @@ type Money struct {
 	CurrencyCode string  `json:"currencyCode"`
 }
 
+type Mutation struct {
+}
+
 type Portfolio struct {
 	TotalValue              *Money        `json:"totalValue"`
 	TodayReturnAmount       *Money        `json:"todayReturnAmount"`
@@ -30,4 +65,77 @@ type Portfolio struct {
 }
 
 type Query struct {
+}
+
+type TransactionType string
+
+const (
+	TransactionTypeBuy          TransactionType = "BUY"
+	TransactionTypeSell         TransactionType = "SELL"
+	TransactionTypeDividend     TransactionType = "DIVIDEND"
+	TransactionTypeDeposit      TransactionType = "DEPOSIT"
+	TransactionTypeWithdrawal   TransactionType = "WITHDRAWAL"
+	TransactionTypeInterest     TransactionType = "INTEREST"
+	TransactionTypeFee          TransactionType = "FEE"
+	TransactionTypeTax          TransactionType = "TAX"
+	TransactionTypeTransferIn   TransactionType = "TRANSFER_IN"
+	TransactionTypeTransferOut  TransactionType = "TRANSFER_OUT"
+	TransactionTypeFxConversion TransactionType = "FX_CONVERSION"
+)
+
+var AllTransactionType = []TransactionType{
+	TransactionTypeBuy,
+	TransactionTypeSell,
+	TransactionTypeDividend,
+	TransactionTypeDeposit,
+	TransactionTypeWithdrawal,
+	TransactionTypeInterest,
+	TransactionTypeFee,
+	TransactionTypeTax,
+	TransactionTypeTransferIn,
+	TransactionTypeTransferOut,
+	TransactionTypeFxConversion,
+}
+
+func (e TransactionType) IsValid() bool {
+	switch e {
+	case TransactionTypeBuy, TransactionTypeSell, TransactionTypeDividend, TransactionTypeDeposit, TransactionTypeWithdrawal, TransactionTypeInterest, TransactionTypeFee, TransactionTypeTax, TransactionTypeTransferIn, TransactionTypeTransferOut, TransactionTypeFxConversion:
+		return true
+	}
+	return false
+}
+
+func (e TransactionType) String() string {
+	return string(e)
+}
+
+func (e *TransactionType) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = TransactionType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid TransactionType", str)
+	}
+	return nil
+}
+
+func (e TransactionType) MarshalGQL(w io.Writer) {
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *TransactionType) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e TransactionType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }

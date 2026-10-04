@@ -41,6 +41,22 @@ func (m *MockPortfolioService) EXPECT() *MockPortfolioServiceMockRecorder {
 	return m.recorder
 }
 
+// AddTransaction mocks base method.
+func (m *MockPortfolioService) AddTransaction(ctx context.Context, input domain.AddTransactionInput) (*domain.Transaction, *domain.PortfolioSummary, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddTransaction", ctx, input)
+	ret0, _ := ret[0].(*domain.Transaction)
+	ret1, _ := ret[1].(*domain.PortfolioSummary)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// AddTransaction indicates an expected call of AddTransaction.
+func (mr *MockPortfolioServiceMockRecorder) AddTransaction(ctx, input any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTransaction", reflect.TypeOf((*MockPortfolioService)(nil).AddTransaction), ctx, input)
+}
+
 // GetPortfolioSummary mocks base method.
 func (m *MockPortfolioService) GetPortfolioSummary(ctx context.Context, userID string) (*domain.PortfolioSummary, error) {
 	m.ctrl.T.Helper()
@@ -54,6 +70,21 @@ func (m *MockPortfolioService) GetPortfolioSummary(ctx context.Context, userID s
 func (mr *MockPortfolioServiceMockRecorder) GetPortfolioSummary(ctx, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPortfolioSummary", reflect.TypeOf((*MockPortfolioService)(nil).GetPortfolioSummary), ctx, userID)
+}
+
+// ListInstruments mocks base method.
+func (m *MockPortfolioService) ListInstruments(ctx context.Context) ([]domain.Instrument, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListInstruments", ctx)
+	ret0, _ := ret[0].([]domain.Instrument)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListInstruments indicates an expected call of ListInstruments.
+func (mr *MockPortfolioServiceMockRecorder) ListInstruments(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListInstruments", reflect.TypeOf((*MockPortfolioService)(nil).ListInstruments), ctx)
 }
 
 // RebuildProjections mocks base method.

@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"errors"
+	"time"
 
 	"portfolio-api/internal/domain"
 	"portfolio-api/internal/repository"
@@ -13,6 +14,7 @@ import (
 	commonpb "graphfolio/proto/common/v1"
 	pb "graphfolio/proto/portfolio/v1"
 
+	"github.com/shopspring/decimal"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -49,6 +51,156 @@ func (s *PortfolioServer) GetPortfolio(ctx context.Context, req *pb.GetPortfolio
 	// Fallback to static mock if service is not initialized
 	return &pb.GetPortfolioResponse{
 		Portfolio: fallbackMock(),
+	}, nil
+}
+
+func (s *PortfolioServer) AddTransaction(ctx context.Context, req *pb.AddTransactionRequest) (*pb.AddTransactionResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	var txType domain.TransactionType
+	switch req.GetType() {
+	case pb.TransactionType_TRANSACTION_TYPE_BUY:
+		txType = domain.TxTypeBuy
+	case pb.TransactionType_TRANSACTION_TYPE_SELL:
+		txType = domain.TxTypeSell
+	case pb.TransactionType_TRANSACTION_TYPE_DIVIDEND:
+		txType = domain.TxTypeDividend
+	case pb.TransactionType_TRANSACTION_TYPE_DEPOSIT:
+		txType = domain.TxTypeDeposit
+	case pb.TransactionType_TRANSACTION_TYPE_WITHDRAWAL:
+		txType = domain.TxTypeWithdrawal
+	case pb.TransactionType_TRANSACTION_TYPE_INTEREST:
+		txType = domain.TxTypeInterest
+	case pb.TransactionType_TRANSACTION_TYPE_FEE:
+		txType = domain.TxTypeFee
+	case pb.TransactionType_TRANSACTION_TYPE_TAX:
+		txType = domain.TxTypeTax
+	case pb.TransactionType_TRANSACTION_TYPE_TRANSFER_IN:
+		txType = domain.TxTypeTransferIn
+	case pb.TransactionType_TRANSACTION_TYPE_TRANSFER_OUT:
+		txType = domain.TxTypeTransferOut
+	case pb.TransactionType_TRANSACTION_TYPE_FX_CONVERSION:
+		txType = domain.TxTypeFXConversion
+	default:
+		return nil, status.Errorf(codes.InvalidArgument, "invalid transaction type: %v", req.GetType())
+	}
+
+	var tradeDate time.Time
+	if req.GetTradeDate() != "" {
+		parsedDate, err := time.Parse("2006-01-02", req.GetTradeDate())
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid trade date format (expected YYYY-MM-DD): %v", err)
+		}
+		tradeDate = parsedDate
+	}
+
+	var qty *decimal.Decimal
+	if req.GetQuantity() != nil && req.GetQuantity().GetValue() != "" {
+		q, err := decimalpb.FromProto(req.GetQuantity())
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid quantity: %v", err)
+		}
+		qty = &q
+	}
+
+	var price *decimal.Decimal
+	if req.GetPrice() != nil && req.GetPrice().GetAmount() != nil {
+		p, _, err := decimalpb.MoneyFromProto(req.GetPrice())
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid price: %v", err)
+		}
+		price = &p
+	}
+
+	var amount *decimal.Decimal
+	var ccy *string
+	if req.GetAmount() != nil && req.GetAmount().GetAmount() != nil {
+		a, c, err := decimalpb.MoneyFromProto(req.GetAmount())
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid amount: %v", err)
+		}
+		amount = &a
+		if c != "" {
+			ccy = &c
+		}
+	}
+
+	var fee *decimal.Decimal
+	if req.GetFee() != nil && req.GetFee().GetAmount() != nil {
+		f, _, err := decimalpb.MoneyFromProto(req.GetFee())
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid fee: %v", err)
+		}
+		fee = &f
+	}
+
+	var symbol *string
+	if req.GetSymbol() != "" {
+		s := req.GetSymbol()
+		symbol = &s
+	}
+
+	var notes *string
+	if req.GetNotes() != "" {
+		n := req.GetNotes()
+		notes = &n
+	}
+
+	input := domain.AddTransactionInput{
+		UserID:       req.GetUserId(),
+		Type:         txType,
+		Symbol:       symbol,
+		TradeDate:    tradeDate,
+		Quantity:     qty,
+		Price:        price,
+		Amount:       amount,
+		CurrencyCode: ccy,
+		Fee:          fee,
+		Notes:        notes,
+	}
+
+	tx, summary, err := s.svc.AddTransaction(ctx, input)
+	if err != nil {
+		if errors.Is(err, repository.ErrPortfolioNotFound) {
+			return nil, status.Errorf(codes.NotFound, "portfolio not found: %v", err)
+		}
+		if errors.Is(err, repository.ErrInstrumentNotFound) {
+			return nil, status.Errorf(codes.NotFound, "instrument not found: %v", err)
+		}
+		return nil, status.Errorf(codes.InvalidArgument, "failed to add transaction: %v", err)
+	}
+
+	return &pb.AddTransactionResponse{
+		TransactionId: tx.ID.String(),
+		Portfolio:     mapSummaryToProto(summary),
+	}, nil
+}
+
+func (s *PortfolioServer) ListInstruments(ctx context.Context, req *pb.ListInstrumentsRequest) (*pb.ListInstrumentsResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	instruments, err := s.svc.ListInstruments(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to list instruments: %v", err)
+	}
+
+	protoInsts := make([]*pb.Instrument, len(instruments))
+	for i, inst := range instruments {
+		protoInsts[i] = &pb.Instrument{
+			Id:           inst.ID.String(),
+			Symbol:       inst.Symbol,
+			Name:         inst.Name,
+			CurrencyCode: inst.CurrencyCode,
+			AssetClass:   inst.AssetClass,
+		}
+	}
+
+	return &pb.ListInstrumentsResponse{
+		Instruments: protoInsts,
 	}, nil
 }
 

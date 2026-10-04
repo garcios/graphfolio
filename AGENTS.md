@@ -16,7 +16,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 - **`proto/` (The Contract)**:
   Protocol Buffers are the single source of truth for microservice RPCs and shared types. Stored at the root to eliminate schema drift between gRPC servers and the BFF client wrappers.
   - `proto/common/v1/decimal.proto`: High-precision fixed-point `Decimal` (value, scale) and `Money` (amount, currency_code) types.
-  - `proto/portfolio/v1/portfolio.proto`: Portfolio service, investment summary, and performance metrics.
+  - `proto/portfolio/v1/portfolio.proto`: Portfolio service (`GetPortfolio`, `AddTransaction`, `ListInstruments`), investment summary, and performance metrics.
 
 - **`pkg/` (Shared Infrastructure)**:
   Strictly non-domain-specific code shared across backend modules:
@@ -27,17 +27,17 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 
 - **`services/` (The Domain Microservices)**:
   Each microservice is an isolated Go module (`services/portfolio-api`, `services/user-api`):
-  - Domain models and calculators live in `internal/domain/`.
-  - Persistence logic lives in `internal/repository/` with `pgxpool.Pool` queries and transactions.
-  - Business logic, calculation services, and ledger replay projections live in `internal/service/`.
-  - Transport adapters (gRPC servers) live in `internal/` and `cmd/server/main.go`.
+  - Domain models and calculators live in `internal/domain/` (`portfolio`, `holding`, `transaction`, `instrument`, `tax_lot`).
+  - Persistence logic lives in `internal/repository/` with `pgxpool.Pool` queries and transactions (`InsertTransaction`, `FindInstrumentBySymbol`, `SaveProjectionsTx`).
+  - Business logic, calculation services, transaction ingestion (`AddTransaction`), and ledger replay projections (`RebuildProjections`) live in `internal/service/`.
+  - Transport adapters (gRPC servers) live in `internal/` (`server.go`) and `cmd/server/main.go`.
   - Microservices only interact with their dedicated database schemas and other gRPC APIs. They have zero awareness of GraphQL.
 
 - **`bff/` (The Orchestrator)**:
-  The Backend-for-Frontend is a Go service using `gqlgen` (GraphQL). It translates GraphQL queries and mutations into gRPC calls across domain microservices, maps exact decimal scalars, stitches data together, and shields the frontend from microservice topology.
+  The Backend-for-Frontend is a Go service using `gqlgen` (GraphQL). It translates GraphQL queries (`portfolio`, `instruments`) and mutations (`addTransaction`) into gRPC calls across domain microservices, maps exact decimal scalars, stitches data together, and shields the frontend from microservice topology.
 
 - **`web/` (The Consumer)**:
-  Standalone Vite + React + TypeScript frontend. Interacts exclusively with the BFF GraphQL endpoint using a strongly-typed auto-generated client (`genql`).
+  Standalone Vite + React + TypeScript frontend. Interacts exclusively with the BFF GraphQL endpoint using a strongly-typed auto-generated client (`genql`). Includes interactive dashboard and transaction ingestion modal (`AddTransactionModal`).
 
 ---
 
@@ -48,7 +48,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   ├── common/v1/
 │   │   └── decimal.proto         # Decimal and Money contracts
 │   ├── portfolio/v1/
-│   │   └── portfolio.proto       # Portfolio gRPC service definition
+│   │   └── portfolio.proto       # Portfolio gRPC service (GetPortfolio, AddTransaction, ListInstruments)
 │   └── user/v1/
 │       └── user.proto            # User gRPC service definition
 │
@@ -69,10 +69,10 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   ├── portfolio-api/
 │   │   ├── cmd/server/           # Service entrypoint (gRPC on :50051)
 │   │   ├── internal/
-│   │   │   ├── domain/           # Domain entities (Portfolio, Holding, TaxLot, Money) & Calculator
+│   │   │   ├── domain/           # Domain entities (Portfolio, Holding, Transaction, Instrument, TaxLot, Money)
 │   │   │   ├── repository/       # Repository interface & PostgreSQL (pgx) queries
 │   │   │   │   └── mocks/        # Uber-go mock repository (MockRepository)
-│   │   │   ├── service/          # PortfolioService & ledger projection replay engine
+│   │   │   ├── service/          # PortfolioService, transaction ingestion & ledger projection engine
 │   │   │   │   └── mocks/        # Uber-go mock service (MockPortfolioService)
 │   │   │   ├── server.go         # gRPC PortfolioServiceServer implementation
 │   │   │   └── server_test.go    # gRPC server unit tests with MockPortfolioService
@@ -87,7 +87,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 ├── bff/                          # 5. GraphQL Backend-for-Frontend
 │   ├── cmd/server/               # BFF entrypoint (GraphQL server on :8080)
 │   ├── graph/
-│   │   ├── schema.graphqls       # GraphQL schema with custom Decimal scalar
+│   │   ├── schema.graphqls       # GraphQL schema (Queries, Mutations, custom Decimal scalar)
 │   │   ├── schema.resolvers.go   # Resolver implementations calling gRPC
 │   │   ├── helpers.go            # Domain-to-GraphQL conversion helpers
 │   │   └── model/
@@ -97,7 +97,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │
 ├── web/                          # 6. Frontend Application
 │   ├── src/
-│   │   ├── components/           # Reusable UI components (Dashboard, etc.)
+│   │   ├── components/           # Reusable UI components (Dashboard, AddTransactionModal, etc.)
 │   │   ├── generated/            # GenQL auto-generated typed client
 │   │   └── main.tsx              # Application entrypoint
 │   ├── package.json
@@ -106,6 +106,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 ├── docs/                         # Architecture designs & implementation plans
 │   ├── db-implementation-plan.md
 │   ├── portfolio-service-implementation-plan.md
+│   ├── add-transactions-implementation-plan.md
 │   └── genql-usage.md
 │
 ├── Makefile                      # Standardized commands (make proto, make generate, make run, make test)
@@ -134,7 +135,9 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 
 ### 4.3 Ledger Replay & Cost Basis Methods
 - The transaction ledger (`portfolio.transactions`) is the source of truth for portfolio history.
+- Adding transactions (`BUY`, `SELL`, `DEPOSIT`, `WITHDRAWAL`, `DIVIDEND`) appends records to `portfolio.transactions` and immediately invokes `service.RebuildProjections`.
 - Holding balances, tax lots, lot disposals, and cash balances are deterministic projections built by `service.ProcessLedger`.
+- Projection rebuilds acquire a row lock (`SELECT ... FOR UPDATE` on `portfolio.portfolios`) to serialize concurrent updates and atomically save recomputed state.
 - Both `AVERAGE_COST` (default) and `FIFO` cost-basis relieve algorithms are supported in `internal/service/projection.go`.
 
 ### 4.4 Mocking & Unit Testing Standards

@@ -11,42 +11,81 @@ import (
 	pb "graphfolio/proto/portfolio/v1"
 )
 
+// AddTransaction is the resolver for the addTransaction field.
+func (r *mutationResolver) AddTransaction(ctx context.Context, input model.AddTransactionInput) (*model.AddTransactionPayload, error) {
+	currency := "USD"
+	if input.CurrencyCode != nil && *input.CurrencyCode != "" {
+		currency = *input.CurrencyCode
+	}
+
+	req := &pb.AddTransactionRequest{
+		UserId:    "1", // Default user ID for single-user/demo session
+		Type:      toProtoTransactionType(input.Type),
+		TradeDate: input.TradeDate,
+		Quantity:  toProtoDecimal(input.Quantity),
+		Price:     toProtoMoney(input.Price, currency),
+		Amount:    toProtoMoney(input.Amount, currency),
+		Fee:       toProtoMoney(input.Fee, currency),
+	}
+
+	if input.Symbol != nil {
+		req.Symbol = *input.Symbol
+	}
+	if input.Notes != nil {
+		req.Notes = *input.Notes
+	}
+
+	resp, err := r.PortfolioClient.AddTransaction(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.AddTransactionPayload{
+		TransactionID: resp.TransactionId,
+		Portfolio:     toModelPortfolio(resp.Portfolio),
+	}, nil
+}
+
 // Portfolio is the resolver for the portfolio field.
 func (r *queryResolver) Portfolio(ctx context.Context) (*model.Portfolio, error) {
 	resp, err := r.PortfolioClient.GetPortfolio(ctx, &pb.GetPortfolioRequest{
-		UserId: "1", // Hardcoded for now
+		UserId: "1", // Hardcoded for single-user/demo session
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	investments := make([]*model.Investment, len(resp.Portfolio.Investments))
-	for i, inv := range resp.Portfolio.Investments {
-		investments[i] = &model.Investment{
-			ID:                 inv.Id,
-			Ticker:             inv.Ticker,
-			Name:               inv.Name,
-			Price:              toModelMoney(inv.Price),
-			Quantity:           toModelDecimal(inv.Quantity),
-			TotalValue:         toModelMoney(inv.TotalValue),
-			TodayReturnAmount:  toModelMoney(inv.TodayReturnAmount),
-			TodayReturnPercent: toModelDecimal(inv.TodayReturnPercent),
-			TotalReturnAmount:  toModelMoney(inv.TotalReturnAmount),
-			TotalReturnPercent: toModelDecimal(inv.TotalReturnPercent),
+	return toModelPortfolio(resp.Portfolio), nil
+}
+
+// Instruments is the resolver for the instruments field.
+func (r *queryResolver) Instruments(ctx context.Context) ([]*model.Instrument, error) {
+	resp, err := r.PortfolioClient.ListInstruments(ctx, &pb.ListInstrumentsRequest{})
+	if err != nil {
+		return nil, err
+	}
+
+	instruments := make([]*model.Instrument, len(resp.Instruments))
+	for i, inst := range resp.Instruments {
+		instruments[i] = &model.Instrument{
+			ID:           inst.Id,
+			Symbol:       inst.Symbol,
+			Name:         inst.Name,
+			CurrencyCode: inst.CurrencyCode,
+			AssetClass:   inst.AssetClass,
 		}
 	}
 
-	return &model.Portfolio{
-		TotalValue:              toModelMoney(resp.Portfolio.TotalValue),
-		TodayReturnAmount:       toModelMoney(resp.Portfolio.TodayReturnAmount),
-		TodayReturnPercent:      toModelDecimal(resp.Portfolio.TodayReturnPercent),
-		AnnualizedReturnPercent: toModelDecimal(resp.Portfolio.AnnualizedReturnPercent),
-		CashBalance:             toModelMoney(resp.Portfolio.CashBalance),
-		Investments:             investments,
-	}, nil
+	return instruments, nil
 }
+
+// Mutation returns MutationResolver implementation.
+func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
-type queryResolver struct{ *Resolver }
+type (
+	mutationResolver struct{ *Resolver }
+	queryResolver    struct{ *Resolver }
+)

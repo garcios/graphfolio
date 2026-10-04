@@ -9,6 +9,6 @@ import (
 	pb "graphfolio/proto/portfolio/v1"
 )
 
-type Resolver struct{
+type Resolver struct {
 	PortfolioClient pb.PortfolioServiceClient
 }

@@ -6,8 +6,52 @@ type Money {
   currencyCode: String!
 }
 
+enum TransactionType {
+  BUY
+  SELL
+  DIVIDEND
+  DEPOSIT
+  WITHDRAWAL
+  INTEREST
+  FEE
+  TAX
+  TRANSFER_IN
+  TRANSFER_OUT
+  FX_CONVERSION
+}
+
+input AddTransactionInput {
+  type: TransactionType!
+  symbol: String
+  tradeDate: String!
+  quantity: Decimal
+  price: Decimal
+  amount: Decimal
+  currencyCode: String
+  fee: Decimal
+  notes: String
+}
+
+type AddTransactionPayload {
+  transactionId: String!
+  portfolio: Portfolio!
+}
+
+type Instrument {
+  id: ID!
+  symbol: String!
+  name: String!
+  currencyCode: String!
+  assetClass: String!
+}
+
 type Query {
   portfolio: Portfolio!
+  instruments: [Instrument!]!
+}
+
+type Mutation {
+  addTransaction(input: AddTransactionInput!): AddTransactionPayload!
 }
 
 type Portfolio {

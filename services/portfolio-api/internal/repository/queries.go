@@ -103,4 +103,39 @@ SELECT
 FROM portfolio.corporate_actions
 WHERE instrument_id = ANY($1)
 ORDER BY ex_date ASC, id ASC;`
+
+	insertTransactionSQL = `
+INSERT INTO portfolio.transactions (
+    portfolio_id, instrument_id, type, trade_date, quantity, price, amount,
+    currency_code, fee, withholding_tax, fx_rate_to_base, external_ref, notes
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+)
+RETURNING id;`
+
+	findInstrumentBySymbolSQL = `
+SELECT id, symbol, exchange_code, name, asset_class, currency_code, isin, is_active
+FROM portfolio.instruments
+WHERE UPPER(symbol) = UPPER($1) AND is_active = true
+LIMIT 1;`
+
+	listActiveInstrumentsSQL = `
+SELECT id, symbol, exchange_code, name, asset_class, currency_code, isin, is_active
+FROM portfolio.instruments
+WHERE is_active = true
+ORDER BY symbol ASC;`
+
+	getDirectFXRateSQL = `
+SELECT rate
+FROM portfolio.fx_rates
+WHERE base_currency = $1 AND quote_currency = $2
+ORDER BY rate_date DESC
+LIMIT 1;`
+
+	getInverseFXRateSQL = `
+SELECT rate
+FROM portfolio.fx_rates
+WHERE base_currency = $2 AND quote_currency = $1
+ORDER BY rate_date DESC
+LIMIT 1;`
 )

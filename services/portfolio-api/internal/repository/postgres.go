@@ -13,7 +13,10 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-var ErrPortfolioNotFound = errors.New("portfolio not found")
+var (
+	ErrPortfolioNotFound  = errors.New("portfolio not found")
+	ErrInstrumentNotFound = errors.New("instrument not found")
+)
 
 type PostgresRepository struct {
 	pool *pgxpool.Pool
@@ -310,4 +313,105 @@ func (r *PostgresRepository) SaveProjectionsTx(
 	}
 
 	return tx.Commit(ctx)
+}
+
+func (r *PostgresRepository) InsertTransaction(ctx context.Context, tx domain.Transaction) (*domain.Transaction, error) {
+	row := r.pool.QueryRow(ctx, insertTransactionSQL,
+		tx.PortfolioID,
+		tx.InstrumentID,
+		string(tx.Type),
+		tx.TradeDate,
+		tx.Quantity,
+		tx.Price,
+		tx.Amount,
+		tx.CurrencyCode,
+		tx.Fee,
+		tx.WithholdingTax,
+		tx.FXRateToBase,
+		tx.ExternalRef,
+		tx.Notes,
+	)
+
+	var id uuid.UUID
+	if err := row.Scan(&id); err != nil {
+		return nil, fmt.Errorf("repository: insert transaction failed: %w", err)
+	}
+
+	tx.ID = id
+	return &tx, nil
+}
+
+func (r *PostgresRepository) FindInstrumentBySymbol(ctx context.Context, symbol string) (*domain.Instrument, error) {
+	row := r.pool.QueryRow(ctx, findInstrumentBySymbolSQL, symbol)
+
+	var inst domain.Instrument
+	err := row.Scan(
+		&inst.ID,
+		&inst.Symbol,
+		&inst.ExchangeCode,
+		&inst.Name,
+		&inst.AssetClass,
+		&inst.CurrencyCode,
+		&inst.ISIN,
+		&inst.IsActive,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrInstrumentNotFound
+		}
+		return nil, fmt.Errorf("repository: find instrument %q failed: %w", symbol, err)
+	}
+
+	return &inst, nil
+}
+
+func (r *PostgresRepository) ListActiveInstruments(ctx context.Context) ([]domain.Instrument, error) {
+	rows, err := r.pool.Query(ctx, listActiveInstrumentsSQL)
+	if err != nil {
+		return nil, fmt.Errorf("repository: list instruments failed: %w", err)
+	}
+	defer rows.Close()
+
+	var insts []domain.Instrument
+	for rows.Next() {
+		var inst domain.Instrument
+		err := rows.Scan(
+			&inst.ID,
+			&inst.Symbol,
+			&inst.ExchangeCode,
+			&inst.Name,
+			&inst.AssetClass,
+			&inst.CurrencyCode,
+			&inst.ISIN,
+			&inst.IsActive,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("repository: scan instrument failed: %w", err)
+		}
+		insts = append(insts, inst)
+	}
+
+	return insts, rows.Err()
+}
+
+func (r *PostgresRepository) GetFXRate(ctx context.Context, fromCurrency, toCurrency string) (decimal.Decimal, error) {
+	if fromCurrency == toCurrency {
+		return decimal.NewFromInt(1), nil
+	}
+
+	// Try direct rate
+	var directRate decimal.Decimal
+	err := r.pool.QueryRow(ctx, getDirectFXRateSQL, fromCurrency, toCurrency).Scan(&directRate)
+	if err == nil && directRate.IsPositive() {
+		return directRate, nil
+	}
+
+	// Try inverse rate
+	var inverseRate decimal.Decimal
+	err = r.pool.QueryRow(ctx, getInverseFXRateSQL, fromCurrency, toCurrency).Scan(&inverseRate)
+	if err == nil && inverseRate.IsPositive() {
+		return decimal.NewFromInt(1).Div(inverseRate), nil
+	}
+
+	return decimal.NewFromInt(1), nil
 }

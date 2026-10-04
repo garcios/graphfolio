@@ -40,6 +40,19 @@ type Transaction struct {
 	Notes          *string
 }
 
+type AddTransactionInput struct {
+	UserID       string
+	Type         TransactionType
+	Symbol       *string
+	TradeDate    time.Time
+	Quantity     *decimal.Decimal
+	Price        *decimal.Decimal
+	Amount       *decimal.Decimal
+	CurrencyCode *string
+	Fee          *decimal.Decimal
+	Notes        *string
+}
+
 type TaxLot struct {
 	ID                uuid.UUID
 	PortfolioID       uuid.UUID
