@@ -18,7 +18,7 @@ A modern portfolio tracker built for serious investors. GraphFolio accurately me
 
 ## Prerequisites
 
-- Go 1.21 or higher
+- Go 1.26 or higher
 - Node.js 20+ and npm
 - Make
 - Protobuf Compiler (`protoc`) - *Optional, for regenerating protobufs*
