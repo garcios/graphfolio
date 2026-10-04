@@ -26,42 +26,54 @@ consolidated dashboard.
 
 ```text
 ├── proto/                        # 1. Single Source of Truth for APIs
+│   ├── common/v1/
+│   │   └── decimal.proto         # Decimal and Money types
 │   ├── portfolio/v1/
 │   │   └── portfolio.proto
 │   └── user/v1/
 │       └── user.proto
 │
 ├── pkg/                          # 2. Shared Libraries (Backend)
+│   ├── database/                 # Postgres connection pooling, migration runner
+│   ├── decimalpb/                # Decimal/Money proto <-> shopspring conversion
 │   ├── logger/                   # Standardized logging
 │   ├── middleware/               # gRPC interceptors (auth, metrics)
-│   ├── database/                 # Postgres/DB connection managers
 │   └── go.mod
 │
-├── services/                     # 3. Core gRPC Microservices
+├── scripts/                      # 3. Database bootstrap & scripts
+│   └── db/
+│       ├── bootstrap.sql         # Idempotent DB, role, schema creation
+│       └── teardown.sql          # DB drop script
+│
+├── services/                     # 4. Core gRPC Microservices
 │   ├── portfolio-api/
 │   │   ├── cmd/server/           # Application entrypoint
 │   │   ├── internal/             # Domain logic, handlers, repository
+│   │   ├── migrations/           # golang-migrate schema migrations
+│   │   ├── seeds/                # Development seed data
 │   │   └── go.mod
 │   └── user-api/
 │       ├── cmd/server/
 │       ├── internal/
+│       ├── migrations/
 │       └── go.mod
 │
-├── bff/                          # 4. GraphQL Backend-for-Frontend
+├── bff/                          # 5. GraphQL Backend-for-Frontend
 │   ├── cmd/server/               # BFF entrypoint
 │   ├── graph/                    # GraphQL definitions (e.g., via gqlgen)
 │   │   ├── schema.graphqls       # Federated or standalone schema
 │   │   ├── schema.resolvers.go   # Resolver implementations
-│   │   └── model/                # Generated models
+│   │   └── model/                # Generated models & Decimal scalar
 │   ├── internal/
 │   │   └── clients/              # gRPC client wrappers to communicate with services/
 │   └── go.mod
 │
-├── web/                          # 5. Frontend Application
+├── web/                          # 6. Frontend Application
 │   ├── src/
-│   │   ├── components/           # Reusable UI elements
+│   │   ├── components/           # Reusable UI elements (Dashboard)
 │   │   ├── features/             # Domain-specific frontend modules
-│   │   ├── graphql/              # Frontend queries/mutations and generated hooks
+│   │   ├── generated/            # GenQL auto-generated typed client
+│   │   ├── graphql/              # Frontend queries/mutations
 │   │   └── pages/                # Route components
 │   ├── package.json
 │   └── tsconfig.json
@@ -69,11 +81,10 @@ consolidated dashboard.
 ├── tools/                        # Code generation and dev scripts
 │   └── tools.go                  # Version locking for protoc-gen-go, gqlgen, etc.
 │
-├── Makefile                      # Standardized commands (make proto, make build)
-├── docker-compose.yml            # Local dev orchestration
+├── Makefile                      # Standardized commands (make proto, make generate, make run)
 └── go.work                       # Go workspace mapping (pkg, services/*, bff, proto)
 ```
 
 ## 4. Monorepo Tooling Strategy
 
-For a polyglot monorepo like this, a standard Makefile is often enough to orchestrate protoc generation, gqlgen execution, and Docker builds. If the frontend tooling becomes complex, adopting a build system like Turborepo or Bazel allows you to cache tasks—ensuring the frontend only rebuilds when `web/` or `bff/graph/` changes, and gRPC services only rebuild when their specific `services/` directory or the `proto/` directory changes.
+For a polyglot monorepo like this, a standard Makefile is used to orchestrate protoc generation, gqlgen execution, database migrations, and development servers. If the frontend tooling becomes complex, adopting a build system like Turborepo or Bazel allows caching tasks—ensuring the frontend only rebuilds when `web/` or `bff/graph/` changes, and gRPC services only rebuild when their specific `services/` directory or the `proto/` directory changes.

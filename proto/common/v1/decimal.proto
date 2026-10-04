@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package common.v1;
+
+option go_package = "graphfolio/proto/common/v1;commonpb";
+
+// Arbitrary-precision decimal encoded as a canonical string, e.g. "-1234.56".
+message Decimal {
+  string value = 1;
+}
+
+message Money {
+  Decimal amount        = 1;
+  string  currency_code = 2; // ISO 4217, e.g. "USD"
+}

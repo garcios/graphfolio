@@ -1,80 +1,91 @@
 export default {
     "scalars": [
+        0,
         2,
-        4,
-        5,
-        6
+        6,
+        7
     ],
     "types": {
-        "Query": {
-            "portfolio": [
-                1
+        "Decimal": {},
+        "Money": {
+            "amount": [
+                0
+            ],
+            "currencyCode": [
+                2
             ],
             "__typename": [
-                5
+                2
+            ]
+        },
+        "String": {},
+        "Query": {
+            "portfolio": [
+                4
+            ],
+            "__typename": [
+                2
             ]
         },
         "Portfolio": {
             "totalValue": [
-                2
+                1
             ],
             "todayReturnAmount": [
-                2
+                1
             ],
             "todayReturnPercent": [
-                2
+                0
             ],
             "annualizedReturnPercent": [
-                2
+                0
             ],
             "cashBalance": [
-                2
+                1
             ],
             "investments": [
-                3
+                5
             ],
             "__typename": [
-                5
+                2
             ]
         },
-        "Float": {},
         "Investment": {
             "id": [
-                4
+                6
             ],
             "ticker": [
-                5
+                2
             ],
             "name": [
-                5
+                2
             ],
             "price": [
-                2
+                1
             ],
             "quantity": [
-                2
+                0
             ],
             "totalValue": [
-                2
+                1
             ],
             "todayReturnAmount": [
-                2
+                1
             ],
             "todayReturnPercent": [
-                2
+                0
             ],
             "totalReturnAmount": [
-                2
+                1
             ],
             "totalReturnPercent": [
-                2
+                0
             ],
             "__typename": [
-                5
+                2
             ]
         },
         "ID": {},
-        "String": {},
         "Boolean": {}
     }
 }
