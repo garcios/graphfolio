@@ -18,8 +18,11 @@ This document catalogs all implemented features, in-progress components, and pla
 | **8** | **Transaction History & Ledger Management** | **PLANNED** | Proto, Svc, BFF, Web | [transaction-history-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/transaction-history-implementation-plan.md) |
 | **9** | **Dynamic Cost Basis Method Switching (Average Cost ↔ FIFO)** | **PLANNED** | Proto, Svc, BFF, Web | [cost-basis-switching-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/cost-basis-switching-implementation-plan.md) |
 | **10** | **User Preferences & Display Currency** | **PLANNED** | Proto, User API, BFF, Web | [user-preferences-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-preferences-implementation-plan.md) |
-| **11** | **Tax Lot Inspector & Capital Gains Reports** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
-| **12** | **Dividend Calendar & Yield Analytics** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
+| **11** | **Portfolio Valuation Engine & Historical Backfill** | **PLANNED** | Database, Svc, Worker | [portfolio-valuation-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/portfolio-valuation-engine-implementation-plan.md) |
+| **12** | **Market Data Ingestion (Asset Prices & FX Rates)** | **PLANNED** | Database, Svc, Worker | [market-data-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/market-data-ingestion-implementation-plan.md) |
+| **13** | **Tax Lot Inspector & Capital Gains Reports** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
+| **14** | **Dividend Calendar & Yield Analytics** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
+| **15** | **Real-Time Market Data & WebSocket Price Ticker** | **ROADMAP** | Market Data, Svc, Web | *(Future Plan)* |
 
 ---
 
@@ -99,7 +102,7 @@ This document catalogs all implemented features, in-progress components, and pla
 
 ## 3. Planned Features (`PLANNED`)
 
-### 3.2 Transaction History & Ledger Management
+### 3.1 Transaction History & Ledger Management
 - **Status**: **PLANNED**
 - **Plan Reference**: [transaction-history-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/transaction-history-implementation-plan.md)
 - **Scope**: `proto/`, `services/portfolio-api`, `bff/`, `web/`
@@ -109,7 +112,7 @@ This document catalogs all implemented features, in-progress components, and pla
   - Safe transaction deletion with warning modal.
   - Deleting an entry triggers automatic projection replay (`RebuildProjections`), recalculating open tax lots, disposals, holdings, and cash atomically.
 
-### 3.3 Dynamic Cost Basis Method Switching (Average Cost ↔ FIFO)
+### 3.2 Dynamic Cost Basis Method Switching (Average Cost ↔ FIFO)
 - **Status**: **PLANNED**
 - **Plan Reference**: [cost-basis-switching-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/cost-basis-switching-implementation-plan.md)
 - **Scope**: `proto/`, `services/portfolio-api`, `bff/`, `web/`
@@ -119,7 +122,7 @@ This document catalogs all implemented features, in-progress components, and pla
   - Replays historical transaction ledger to instantly update realized capital gains, holding cost basis, and total return percentages.
   - Info tooltip explaining tax optimization differences (pooling vs selling oldest shares).
 
-### 3.4 User Preferences & Display Currency
+### 3.3 User Preferences & Display Currency
 - **Status**: **PLANNED**
 - **Plan Reference**: [user-preferences-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-preferences-implementation-plan.md)
 - **Scope**: `proto/user/v1/`, `services/user-api`, `bff/`, `web/`
@@ -129,6 +132,27 @@ This document catalogs all implemented features, in-progress components, and pla
   - Multi-currency selector (`USD`, `EUR`, `GBP`, `AUD`, `CAD`, `JPY`, `CHF`).
   - Dynamic currency conversion across portfolio valuation and holding metrics via live FX rates.
   - `UserPreferencesModal` component triggered from the user profile badge in the navigation bar.
+
+### 3.4 Portfolio Valuation Engine & Historical Backfill
+- **Status**: **PLANNED**
+- **Plan Reference**: [portfolio-valuation-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/portfolio-valuation-engine-implementation-plan.md)
+- **Scope**: `services/portfolio-api`
+- **Highlights**:
+  - Automated daily End-of-Day (EOD) portfolio valuation scheduler and snapshot engine.
+  - Historical ledger replay worker computing daily valuation points from historical transactions + historical market close & FX rates.
+  - Daily sub-period return and cumulative Time-Weighted Return (TWR) index calculations with zero-drift decimal arithmetic.
+  - Automatic historical replay hook triggered upon past-dated transaction additions.
+
+### 3.5 Market Data Ingestion (Asset Prices & FX Rates)
+- **Status**: **PLANNED**
+- **Plan Reference**: [market-data-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/market-data-ingestion-implementation-plan.md)
+- **Scope**: `services/portfolio-api` (`internal/marketdata/`, `cmd/market-ingest/`)
+- **Highlights**:
+  - Automated End-of-Day (EOD) closing price and official FX fixing rate ingestion pipeline.
+  - Multi-provider adapter architecture (Twelve Data, Yahoo Finance, European Central Bank SDMX/XML, Open Exchange Rates).
+  - High-throughput batch upsert queries with idempotent conflict handling for `portfolio.instrument_prices` and `portfolio.fx_rates`.
+  - Token-bucket rate limiting (`golang.org/x/time/rate`), exponential backoff retry policies, and price spike anomaly detection.
+  - Automatic historical price and FX backfill triggered upon transaction ingestion for unpriced assets.
 
 ---
 
