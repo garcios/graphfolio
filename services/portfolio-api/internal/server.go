@@ -204,6 +204,61 @@ func (s *PortfolioServer) ListInstruments(ctx context.Context, req *pb.ListInstr
 	}, nil
 }
 
+func (s *PortfolioServer) GetPortfolioHistory(ctx context.Context, req *pb.GetPortfolioHistoryRequest) (*pb.GetPortfolioHistoryResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	userID := req.GetUserId()
+	if userID == "" {
+		userID = "1"
+	}
+
+	var timeframe domain.HistoryTimeframe
+	switch req.GetTimeframe() {
+	case pb.HistoryTimeframe_HISTORY_TIMEFRAME_1D:
+		timeframe = domain.Timeframe1D
+	case pb.HistoryTimeframe_HISTORY_TIMEFRAME_1W:
+		timeframe = domain.Timeframe1W
+	case pb.HistoryTimeframe_HISTORY_TIMEFRAME_1M:
+		timeframe = domain.Timeframe1M
+	case pb.HistoryTimeframe_HISTORY_TIMEFRAME_1Y:
+		timeframe = domain.Timeframe1Y
+	case pb.HistoryTimeframe_HISTORY_TIMEFRAME_ALL, pb.HistoryTimeframe_HISTORY_TIMEFRAME_UNSPECIFIED:
+		timeframe = domain.TimeframeAll
+	default:
+		return nil, status.Errorf(codes.InvalidArgument, "invalid timeframe: %v", req.GetTimeframe())
+	}
+
+	history, err := s.svc.GetPortfolioHistory(ctx, userID, timeframe)
+	if err != nil {
+		if errors.Is(err, repository.ErrPortfolioNotFound) {
+			return nil, status.Errorf(codes.NotFound, "portfolio not found for user: %s", userID)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get portfolio history: %v", err)
+	}
+
+	protoPoints := make([]*pb.ValuationPoint, len(history.Points))
+	for i, pt := range history.Points {
+		protoPoints[i] = &pb.ValuationPoint{
+			Date:        pt.Date.Format("2006-01-02"),
+			TotalValue:  decimalpb.MoneyToProto(pt.TotalValue.Amount, pt.TotalValue.CurrencyCode),
+			MarketValue: decimalpb.MoneyToProto(pt.MarketValue.Amount, pt.MarketValue.CurrencyCode),
+			CashValue:   decimalpb.MoneyToProto(pt.CashValue.Amount, pt.CashValue.CurrencyCode),
+			TwrIndex:    decimalpb.ToProto(pt.TWRIndex),
+			DailyReturn: decimalpb.ToProto(pt.DailyReturn),
+		}
+	}
+
+	return &pb.GetPortfolioHistoryResponse{
+		Points:        protoPoints,
+		StartValue:    decimalpb.MoneyToProto(history.StartValue.Amount, history.StartValue.CurrencyCode),
+		EndValue:      decimalpb.MoneyToProto(history.EndValue.Amount, history.EndValue.CurrencyCode),
+		ReturnAmount:  decimalpb.MoneyToProto(history.ReturnAmount.Amount, history.ReturnAmount.CurrencyCode),
+		ReturnPercent: decimalpb.ToProto(history.ReturnPercent),
+	}, nil
+}
+
 func mapSummaryToProto(summary *domain.PortfolioSummary) *pb.Portfolio {
 	investments := make([]*pb.Investment, len(summary.Investments))
 	for i, inv := range summary.Investments {

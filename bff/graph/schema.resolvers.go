@@ -79,6 +79,19 @@ func (r *queryResolver) Instruments(ctx context.Context) ([]*model.Instrument, e
 	return instruments, nil
 }
 
+// PortfolioHistory is the resolver for the portfolioHistory field.
+func (r *queryResolver) PortfolioHistory(ctx context.Context, timeframe model.HistoryTimeframe) (*model.PortfolioHistory, error) {
+	resp, err := r.PortfolioClient.GetPortfolioHistory(ctx, &pb.GetPortfolioHistoryRequest{
+		UserId:    "1", // Hardcoded for single-user/demo session
+		Timeframe: toProtoHistoryTimeframe(timeframe),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return toModelPortfolioHistory(resp), nil
+}
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 

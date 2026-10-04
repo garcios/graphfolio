@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"portfolio-api/internal/domain"
 
@@ -128,6 +129,38 @@ func (r *PostgresRepository) GetLatestValuation(ctx context.Context, portfolioID
 	}
 
 	return &v, nil
+}
+
+func (r *PostgresRepository) GetPortfolioValuations(ctx context.Context, portfolioID uuid.UUID, fromDate time.Time) ([]domain.PortfolioValuation, error) {
+	queryDate := fromDate
+	if queryDate.IsZero() {
+		queryDate = time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
+	}
+
+	rows, err := r.pool.Query(ctx, getPortfolioValuationsSQL, portfolioID, queryDate)
+	if err != nil {
+		return nil, fmt.Errorf("repository: query portfolio valuations failed: %w", err)
+	}
+	defer rows.Close()
+
+	var valuations []domain.PortfolioValuation
+	for rows.Next() {
+		var v domain.PortfolioValuation
+		if err := rows.Scan(
+			&v.PortfolioID,
+			&v.ValuationDate,
+			&v.MarketValueBase,
+			&v.CashValueBase,
+			&v.NetFlowBase,
+			&v.DailyReturn,
+			&v.TWRIndex,
+		); err != nil {
+			return nil, fmt.Errorf("repository: scan portfolio valuation failed: %w", err)
+		}
+		valuations = append(valuations, v)
+	}
+
+	return valuations, rows.Err()
 }
 
 func (r *PostgresRepository) GetCashFXRates(ctx context.Context, baseCurrency string) (map[string]decimal.Decimal, error) {

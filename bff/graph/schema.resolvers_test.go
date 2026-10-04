@@ -15,9 +15,10 @@ import (
 
 type fakePortfolioClient struct {
 	pb.PortfolioServiceClient
-	getPortfolioFn    func(ctx context.Context, in *pb.GetPortfolioRequest) (*pb.GetPortfolioResponse, error)
-	addTransactionFn  func(ctx context.Context, in *pb.AddTransactionRequest) (*pb.AddTransactionResponse, error)
-	listInstrumentsFn func(ctx context.Context, in *pb.ListInstrumentsRequest) (*pb.ListInstrumentsResponse, error)
+	getPortfolioFn        func(ctx context.Context, in *pb.GetPortfolioRequest) (*pb.GetPortfolioResponse, error)
+	addTransactionFn      func(ctx context.Context, in *pb.AddTransactionRequest) (*pb.AddTransactionResponse, error)
+	listInstrumentsFn     func(ctx context.Context, in *pb.ListInstrumentsRequest) (*pb.ListInstrumentsResponse, error)
+	getPortfolioHistoryFn func(ctx context.Context, in *pb.GetPortfolioHistoryRequest) (*pb.GetPortfolioHistoryResponse, error)
 }
 
 func (f *fakePortfolioClient) GetPortfolio(ctx context.Context, in *pb.GetPortfolioRequest, opts ...grpc.CallOption) (*pb.GetPortfolioResponse, error) {
@@ -37,6 +38,13 @@ func (f *fakePortfolioClient) AddTransaction(ctx context.Context, in *pb.AddTran
 func (f *fakePortfolioClient) ListInstruments(ctx context.Context, in *pb.ListInstrumentsRequest, opts ...grpc.CallOption) (*pb.ListInstrumentsResponse, error) {
 	if f.listInstrumentsFn != nil {
 		return f.listInstrumentsFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakePortfolioClient) GetPortfolioHistory(ctx context.Context, in *pb.GetPortfolioHistoryRequest, opts ...grpc.CallOption) (*pb.GetPortfolioHistoryResponse, error) {
+	if f.getPortfolioHistoryFn != nil {
+		return f.getPortfolioHistoryFn(ctx, in)
 	}
 	return nil, nil
 }
@@ -169,4 +177,126 @@ func TestMutationResolver_AddTransaction(t *testing.T) {
 	if payload.Portfolio == nil {
 		t.Fatalf("expected portfolio in payload, got nil")
 	}
+}
+
+func TestQueryResolver_PortfolioHistory(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully maps valuation time series and returns", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			getPortfolioHistoryFn: func(ctx context.Context, in *pb.GetPortfolioHistoryRequest) (*pb.GetPortfolioHistoryResponse, error) {
+				if in.GetUserId() != "1" {
+					t.Errorf("expected user_id 1, got %s", in.GetUserId())
+				}
+				if in.GetTimeframe() != pb.HistoryTimeframe_HISTORY_TIMEFRAME_1M {
+					t.Errorf("expected timeframe 1M, got %v", in.GetTimeframe())
+				}
+				return &pb.GetPortfolioHistoryResponse{
+					Points: []*pb.ValuationPoint{
+						{
+							Date: "2026-04-01",
+							TotalValue: &commonpb.Money{
+								Amount:       &commonpb.Decimal{Value: "100000.00"},
+								CurrencyCode: "USD",
+							},
+							MarketValue: &commonpb.Money{
+								Amount:       &commonpb.Decimal{Value: "95000.00"},
+								CurrencyCode: "USD",
+							},
+							CashValue: &commonpb.Money{
+								Amount:       &commonpb.Decimal{Value: "5000.00"},
+								CurrencyCode: "USD",
+							},
+							TwrIndex:    &commonpb.Decimal{Value: "1.0000"},
+							DailyReturn: &commonpb.Decimal{Value: "0.0000"},
+						},
+						{
+							Date: "2026-05-01",
+							TotalValue: &commonpb.Money{
+								Amount:       &commonpb.Decimal{Value: "115000.00"},
+								CurrencyCode: "USD",
+							},
+							MarketValue: &commonpb.Money{
+								Amount:       &commonpb.Decimal{Value: "110000.00"},
+								CurrencyCode: "USD",
+							},
+							CashValue: &commonpb.Money{
+								Amount:       &commonpb.Decimal{Value: "5000.00"},
+								CurrencyCode: "USD",
+							},
+							TwrIndex:    &commonpb.Decimal{Value: "1.1500"},
+							DailyReturn: &commonpb.Decimal{Value: "0.0200"},
+						},
+					},
+					StartValue: &commonpb.Money{
+						Amount:       &commonpb.Decimal{Value: "100000.00"},
+						CurrencyCode: "USD",
+					},
+					EndValue: &commonpb.Money{
+						Amount:       &commonpb.Decimal{Value: "115000.00"},
+						CurrencyCode: "USD",
+					},
+					ReturnAmount: &commonpb.Money{
+						Amount:       &commonpb.Decimal{Value: "15000.00"},
+						CurrencyCode: "USD",
+					},
+					ReturnPercent: &commonpb.Decimal{Value: "15.00"},
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		res, err := qResolver.PortfolioHistory(ctx, model.HistoryTimeframeTimeframe1m)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res == nil {
+			t.Fatalf("expected result, got nil")
+		}
+		if len(res.Points) != 2 {
+			t.Fatalf("expected 2 points, got %d", len(res.Points))
+		}
+		if res.Points[0].Date != "2026-04-01" {
+			t.Errorf("expected date 2026-04-01, got %s", res.Points[0].Date)
+		}
+		if res.Points[0].TotalValue.CurrencyCode != "USD" {
+			t.Errorf("expected USD currency, got %s", res.Points[0].TotalValue.CurrencyCode)
+		}
+		if res.Points[1].DailyReturn == nil || res.Points[1].DailyReturn.String() != "0.02" {
+			t.Errorf("expected daily return 0.02, got %v", res.Points[1].DailyReturn)
+		}
+		if res.StartValue.Amount.String() != "100000" && res.StartValue.Amount.String() != "100000.00" {
+			t.Errorf("expected start value 100000.00, got %s", res.StartValue.Amount.String())
+		}
+		if res.EndValue.Amount.String() != "115000" && res.EndValue.Amount.String() != "115000.00" {
+			t.Errorf("expected end value 115000.00, got %s", res.EndValue.Amount.String())
+		}
+		if res.ReturnAmount.Amount.String() != "15000" && res.ReturnAmount.Amount.String() != "15000.00" {
+			t.Errorf("expected return amount 15000.00, got %s", res.ReturnAmount.Amount.String())
+		}
+		if res.ReturnPercent.String() != "15" && res.ReturnPercent.String() != "15.00" {
+			t.Errorf("expected return percent 15.00, got %s", res.ReturnPercent.String())
+		}
+	})
+
+	t.Run("propagates client error", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			getPortfolioHistoryFn: func(ctx context.Context, in *pb.GetPortfolioHistoryRequest) (*pb.GetPortfolioHistoryResponse, error) {
+				return nil, context.DeadlineExceeded
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		_, err := qResolver.PortfolioHistory(ctx, model.HistoryTimeframeTimeframe1y)
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		if err != context.DeadlineExceeded {
+			t.Errorf("expected DeadlineExceeded, got %v", err)
+		}
+	})
 }

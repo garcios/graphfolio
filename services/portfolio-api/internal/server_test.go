@@ -348,3 +348,153 @@ func TestPortfolioServer_ListInstruments(t *testing.T) {
 		}
 	})
 }
+
+func TestPortfolioServer_GetPortfolioHistory(t *testing.T) {
+	ctx := context.Background()
+
+	mockHistory := &domain.PortfolioHistory{
+		Points: []domain.ValuationPoint{
+			{
+				Date:        time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+				TotalValue:  domain.NewMoney(decimal.RequireFromString("100000.00"), "USD"),
+				MarketValue: domain.NewMoney(decimal.RequireFromString("95000.00"), "USD"),
+				CashValue:   domain.NewMoney(decimal.RequireFromString("5000.00"), "USD"),
+				TWRIndex:    decimal.RequireFromString("1.0000"),
+				DailyReturn: decimal.Zero,
+			},
+			{
+				Date:        time.Date(2026, 1, 2, 0, 0, 0, 0, time.UTC),
+				TotalValue:  domain.NewMoney(decimal.RequireFromString("105000.00"), "USD"),
+				MarketValue: domain.NewMoney(decimal.RequireFromString("100000.00"), "USD"),
+				CashValue:   domain.NewMoney(decimal.RequireFromString("5000.00"), "USD"),
+				TWRIndex:    decimal.RequireFromString("1.0500"),
+				DailyReturn: decimal.RequireFromString("0.0500"),
+			},
+		},
+		StartValue:    domain.NewMoney(decimal.RequireFromString("100000.00"), "USD"),
+		EndValue:      domain.NewMoney(decimal.RequireFromString("105000.00"), "USD"),
+		ReturnAmount:  domain.NewMoney(decimal.RequireFromString("5000.00"), "USD"),
+		ReturnPercent: decimal.RequireFromString("5.00"),
+	}
+
+	t.Run("success returns portfolio history proto", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().GetPortfolioHistory(ctx, "user-123", domain.Timeframe1M).Return(mockHistory, nil)
+
+		res, err := server.GetPortfolioHistory(ctx, &pb.GetPortfolioHistoryRequest{
+			UserId:    "user-123",
+			Timeframe: pb.HistoryTimeframe_HISTORY_TIMEFRAME_1M,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res == nil {
+			t.Fatalf("expected non-nil response")
+		}
+		if len(res.Points) != 2 {
+			t.Fatalf("expected 2 points, got %d", len(res.Points))
+		}
+		if res.Points[0].Date != "2026-01-01" {
+			t.Errorf("expected date 2026-01-01, got %s", res.Points[0].Date)
+		}
+		if res.Points[0].TotalValue.CurrencyCode != "USD" {
+			t.Errorf("expected currency USD, got %s", res.Points[0].TotalValue.CurrencyCode)
+		}
+		if res.StartValue.CurrencyCode != "USD" {
+			t.Errorf("expected USD start value currency, got %s", res.StartValue.CurrencyCode)
+		}
+	})
+
+	t.Run("defaults user id to 1 when empty", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().GetPortfolioHistory(ctx, "1", domain.Timeframe1Y).Return(mockHistory, nil)
+
+		res, err := server.GetPortfolioHistory(ctx, &pb.GetPortfolioHistoryRequest{
+			Timeframe: pb.HistoryTimeframe_HISTORY_TIMEFRAME_1Y,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res == nil {
+			t.Fatalf("expected non-nil response")
+		}
+	})
+
+	t.Run("unavailable when service is nil", func(t *testing.T) {
+		server := NewPortfolioServer(nil)
+		_, err := server.GetPortfolioHistory(ctx, &pb.GetPortfolioHistoryRequest{
+			Timeframe: pb.HistoryTimeframe_HISTORY_TIMEFRAME_1M,
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.Unavailable {
+			t.Errorf("expected Unavailable code, got: %v", st.Code())
+		}
+	})
+
+	t.Run("invalid argument on invalid timeframe", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		_, err := server.GetPortfolioHistory(ctx, &pb.GetPortfolioHistoryRequest{
+			UserId:    "user-123",
+			Timeframe: pb.HistoryTimeframe(999),
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument code, got: %v", st.Code())
+		}
+	})
+
+	t.Run("portfolio not found returns NotFound gRPC code", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().GetPortfolioHistory(ctx, "unknown-user", domain.TimeframeAll).Return(nil, repository.ErrPortfolioNotFound)
+
+		_, err := server.GetPortfolioHistory(ctx, &pb.GetPortfolioHistoryRequest{
+			UserId:    "unknown-user",
+			Timeframe: pb.HistoryTimeframe_HISTORY_TIMEFRAME_ALL,
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.NotFound {
+			t.Errorf("expected NotFound code, got: %v", st.Code())
+		}
+	})
+
+	t.Run("internal error on service error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().GetPortfolioHistory(ctx, "user-123", domain.Timeframe1W).Return(nil, errors.New("db failure"))
+
+		_, err := server.GetPortfolioHistory(ctx, &pb.GetPortfolioHistoryRequest{
+			UserId:    "user-123",
+			Timeframe: pb.HistoryTimeframe_HISTORY_TIMEFRAME_1W,
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.Internal {
+			t.Errorf("expected Internal code, got: %v", st.Code())
+		}
+	})
+}

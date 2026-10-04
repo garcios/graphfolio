@@ -118,3 +118,52 @@ func toProtoTransactionType(t model.TransactionType) pb.TransactionType {
 		return pb.TransactionType_TRANSACTION_TYPE_UNSPECIFIED
 	}
 }
+
+func toProtoHistoryTimeframe(t model.HistoryTimeframe) pb.HistoryTimeframe {
+	switch t {
+	case model.HistoryTimeframeTimeframe1d:
+		return pb.HistoryTimeframe_HISTORY_TIMEFRAME_1D
+	case model.HistoryTimeframeTimeframe1w:
+		return pb.HistoryTimeframe_HISTORY_TIMEFRAME_1W
+	case model.HistoryTimeframeTimeframe1m:
+		return pb.HistoryTimeframe_HISTORY_TIMEFRAME_1M
+	case model.HistoryTimeframeTimeframe1y:
+		return pb.HistoryTimeframe_HISTORY_TIMEFRAME_1Y
+	case model.HistoryTimeframeTimeframeAll:
+		return pb.HistoryTimeframe_HISTORY_TIMEFRAME_ALL
+	default:
+		return pb.HistoryTimeframe_HISTORY_TIMEFRAME_UNSPECIFIED
+	}
+}
+
+func toModelPortfolioHistory(resp *pb.GetPortfolioHistoryResponse) *model.PortfolioHistory {
+	if resp == nil {
+		return nil
+	}
+
+	points := make([]*model.ValuationPoint, len(resp.Points))
+	for i, pt := range resp.Points {
+		var dailyRet *model.Decimal
+		if pt.DailyReturn != nil {
+			d := toModelDecimal(pt.DailyReturn)
+			dailyRet = &d
+		}
+
+		points[i] = &model.ValuationPoint{
+			Date:        pt.Date,
+			TotalValue:  toModelMoney(pt.TotalValue),
+			MarketValue: toModelMoney(pt.MarketValue),
+			CashValue:   toModelMoney(pt.CashValue),
+			TwrIndex:    toModelDecimal(pt.TwrIndex),
+			DailyReturn: dailyRet,
+		}
+	}
+
+	return &model.PortfolioHistory{
+		Points:        points,
+		StartValue:    toModelMoney(resp.StartValue),
+		EndValue:      toModelMoney(resp.EndValue),
+		ReturnAmount:  toModelMoney(resp.ReturnAmount),
+		ReturnPercent: toModelDecimal(resp.ReturnPercent),
+	}
+}

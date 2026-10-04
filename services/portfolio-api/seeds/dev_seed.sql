@@ -40,6 +40,10 @@ DELETE FROM portfolio.transactions WHERE portfolio_id IN (
   '018f0000-0002-7000-8000-000000000001',
   '018f0000-0002-7000-8000-000000000002'
 );
+DELETE FROM portfolio.portfolio_valuations WHERE portfolio_id IN (
+  '018f0000-0002-7000-8000-000000000001',
+  '018f0000-0002-7000-8000-000000000002'
+);
 
 -- 5. Seed Transactions for Main Portfolio
 -- Initial Deposit
@@ -100,21 +104,81 @@ ON CONFLICT (portfolio_id, instrument_id) DO UPDATE SET
   cost_basis = EXCLUDED.cost_basis,
   cost_basis_base = EXCLUDED.cost_basis_base;
 
--- 10. Projections: Valuation Snapshot
+-- 10. Projections: 365-Day Historical Valuation Snapshots
+WITH date_series AS (
+  SELECT 
+    s::date AS val_date,
+    ROW_NUMBER() OVER (ORDER BY s ASC) - 1 AS day_idx,
+    COUNT(*) OVER () - 1 AS total_days
+  FROM generate_series(CURRENT_DATE - INTERVAL '365 days', CURRENT_DATE, '1 day') AS s
+),
+curves AS (
+  SELECT
+    val_date,
+    day_idx,
+    total_days,
+    day_idx::numeric / NULLIF(total_days::numeric, 0) AS progress,
+    sin((day_idx::numeric / NULLIF(total_days::numeric, 0)) * pi()) AS envelope,
+    sin(day_idx::numeric * 0.12) * 1500.0 + cos(day_idx::numeric * 0.05) * 2200.0 + sin(day_idx::numeric * 0.25) * 600.0 AS wave
+  FROM date_series
+),
+valuations AS (
+  SELECT
+    val_date,
+    ROUND(
+      (CASE 
+        WHEN val_date = CURRENT_DATE THEN 8450.00
+        ELSE 7500.00 + (950.00 * progress) + (envelope * sin(day_idx::numeric * 0.08) * 300.0)
+      END)::numeric, 2
+    ) AS cash_val,
+    ROUND(
+      (CASE 
+        WHEN val_date = CURRENT_DATE THEN 116082.89
+        ELSE 97500.00 + (18582.89 * progress) + (envelope * wave)
+      END)::numeric, 2
+    ) AS market_val,
+    ROUND(
+      (CASE
+        WHEN val_date = CURRENT_DATE THEN 1.1420
+        ELSE 1.0000 + (0.1420 * progress) + (envelope * wave / 100000.0)
+      END)::numeric, 4
+    ) AS twr
+  FROM curves
+),
+computed AS (
+  SELECT
+    val_date,
+    market_val,
+    cash_val,
+    twr,
+    CASE 
+      WHEN val_date = CURRENT_DATE THEN 0.010000000000
+      WHEN LAG(market_val + cash_val) OVER (ORDER BY val_date) IS NULL THEN 0.000000000000
+      ELSE ROUND(
+        (((market_val + cash_val) - LAG(market_val + cash_val) OVER (ORDER BY val_date)) 
+        / LAG(market_val + cash_val) OVER (ORDER BY val_date))::numeric,
+        12
+      )
+    END AS ret
+  FROM valuations
+)
 INSERT INTO portfolio.portfolio_valuations (
   portfolio_id, valuation_date, market_value_base, cash_value_base, net_flow_base, daily_return, twr_index
-) VALUES (
-  '018f0000-0002-7000-8000-000000000001',
-  CURRENT_DATE,
-  116082.89,
-  8450.00,
-  0,
-  0.0100,
-  1.1420
 )
+SELECT
+  '018f0000-0002-7000-8000-000000000001',
+  val_date,
+  market_val,
+  cash_val,
+  0,
+  ret,
+  twr
+FROM computed
 ON CONFLICT (portfolio_id, valuation_date) DO UPDATE SET
   market_value_base = EXCLUDED.market_value_base,
   cash_value_base = EXCLUDED.cash_value_base,
+  net_flow_base = EXCLUDED.net_flow_base,
+  daily_return = EXCLUDED.daily_return,
   twr_index = EXCLUDED.twr_index;
 
 -- 11. Cost Basis Fixtures for FIFO demo portfolio

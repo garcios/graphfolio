@@ -1,12 +1,8 @@
 import { useEffect, useState } from 'react';
-import { createClient } from '../generated';
+import { client } from '../graphql/client';
 import './Dashboard.css';
-import chartImage from '../assets/portfolio_chart.jpg';
 import { AddTransactionModal } from './AddTransactionModal';
-
-const client = createClient({
-  url: 'http://localhost:8080/query',
-});
+import { PerformanceChart } from './PerformanceChart';
 
 interface Money {
   amount: string;
@@ -125,22 +121,7 @@ export const Dashboard = () => {
         </div>
       </section>
 
-      <section className="chart-container">
-        <div className="chart-header">
-          <h3>Performance</h3>
-          <div className="time-filters">
-            <button>1D</button>
-            <button>1W</button>
-            <button>1M</button>
-            <button className="active">1Y</button>
-            <button>ALL</button>
-          </div>
-        </div>
-        <div className="chart-area">
-          <img src={chartImage} alt="Portfolio Performance Chart" className="mock-chart-img" />
-          <div className="chart-overlay-gradient"></div>
-        </div>
-      </section>
+      <PerformanceChart />
 
       <section className="investments-section">
         <div className="table-card">

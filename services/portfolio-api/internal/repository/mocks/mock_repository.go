@@ -13,6 +13,7 @@ import (
 	context "context"
 	domain "portfolio-api/internal/domain"
 	reflect "reflect"
+	time "time"
 
 	uuid "github.com/google/uuid"
 	decimal "github.com/shopspring/decimal"
@@ -161,6 +162,21 @@ func (m *MockRepository) GetLatestValuation(ctx context.Context, portfolioID uui
 func (mr *MockRepositoryMockRecorder) GetLatestValuation(ctx, portfolioID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLatestValuation", reflect.TypeOf((*MockRepository)(nil).GetLatestValuation), ctx, portfolioID)
+}
+
+// GetPortfolioValuations mocks base method.
+func (m *MockRepository) GetPortfolioValuations(ctx context.Context, portfolioID uuid.UUID, fromDate time.Time) ([]domain.PortfolioValuation, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPortfolioValuations", ctx, portfolioID, fromDate)
+	ret0, _ := ret[0].([]domain.PortfolioValuation)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPortfolioValuations indicates an expected call of GetPortfolioValuations.
+func (mr *MockRepositoryMockRecorder) GetPortfolioValuations(ctx, portfolioID, fromDate any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPortfolioValuations", reflect.TypeOf((*MockRepository)(nil).GetPortfolioValuations), ctx, portfolioID, fromDate)
 }
 
 // GetTransactions mocks base method.
