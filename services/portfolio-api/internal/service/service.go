@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"portfolio-api/internal/domain"
 	"portfolio-api/internal/repository"
@@ -14,14 +15,19 @@ type PortfolioService interface {
 	RebuildProjections(ctx context.Context, userID string) error
 	AddTransaction(ctx context.Context, input domain.AddTransactionInput) (*domain.Transaction, *domain.PortfolioSummary, error)
 	ListInstruments(ctx context.Context) ([]domain.Instrument, error)
+	GetPortfolioHistory(ctx context.Context, userID string, timeframe domain.HistoryTimeframe) (*domain.PortfolioHistory, error)
 }
 
 type portfolioService struct {
-	repo repository.Repository
+	repo    repository.Repository
+	nowFunc func() time.Time
 }
 
 func NewPortfolioService(repo repository.Repository) PortfolioService {
-	return &portfolioService{repo: repo}
+	return &portfolioService{
+		repo:    repo,
+		nowFunc: func() time.Time { return time.Now().UTC() },
+	}
 }
 
 func (s *portfolioService) GetPortfolioSummary(ctx context.Context, userID string) (*domain.PortfolioSummary, error) {

@@ -57,6 +57,21 @@ func (mr *MockPortfolioServiceMockRecorder) AddTransaction(ctx, input any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTransaction", reflect.TypeOf((*MockPortfolioService)(nil).AddTransaction), ctx, input)
 }
 
+// GetPortfolioHistory mocks base method.
+func (m *MockPortfolioService) GetPortfolioHistory(ctx context.Context, userID string, timeframe domain.HistoryTimeframe) (*domain.PortfolioHistory, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetPortfolioHistory", ctx, userID, timeframe)
+	ret0, _ := ret[0].(*domain.PortfolioHistory)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetPortfolioHistory indicates an expected call of GetPortfolioHistory.
+func (mr *MockPortfolioServiceMockRecorder) GetPortfolioHistory(ctx, userID, timeframe any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPortfolioHistory", reflect.TypeOf((*MockPortfolioService)(nil).GetPortfolioHistory), ctx, userID, timeframe)
+}
+
 // GetPortfolioSummary mocks base method.
 func (m *MockPortfolioService) GetPortfolioSummary(ctx context.Context, userID string) (*domain.PortfolioSummary, error) {
 	m.ctrl.T.Helper()

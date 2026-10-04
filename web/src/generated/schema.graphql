@@ -48,6 +48,32 @@ type Instrument {
 type Query {
   portfolio: Portfolio!
   instruments: [Instrument!]!
+  portfolioHistory(timeframe: HistoryTimeframe!): PortfolioHistory!
+}
+
+enum HistoryTimeframe {
+  TIMEFRAME_1D
+  TIMEFRAME_1W
+  TIMEFRAME_1M
+  TIMEFRAME_1Y
+  TIMEFRAME_ALL
+}
+
+type ValuationPoint {
+  date: String!
+  totalValue: Money!
+  marketValue: Money!
+  cashValue: Money!
+  twrIndex: Decimal!
+  dailyReturn: Decimal
+}
+
+type PortfolioHistory {
+  points: [ValuationPoint!]!
+  startValue: Money!
+  endValue: Money!
+  returnAmount: Money!
+  returnPercent: Decimal!
 }
 
 type Mutation {

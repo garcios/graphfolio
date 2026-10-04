@@ -36,7 +36,29 @@ export interface Instrument {
 export interface Query {
     portfolio: Portfolio
     instruments: Instrument[]
+    portfolioHistory: PortfolioHistory
     __typename: 'Query'
+}
+
+export type HistoryTimeframe = 'TIMEFRAME_1D' | 'TIMEFRAME_1W' | 'TIMEFRAME_1M' | 'TIMEFRAME_1Y' | 'TIMEFRAME_ALL'
+
+export interface ValuationPoint {
+    date: Scalars['String']
+    totalValue: Money
+    marketValue: Money
+    cashValue: Money
+    twrIndex: Scalars['Decimal']
+    dailyReturn: (Scalars['Decimal'] | null)
+    __typename: 'ValuationPoint'
+}
+
+export interface PortfolioHistory {
+    points: ValuationPoint[]
+    startValue: Money
+    endValue: Money
+    returnAmount: Money
+    returnPercent: Scalars['Decimal']
+    __typename: 'PortfolioHistory'
 }
 
 export interface Mutation {
@@ -97,6 +119,28 @@ export interface InstrumentGenqlSelection{
 export interface QueryGenqlSelection{
     portfolio?: PortfolioGenqlSelection
     instruments?: InstrumentGenqlSelection
+    portfolioHistory?: (PortfolioHistoryGenqlSelection & { __args: {timeframe: HistoryTimeframe} })
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface ValuationPointGenqlSelection{
+    date?: boolean | number
+    totalValue?: MoneyGenqlSelection
+    marketValue?: MoneyGenqlSelection
+    cashValue?: MoneyGenqlSelection
+    twrIndex?: boolean | number
+    dailyReturn?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface PortfolioHistoryGenqlSelection{
+    points?: ValuationPointGenqlSelection
+    startValue?: MoneyGenqlSelection
+    endValue?: MoneyGenqlSelection
+    returnAmount?: MoneyGenqlSelection
+    returnPercent?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -166,6 +210,22 @@ export interface InvestmentGenqlSelection{
     
 
 
+    const ValuationPoint_possibleTypes: string[] = ['ValuationPoint']
+    export const isValuationPoint = (obj?: { __typename?: any } | null): obj is ValuationPoint => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isValuationPoint"')
+      return ValuationPoint_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const PortfolioHistory_possibleTypes: string[] = ['PortfolioHistory']
+    export const isPortfolioHistory = (obj?: { __typename?: any } | null): obj is PortfolioHistory => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isPortfolioHistory"')
+      return PortfolioHistory_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
     const Mutation_possibleTypes: string[] = ['Mutation']
     export const isMutation = (obj?: { __typename?: any } | null): obj is Mutation => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isMutation"')
@@ -201,4 +261,12 @@ export const enumTransactionType = {
    TRANSFER_IN: 'TRANSFER_IN' as const,
    TRANSFER_OUT: 'TRANSFER_OUT' as const,
    FX_CONVERSION: 'FX_CONVERSION' as const
+}
+
+export const enumHistoryTimeframe = {
+   TIMEFRAME_1D: 'TIMEFRAME_1D' as const,
+   TIMEFRAME_1W: 'TIMEFRAME_1W' as const,
+   TIMEFRAME_1M: 'TIMEFRAME_1M' as const,
+   TIMEFRAME_1Y: 'TIMEFRAME_1Y' as const,
+   TIMEFRAME_ALL: 'TIMEFRAME_ALL' as const
 }

@@ -4,7 +4,8 @@ export default {
         2,
         3,
         7,
-        12
+        9,
+        15
     ],
     "types": {
         "Decimal": {},
@@ -58,7 +59,7 @@ export default {
                 2
             ],
             "portfolio": [
-                10
+                13
             ],
             "__typename": [
                 2
@@ -87,10 +88,63 @@ export default {
         "ID": {},
         "Query": {
             "portfolio": [
-                10
+                13
             ],
             "instruments": [
                 6
+            ],
+            "portfolioHistory": [
+                11,
+                {
+                    "timeframe": [
+                        9,
+                        "HistoryTimeframe!"
+                    ]
+                }
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "HistoryTimeframe": {},
+        "ValuationPoint": {
+            "date": [
+                2
+            ],
+            "totalValue": [
+                1
+            ],
+            "marketValue": [
+                1
+            ],
+            "cashValue": [
+                1
+            ],
+            "twrIndex": [
+                0
+            ],
+            "dailyReturn": [
+                0
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "PortfolioHistory": {
+            "points": [
+                10
+            ],
+            "startValue": [
+                1
+            ],
+            "endValue": [
+                1
+            ],
+            "returnAmount": [
+                1
+            ],
+            "returnPercent": [
+                0
             ],
             "__typename": [
                 2
@@ -127,7 +181,7 @@ export default {
                 1
             ],
             "investments": [
-                11
+                14
             ],
             "__typename": [
                 2

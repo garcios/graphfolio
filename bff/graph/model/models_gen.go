@@ -64,7 +64,85 @@ type Portfolio struct {
 	Investments             []*Investment `json:"investments"`
 }
 
+type PortfolioHistory struct {
+	Points        []*ValuationPoint `json:"points"`
+	StartValue    *Money            `json:"startValue"`
+	EndValue      *Money            `json:"endValue"`
+	ReturnAmount  *Money            `json:"returnAmount"`
+	ReturnPercent Decimal           `json:"returnPercent"`
+}
+
 type Query struct {
+}
+
+type ValuationPoint struct {
+	Date        string   `json:"date"`
+	TotalValue  *Money   `json:"totalValue"`
+	MarketValue *Money   `json:"marketValue"`
+	CashValue   *Money   `json:"cashValue"`
+	TwrIndex    Decimal  `json:"twrIndex"`
+	DailyReturn *Decimal `json:"dailyReturn,omitempty"`
+}
+
+type HistoryTimeframe string
+
+const (
+	HistoryTimeframeTimeframe1d  HistoryTimeframe = "TIMEFRAME_1D"
+	HistoryTimeframeTimeframe1w  HistoryTimeframe = "TIMEFRAME_1W"
+	HistoryTimeframeTimeframe1m  HistoryTimeframe = "TIMEFRAME_1M"
+	HistoryTimeframeTimeframe1y  HistoryTimeframe = "TIMEFRAME_1Y"
+	HistoryTimeframeTimeframeAll HistoryTimeframe = "TIMEFRAME_ALL"
+)
+
+var AllHistoryTimeframe = []HistoryTimeframe{
+	HistoryTimeframeTimeframe1d,
+	HistoryTimeframeTimeframe1w,
+	HistoryTimeframeTimeframe1m,
+	HistoryTimeframeTimeframe1y,
+	HistoryTimeframeTimeframeAll,
+}
+
+func (e HistoryTimeframe) IsValid() bool {
+	switch e {
+	case HistoryTimeframeTimeframe1d, HistoryTimeframeTimeframe1w, HistoryTimeframeTimeframe1m, HistoryTimeframeTimeframe1y, HistoryTimeframeTimeframeAll:
+		return true
+	}
+	return false
+}
+
+func (e HistoryTimeframe) String() string {
+	return string(e)
+}
+
+func (e *HistoryTimeframe) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = HistoryTimeframe(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid HistoryTimeframe", str)
+	}
+	return nil
+}
+
+func (e HistoryTimeframe) MarshalGQL(w io.Writer) {
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *HistoryTimeframe) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e HistoryTimeframe) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }
 
 type TransactionType string

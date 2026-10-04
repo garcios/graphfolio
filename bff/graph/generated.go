@@ -81,9 +81,27 @@ type ComplexityRoot struct {
 		TotalValue              func(childComplexity int) int
 	}
 
+	PortfolioHistory struct {
+		EndValue      func(childComplexity int) int
+		Points        func(childComplexity int) int
+		ReturnAmount  func(childComplexity int) int
+		ReturnPercent func(childComplexity int) int
+		StartValue    func(childComplexity int) int
+	}
+
 	Query struct {
-		Instruments func(childComplexity int) int
-		Portfolio   func(childComplexity int) int
+		Instruments      func(childComplexity int) int
+		Portfolio        func(childComplexity int) int
+		PortfolioHistory func(childComplexity int, timeframe model.HistoryTimeframe) int
+	}
+
+	ValuationPoint struct {
+		CashValue   func(childComplexity int) int
+		DailyReturn func(childComplexity int) int
+		Date        func(childComplexity int) int
+		MarketValue func(childComplexity int) int
+		TotalValue  func(childComplexity int) int
+		TwrIndex    func(childComplexity int) int
 	}
 }
 
@@ -97,6 +115,7 @@ type MutationResolver interface {
 type QueryResolver interface {
 	Portfolio(ctx context.Context) (*model.Portfolio, error)
 	Instruments(ctx context.Context) ([]*model.Instrument, error)
+	PortfolioHistory(ctx context.Context, timeframe model.HistoryTimeframe) (*model.PortfolioHistory, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -284,6 +303,37 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.Portfolio.TotalValue(childComplexity), true
 
+	case "PortfolioHistory.endValue":
+		if e.ComplexityRoot.PortfolioHistory.EndValue == nil {
+			break
+		}
+
+		return e.ComplexityRoot.PortfolioHistory.EndValue(childComplexity), true
+	case "PortfolioHistory.points":
+		if e.ComplexityRoot.PortfolioHistory.Points == nil {
+			break
+		}
+
+		return e.ComplexityRoot.PortfolioHistory.Points(childComplexity), true
+	case "PortfolioHistory.returnAmount":
+		if e.ComplexityRoot.PortfolioHistory.ReturnAmount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.PortfolioHistory.ReturnAmount(childComplexity), true
+	case "PortfolioHistory.returnPercent":
+		if e.ComplexityRoot.PortfolioHistory.ReturnPercent == nil {
+			break
+		}
+
+		return e.ComplexityRoot.PortfolioHistory.ReturnPercent(childComplexity), true
+	case "PortfolioHistory.startValue":
+		if e.ComplexityRoot.PortfolioHistory.StartValue == nil {
+			break
+		}
+
+		return e.ComplexityRoot.PortfolioHistory.StartValue(childComplexity), true
+
 	case "Query.instruments":
 		if e.ComplexityRoot.Query.Instruments == nil {
 			break
@@ -297,6 +347,54 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.Portfolio(childComplexity), true
+	case "Query.portfolioHistory":
+		if e.ComplexityRoot.Query.PortfolioHistory == nil {
+			break
+		}
+
+		args, err := ec.field_Query_portfolioHistory_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.PortfolioHistory(childComplexity, args["timeframe"].(model.HistoryTimeframe)), true
+
+	case "ValuationPoint.cashValue":
+		if e.ComplexityRoot.ValuationPoint.CashValue == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ValuationPoint.CashValue(childComplexity), true
+	case "ValuationPoint.dailyReturn":
+		if e.ComplexityRoot.ValuationPoint.DailyReturn == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ValuationPoint.DailyReturn(childComplexity), true
+	case "ValuationPoint.date":
+		if e.ComplexityRoot.ValuationPoint.Date == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ValuationPoint.Date(childComplexity), true
+	case "ValuationPoint.marketValue":
+		if e.ComplexityRoot.ValuationPoint.MarketValue == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ValuationPoint.MarketValue(childComplexity), true
+	case "ValuationPoint.totalValue":
+		if e.ComplexityRoot.ValuationPoint.TotalValue == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ValuationPoint.TotalValue(childComplexity), true
+	case "ValuationPoint.twrIndex":
+		if e.ComplexityRoot.ValuationPoint.TwrIndex == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ValuationPoint.TwrIndex(childComplexity), true
 
 	}
 	return 0, false
@@ -481,6 +579,40 @@ func (ec *executionContext) childFields_Portfolio(ctx context.Context, field gra
 	return nil, fmt.Errorf("no field named %q was found under type Portfolio", field.Name)
 }
 
+func (ec *executionContext) childFields_PortfolioHistory(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "points":
+		return ec.fieldContext_PortfolioHistory_points(ctx, field)
+	case "startValue":
+		return ec.fieldContext_PortfolioHistory_startValue(ctx, field)
+	case "endValue":
+		return ec.fieldContext_PortfolioHistory_endValue(ctx, field)
+	case "returnAmount":
+		return ec.fieldContext_PortfolioHistory_returnAmount(ctx, field)
+	case "returnPercent":
+		return ec.fieldContext_PortfolioHistory_returnPercent(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type PortfolioHistory", field.Name)
+}
+
+func (ec *executionContext) childFields_ValuationPoint(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "date":
+		return ec.fieldContext_ValuationPoint_date(ctx, field)
+	case "totalValue":
+		return ec.fieldContext_ValuationPoint_totalValue(ctx, field)
+	case "marketValue":
+		return ec.fieldContext_ValuationPoint_marketValue(ctx, field)
+	case "cashValue":
+		return ec.fieldContext_ValuationPoint_cashValue(ctx, field)
+	case "twrIndex":
+		return ec.fieldContext_ValuationPoint_twrIndex(ctx, field)
+	case "dailyReturn":
+		return ec.fieldContext_ValuationPoint_dailyReturn(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type ValuationPoint", field.Name)
+}
+
 func (ec *executionContext) childFields___Directive(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "name":
@@ -622,6 +754,20 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		return nil, err
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_portfolioHistory_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "timeframe",
+		func(ctx context.Context, v any) (model.HistoryTimeframe, error) {
+			return ec.unmarshalNHistoryTimeframe2bffᚋgraphᚋmodelᚐHistoryTimeframe(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["timeframe"] = arg0
 	return args, nil
 }
 
@@ -1385,6 +1531,157 @@ func (ec *executionContext) fieldContext_Portfolio_investments(_ context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _PortfolioHistory_points(ctx context.Context, field graphql.CollectedField, obj *model.PortfolioHistory) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PortfolioHistory_points(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Points, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.ValuationPoint) graphql.Marshaler {
+			return ec.marshalNValuationPoint2ᚕᚖbffᚋgraphᚋmodelᚐValuationPointᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_PortfolioHistory_points(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PortfolioHistory",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_ValuationPoint(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PortfolioHistory_startValue(ctx context.Context, field graphql.CollectedField, obj *model.PortfolioHistory) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PortfolioHistory_startValue(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.StartValue, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_PortfolioHistory_startValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PortfolioHistory",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PortfolioHistory_endValue(ctx context.Context, field graphql.CollectedField, obj *model.PortfolioHistory) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PortfolioHistory_endValue(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.EndValue, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_PortfolioHistory_endValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PortfolioHistory",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PortfolioHistory_returnAmount(ctx context.Context, field graphql.CollectedField, obj *model.PortfolioHistory) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PortfolioHistory_returnAmount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ReturnAmount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_PortfolioHistory_returnAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "PortfolioHistory",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _PortfolioHistory_returnPercent(ctx context.Context, field graphql.CollectedField, obj *model.PortfolioHistory) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_PortfolioHistory_returnPercent(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ReturnPercent, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_PortfolioHistory_returnPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("PortfolioHistory", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
 func (ec *executionContext) _Query_portfolio(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -1445,6 +1742,50 @@ func (ec *executionContext) fieldContext_Query_instruments(_ context.Context, fi
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return ec.childFields_Instrument(ctx, field)
 		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_portfolioHistory(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_portfolioHistory(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().PortfolioHistory(ctx, fc.Args["timeframe"].(model.HistoryTimeframe))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.PortfolioHistory) graphql.Marshaler {
+			return ec.marshalNPortfolioHistory2ᚖbffᚋgraphᚋmodelᚐPortfolioHistory(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_portfolioHistory(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_PortfolioHistory(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_portfolioHistory_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -1523,6 +1864,171 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _ValuationPoint_date(ctx context.Context, field graphql.CollectedField, obj *model.ValuationPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ValuationPoint_date(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Date, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ValuationPoint_date(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ValuationPoint", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _ValuationPoint_totalValue(ctx context.Context, field graphql.CollectedField, obj *model.ValuationPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ValuationPoint_totalValue(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TotalValue, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ValuationPoint_totalValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ValuationPoint",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ValuationPoint_marketValue(ctx context.Context, field graphql.CollectedField, obj *model.ValuationPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ValuationPoint_marketValue(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.MarketValue, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ValuationPoint_marketValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ValuationPoint",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ValuationPoint_cashValue(ctx context.Context, field graphql.CollectedField, obj *model.ValuationPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ValuationPoint_cashValue(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CashValue, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ValuationPoint_cashValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ValuationPoint",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ValuationPoint_twrIndex(ctx context.Context, field graphql.CollectedField, obj *model.ValuationPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ValuationPoint_twrIndex(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TwrIndex, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ValuationPoint_twrIndex(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ValuationPoint", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _ValuationPoint_dailyReturn(ctx context.Context, field graphql.CollectedField, obj *model.ValuationPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ValuationPoint_dailyReturn(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DailyReturn, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Decimal) graphql.Marshaler {
+			return ec.marshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_ValuationPoint_dailyReturn(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ValuationPoint", field, false, false, errors.New("field of type Decimal does not have child fields"))
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -3016,6 +3522,64 @@ func (ec *executionContext) _Portfolio(ctx context.Context, sel ast.SelectionSet
 	return out
 }
 
+var portfolioHistoryImplementors = []string{"PortfolioHistory"}
+
+func (ec *executionContext) _PortfolioHistory(ctx context.Context, sel ast.SelectionSet, obj *model.PortfolioHistory) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, portfolioHistoryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("PortfolioHistory")
+		case "points":
+			out.Values[i] = ec._PortfolioHistory_points(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "startValue":
+			out.Values[i] = ec._PortfolioHistory_startValue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "endValue":
+			out.Values[i] = ec._PortfolioHistory_endValue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "returnAmount":
+			out.Values[i] = ec._PortfolioHistory_returnAmount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "returnPercent":
+			out.Values[i] = ec._PortfolioHistory_returnPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
 var queryImplementors = []string{"Query"}
 
 func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -3080,6 +3644,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "portfolioHistory":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_portfolioHistory(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -3093,6 +3679,69 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			})
 			if out.Values[i] == graphql.RequiredNull {
 				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var valuationPointImplementors = []string{"ValuationPoint"}
+
+func (ec *executionContext) _ValuationPoint(ctx context.Context, sel ast.SelectionSet, obj *model.ValuationPoint) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, valuationPointImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ValuationPoint")
+		case "date":
+			out.Values[i] = ec._ValuationPoint_date(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalValue":
+			out.Values[i] = ec._ValuationPoint_totalValue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "marketValue":
+			out.Values[i] = ec._ValuationPoint_marketValue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cashValue":
+			out.Values[i] = ec._ValuationPoint_cashValue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "twrIndex":
+			out.Values[i] = ec._ValuationPoint_twrIndex(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "dailyReturn":
+			out.Values[i] = ec._ValuationPoint_dailyReturn(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -3548,6 +4197,16 @@ func (ec *executionContext) marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx co
 	return v
 }
 
+func (ec *executionContext) unmarshalNHistoryTimeframe2bffᚋgraphᚋmodelᚐHistoryTimeframe(ctx context.Context, v any) (model.HistoryTimeframe, error) {
+	var res model.HistoryTimeframe
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNHistoryTimeframe2bffᚋgraphᚋmodelᚐHistoryTimeframe(ctx context.Context, sel ast.SelectionSet, v model.HistoryTimeframe) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalID(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3636,6 +4295,16 @@ func (ec *executionContext) marshalNPortfolio2ᚖbffᚋgraphᚋmodelᚐPortfolio
 	return ec._Portfolio(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNPortfolioHistory2ᚖbffᚋgraphᚋmodelᚐPortfolioHistory(ctx context.Context, sel ast.SelectionSet, v *model.PortfolioHistory) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._PortfolioHistory(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v any) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -3660,6 +4329,32 @@ func (ec *executionContext) unmarshalNTransactionType2bffᚋgraphᚋmodelᚐTran
 
 func (ec *executionContext) marshalNTransactionType2bffᚋgraphᚋmodelᚐTransactionType(ctx context.Context, sel ast.SelectionSet, v model.TransactionType) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNValuationPoint2ᚕᚖbffᚋgraphᚋmodelᚐValuationPointᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ValuationPoint) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNValuationPoint2ᚖbffᚋgraphᚋmodelᚐValuationPoint(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNValuationPoint2ᚖbffᚋgraphᚋmodelᚐValuationPoint(ctx context.Context, sel ast.SelectionSet, v *model.ValuationPoint) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ValuationPoint(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {

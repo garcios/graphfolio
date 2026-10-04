@@ -14,7 +14,7 @@ This document catalogs all implemented features, in-progress components, and pla
 | **4** | **Backend-for-Frontend (BFF) GraphQL Layer** | **DONE** | BFF (`gqlgen`), gRPC Client | [portfolio-service-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/portfolio-service-implementation-plan.md) |
 | **5** | **Investor Dashboard Web Application** | **DONE** | Web (React, Vite, GenQL) | [portfolio-service-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/portfolio-service-implementation-plan.md) |
 | **6** | **Interactive Transaction Ingestion Modal** | **DONE** | Proto, Svc, BFF, Web | [add-transactions-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/add-transactions-implementation-plan.md) |
-| **7** | **Interactive SVG Performance Chart & Time Range Filtering** | **PLANNED** | Proto, Svc, BFF, Web | [performance-chart-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/performance-chart-implementation-plan.md) |
+| **7** | **Interactive SVG Performance Chart & Time Range Filtering** | **DONE** | Proto, Svc, BFF, Web | [performance-chart-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/performance-chart-implementation-plan.md) |
 | **8** | **Transaction History & Ledger Management** | **PLANNED** | Proto, Svc, BFF, Web | [transaction-history-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/transaction-history-implementation-plan.md) |
 | **9** | **Dynamic Cost Basis Method Switching (Average Cost ↔ FIFO)** | **PLANNED** | Proto, Svc, BFF, Web | [cost-basis-switching-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/cost-basis-switching-implementation-plan.md) |
 | **10** | **User Preferences & Display Currency** | **PLANNED** | Proto, User API, BFF, Web | [user-preferences-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-preferences-implementation-plan.md) |
@@ -83,19 +83,21 @@ This document catalogs all implemented features, in-progress components, and pla
   - [AddTransactionModal.css](file:///Users/oscargarcia/workspace/graphfolio/web/src/components/AddTransactionModal.css)
   - [transaction.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/transaction.go)
 
+### 2.7 Interactive SVG Performance Chart & Time Range Filtering
+- **Status**: **DONE**
+- **Plan Reference**: [performance-chart-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/performance-chart-implementation-plan.md)
+- **Description**: Replaced static placeholder chart with an interactive, data-driven SVG performance curve. Driven by time-series snapshots in `portfolio.portfolio_valuations` (with a 365-day seed series), queried across `1D`, `1W`, `1M`, `1Y`, and `ALL` timeframes. Features smooth Catmull-Rom Bezier curves, dynamic gradient glows, hover crosshairs with micro-animations, and floating glassmorphism tooltips showing total value, market/cash splits, and cumulative return.
+- **Key Files**:
+  - [portfolio.proto](file:///Users/oscargarcia/workspace/graphfolio/proto/portfolio/v1/portfolio.proto)
+  - [history.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/history.go)
+  - [schema.graphqls](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls)
+  - [schema.resolvers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers.go)
+  - [PerformanceChart.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/src/components/PerformanceChart.tsx)
+  - [PerformanceChart.css](file:///Users/oscargarcia/workspace/graphfolio/web/src/components/PerformanceChart.css)
+
 ---
 
 ## 3. Planned Features (`PLANNED`)
-
-### 3.1 Interactive SVG Performance Chart & Time Range Filtering
-- **Status**: **PLANNED**
-- **Plan Reference**: [performance-chart-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/performance-chart-implementation-plan.md)
-- **Scope**: `proto/`, `services/portfolio-api`, `bff/`, `web/`
-- **Highlights**:
-  - Replaces static placeholder asset with an interactive SVG performance chart.
-  - Time range selector buttons: `1W`, `1M`, `3M`, `YTD`, `1Y`, `ALL`.
-  - Queries daily Time-Weighted Return (TWR) and valuation curves from `portfolio.portfolio_valuations`.
-  - Interactive crosshairs, tooltips showing date and valuation, gradient fills, and performance delta pills.
 
 ### 3.2 Transaction History & Ledger Management
 - **Status**: **PLANNED**

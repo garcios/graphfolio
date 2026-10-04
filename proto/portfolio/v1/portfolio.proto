@@ -10,6 +10,7 @@ service PortfolioService {
   rpc GetPortfolio(GetPortfolioRequest) returns (GetPortfolioResponse) {}
   rpc AddTransaction(AddTransactionRequest) returns (AddTransactionResponse) {}
   rpc ListInstruments(ListInstrumentsRequest) returns (ListInstrumentsResponse) {}
+  rpc GetPortfolioHistory(GetPortfolioHistoryRequest) returns (GetPortfolioHistoryResponse) {}
 }
 
 message GetPortfolioRequest {
@@ -86,4 +87,35 @@ message Investment {
   common.v1.Decimal today_return_percent = 8;
   common.v1.Money   total_return_amount  = 9;
   common.v1.Decimal total_return_percent = 10;
+}
+
+enum HistoryTimeframe {
+  HISTORY_TIMEFRAME_UNSPECIFIED = 0;
+  HISTORY_TIMEFRAME_1D = 1;
+  HISTORY_TIMEFRAME_1W = 2;
+  HISTORY_TIMEFRAME_1M = 3;
+  HISTORY_TIMEFRAME_1Y = 4;
+  HISTORY_TIMEFRAME_ALL = 5;
+}
+
+message ValuationPoint {
+  string            date         = 1; // YYYY-MM-DD
+  common.v1.Money   total_value  = 2; // Market value + cash value
+  common.v1.Money   market_value = 3;
+  common.v1.Money   cash_value   = 4;
+  common.v1.Decimal twr_index    = 5;
+  common.v1.Decimal daily_return = 6;
+}
+
+message GetPortfolioHistoryRequest {
+  string           user_id   = 1;
+  HistoryTimeframe timeframe = 2;
+}
+
+message GetPortfolioHistoryResponse {
+  repeated ValuationPoint points         = 1;
+  common.v1.Money         start_value    = 2;
+  common.v1.Money         end_value      = 3;
+  common.v1.Money         return_amount  = 4;
+  common.v1.Decimal       return_percent = 5;
 }
