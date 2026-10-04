@@ -3,6 +3,7 @@ go 1.26
 use (
 	./bff
 	./pkg
+	./proto
 	./services/portfolio-api
 	./services/user-api
 )

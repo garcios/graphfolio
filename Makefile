@@ -16,10 +16,14 @@ run-bff:
 	@echo "Starting BFF server..."
 	cd bff/cmd/server && go run main.go
 
+run-portfolio:
+	@echo "Starting Portfolio API..."
+	cd services/portfolio-api/cmd/server && go run main.go
+
 run-web:
 	@echo "Starting Web frontend..."
 	cd web && npm run dev
 
 run:
-	@echo "Starting both BFF and Web servers..."
-	$(MAKE) -j 2 run-bff run-web
+	@echo "Starting services..."
+	$(MAKE) -j 3 run-portfolio run-bff run-web
