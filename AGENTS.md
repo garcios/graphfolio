@@ -104,9 +104,14 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   └── tsconfig.json
 │
 ├── docs/                         # Architecture designs & implementation plans
+│   ├── features.md               # Master features matrix & roadmap (DONE, PLANNED, ROADMAP)
 │   ├── db-implementation-plan.md
 │   ├── portfolio-service-implementation-plan.md
 │   ├── add-transactions-implementation-plan.md
+│   ├── performance-chart-implementation-plan.md
+│   ├── transaction-history-implementation-plan.md
+│   ├── cost-basis-switching-implementation-plan.md
+│   ├── user-preferences-implementation-plan.md
 │   └── genql-usage.md
 │
 ├── Makefile                      # Standardized commands (make proto, make generate, make run, make test)

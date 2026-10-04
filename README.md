@@ -14,6 +14,8 @@ A modern portfolio tracker built for serious investors. GraphFolio accurately me
 - **Clean Microservice Monorepo**: Contract-first gRPC services with a Go GraphQL Backend-for-Frontend (BFF) and strongly-typed frontend queries.
 - **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, Vite, and modal transaction entry with instant state refresh.
 
+> 📋 *For a comprehensive list of completed milestones, in-progress components, and planned roadmap items, see [`docs/features.md`](file:///Users/oscargarcia/workspace/graphfolio/docs/features.md).*
+
 ---
 
 ## Tech Stack
@@ -182,9 +184,14 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   ├── src/components/           # Reusable UI elements (Dashboard, AddTransactionModal, etc.)
 │   └── src/generated/            # Auto-generated typed GenQL client
 ├── docs/                         # Implementation plans and guides
+│   ├── features.md               # Master features matrix & roadmap (completed & planned)
 │   ├── db-implementation-plan.md
 │   ├── portfolio-service-implementation-plan.md
 │   ├── add-transactions-implementation-plan.md
+│   ├── performance-chart-implementation-plan.md
+│   ├── transaction-history-implementation-plan.md
+│   ├── cost-basis-switching-implementation-plan.md
+│   ├── user-preferences-implementation-plan.md
 │   └── genql-usage.md
 ├── Makefile                      # Standardized development workflows
 └── go.work                       # Go workspace mapping modules
