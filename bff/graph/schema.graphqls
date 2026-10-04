@@ -1,0 +1,25 @@
+type Query {
+  portfolio: Portfolio!
+}
+
+type Portfolio {
+  totalValue: Float!
+  todayReturnAmount: Float!
+  todayReturnPercent: Float!
+  annualizedReturnPercent: Float!
+  cashBalance: Float!
+  investments: [Investment!]!
+}
+
+type Investment {
+  id: ID!
+  ticker: String!
+  name: String!
+  price: Float!
+  quantity: Float!
+  totalValue: Float!
+  todayReturnAmount: Float!
+  todayReturnPercent: Float!
+  totalReturnAmount: Float!
+  totalReturnPercent: Float!
+}

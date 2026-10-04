@@ -1,0 +1,267 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dashboard-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  background: linear-gradient(to right, #fff, #a1a1aa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dashboard-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+
+.user-profile .avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-green), #047857);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  box-shadow: 0 0 15px var(--card-glow);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.user-profile .avatar:hover {
+  transform: scale(1.05);
+}
+
+.hero-metrics {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.metric-primary h2 {
+  font-size: 3.5rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.trend {
+  font-weight: 500;
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.trend.positive { color: var(--accent-green); }
+.trend.negative { color: var(--accent-red); }
+
+.metric-secondary {
+  display: flex;
+  gap: 1rem;
+}
+
+.metric-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(10px);
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 150px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+.metric-card .label {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.metric-card .value {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.metric-card .value.neutral { color: var(--text-primary); }
+
+.chart-container {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 2;
+}
+
+.time-filters {
+  display: flex;
+  gap: 0.5rem;
+  background: rgba(0,0,0,0.2);
+  padding: 0.25rem;
+  border-radius: 8px;
+}
+
+.time-filters button {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 0.25rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.time-filters button:hover {
+  color: var(--text-primary);
+}
+
+.time-filters button.active {
+  background: var(--card-border);
+  color: var(--text-primary);
+}
+
+.chart-area {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+
+.mock-chart-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.8;
+  mix-blend-mode: screen;
+}
+
+.chart-overlay-gradient {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background: linear-gradient(to top, var(--card-bg) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.investments-section {
+  width: 100%;
+}
+
+.table-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  padding: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.table-card h3 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  color: var(--text-secondary);
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.investments-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.investments-table th {
+  padding: 1rem 0.5rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.investments-table td {
+  padding: 1rem 0.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  vertical-align: middle;
+}
+
+.investments-table tr:last-child td {
+  border-bottom: none;
+}
+
+.investments-table tbody tr {
+  transition: background-color 0.2s;
+}
+
+.investments-table tbody tr:hover {
+  background-color: rgba(255,255,255,0.02);
+}
+
+.asset-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.asset-info .ticker { font-weight: 600; }
+.asset-info .name { color: var(--text-secondary); font-size: 0.85rem; }
+
+.return-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.return-info .amount { font-weight: 500; }
+.return-info .percent { font-size: 0.85rem; opacity: 0.8; }
+
+.return-info.positive { color: var(--accent-green); }
+.return-info.negative { color: var(--accent-red); }
+.return-info.neutral { color: var(--text-primary); }
