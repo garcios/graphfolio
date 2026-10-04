@@ -2,30 +2,43 @@
 
 A modern portfolio tracker built for serious investors. GraphFolio accurately measures your total annualized returns—including dividends, currency fluctuations, and corporate actions—all in one clear, consolidated dashboard.
 
+---
+
 ## Key Features
 
 - **Consolidated Dashboard**: View all your investments across multiple asset classes in a single, unified view.
-- **Accurate Return Metrics**: Calculate total return, annualized returns (TWR), and daily fluctuations accurately using exact decimal precision.
-- **Microservice Architecture**: A robust backend architecture powered by Go, gRPC, and GraphQL.
-- **PostgreSQL Persistence**: Transaction-ledger source of truth, tax-lot accounting (AVERAGE_COST & FIFO), and projections.
-- **Responsive UI**: A beautiful, dark-themed, glassmorphic UI built with React and Vite.
+- **Exact Decimal Arithmetic**: Zero floating-point drift. All money, quantities, prices, and rates use fixed-point decimal arithmetic from database to browser.
+- **Transaction-Ledger Architecture**: Immutable transaction ledger acts as the source of truth, deterministically projecting holdings, cash balances, and valuations.
+- **Flexible Cost Basis Accounting**: Native support for both **Average Cost** (`AVERAGE_COST`, default) and **FIFO** (`FIFO`) tax lot relief strategies.
+- **Clean Microservice Monorepo**: Contract-first gRPC services with a Go GraphQL Backend-for-Frontend (BFF) and strongly-typed frontend queries.
+- **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, and Vite.
+
+---
 
 ## Tech Stack
 
-- **Backend (Microservices)**: Go, gRPC, Protocol Buffers
-- **Database & Persistence**: PostgreSQL 17+ (18+ recommended), `pgx/v5`, `golang-migrate`
-- **Backend-for-Frontend (BFF)**: Go, GraphQL (`gqlgen`)
-- **Frontend**: React, TypeScript, Vite, `genql`
-- **Orchestration**: Make
+| Layer | Technologies |
+| --- | --- |
+| **Frontend** | React 19, TypeScript, Vite, Vanilla CSS, GenQL |
+| **Backend-for-Frontend (BFF)** | Go 1.26+, GraphQL (`gqlgen`), gRPC Client |
+| **Core Microservices** | Go 1.26+, gRPC, Protocol Buffers (`protoc-gen-go`, `protoc-gen-go-grpc`) |
+| **Database & Persistence** | PostgreSQL 17+ (18+ supported), `pgx/v5`, `golang-migrate` |
+| **Mocking & Testing** | `go.uber.org/mock` (`mockgen`), standard library Go test runner with `-race` |
+| **Orchestration** | GNU Make, Go Workspaces (`go.work`) |
+
+---
 
 ## Prerequisites
 
-- Go 1.26 or higher
-- Node.js 20+ and npm
-- PostgreSQL 17+ (18+ recommended) running locally at `localhost:5432` (`psql`, `pg_isready`)
-- `golang-migrate` CLI (`brew install golang-migrate`)
-- Protobuf Compiler (`protoc`) - *Optional, for regenerating protobufs*
-- Make
+Ensure the following tools are installed on your machine:
+
+- **Go 1.26+**
+- **Node.js 20+** and **npm**
+- **PostgreSQL 17+** running locally at `localhost:5432` (`psql`, `pg_isready`)
+- **`golang-migrate` CLI**: `brew install golang-migrate`
+- **Protobuf Compiler (`protoc`)**: `brew install protobuf` *(only required if editing `.proto` files)*
+
+---
 
 ## Getting Started
 
@@ -36,116 +49,193 @@ git clone https://github.com/garcios/graphfolio.git
 cd graphfolio
 ```
 
-### 2. Install Dependencies
+### 2. Configure Environment
 
-We use a unified `Makefile` to simplify local development.
+Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+The default `.env` is pre-configured for a local PostgreSQL instance:
+
+```env
+PG_ADMIN_URL=postgres://$(USER)@localhost:5432/postgres
+PORTFOLIO_DB_URL=postgres://portfolio_svc:portfolio@localhost:5432/graphfolio?sslmode=disable
+USER_DB_URL=postgres://user_svc:user@localhost:5432/graphfolio?sslmode=disable
+MIGRATE_ON_START=false
+```
+
+### 3. Install Dependencies
+
+Install all frontend npm packages and backend Go module dependencies:
 
 ```bash
 make install
 ```
-This will run `npm install` for the frontend and download backend Go module dependencies.
 
-### 3. Configure and Bootstrap Database
+### 4. Bootstrap and Migrate Database
 
-Ensure your local PostgreSQL instance is running on `localhost:5432`:
+Set up database roles, schemas, migrations, and development seed data:
 
 ```bash
-# Optional: copy and inspect environment configuration
-cp .env.example .env
+# Verify PostgreSQL is running
+make db-check
 
-# Bootstrap roles, database, and service schemas
+# Bootstrap roles (portfolio_svc, user_svc), database (graphfolio), and schemas
 make db-bootstrap
 
-# Run all schema migrations
+# Run all schema migrations for portfolio-api and user-api
 make migrate-up
 
-# Seed development data
+# Seed development market data, instruments, demo portfolios, and transactions
 make db-seed
 
-# (Or run all of the above in one step)
-make db-reset
+# (Alternatively, run all four steps with: make db-reset)
 ```
 
-### 4. Generate Models and API Clients
+### 5. Generate Code Contracts, Models, and Mocks
 
-GraphFolio uses a strictly typed contract-first approach. Generate Protocol Buffers, GraphQL BFF models, and the frontend typed client:
+Compile protobufs, generate GraphQL models, regenerate the typed GenQL frontend client, and generate Go unit test mocks:
 
 ```bash
 make generate
 ```
 
-### 5. Start Development Servers
+### 6. Start Development Servers
 
-You can start the backend services and the Vite React frontend simultaneously:
+Start the Portfolio gRPC API, the GraphQL BFF, and the Vite frontend concurrently:
 
 ```bash
 make run
 ```
-- The frontend will be available at [http://localhost:5173](http://localhost:5173).
-- The GraphQL Playground (BFF) will be available at [http://localhost:8080/](http://localhost:8080/).
-- The Portfolio gRPC service will be available on `:50051`.
 
-## Architecture
+- **Web Frontend**: [http://localhost:5173](http://localhost:5173)
+- **GraphQL Playground (BFF)**: [http://localhost:8080/](http://localhost:8080/)
+- **Portfolio gRPC API**: `localhost:50051`
 
-GraphFolio uses a layered microservice monorepo structure. For deep dive architectural rules, see [`AGENTS.md`](./AGENTS.md).
+---
 
-### Directory Structure
+## Architecture & Data Flow
+
+GraphFolio enforces a strict separation of concerns across layered boundaries:
 
 ```text
-├── proto/                        # Single Source of Truth for APIs (Protocol Buffers)
-│   ├── common/v1/                # Shared types (Decimal, Money)
-│   ├── portfolio/v1/             # Portfolio service definition
-│   └── user/v1/                  # User service definition
-├── pkg/                          # Shared Go Infrastructure (pkg/database, pkg/decimalpb)
+React Component (Dashboard)
+      │
+      ▼  (Typed queries via GenQL)
+GraphQL Backend-for-Frontend (BFF)  [localhost:8080]
+      │
+      ▼  (gRPC via Protocol Buffers)
+Portfolio API Service  [localhost:50051]
+      │
+      ▼  (pgxpool connection pool with shopspring/decimal)
+PostgreSQL Database  [localhost:5432/graphfolio]
+      ├── portfolio schema (owned by portfolio_svc)
+      └── users schema     (owned by user_svc)
+```
+
+### Exact Decimal Precision
+
+Financial applications cannot tolerate IEEE 754 binary floating-point rounding errors:
+- Contract layer defines fixed-point types in [`proto/common/v1/decimal.proto`](file:///Users/oscargarcia/workspace/graphfolio/proto/common/v1/decimal.proto).
+- Shared package [`pkg/decimalpb`](file:///Users/oscargarcia/workspace/graphfolio/pkg/decimalpb/decimalpb.go) converts losslessly between protobuf messages and `shopspring/decimal.Decimal`.
+- PostgreSQL drivers automatically register the `pgx-shopspring-decimal` extension on every pool connection.
+- GraphQL exposes a dedicated `Decimal` scalar in [`bff/graph/model/decimal.go`](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/model/decimal.go).
+
+### Ledger Replay & Cost Basis Methods
+
+1. **Transaction Ledger**: All investment events (buys, sells, dividends, transfers, deposits, withdrawals) are appended to `portfolio.transactions`.
+2. **Deterministic Projections**: The replay engine in [`services/portfolio-api/internal/service/projection.go`](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/projection.go) re-evaluates all transactions to produce:
+   - `tax_lots` and `lot_disposals`
+   - `holding_projections` (quantity, cost basis, realized PnL, dividend income)
+   - `cash_balances`
+3. **Accounting Methods**:
+   - `AVERAGE_COST`: Disposals proportionally relieve cost basis across all open tax lots.
+   - `FIFO`: Disposals relieve the earliest acquired tax lots first.
+
+---
+
+## Directory Structure
+
+```text
+├── proto/                        # Single Source of Truth for APIs (Protobuf definitions)
+│   ├── common/v1/decimal.proto   # Decimal and Money contracts
+│   └── portfolio/v1/             # Portfolio gRPC service contract
+├── pkg/                          # Shared Go infrastructure
+│   ├── database/                 # pgx connection pooling, auto .env loading, migration runner
+│   └── decimalpb/                # Decimal/Money conversions between proto and shopspring
 ├── scripts/db/                   # Database bootstrap and teardown scripts
-├── services/                     # Core gRPC Microservices
-│   ├── portfolio-api/            # Portfolio business logic, migrations, and seeds
-│   └── user-api/                 # User management logic and migrations
+├── services/                     # Domain Microservices
+│   ├── portfolio-api/            # Portfolio business logic, ledger replay, migrations, seeds
+│   │   ├── cmd/server/           # Application entrypoint
+│   │   ├── internal/             # Domain calculator, repository, service, and gRPC handler
+│   │   ├── migrations/           # Versioned schema migrations (000001 - 000006)
+│   │   └── seeds/                # Seed fixtures (dev_seed.sql)
+│   └── user-api/                 # User domain microservice and migrations
 ├── bff/                          # GraphQL Backend-for-Frontend (gqlgen)
-│   ├── graph/                    # Schema, custom scalars, resolvers mapping to gRPC
+│   ├── graph/                    # Schema, resolvers, helpers, custom Decimal scalar
 │   └── cmd/server/               # BFF entrypoint
-├── web/                          # Frontend React Application
-│   ├── src/components/           # UI Components (e.g. Dashboard)
-│   └── src/generated/            # genql auto-generated typed client
-├── docs/                         # Additional project documentation
-└── Makefile                      # Standardized commands (bootstrap, migrate, run)
+├── web/                          # Frontend React application
+│   ├── src/components/           # Reusable UI elements (Dashboard, etc.)
+│   └── src/generated/            # Auto-generated typed GenQL client
+├── docs/                         # Implementation plans and guides
+├── Makefile                      # Standardized development workflows
+└── go.work                       # Go workspace mapping modules
 ```
 
-### Data Flow
+---
 
-```text
-React Component (Dashboard) 
-  → GenQL Typed Client 
-    → GraphQL Query (http://localhost:8080/query)
-      → BFF Resolver (schema.resolvers.go)
-        → gRPC Call to services/portfolio-api (localhost:50051)
-          → PostgreSQL (graphfolio.portfolio schema via pgx/v5)
-            → Exact Decimal/Money returned to frontend
+## Testing & Quality Assurance
+
+### Running Tests
+
+Execute unit tests across all Go workspace modules with race condition detection:
+
+```bash
+make test
 ```
 
-## Available Scripts
+### Unit Tests with Mocks (`go.uber.org/mock`)
+
+Service and transport layer unit tests run with zero external dependencies using mocks generated by `mockgen`:
+- **Repository Mock**: [`MockRepository`](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/repository/mocks/mock_repository.go) allows verifying `PortfolioService` business calculations, error handling, and projection rebuilds without a database.
+- **Service Mock**: [`MockPortfolioService`](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/mocks/mock_service.go) allows verifying gRPC server request routing, error code mapping (`codes.NotFound`, `codes.Internal`), and fallback behavior.
+
+To regenerate mocks after modifying Go interfaces:
+
+```bash
+make generate
+```
+
+---
+
+## Available Make Commands
 
 | Command | Description |
 | --- | --- |
-| `make install` | Installs dependencies for Go and Node modules |
-| `make proto` | Compiles `.proto` definitions into Go packages |
-| `make generate` | Runs proto, gqlgen, and genql code generation |
-| `make db-check` | Verifies local PostgreSQL is reachable on localhost:5432 |
-| `make db-bootstrap` | Idempotently creates service roles, DB, and schemas |
+| `make install` | Installs npm packages and downloads all Go module dependencies |
+| `make proto` | Compiles `.proto` contracts into Go packages |
+| `make generate` | Runs proto compilation, gqlgen generation, genql client build, and mockgen |
+| `make db-check` | Tests if local PostgreSQL is accepting connections on localhost:5432 |
+| `make db-bootstrap` | Idempotently creates database roles (`portfolio_svc`, `user_svc`), DB, and schemas |
 | `make db-drop` | Drops local development database |
-| `make migrate-up` | Applies all pending migrations across services |
-| `make migrate-down` | Rolls back one migration step across services |
-| `make db-seed` | Populates development reference data, demo portfolios, and market prices |
-| `make db-reset` | Runs db-drop, db-bootstrap, migrate-up, and db-seed |
-| `make test` | Runs Go test suites |
-| `make run-portfolio` | Starts the Go gRPC Portfolio API on port 50051 |
-| `make run-user` | Starts the Go gRPC User API on port 50052 |
-| `make run-bff` | Starts the Go GraphQL backend on port 8080 |
-| `make run-web` | Starts the Vite React dev server |
-| `make run` | Starts Portfolio API, BFF, and Web servers concurrently |
+| `make migrate-up` | Applies all pending migrations across all microservices |
+| `make migrate-down` | Rolls back the latest migration step across services |
+| `make db-seed` | Seeds development instruments, market data, and demo portfolios |
+| `make db-reset` | Recreates database from scratch: drop, bootstrap, migrate, and seed |
+| `make test` | Runs unit tests across all modules in `go.work` with race detection |
+| `make run-portfolio` | Starts the Portfolio gRPC microservice on port 50051 |
+| `make run-user` | Starts the User gRPC microservice on port 50052 |
+| `make run-bff` | Starts the GraphQL BFF on port 8080 |
+| `make run-web` | Starts the Vite React frontend on port 5173 |
+| `make run` | Concurrently starts Portfolio API, BFF, and React web servers |
 
-## Documentation Reference
+---
 
-- **Repository Architecture**: [`AGENTS.md`](./AGENTS.md)
-- **Database Implementation Plan**: [`docs/db-implementation-plan.md`](./docs/db-implementation-plan.md)
+## Documentation Links
+
+- **Repository Rules & Guidelines**: [`AGENTS.md`](./AGENTS.md)
+- **Database Architecture & Schema Design**: [`docs/db-implementation-plan.md`](./docs/db-implementation-plan.md)
+- **Portfolio Service Implementation Plan**: [`docs/portfolio-service-implementation-plan.md`](./docs/portfolio-service-implementation-plan.md)
 - **Frontend GraphQL Setup**: [`docs/genql-usage.md`](./docs/genql-usage.md)
