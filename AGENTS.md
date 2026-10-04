@@ -71,7 +71,7 @@ consolidated dashboard.
 │
 ├── Makefile                      # Standardized commands (make proto, make build)
 ├── docker-compose.yml            # Local dev orchestration
-└── go.work                       # Go workspace mapping (pkg, services/*, bff)
+└── go.work                       # Go workspace mapping (pkg, services/*, bff, proto)
 ```
 
 ## 4. Monorepo Tooling Strategy

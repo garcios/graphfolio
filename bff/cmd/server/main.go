@@ -7,6 +7,10 @@ import (
 
 	"bff/graph"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
+	pb "graphfolio/proto/portfolio/v1"
+
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
 	"github.com/99designs/gqlgen/graphql/handler/lru"
@@ -23,7 +27,17 @@ func main() {
 		port = defaultPort
 	}
 
-	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
+	conn, err := grpc.Dial("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("did not connect to portfolio-api: %v", err)
+	}
+	defer conn.Close()
+
+	portfolioClient := pb.NewPortfolioServiceClient(conn)
+
+	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
+		PortfolioClient: portfolioClient,
+	}}))
 
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
