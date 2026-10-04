@@ -89,7 +89,7 @@ React Component (Dashboard)
   → GenQL Typed Client 
     → GraphQL Query (http://localhost:8080/query)
       → BFF Resolver (schema.resolvers.go)
-        → [Future: gRPC Call to services/portfolio-api]
+        → gRPC Call to services/portfolio-api (localhost:50051)
           → Data returned to frontend
 ```
 
@@ -101,9 +101,10 @@ We rely heavily on the `Makefile` at the root of the project to orchestrate task
 | --- | --- |
 | `make install` | Installs dependencies for both Go (backend) and Node (frontend) |
 | `make generate` | Regenerates backend GraphQL models and frontend `genql` SDK |
-| `make run-bff` | Starts only the Go GraphQL backend on port 8080 |
-| `make run-web` | Starts only the Vite React dev server |
-| `make run` | Starts both the BFF and Web servers concurrently |
+| `make run-portfolio` | Starts the Go gRPC Portfolio API on port 50051 |
+| `make run-bff` | Starts the Go GraphQL backend on port 8080 |
+| `make run-web` | Starts the Vite React dev server |
+| `make run` | Starts the Portfolio API, BFF, and Web servers concurrently |
 
 ## Documentation Reference
 
