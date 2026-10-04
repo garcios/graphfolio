@@ -2,8 +2,9 @@ export default {
     "scalars": [
         0,
         2,
-        6,
-        7
+        3,
+        7,
+        12
     ],
     "types": {
         "Decimal": {},
@@ -19,9 +20,91 @@ export default {
             ]
         },
         "String": {},
+        "TransactionType": {},
+        "AddTransactionInput": {
+            "type": [
+                3
+            ],
+            "symbol": [
+                2
+            ],
+            "tradeDate": [
+                2
+            ],
+            "quantity": [
+                0
+            ],
+            "price": [
+                0
+            ],
+            "amount": [
+                0
+            ],
+            "currencyCode": [
+                2
+            ],
+            "fee": [
+                0
+            ],
+            "notes": [
+                2
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "AddTransactionPayload": {
+            "transactionId": [
+                2
+            ],
+            "portfolio": [
+                10
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "Instrument": {
+            "id": [
+                7
+            ],
+            "symbol": [
+                2
+            ],
+            "name": [
+                2
+            ],
+            "currencyCode": [
+                2
+            ],
+            "assetClass": [
+                2
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "ID": {},
         "Query": {
             "portfolio": [
-                4
+                10
+            ],
+            "instruments": [
+                6
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "Mutation": {
+            "addTransaction": [
+                5,
+                {
+                    "input": [
+                        4,
+                        "AddTransactionInput!"
+                    ]
+                }
             ],
             "__typename": [
                 2
@@ -44,7 +127,7 @@ export default {
                 1
             ],
             "investments": [
-                5
+                11
             ],
             "__typename": [
                 2
@@ -52,7 +135,7 @@ export default {
         },
         "Investment": {
             "id": [
-                6
+                7
             ],
             "ticker": [
                 2
@@ -85,7 +168,6 @@ export default {
                 2
             ]
         },
-        "ID": {},
         "Boolean": {}
     }
 }

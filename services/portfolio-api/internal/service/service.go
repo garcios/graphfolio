@@ -12,6 +12,8 @@ import (
 type PortfolioService interface {
 	GetPortfolioSummary(ctx context.Context, userID string) (*domain.PortfolioSummary, error)
 	RebuildProjections(ctx context.Context, userID string) error
+	AddTransaction(ctx context.Context, input domain.AddTransactionInput) (*domain.Transaction, *domain.PortfolioSummary, error)
+	ListInstruments(ctx context.Context) ([]domain.Instrument, error)
 }
 
 type portfolioService struct {

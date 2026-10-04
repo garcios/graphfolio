@@ -19,7 +19,9 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	PortfolioService_GetPortfolio_FullMethodName = "/portfolio.v1.PortfolioService/GetPortfolio"
+	PortfolioService_GetPortfolio_FullMethodName    = "/portfolio.v1.PortfolioService/GetPortfolio"
+	PortfolioService_AddTransaction_FullMethodName  = "/portfolio.v1.PortfolioService/AddTransaction"
+	PortfolioService_ListInstruments_FullMethodName = "/portfolio.v1.PortfolioService/ListInstruments"
 )
 
 // PortfolioServiceClient is the client API for PortfolioService service.
@@ -27,6 +29,8 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PortfolioServiceClient interface {
 	GetPortfolio(ctx context.Context, in *GetPortfolioRequest, opts ...grpc.CallOption) (*GetPortfolioResponse, error)
+	AddTransaction(ctx context.Context, in *AddTransactionRequest, opts ...grpc.CallOption) (*AddTransactionResponse, error)
+	ListInstruments(ctx context.Context, in *ListInstrumentsRequest, opts ...grpc.CallOption) (*ListInstrumentsResponse, error)
 }
 
 type portfolioServiceClient struct {
@@ -46,11 +50,31 @@ func (c *portfolioServiceClient) GetPortfolio(ctx context.Context, in *GetPortfo
 	return out, nil
 }
 
+func (c *portfolioServiceClient) AddTransaction(ctx context.Context, in *AddTransactionRequest, opts ...grpc.CallOption) (*AddTransactionResponse, error) {
+	out := new(AddTransactionResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_AddTransaction_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portfolioServiceClient) ListInstruments(ctx context.Context, in *ListInstrumentsRequest, opts ...grpc.CallOption) (*ListInstrumentsResponse, error) {
+	out := new(ListInstrumentsResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_ListInstruments_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PortfolioServiceServer is the server API for PortfolioService service.
 // All implementations must embed UnimplementedPortfolioServiceServer
 // for forward compatibility
 type PortfolioServiceServer interface {
 	GetPortfolio(context.Context, *GetPortfolioRequest) (*GetPortfolioResponse, error)
+	AddTransaction(context.Context, *AddTransactionRequest) (*AddTransactionResponse, error)
+	ListInstruments(context.Context, *ListInstrumentsRequest) (*ListInstrumentsResponse, error)
 	mustEmbedUnimplementedPortfolioServiceServer()
 }
 
@@ -60,6 +84,12 @@ type UnimplementedPortfolioServiceServer struct {
 
 func (UnimplementedPortfolioServiceServer) GetPortfolio(context.Context, *GetPortfolioRequest) (*GetPortfolioResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPortfolio not implemented")
+}
+func (UnimplementedPortfolioServiceServer) AddTransaction(context.Context, *AddTransactionRequest) (*AddTransactionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddTransaction not implemented")
+}
+func (UnimplementedPortfolioServiceServer) ListInstruments(context.Context, *ListInstrumentsRequest) (*ListInstrumentsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListInstruments not implemented")
 }
 func (UnimplementedPortfolioServiceServer) mustEmbedUnimplementedPortfolioServiceServer() {}
 
@@ -92,6 +122,42 @@ func _PortfolioService_GetPortfolio_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortfolioService_AddTransaction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddTransactionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).AddTransaction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_AddTransaction_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).AddTransaction(ctx, req.(*AddTransactionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortfolioService_ListInstruments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListInstrumentsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).ListInstruments(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_ListInstruments_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).ListInstruments(ctx, req.(*ListInstrumentsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PortfolioService_ServiceDesc is the grpc.ServiceDesc for PortfolioService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -102,6 +168,14 @@ var PortfolioService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPortfolio",
 			Handler:    _PortfolioService_GetPortfolio_Handler,
+		},
+		{
+			MethodName: "AddTransaction",
+			Handler:    _PortfolioService_AddTransaction_Handler,
+		},
+		{
+			MethodName: "ListInstruments",
+			Handler:    _PortfolioService_ListInstruments_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

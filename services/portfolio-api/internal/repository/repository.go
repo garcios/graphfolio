@@ -22,4 +22,9 @@ type Repository interface {
 	GetTransactions(ctx context.Context, portfolioID uuid.UUID) ([]domain.Transaction, error)
 	GetCorporateActions(ctx context.Context, instrumentIDs []uuid.UUID) ([]domain.CorporateAction, error)
 	SaveProjectionsTx(ctx context.Context, portfolioID uuid.UUID, lots []domain.TaxLot, disposals []domain.LotDisposal, holdings []domain.Holding, cash []domain.CashBalance) error
+
+	InsertTransaction(ctx context.Context, tx domain.Transaction) (*domain.Transaction, error)
+	FindInstrumentBySymbol(ctx context.Context, symbol string) (*domain.Instrument, error)
+	ListActiveInstruments(ctx context.Context) ([]domain.Instrument, error)
+	GetFXRate(ctx context.Context, fromCurrency, toCurrency string) (decimal.Decimal, error)
 }

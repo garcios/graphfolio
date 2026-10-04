@@ -8,6 +8,8 @@ option go_package = "graphfolio/proto/portfolio/v1;portfoliopb";
 
 service PortfolioService {
   rpc GetPortfolio(GetPortfolioRequest) returns (GetPortfolioResponse) {}
+  rpc AddTransaction(AddTransactionRequest) returns (AddTransactionResponse) {}
+  rpc ListInstruments(ListInstrumentsRequest) returns (ListInstrumentsResponse) {}
 }
 
 message GetPortfolioRequest {
@@ -16,6 +18,52 @@ message GetPortfolioRequest {
 
 message GetPortfolioResponse {
   Portfolio portfolio = 1;
+}
+
+enum TransactionType {
+  TRANSACTION_TYPE_UNSPECIFIED = 0;
+  TRANSACTION_TYPE_BUY = 1;
+  TRANSACTION_TYPE_SELL = 2;
+  TRANSACTION_TYPE_DIVIDEND = 3;
+  TRANSACTION_TYPE_DEPOSIT = 4;
+  TRANSACTION_TYPE_WITHDRAWAL = 5;
+  TRANSACTION_TYPE_INTEREST = 6;
+  TRANSACTION_TYPE_FEE = 7;
+  TRANSACTION_TYPE_TAX = 8;
+  TRANSACTION_TYPE_TRANSFER_IN = 9;
+  TRANSACTION_TYPE_TRANSFER_OUT = 10;
+  TRANSACTION_TYPE_FX_CONVERSION = 11;
+}
+
+message AddTransactionRequest {
+  string            user_id    = 1;
+  TransactionType   type       = 2;
+  string            symbol     = 3; // e.g. "AAPL" (optional for DEPOSIT/WITHDRAWAL)
+  string            trade_date = 4; // YYYY-MM-DD
+  common.v1.Decimal quantity   = 5; // e.g. "10"
+  common.v1.Money   price      = 6; // unit price
+  common.v1.Money   amount     = 7; // total cash flow / value
+  common.v1.Money   fee        = 8; // optional fee
+  string            notes      = 9;
+}
+
+message AddTransactionResponse {
+  string    transaction_id = 1;
+  Portfolio portfolio      = 2;
+}
+
+message Instrument {
+  string id            = 1;
+  string symbol        = 2;
+  string name          = 3;
+  string currency_code = 4;
+  string asset_class   = 5;
+}
+
+message ListInstrumentsRequest {}
+
+message ListInstrumentsResponse {
+  repeated Instrument instruments = 1;
 }
 
 message Portfolio {

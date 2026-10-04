@@ -43,6 +43,21 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
+// FindInstrumentBySymbol mocks base method.
+func (m *MockRepository) FindInstrumentBySymbol(ctx context.Context, symbol string) (*domain.Instrument, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindInstrumentBySymbol", ctx, symbol)
+	ret0, _ := ret[0].(*domain.Instrument)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindInstrumentBySymbol indicates an expected call of FindInstrumentBySymbol.
+func (mr *MockRepositoryMockRecorder) FindInstrumentBySymbol(ctx, symbol any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindInstrumentBySymbol", reflect.TypeOf((*MockRepository)(nil).FindInstrumentBySymbol), ctx, symbol)
+}
+
 // FindPortfolioByUser mocks base method.
 func (m *MockRepository) FindPortfolioByUser(ctx context.Context, userID string) (*domain.Portfolio, error) {
 	m.ctrl.T.Helper()
@@ -103,6 +118,21 @@ func (mr *MockRepositoryMockRecorder) GetCorporateActions(ctx, instrumentIDs any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCorporateActions", reflect.TypeOf((*MockRepository)(nil).GetCorporateActions), ctx, instrumentIDs)
 }
 
+// GetFXRate mocks base method.
+func (m *MockRepository) GetFXRate(ctx context.Context, fromCurrency, toCurrency string) (decimal.Decimal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetFXRate", ctx, fromCurrency, toCurrency)
+	ret0, _ := ret[0].(decimal.Decimal)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetFXRate indicates an expected call of GetFXRate.
+func (mr *MockRepositoryMockRecorder) GetFXRate(ctx, fromCurrency, toCurrency any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFXRate", reflect.TypeOf((*MockRepository)(nil).GetFXRate), ctx, fromCurrency, toCurrency)
+}
+
 // GetHoldingsWithMarketData mocks base method.
 func (m *MockRepository) GetHoldingsWithMarketData(ctx context.Context, portfolioID uuid.UUID) ([]domain.HoldingWithPrice, error) {
 	m.ctrl.T.Helper()
@@ -146,6 +176,36 @@ func (m *MockRepository) GetTransactions(ctx context.Context, portfolioID uuid.U
 func (mr *MockRepositoryMockRecorder) GetTransactions(ctx, portfolioID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTransactions", reflect.TypeOf((*MockRepository)(nil).GetTransactions), ctx, portfolioID)
+}
+
+// InsertTransaction mocks base method.
+func (m *MockRepository) InsertTransaction(ctx context.Context, tx domain.Transaction) (*domain.Transaction, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InsertTransaction", ctx, tx)
+	ret0, _ := ret[0].(*domain.Transaction)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// InsertTransaction indicates an expected call of InsertTransaction.
+func (mr *MockRepositoryMockRecorder) InsertTransaction(ctx, tx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InsertTransaction", reflect.TypeOf((*MockRepository)(nil).InsertTransaction), ctx, tx)
+}
+
+// ListActiveInstruments mocks base method.
+func (m *MockRepository) ListActiveInstruments(ctx context.Context) ([]domain.Instrument, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListActiveInstruments", ctx)
+	ret0, _ := ret[0].([]domain.Instrument)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListActiveInstruments indicates an expected call of ListActiveInstruments.
+func (mr *MockRepositoryMockRecorder) ListActiveInstruments(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListActiveInstruments", reflect.TypeOf((*MockRepository)(nil).ListActiveInstruments), ctx)
 }
 
 // SaveProjectionsTx mocks base method.

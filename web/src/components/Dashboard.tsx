@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '../generated';
 import './Dashboard.css';
 import chartImage from '../assets/portfolio_chart.jpg';
+import { AddTransactionModal } from './AddTransactionModal';
 
 const client = createClient({
   url: 'http://localhost:8080/query',
@@ -39,6 +40,8 @@ const isPositive = (val?: Money | string | null) => {
 export const Dashboard = () => {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
     client.query({
@@ -86,10 +89,20 @@ export const Dashboard = () => {
           <h1 className="dashboard-title">GraphFolio</h1>
           <p className="dashboard-subtitle">Total Portfolio Value</p>
         </div>
-        <div className="user-profile">
-          <div className="avatar">OG</div>
+        <div className="header-actions">
+          <button
+            type="button"
+            className="btn-add-transaction"
+            onClick={() => setIsModalOpen(true)}
+          >
+            + Add Transaction
+          </button>
+          <div className="user-profile">
+            <div className="avatar">OG</div>
+          </div>
         </div>
       </header>
+
 
       <section className="hero-metrics">
         <div className="metric-primary">
@@ -180,6 +193,23 @@ export const Dashboard = () => {
           </div>
         </div>
       </section>
+
+      <AddTransactionModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={(updatedPortfolio) => {
+          setData(updatedPortfolio);
+          setToastMessage('Transaction recorded and projections updated!');
+          setTimeout(() => setToastMessage(null), 4000);
+        }}
+      />
+
+      {toastMessage && (
+        <div className="toast-notification">
+          <span>{toastMessage}</span>
+        </div>
+      )}
     </div>
   );
 };
+
