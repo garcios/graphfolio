@@ -4,6 +4,7 @@ go 1.26
 
 require (
 	github.com/99designs/gqlgen v0.17.95
+	github.com/shopspring/decimal v1.4.0
 	github.com/vektah/gqlparser/v2 v2.5.60
 	google.golang.org/grpc v1.84.0
 )

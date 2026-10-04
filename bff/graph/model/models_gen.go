@@ -6,21 +6,26 @@ type Investment struct {
 	ID                 string  `json:"id"`
 	Ticker             string  `json:"ticker"`
 	Name               string  `json:"name"`
-	Price              float64 `json:"price"`
-	Quantity           float64 `json:"quantity"`
-	TotalValue         float64 `json:"totalValue"`
-	TodayReturnAmount  float64 `json:"todayReturnAmount"`
-	TodayReturnPercent float64 `json:"todayReturnPercent"`
-	TotalReturnAmount  float64 `json:"totalReturnAmount"`
-	TotalReturnPercent float64 `json:"totalReturnPercent"`
+	Price              *Money  `json:"price"`
+	Quantity           Decimal `json:"quantity"`
+	TotalValue         *Money  `json:"totalValue"`
+	TodayReturnAmount  *Money  `json:"todayReturnAmount"`
+	TodayReturnPercent Decimal `json:"todayReturnPercent"`
+	TotalReturnAmount  *Money  `json:"totalReturnAmount"`
+	TotalReturnPercent Decimal `json:"totalReturnPercent"`
+}
+
+type Money struct {
+	Amount       Decimal `json:"amount"`
+	CurrencyCode string  `json:"currencyCode"`
 }
 
 type Portfolio struct {
-	TotalValue              float64       `json:"totalValue"`
-	TodayReturnAmount       float64       `json:"todayReturnAmount"`
-	TodayReturnPercent      float64       `json:"todayReturnPercent"`
-	AnnualizedReturnPercent float64       `json:"annualizedReturnPercent"`
-	CashBalance             float64       `json:"cashBalance"`
+	TotalValue              *Money        `json:"totalValue"`
+	TodayReturnAmount       *Money        `json:"todayReturnAmount"`
+	TodayReturnPercent      Decimal       `json:"todayReturnPercent"`
+	AnnualizedReturnPercent Decimal       `json:"annualizedReturnPercent"`
+	CashBalance             *Money        `json:"cashBalance"`
 	Investments             []*Investment `json:"investments"`
 }
 

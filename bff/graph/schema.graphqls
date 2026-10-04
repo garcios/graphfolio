@@ -1,13 +1,21 @@
+"Arbitrary-precision decimal serialized as a string, e.g. \"1234.56\"."
+scalar Decimal
+
+type Money {
+  amount: Decimal!
+  currencyCode: String!
+}
+
 type Query {
   portfolio: Portfolio!
 }
 
 type Portfolio {
-  totalValue: Float!
-  todayReturnAmount: Float!
-  todayReturnPercent: Float!
-  annualizedReturnPercent: Float!
-  cashBalance: Float!
+  totalValue: Money!
+  todayReturnAmount: Money!
+  todayReturnPercent: Decimal!
+  annualizedReturnPercent: Decimal!
+  cashBalance: Money!
   investments: [Investment!]!
 }
 
@@ -15,11 +23,11 @@ type Investment {
   id: ID!
   ticker: String!
   name: String!
-  price: Float!
-  quantity: Float!
-  totalValue: Float!
-  todayReturnAmount: Float!
-  todayReturnPercent: Float!
-  totalReturnAmount: Float!
-  totalReturnPercent: Float!
+  price: Money!
+  quantity: Decimal!
+  totalValue: Money!
+  todayReturnAmount: Money!
+  todayReturnPercent: Decimal!
+  totalReturnAmount: Money!
+  totalReturnPercent: Decimal!
 }

@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package portfolio.v1;
 
+import "common/v1/decimal.proto";
+
 option go_package = "graphfolio/proto/portfolio/v1;portfoliopb";
 
 service PortfolioService {
@@ -17,23 +19,23 @@ message GetPortfolioResponse {
 }
 
 message Portfolio {
-  double total_value = 1;
-  double today_return_amount = 2;
-  double today_return_percent = 3;
-  double annualized_return_percent = 4;
-  double cash_balance = 5;
-  repeated Investment investments = 6;
+  common.v1.Money   total_value               = 1;
+  common.v1.Money   today_return_amount       = 2;
+  common.v1.Decimal today_return_percent      = 3;
+  common.v1.Decimal annualized_return_percent = 4;
+  common.v1.Money   cash_balance              = 5;
+  repeated Investment investments             = 6;
 }
 
 message Investment {
-  string id = 1;
-  string ticker = 2;
-  string name = 3;
-  double price = 4;
-  double quantity = 5;
-  double total_value = 6;
-  double today_return_amount = 7;
-  double today_return_percent = 8;
-  double total_return_amount = 9;
-  double total_return_percent = 10;
+  string            id                   = 1;
+  string            ticker               = 2;
+  string            name                 = 3;
+  common.v1.Money   price                = 4;
+  common.v1.Decimal quantity             = 5;
+  common.v1.Money   total_value          = 6;
+  common.v1.Money   today_return_amount  = 7;
+  common.v1.Decimal today_return_percent = 8;
+  common.v1.Money   total_return_amount  = 9;
+  common.v1.Decimal total_return_percent = 10;
 }

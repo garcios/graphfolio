@@ -4,10 +4,16 @@
 /* eslint-disable */
 
 export type Scalars = {
-    Float: number,
-    ID: string,
+    Decimal: any,
     String: string,
+    ID: string,
     Boolean: boolean,
+}
+
+export interface Money {
+    amount: Scalars['Decimal']
+    currencyCode: Scalars['String']
+    __typename: 'Money'
 }
 
 export interface Query {
@@ -16,11 +22,11 @@ export interface Query {
 }
 
 export interface Portfolio {
-    totalValue: Scalars['Float']
-    todayReturnAmount: Scalars['Float']
-    todayReturnPercent: Scalars['Float']
-    annualizedReturnPercent: Scalars['Float']
-    cashBalance: Scalars['Float']
+    totalValue: Money
+    todayReturnAmount: Money
+    todayReturnPercent: Scalars['Decimal']
+    annualizedReturnPercent: Scalars['Decimal']
+    cashBalance: Money
     investments: Investment[]
     __typename: 'Portfolio'
 }
@@ -29,14 +35,21 @@ export interface Investment {
     id: Scalars['ID']
     ticker: Scalars['String']
     name: Scalars['String']
-    price: Scalars['Float']
-    quantity: Scalars['Float']
-    totalValue: Scalars['Float']
-    todayReturnAmount: Scalars['Float']
-    todayReturnPercent: Scalars['Float']
-    totalReturnAmount: Scalars['Float']
-    totalReturnPercent: Scalars['Float']
+    price: Money
+    quantity: Scalars['Decimal']
+    totalValue: Money
+    todayReturnAmount: Money
+    todayReturnPercent: Scalars['Decimal']
+    totalReturnAmount: Money
+    totalReturnPercent: Scalars['Decimal']
     __typename: 'Investment'
+}
+
+export interface MoneyGenqlSelection{
+    amount?: boolean | number
+    currencyCode?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
 }
 
 export interface QueryGenqlSelection{
@@ -46,11 +59,11 @@ export interface QueryGenqlSelection{
 }
 
 export interface PortfolioGenqlSelection{
-    totalValue?: boolean | number
-    todayReturnAmount?: boolean | number
+    totalValue?: MoneyGenqlSelection
+    todayReturnAmount?: MoneyGenqlSelection
     todayReturnPercent?: boolean | number
     annualizedReturnPercent?: boolean | number
-    cashBalance?: boolean | number
+    cashBalance?: MoneyGenqlSelection
     investments?: InvestmentGenqlSelection
     __typename?: boolean | number
     __scalar?: boolean | number
@@ -60,16 +73,24 @@ export interface InvestmentGenqlSelection{
     id?: boolean | number
     ticker?: boolean | number
     name?: boolean | number
-    price?: boolean | number
+    price?: MoneyGenqlSelection
     quantity?: boolean | number
-    totalValue?: boolean | number
-    todayReturnAmount?: boolean | number
+    totalValue?: MoneyGenqlSelection
+    todayReturnAmount?: MoneyGenqlSelection
     todayReturnPercent?: boolean | number
-    totalReturnAmount?: boolean | number
+    totalReturnAmount?: MoneyGenqlSelection
     totalReturnPercent?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
+
+
+    const Money_possibleTypes: string[] = ['Money']
+    export const isMoney = (obj?: { __typename?: any } | null): obj is Money => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isMoney"')
+      return Money_possibleTypes.includes(obj.__typename)
+    }
+    
 
 
     const Query_possibleTypes: string[] = ['Query']
