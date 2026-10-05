@@ -16,14 +16,15 @@ This document catalogs all implemented features, in-progress components, and pla
 | **6** | **Interactive Transaction Ingestion Modal** | **DONE** | Proto, Svc, BFF, Web | [add-transactions-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/add-transactions-implementation-plan.md) |
 | **7** | **Interactive SVG Performance Chart & Time Range Filtering** | **DONE** | Proto, Svc, BFF, Web | [performance-chart-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/performance-chart-implementation-plan.md) |
 | **8** | **Transaction History & Ledger Management** | **DONE** | Proto, Svc, BFF, Web | [transaction-history-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/transaction-history-implementation-plan.md) |
-| **9** | **Dynamic Cost Basis Method Switching (Average Cost ↔ FIFO)** | **PLANNED** | Proto, Svc, BFF, Web | [cost-basis-switching-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/cost-basis-switching-implementation-plan.md) |
-| **10** | **User Preferences & Display Currency** | **PLANNED** | Proto, User API, BFF, Web | [user-preferences-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-preferences-implementation-plan.md) |
-| **11** | **Portfolio Valuation Engine & Historical Backfill** | **PLANNED** | Database, Svc, Worker | [portfolio-valuation-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/portfolio-valuation-engine-implementation-plan.md) |
-| **12** | **Market Data Ingestion (Asset Prices & FX Rates)** | **PLANNED** | Database, Svc, Worker | [market-data-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/market-data-ingestion-implementation-plan.md) |
-| **13** | **Look-Through Fundamental & Cash Flow Quality Engine** | **PLANNED** | Database, Proto, Svc, BFF, Web | [fundamental-cash-flow-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/fundamental-cash-flow-engine-implementation-plan.md) |
-| **14** | **Tax Lot Inspector & Capital Gains Reports** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
-| **15** | **Dividend Calendar & Yield Analytics** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
-| **16** | **Real-Time Market Data & WebSocket Price Ticker** | **ROADMAP** | Market Data, Svc, Web | *(Future Plan)* |
+| **9** | **Frontend Workspace Architecture (Main App & Admin Portal)** | **DONE** | Web (Monorepo, React, Vite), BFF | [web-workspace-refactoring-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/web-workspace-refactoring-plan.md) |
+| **10** | **Dynamic Cost Basis Method Switching (Average Cost ↔ FIFO)** | **PLANNED** | Proto, Svc, BFF, Web | [cost-basis-switching-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/cost-basis-switching-implementation-plan.md) |
+| **11** | **User Preferences & Display Currency** | **PLANNED** | Proto, User API, BFF, Web | [user-preferences-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-preferences-implementation-plan.md) |
+| **12** | **Portfolio Valuation Engine & Historical Backfill** | **PLANNED** | Database, Svc, Worker | [portfolio-valuation-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/portfolio-valuation-engine-implementation-plan.md) |
+| **13** | **Market Data Ingestion (Asset Prices & FX Rates)** | **PLANNED** | Database, Svc, Worker | [market-data-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/market-data-ingestion-implementation-plan.md) |
+| **14** | **Look-Through Fundamental & Cash Flow Quality Engine** | **PLANNED** | Database, Proto, Svc, BFF, Web | [fundamental-cash-flow-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/fundamental-cash-flow-engine-implementation-plan.md) |
+| **15** | **Tax Lot Inspector & Capital Gains Reports** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
+| **16** | **Dividend Calendar & Yield Analytics** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
+| **17** | **Real-Time Market Data & WebSocket Price Ticker** | **ROADMAP** | Market Data, Svc, Web | *(Future Plan)* |
 
 ---
 
@@ -73,9 +74,9 @@ This document catalogs all implemented features, in-progress components, and pla
 - **Plan Reference**: [portfolio-service-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/portfolio-service-implementation-plan.md) & [genql-usage.md](file:///Users/oscargarcia/workspace/graphfolio/docs/genql-usage.md)
 - **Description**: Glassmorphic, dark-mode single-page application built with React 19, TypeScript, and Vite. Queries the BFF using an auto-generated type-safe client (`genql`), rendering total portfolio valuation, day's gain/loss, annualized returns, cash balance, and a comprehensive holdings table with currency formatting.
 - **Key Files**:
-  - [Dashboard.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/src/components/Dashboard.tsx)
-  - [Dashboard.css](file:///Users/oscargarcia/workspace/graphfolio/web/src/components/Dashboard.css)
-  - [main.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/src/main.tsx)
+  - [Dashboard.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.tsx)
+  - [Dashboard.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.css)
+  - [main.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/main.tsx)
 
 ### 2.6 Interactive Transaction Ingestion Modal
 - **Status**: **DONE**
@@ -83,8 +84,8 @@ This document catalogs all implemented features, in-progress components, and pla
 - **Description**: End-to-end transaction entry flow allowing investors to record `BUY`, `SELL`, `DIVIDEND`, `DEPOSIT`, and `WITHDRAWAL` transactions. Features dynamic instrument lookup, trade date validation, cash balance checks, automatic projection rebuilds, and instantaneous UI refresh without full page reload.
 - **Key Files**:
   - [portfolio.proto](file:///Users/oscargarcia/workspace/graphfolio/proto/portfolio/v1/portfolio.proto)
-  - [AddTransactionModal.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/src/components/AddTransactionModal.tsx)
-  - [AddTransactionModal.css](file:///Users/oscargarcia/workspace/graphfolio/web/src/components/AddTransactionModal.css)
+  - [AddTransactionModal.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/AddTransactionModal.tsx)
+  - [AddTransactionModal.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/AddTransactionModal.css)
   - [transaction.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/transaction.go)
 
 ### 2.7 Interactive SVG Performance Chart & Time Range Filtering
@@ -96,8 +97,8 @@ This document catalogs all implemented features, in-progress components, and pla
   - [history.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/history.go)
   - [schema.graphqls](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls)
   - [schema.resolvers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers.go)
-  - [PerformanceChart.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/src/components/PerformanceChart.tsx)
-  - [PerformanceChart.css](file:///Users/oscargarcia/workspace/graphfolio/web/src/components/PerformanceChart.css)
+  - [PerformanceChart.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/PerformanceChart.tsx)
+  - [PerformanceChart.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/PerformanceChart.css)
 
 ### 2.8 Transaction History & Ledger Management
 - **Status**: **DONE**
@@ -108,8 +109,19 @@ This document catalogs all implemented features, in-progress components, and pla
   - [transaction.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/transaction.go)
   - [schema.graphqls](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls)
   - [schema.resolvers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers.go)
-  - [TransactionLedger.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/src/components/TransactionLedger.tsx)
-  - [TransactionLedger.css](file:///Users/oscargarcia/workspace/graphfolio/web/src/components/TransactionLedger.css)
+  - [TransactionLedger.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/TransactionLedger.tsx)
+  - [TransactionLedger.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/TransactionLedger.css)
+
+### 2.9 Frontend Workspace Architecture (`main-app` & `admin-app`)
+- **Status**: **DONE**
+- **Plan Reference**: [web-workspace-refactoring-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/web-workspace-refactoring-plan.md)
+- **Description**: Transitioned `web/` to an npm workspace monorepo supporting multiple frontend applications. Cleanly decouples the primary user-facing application (`main-app` on port 5173) and the internal administrative portal (`admin-app` on port 5174) while eliminating configuration duplication through shared `tsconfig.base.json`, Oxlint configs, and Vite bundler settings.
+- **Key Packages & Files**:
+  - **Shared Design System**: [`@graphfolio/ui`](file:///Users/oscargarcia/workspace/graphfolio/web/packages/ui) with tokens, reset, formatters, and atomic components (`Button`, `Modal`, `Card`, `Badge`, `Table`, `Input`, `Select`).
+  - **Shared API Client**: [`@graphfolio/api-client`](file:///Users/oscargarcia/workspace/graphfolio/web/packages/api-client) with GenQL generated client and singleton factory.
+  - **Primary Application**: [`@graphfolio/main-app`](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app)
+  - **Internal Admin Portal**: [`@graphfolio/admin-app`](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app) (Asset Management, Price Management, Ingestion Pipeline)
+  - [Makefile](file:///Users/oscargarcia/workspace/graphfolio/Makefile) targets: `run-web`, `run-admin`, `run-all-web`, `build-web`, `install-web`
 
 ---
 
@@ -125,7 +137,7 @@ This document catalogs all implemented features, in-progress components, and pla
   - Replays historical transaction ledger to instantly update realized capital gains, holding cost basis, and total return percentages.
   - Info tooltip explaining tax optimization differences (pooling vs selling oldest shares).
 
-### 3.3 User Preferences & Display Currency
+### 3.2 User Preferences & Display Currency
 - **Status**: **PLANNED**
 - **Plan Reference**: [user-preferences-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-preferences-implementation-plan.md)
 - **Scope**: `proto/user/v1/`, `services/user-api`, `bff/`, `web/`
@@ -136,7 +148,7 @@ This document catalogs all implemented features, in-progress components, and pla
   - Dynamic currency conversion across portfolio valuation and holding metrics via live FX rates.
   - `UserPreferencesModal` component triggered from the user profile badge in the navigation bar.
 
-### 3.4 Portfolio Valuation Engine & Historical Backfill
+### 3.3 Portfolio Valuation Engine & Historical Backfill
 - **Status**: **PLANNED**
 - **Plan Reference**: [portfolio-valuation-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/portfolio-valuation-engine-implementation-plan.md)
 - **Scope**: `services/portfolio-api`
@@ -146,7 +158,7 @@ This document catalogs all implemented features, in-progress components, and pla
   - Daily sub-period return and cumulative Time-Weighted Return (TWR) index calculations with zero-drift decimal arithmetic.
   - Automatic historical replay hook triggered upon past-dated transaction additions.
 
-### 3.5 Market Data Ingestion (Asset Prices & FX Rates)
+### 3.4 Market Data Ingestion (Asset Prices & FX Rates)
 - **Status**: **PLANNED**
 - **Plan Reference**: [market-data-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/market-data-ingestion-implementation-plan.md)
 - **Scope**: `services/portfolio-api` (`internal/marketdata/`, `cmd/market-ingest/`)
@@ -157,7 +169,7 @@ This document catalogs all implemented features, in-progress components, and pla
   - Token-bucket rate limiting (`golang.org/x/time/rate`), exponential backoff retry policies, and price spike anomaly detection.
   - Automatic historical price and FX backfill triggered upon transaction ingestion for unpriced assets.
 
-### 3.6 Look-Through Fundamental & Cash Flow Quality Engine
+### 3.5 Look-Through Fundamental & Cash Flow Quality Engine
 - **Status**: **PLANNED**
 - **Plan Reference**: [fundamental-cash-flow-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/fundamental-cash-flow-engine-implementation-plan.md)
 - **Scope**: `proto/`, `services/portfolio-api`, `bff/`, `web/`

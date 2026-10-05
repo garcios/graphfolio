@@ -6,7 +6,7 @@ DB_NAME          ?= graphfolio
 PORTFOLIO_DB_URL ?= postgres://portfolio_svc:portfolio@localhost:5432/$(DB_NAME)?sslmode=disable
 USER_DB_URL      ?= postgres://user_svc:user@localhost:5432/$(DB_NAME)?sslmode=disable
 
-.PHONY: install generate proto run-bff run-portfolio run-web run \
+.PHONY: install install-web generate proto run-bff run-portfolio run-user run-web run-admin run-all-web build-web run \
 	db-check db-bootstrap db-drop db-reset db-test-setup \
 	migrate-up migrate-down migrate-create db-seed test
 
@@ -20,6 +20,10 @@ install:
 	cd services/portfolio-api && go mod download
 	cd services/user-api && go mod download
 
+install-web:
+	@echo "Installing frontend workspace dependencies..."
+	cd web && npm install
+
 proto:
 	@echo "Generating Protocol Buffers code..."
 	cd proto && protoc \
@@ -30,8 +34,8 @@ proto:
 generate: proto
 	@echo "Generating GraphQL backend models..."
 	cd bff && go run github.com/99designs/gqlgen generate
-	@echo "Generating genql frontend client..."
-	cd web && npx genql --schema ../bff/graph/schema.graphqls --output ./src/generated
+	@echo "Generating genql frontend client in shared api-client package..."
+	cd web && npx genql --schema ../bff/graph/schema.graphqls --output ./packages/api-client/src/generated
 	@echo "Generating Go mocks..."
 	cd services/portfolio-api && go generate ./...
 
@@ -83,8 +87,20 @@ run-user:
 	cd services/user-api/cmd/server && go run main.go
 
 run-web:
-	@echo "Starting Web frontend..."
-	cd web && npm run dev
+	@echo "Starting Main Investor Web Application (port 5173)..."
+	cd web && npm run dev:main
+
+run-admin:
+	@echo "Starting Admin Portal Application (port 5174)..."
+	cd web && npm run dev:admin
+
+run-all-web:
+	@echo "Starting both Main and Admin web applications concurrently..."
+	$(MAKE) -j 2 run-web run-admin
+
+build-web:
+	@echo "Building all web workspaces..."
+	cd web && npm run build
 
 run:
 	@echo "Starting services..."

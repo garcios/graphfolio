@@ -1,0 +1,64 @@
+.gf-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.gf-input-label {
+  font-size: 0.825rem;
+  font-weight: 500;
+  color: var(--text-secondary, #a1a1aa);
+  letter-spacing: 0.01em;
+}
+
+.gf-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.gf-input {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  background: var(--input-bg, rgba(0, 0, 0, 0.4));
+  border: 1px solid var(--input-border, rgba(255, 255, 255, 0.12));
+  border-radius: var(--radius-sm, 6px);
+  color: var(--text-primary, #ffffff);
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  font-family: inherit;
+}
+
+.gf-input:focus {
+  border-color: var(--input-focus-border, #3b82f6);
+  box-shadow: 0 0 0 2px var(--input-focus-glow, rgba(59, 130, 246, 0.25));
+}
+
+.gf-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gf-input--error {
+  border-color: var(--accent-red, #ef4444);
+}
+
+.gf-input--error:focus {
+  border-color: var(--accent-red, #ef4444);
+  box-shadow: 0 0 0 2px var(--accent-red-glow, rgba(239, 68, 68, 0.25));
+}
+
+.gf-input-error {
+  font-size: 0.775rem;
+  color: var(--accent-red, #ef4444);
+  margin-top: 0.15rem;
+}
+
+.gf-input-helper {
+  font-size: 0.775rem;
+  color: var(--text-muted, #71717a);
+  margin-top: 0.15rem;
+}

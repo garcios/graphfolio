@@ -1,0 +1,109 @@
+.gf-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--modal-backdrop, rgba(0, 0, 0, 0.75));
+  backdrop-filter: var(--glass-blur, blur(10px));
+  -webkit-backdrop-filter: var(--glass-blur, blur(10px));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+  animation: gf-fadeIn 0.15s ease-out;
+}
+
+.gf-modal {
+  background: #0d0e15;
+  border: 1px solid var(--card-border-active, rgba(255, 255, 255, 0.12));
+  border-radius: var(--radius-lg, 16px);
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  animation: gf-scaleUp 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.gf-modal--sm {
+  max-width: 420px;
+}
+
+.gf-modal--lg {
+  max-width: 760px;
+}
+
+.gf-modal--xl {
+  max-width: 980px;
+}
+
+.gf-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+}
+
+.gf-modal__title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+  letter-spacing: -0.01em;
+}
+
+.gf-modal__close {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary, #a1a1aa);
+  cursor: pointer;
+  padding: 0.35rem;
+  border-radius: var(--radius-xs, 4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.gf-modal__close:hover {
+  color: var(--text-primary, #ffffff);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.gf-modal__body {
+  padding: 1.5rem;
+  overflow-y: auto;
+  color: var(--text-primary, #ffffff);
+}
+
+.gf-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+  background: rgba(0, 0, 0, 0.2);
+}
+
+@keyframes gf-fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes gf-scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

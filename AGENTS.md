@@ -37,7 +37,11 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
   The Backend-for-Frontend is a Go service using `gqlgen` (GraphQL). It translates GraphQL queries (`portfolio`, `instruments`, `portfolioHistory`, `transactions`) and mutations (`addTransaction`, `deleteTransaction`) into gRPC calls across domain microservices, maps exact decimal scalars, stitches data together, and shields the frontend from microservice topology.
 
 - **`web/` (The Consumer)**:
-  Standalone Vite + React + TypeScript frontend. Interacts exclusively with the BFF GraphQL endpoint using a strongly-typed auto-generated client (`genql`). Includes interactive dashboard, transaction ingestion modal (`AddTransactionModal`), dynamic SVG performance curve (`PerformanceChart`), and paginated transaction ledger with filtering and deletion (`TransactionLedger`).
+  Workspace monorepo containing multiple frontend applications and shared libraries:
+  - `apps/main-app`: Primary investor-facing application (Port 5173). Interactive portfolio dashboard, performance chart, transaction ledger, and trade ingestion modal.
+  - `apps/admin-app`: Internal administrative portal (Port 5174). Master instrument/asset directory management, closing price ledger, manual price overrides, and market ingestion monitoring.
+  - `packages/ui`: Shared design system (`@graphfolio/ui`) with dark glassmorphic design tokens, atomic components (`Button`, `Modal`, `Card`, `Badge`, `Table`, `Input`, `Select`), and precision financial formatters.
+  - `packages/api-client`: Shared auto-generated typed GraphQL client (`@graphfolio/api-client`) communicating with the BFF.
 
 ---
 
@@ -104,23 +108,36 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   │       └── models_gen.go     # Generated GraphQL models
 │   └── go.mod
 │
-├── web/                          # 6. Frontend Application
-│   ├── src/
-│   │   ├── components/           # Reusable UI components
-│   │   │   ├── Dashboard.tsx     # Consolidated portfolio dashboard view
-│   │   │   ├── Dashboard.css     # Dashboard layout and glassmorphism styling
-│   │   │   ├── PerformanceChart.tsx # Interactive SVG Bezier curve with crosshair & tooltip
-│   │   │   ├── PerformanceChart.css # Glassmorphism and glow styles for performance chart
-│   │   │   ├── TransactionLedger.tsx# Paginated transaction ledger with type filtering and deletion
-│   │   │   ├── TransactionLedger.css# Styling, badges, and delete confirmation modal
-│   │   │   ├── AddTransactionModal.tsx # Interactive modal for recording trades and cash movements
-│   │   │   ├── AddTransactionModal.css # Glassmorphic modal styling
-│   │   │   └── ...
-│   │   ├── generated/            # GenQL auto-generated typed client
-│   │   ├── graphql/              # Shared GraphQL client (client.ts)
-│   │   └── main.tsx              # Application entrypoint
-│   ├── package.json
-│   └── tsconfig.json
+├── web/                          # 6. Frontend Workspace Monorepo
+│   ├── package.json              # Workspace root ("workspaces": ["apps/*", "packages/*"])
+│   ├── tsconfig.base.json        # Shared TypeScript compiler options
+│   ├── apps/
+│   │   ├── main-app/             # Primary Investor Application (:5173)
+│   │   │   ├── src/
+│   │   │   │   ├── components/   # Dashboard, PerformanceChart, TransactionLedger, AddTransactionModal
+│   │   │   │   ├── App.tsx
+│   │   │   │   └── main.tsx
+│   │   │   ├── vite.config.ts    # Configured with resolve.alias for live package HMR
+│   │   │   └── package.json      # @graphfolio/main-app
+│   │   └── admin-app/            # Internal Operations Portal (:5174)
+│   │       ├── src/
+│   │       │   ├── components/   # AdminLayout, AssetManagement, PriceManagement, IngestionPipeline
+│   │       │   ├── App.tsx
+│   │       │   └── main.tsx
+│   │       ├── vite.config.ts    # Port 5174 with package aliases
+│   │       └── package.json      # @graphfolio/admin-app
+│   └── packages/
+│       ├── ui/                   # Shared Design System (@graphfolio/ui)
+│       │   ├── src/
+│       │   │   ├── styles/       # tokens.css, reset.css
+│       │   │   ├── components/   # Button, Modal, Card, Badge, Table, Input, Select
+│       │   │   └── utils/        # formatMoney, formatPercent, formatDate, cn
+│       │   └── package.json
+│       └── api-client/           # Shared GraphQL Client (@graphfolio/api-client)
+│           ├── src/
+│           │   ├── generated/    # Target for `make generate`
+│           │   └── client.ts     # Configurable GraphQL client singleton
+│           └── package.json
 │
 ├── docs/                         # Architecture designs & implementation plans
 │   ├── db-implementation-plan.md

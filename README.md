@@ -182,10 +182,13 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 ├── bff/                          # GraphQL Backend-for-Frontend (gqlgen)
 │   ├── graph/                    # Schema, resolvers (portfolio, instruments, addTransaction, portfolioHistory, transactions, deleteTransaction), helpers
 │   └── cmd/server/               # BFF entrypoint
-├── web/                          # Frontend React application
-│   ├── src/components/           # Reusable UI elements (Dashboard, AddTransactionModal, PerformanceChart, TransactionLedger)
-│   ├── src/graphql/              # Shared typed client wrapper (client.ts)
-│   └── src/generated/            # Auto-generated typed GenQL client
+├── web/                          # Frontend Workspace Monorepo
+│   ├── apps/
+│   │   ├── main-app/             # Primary Investor React App (:5173)
+│   │   └── admin-app/            # Internal Operations Portal (:5174)
+│   └── packages/
+│       ├── ui/                   # Shared Design System (@graphfolio/ui)
+│       └── api-client/           # Shared GraphQL Client (@graphfolio/api-client)
 ├── docs/                         # Implementation plans and guides
 │   ├── db-implementation-plan.md
 │   ├── portfolio-service-implementation-plan.md
@@ -248,7 +251,10 @@ make generate
 | `make run-portfolio` | Starts the Portfolio gRPC microservice on port 50051 |
 | `make run-user` | Starts the User gRPC microservice on port 50052 |
 | `make run-bff` | Starts the GraphQL BFF on port 8080 |
-| `make run-web` | Starts the Vite React frontend on port 5173 |
+| `make run-web` | Starts the Primary Investor frontend (`main-app`) on port 5173 |
+| `make run-admin` | Starts the Internal Operations Portal (`admin-app`) on port 5174 |
+| `make run-all-web` | Concurrently starts both `main-app` and `admin-app` |
+| `make build-web` | Builds production bundles for all web workspaces |
 | `make run` | Concurrently starts Portfolio API, BFF, and React web servers |
 
 ---
@@ -256,6 +262,7 @@ make generate
 ## Documentation Links
 
 - **Repository Rules & Guidelines**: [`AGENTS.md`](./AGENTS.md)
+- **Frontend Workspace Architecture Plan**: [`docs/web-workspace-refactoring-plan.md`](./docs/web-workspace-refactoring-plan.md)
 - **Database Architecture & Schema Design**: [`docs/db-implementation-plan.md`](./docs/db-implementation-plan.md)
 - **Portfolio Service Implementation Plan**: [`docs/portfolio-service-implementation-plan.md`](./docs/portfolio-service-implementation-plan.md)
 - **Add Transactions Implementation Plan**: [`docs/add-transactions-implementation-plan.md`](./docs/add-transactions-implementation-plan.md)

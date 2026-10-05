@@ -1,0 +1,21 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-color, #050505);
+  color: var(--text-primary, #ffffff);
+  min-height: 100vh;
+  background: var(--bg-gradient, radial-gradient(circle at 50% -20%, #1a1a2e 0%, #050505 70%));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+input, button, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
