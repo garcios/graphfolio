@@ -17,14 +17,15 @@ This document catalogs all implemented features, in-progress components, and pla
 | **7** | **Interactive SVG Performance Chart & Time Range Filtering** | **DONE** | Proto, Svc, BFF, Web | [performance-chart-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/performance-chart-implementation-plan.md) |
 | **8** | **Transaction History & Ledger Management** | **DONE** | Proto, Svc, BFF, Web | [transaction-history-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/transaction-history-implementation-plan.md) |
 | **9** | **Frontend Workspace Architecture (Main App & Admin Portal)** | **DONE** | Web (Monorepo, React, Vite), BFF | [web-workspace-refactoring-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/web-workspace-refactoring-plan.md) |
-| **10** | **Dynamic Cost Basis Method Switching (Average Cost ↔ FIFO)** | **PLANNED** | Proto, Svc, BFF, Web | [cost-basis-switching-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/cost-basis-switching-implementation-plan.md) |
-| **11** | **User Preferences & Display Currency** | **PLANNED** | Proto, User API, BFF, Web | [user-preferences-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-preferences-implementation-plan.md) |
-| **12** | **Portfolio Valuation Engine & Historical Backfill** | **PLANNED** | Database, Svc, Worker | [portfolio-valuation-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/portfolio-valuation-engine-implementation-plan.md) |
-| **13** | **Market Data Ingestion (Asset Prices & FX Rates)** | **PLANNED** | Database, Svc, Worker | [market-data-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/market-data-ingestion-implementation-plan.md) |
-| **14** | **Look-Through Fundamental & Cash Flow Quality Engine** | **PLANNED** | Database, Proto, Svc, BFF, Web | [fundamental-cash-flow-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/fundamental-cash-flow-engine-implementation-plan.md) |
-| **15** | **Tax Lot Inspector & Capital Gains Reports** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
-| **16** | **Dividend Calendar & Yield Analytics** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
-| **17** | **Real-Time Market Data & WebSocket Price Ticker** | **ROADMAP** | Market Data, Svc, Web | *(Future Plan)* |
+| **10** | **Admin Portal Backend & BFF (Asset, Price & Ingestion Management)** | **PLANNED** | Proto, Svc, BFF, Web | [admin-portal-backend-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/admin-portal-backend-implementation-plan.md) |
+| **11** | **Dynamic Cost Basis Method Switching (Average Cost ↔ FIFO)** | **PLANNED** | Proto, Svc, BFF, Web | [cost-basis-switching-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/cost-basis-switching-implementation-plan.md) |
+| **12** | **User Preferences & Display Currency** | **PLANNED** | Proto, User API, BFF, Web | [user-preferences-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-preferences-implementation-plan.md) |
+| **13** | **Portfolio Valuation Engine & Historical Backfill** | **PLANNED** | Database, Svc, Worker | [portfolio-valuation-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/portfolio-valuation-engine-implementation-plan.md) |
+| **14** | **Market Data Ingestion (Asset Prices & FX Rates)** | **PLANNED** | Database, Svc, Worker | [market-data-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/market-data-ingestion-implementation-plan.md) |
+| **15** | **Look-Through Fundamental & Cash Flow Quality Engine** | **PLANNED** | Database, Proto, Svc, BFF, Web | [fundamental-cash-flow-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/fundamental-cash-flow-engine-implementation-plan.md) |
+| **16** | **Tax Lot Inspector & Capital Gains Reports** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
+| **17** | **Dividend Calendar & Yield Analytics** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
+| **18** | **Real-Time Market Data & WebSocket Price Ticker** | **ROADMAP** | Market Data, Svc, Web | *(Future Plan)* |
 
 ---
 
@@ -127,7 +128,17 @@ This document catalogs all implemented features, in-progress components, and pla
 
 ## 3. Planned Features (`PLANNED`)
 
-### 3.1 Dynamic Cost Basis Method Switching (Average Cost ↔ FIFO)
+### 3.1 Admin Portal Backend & BFF (Asset, Price & Ingestion Management)
+- **Status**: **PLANNED**
+- **Plan Reference**: [admin-portal-backend-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/admin-portal-backend-implementation-plan.md)
+- **Scope**: `proto/`, `services/portfolio-api`, `bff/`, `web/apps/admin-app`
+- **Highlights**:
+  - Master instrument directory CRUD: listing all instruments (active/inactive), symbol uniqueness verification, exchange and currency code checks, and active toggle.
+  - Closing price ledger queries (`portfolio.instrument_prices`) and manual price override recording with audit reasons and retroactive valuation handling.
+  - Ingestion pipeline diagnostic endpoints reporting live feed health, central bank FX fixings, and rate limit budgets.
+  - On-demand market synchronization trigger.
+
+### 3.2 Dynamic Cost Basis Method Switching (Average Cost ↔ FIFO)
 - **Status**: **PLANNED**
 - **Plan Reference**: [cost-basis-switching-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/cost-basis-switching-implementation-plan.md)
 - **Scope**: `proto/`, `services/portfolio-api`, `bff/`, `web/`
@@ -137,7 +148,7 @@ This document catalogs all implemented features, in-progress components, and pla
   - Replays historical transaction ledger to instantly update realized capital gains, holding cost basis, and total return percentages.
   - Info tooltip explaining tax optimization differences (pooling vs selling oldest shares).
 
-### 3.2 User Preferences & Display Currency
+### 3.3 User Preferences & Display Currency
 - **Status**: **PLANNED**
 - **Plan Reference**: [user-preferences-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-preferences-implementation-plan.md)
 - **Scope**: `proto/user/v1/`, `services/user-api`, `bff/`, `web/`
@@ -148,7 +159,7 @@ This document catalogs all implemented features, in-progress components, and pla
   - Dynamic currency conversion across portfolio valuation and holding metrics via live FX rates.
   - `UserPreferencesModal` component triggered from the user profile badge in the navigation bar.
 
-### 3.3 Portfolio Valuation Engine & Historical Backfill
+### 3.4 Portfolio Valuation Engine & Historical Backfill
 - **Status**: **PLANNED**
 - **Plan Reference**: [portfolio-valuation-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/portfolio-valuation-engine-implementation-plan.md)
 - **Scope**: `services/portfolio-api`
@@ -158,7 +169,7 @@ This document catalogs all implemented features, in-progress components, and pla
   - Daily sub-period return and cumulative Time-Weighted Return (TWR) index calculations with zero-drift decimal arithmetic.
   - Automatic historical replay hook triggered upon past-dated transaction additions.
 
-### 3.4 Market Data Ingestion (Asset Prices & FX Rates)
+### 3.5 Market Data Ingestion (Asset Prices & FX Rates)
 - **Status**: **PLANNED**
 - **Plan Reference**: [market-data-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/market-data-ingestion-implementation-plan.md)
 - **Scope**: `services/portfolio-api` (`internal/marketdata/`, `cmd/market-ingest/`)
@@ -169,7 +180,7 @@ This document catalogs all implemented features, in-progress components, and pla
   - Token-bucket rate limiting (`golang.org/x/time/rate`), exponential backoff retry policies, and price spike anomaly detection.
   - Automatic historical price and FX backfill triggered upon transaction ingestion for unpriced assets.
 
-### 3.5 Look-Through Fundamental & Cash Flow Quality Engine
+### 3.6 Look-Through Fundamental & Cash Flow Quality Engine
 - **Status**: **PLANNED**
 - **Plan Reference**: [fundamental-cash-flow-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/fundamental-cash-flow-engine-implementation-plan.md)
 - **Scope**: `proto/`, `services/portfolio-api`, `bff/`, `web/`
