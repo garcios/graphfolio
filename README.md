@@ -10,10 +10,11 @@ A modern portfolio tracker built for serious investors. GraphFolio accurately me
 - **Exact Decimal Arithmetic**: Zero floating-point drift. All money, quantities, prices, and rates use fixed-point decimal arithmetic from database to browser.
 - **Interactive Performance Chart**: Timeframe-selectable SVG performance chart (1D, 1W, 1M, YTD, 1Y, ALL) rendering cubic Bezier curves, dynamic profit/loss color gradients, crosshair tracking, inspection tooltips, and exact period returns.
 - **Interactive Transaction Logging**: Record Buys, Sells, Cash Deposits, Withdrawals, and Dividends directly in the UI. Holding quantities, cost bases, cash balances, and returns re-project deterministically in real time.
+- **Transaction History & Ledger Management**: Paginated transaction history with type filtering, exact execution prices, fee tracking, and safe deletion with immediate atomic ledger replay.
 - **Transaction-Ledger Architecture**: Immutable transaction ledger acts as the authoritative source of truth, deterministically projecting holdings, cash balances, and valuations.
 - **Flexible Cost Basis Accounting**: Native support for both **Average Cost** (`AVERAGE_COST`, default) and **FIFO** (`FIFO`) tax lot relief strategies.
 - **Clean Microservice Monorepo**: Contract-first gRPC services with a Go GraphQL Backend-for-Frontend (BFF) and strongly-typed frontend queries.
-- **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, Vite, and modal transaction entry with instant state refresh.
+- **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, Vite, modal transaction entry, and instant state refresh.
 
 > 📋 *For a comprehensive list of completed milestones, in-progress components, and planned roadmap items, see [`docs/features.md`](file:///Users/oscargarcia/workspace/graphfolio/docs/features.md).*
 
@@ -125,7 +126,7 @@ make run
 GraphFolio enforces a strict separation of concerns across layered boundaries:
 
 ```text
-React Component (Dashboard, AddTransactionModal, PerformanceChart)
+React Component (Dashboard, AddTransactionModal, PerformanceChart, TransactionLedger)
       │
       ▼  (Typed queries & mutations via GenQL)
 GraphQL Backend-for-Frontend (BFF)  [localhost:8080]
@@ -150,7 +151,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 ### Ledger Replay & Cost Basis Methods
 
 1. **Transaction Ledger**: All investment events (buys, sells, dividends, transfers, deposits, withdrawals) are appended to `portfolio.transactions`.
-2. **Deterministic Projections**: When transactions are added or cost-basis methods switch, the replay engine in [`services/portfolio-api/internal/service/projection.go`](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/projection.go) re-evaluates all transactions to produce:
+2. **Deterministic Projections**: When transactions are added, deleted, or cost-basis methods switch, the replay engine in [`services/portfolio-api/internal/service/projection.go`](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/projection.go) re-evaluates all transactions to produce:
    - `tax_lots` and `lot_disposals`
    - `holding_projections` (quantity, cost basis, realized PnL, dividend income)
    - `cash_balances`
@@ -166,7 +167,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 ```text
 ├── proto/                        # Single Source of Truth for APIs (Protobuf definitions)
 │   ├── common/v1/decimal.proto   # Decimal and Money contracts
-│   └── portfolio/v1/             # Portfolio gRPC service (GetPortfolio, AddTransaction, ListInstruments, GetPortfolioHistory)
+│   └── portfolio/v1/             # Portfolio gRPC service (GetPortfolio, AddTransaction, ListInstruments, GetPortfolioHistory, ListTransactions, DeleteTransaction)
 ├── pkg/                          # Shared Go infrastructure
 │   ├── database/                 # pgx connection pooling, auto .env loading, migration runner
 │   └── decimalpb/                # Decimal/Money conversions between proto and shopspring
@@ -179,10 +180,10 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   └── seeds/                # Seed fixtures (dev_seed.sql with 365-day history)
 │   └── user-api/                 # User domain microservice and migrations
 ├── bff/                          # GraphQL Backend-for-Frontend (gqlgen)
-│   ├── graph/                    # Schema, resolvers (portfolio, instruments, addTransaction, portfolioHistory), helpers
+│   ├── graph/                    # Schema, resolvers (portfolio, instruments, addTransaction, portfolioHistory, transactions, deleteTransaction), helpers
 │   └── cmd/server/               # BFF entrypoint
 ├── web/                          # Frontend React application
-│   ├── src/components/           # Reusable UI elements (Dashboard, AddTransactionModal, PerformanceChart)
+│   ├── src/components/           # Reusable UI elements (Dashboard, AddTransactionModal, PerformanceChart, TransactionLedger)
 │   ├── src/graphql/              # Shared typed client wrapper (client.ts)
 │   └── src/generated/            # Auto-generated typed GenQL client
 ├── docs/                         # Implementation plans and guides
@@ -196,6 +197,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   ├── transaction-history-implementation-plan.md
 │   ├── cost-basis-switching-implementation-plan.md
 │   ├── user-preferences-implementation-plan.md
+│   ├── competitive-analysis.md
 │   └── genql-usage.md
 ├── Makefile                      # Standardized development workflows
 └── go.work                       # Go workspace mapping modules
@@ -257,7 +259,12 @@ make generate
 - **Portfolio Service Implementation Plan**: [`docs/portfolio-service-implementation-plan.md`](./docs/portfolio-service-implementation-plan.md)
 - **Add Transactions Implementation Plan**: [`docs/add-transactions-implementation-plan.md`](./docs/add-transactions-implementation-plan.md)
 - **Performance Chart Implementation Plan**: [`docs/performance-chart-implementation-plan.md`](./docs/performance-chart-implementation-plan.md)
+- **Transaction History Implementation Plan**: [`docs/transaction-history-implementation-plan.md`](./docs/transaction-history-implementation-plan.md)
+- **Cost Basis Switching Plan**: [`docs/cost-basis-switching-implementation-plan.md`](./docs/cost-basis-switching-implementation-plan.md)
 - **Portfolio Valuation Engine Plan**: [`docs/portfolio-valuation-engine-implementation-plan.md`](./docs/portfolio-valuation-engine-implementation-plan.md)
 - **Market Data Ingestion Plan**: [`docs/market-data-ingestion-implementation-plan.md`](./docs/market-data-ingestion-implementation-plan.md)
+- **User Preferences Implementation Plan**: [`docs/user-preferences-implementation-plan.md`](./docs/user-preferences-implementation-plan.md)
+- **Competitive Strategy Analysis**: [`docs/competitive-analysis.md`](./docs/competitive-analysis.md)
 - **Frontend GraphQL Setup**: [`docs/genql-usage.md`](./docs/genql-usage.md)
+
 

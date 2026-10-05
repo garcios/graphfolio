@@ -16,7 +16,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 - **`proto/` (The Contract)**:
   Protocol Buffers are the single source of truth for microservice RPCs and shared types. Stored at the root to eliminate schema drift between gRPC servers and the BFF client wrappers.
   - `proto/common/v1/decimal.proto`: High-precision fixed-point `Decimal` (value, scale) and `Money` (amount, currency_code) types.
-  - `proto/portfolio/v1/portfolio.proto`: Portfolio service (`GetPortfolio`, `AddTransaction`, `ListInstruments`, `GetPortfolioHistory`), investment summary, time-series valuation points, and performance metrics.
+  - `proto/portfolio/v1/portfolio.proto`: Portfolio service (`GetPortfolio`, `AddTransaction`, `ListInstruments`, `GetPortfolioHistory`, `ListTransactions`, `DeleteTransaction`), investment summary, time-series valuation points, performance metrics, and paginated transaction ledger filtering.
 
 - **`pkg/` (Shared Infrastructure)**:
   Strictly non-domain-specific code shared across backend modules:
@@ -28,16 +28,16 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 - **`services/` (The Domain Microservices)**:
   Each microservice is an isolated Go module (`services/portfolio-api`, `services/user-api`):
   - Domain models and calculators live in `internal/domain/` (`portfolio`, `holding`, `transaction`, `instrument`, `tax_lot`, `history`).
-  - Persistence logic lives in `internal/repository/` with `pgxpool.Pool` queries and transactions (`InsertTransaction`, `FindInstrumentBySymbol`, `SaveProjectionsTx`, `GetPortfolioValuations`).
-  - Business logic, calculation services, transaction ingestion (`AddTransaction`), ledger replay projections (`RebuildProjections`), and historical valuation time-series retrieval (`GetPortfolioHistory`) live in `internal/service/`.
+  - Persistence logic lives in `internal/repository/` with `pgxpool.Pool` queries and transactions (`InsertTransaction`, `ListTransactions`, `DeleteTransaction`, `FindInstrumentBySymbol`, `SaveProjectionsTx`, `GetPortfolioValuations`).
+  - Business logic, calculation services, transaction ingestion (`AddTransaction`), transaction deletion (`DeleteTransaction`), ledger replay projections (`RebuildProjections`), paginated ledger queries (`ListTransactions`), and historical valuation time-series retrieval (`GetPortfolioHistory`) live in `internal/service/`.
   - Transport adapters (gRPC servers) live in `internal/` (`server.go`) and `cmd/server/main.go`.
   - Microservices only interact with their dedicated database schemas and other gRPC APIs. They have zero awareness of GraphQL.
 
 - **`bff/` (The Orchestrator)**:
-  The Backend-for-Frontend is a Go service using `gqlgen` (GraphQL). It translates GraphQL queries (`portfolio`, `instruments`, `portfolioHistory`) and mutations (`addTransaction`) into gRPC calls across domain microservices, maps exact decimal scalars, stitches data together, and shields the frontend from microservice topology.
+  The Backend-for-Frontend is a Go service using `gqlgen` (GraphQL). It translates GraphQL queries (`portfolio`, `instruments`, `portfolioHistory`, `transactions`) and mutations (`addTransaction`, `deleteTransaction`) into gRPC calls across domain microservices, maps exact decimal scalars, stitches data together, and shields the frontend from microservice topology.
 
 - **`web/` (The Consumer)**:
-  Standalone Vite + React + TypeScript frontend. Interacts exclusively with the BFF GraphQL endpoint using a strongly-typed auto-generated client (`genql`). Includes interactive dashboard, transaction ingestion modal (`AddTransactionModal`), and dynamic SVG performance curve (`PerformanceChart`).
+  Standalone Vite + React + TypeScript frontend. Interacts exclusively with the BFF GraphQL endpoint using a strongly-typed auto-generated client (`genql`). Includes interactive dashboard, transaction ingestion modal (`AddTransactionModal`), dynamic SVG performance curve (`PerformanceChart`), and paginated transaction ledger with filtering and deletion (`TransactionLedger`).
 
 ---
 
@@ -48,7 +48,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   ├── common/v1/
 │   │   └── decimal.proto         # Decimal and Money contracts
 │   ├── portfolio/v1/
-│   │   └── portfolio.proto       # Portfolio gRPC service (GetPortfolio, AddTransaction, ListInstruments, GetPortfolioHistory)
+│   │   └── portfolio.proto       # Portfolio gRPC service (GetPortfolio, AddTransaction, ListInstruments, GetPortfolioHistory, ListTransactions, DeleteTransaction)
 │   └── user/v1/
 │       └── user.proto            # User gRPC service definition
 │
@@ -70,15 +70,19 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   │   ├── cmd/server/           # Service entrypoint (gRPC on :50051)
 │   │   ├── internal/
 │   │   │   ├── domain/           # Domain entities (Portfolio, Holding, Transaction, Instrument, TaxLot, Money, History)
+│   │   │   │   ├── transaction.go# Transaction, TransactionFilter, TransactionPage
 │   │   │   │   ├── history.go    # ValuationPoint, PortfolioHistory, CalculatePortfolioHistory
 │   │   │   │   └── ...
 │   │   │   ├── repository/       # Repository interface & PostgreSQL (pgx) queries
+│   │   │   │   ├── postgres.go   # Queries: ListTransactions (COUNT(*) OVER()), DeleteTransaction, etc.
 │   │   │   │   └── mocks/        # Uber-go mock repository (MockRepository)
-│   │   │   ├── service/          # PortfolioService, ledger projection engine, historical valuation aggregator
+│   │   │   ├── service/          # PortfolioService, ledger projection engine, transaction manager
+│   │   │   │   ├── transaction.go# AddTransaction, ListTransactions, DeleteTransaction (with RebuildProjections)
+│   │   │   │   ├── transaction_test.go # Unit tests for transaction ingestion, filtering, and deletion
 │   │   │   │   ├── history.go    # GetPortfolioHistory and timeframe boundary logic
 │   │   │   │   ├── history_test.go# Unit tests for history filtering and period return math
 │   │   │   │   └── mocks/        # Uber-go mock service (MockPortfolioService)
-│   │   │   ├── server.go         # gRPC PortfolioServiceServer implementation (GetPortfolioHistory handler)
+│   │   │   ├── server.go         # gRPC PortfolioServiceServer implementation (ListTransactions, DeleteTransaction, etc.)
 │   │   │   └── server_test.go    # gRPC server unit tests with MockPortfolioService
 │   │   ├── migrations/           # Schema migrations (000001 to 000006)
 │   │   ├── seeds/                # Development seed data (dev_seed.sql with 365-day history)
@@ -91,9 +95,10 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 ├── bff/                          # 5. GraphQL Backend-for-Frontend
 │   ├── cmd/server/               # BFF entrypoint (GraphQL server on :8080)
 │   ├── graph/
-│   │   ├── schema.graphqls       # GraphQL schema (Queries, Mutations, custom Decimal scalar, HistoryTimeframe)
-│   │   ├── schema.resolvers.go   # Resolver implementations calling gRPC (portfolio, portfolioHistory)
-│   │   ├── helpers.go            # Domain-to-GraphQL conversion helpers (history and timeframe mapping)
+│   │   ├── schema.graphqls       # GraphQL schema (Queries: portfolio, transactions; Mutations: addTransaction, deleteTransaction)
+│   │   ├── schema.resolvers.go   # Resolver implementations calling gRPC (portfolio, portfolioHistory, transactions, deleteTransaction)
+│   │   ├── schema.resolvers_test.go # Unit tests for resolvers
+│   │   ├── helpers.go            # Domain-to-GraphQL conversion helpers (history, transactions, timeframe)
 │   │   └── model/
 │   │       ├── decimal.go        # Custom Decimal scalar unmarshaler/marshaler
 │   │       └── models_gen.go     # Generated GraphQL models
@@ -101,9 +106,15 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │
 ├── web/                          # 6. Frontend Application
 │   ├── src/
-│   │   ├── components/           # Reusable UI components (Dashboard, AddTransactionModal, PerformanceChart)
+│   │   ├── components/           # Reusable UI components
+│   │   │   ├── Dashboard.tsx     # Consolidated portfolio dashboard view
+│   │   │   ├── Dashboard.css     # Dashboard layout and glassmorphism styling
 │   │   │   ├── PerformanceChart.tsx # Interactive SVG Bezier curve with crosshair & tooltip
 │   │   │   ├── PerformanceChart.css # Glassmorphism and glow styles for performance chart
+│   │   │   ├── TransactionLedger.tsx# Paginated transaction ledger with type filtering and deletion
+│   │   │   ├── TransactionLedger.css# Styling, badges, and delete confirmation modal
+│   │   │   ├── AddTransactionModal.tsx # Interactive modal for recording trades and cash movements
+│   │   │   ├── AddTransactionModal.css # Glassmorphic modal styling
 │   │   │   └── ...
 │   │   ├── generated/            # GenQL auto-generated typed client
 │   │   ├── graphql/              # Shared GraphQL client (client.ts)
@@ -122,6 +133,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   ├── transaction-history-implementation-plan.md
 │   ├── cost-basis-switching-implementation-plan.md
 │   ├── user-preferences-implementation-plan.md
+│   ├── competitive-analysis.md
 │   └── genql-usage.md
 │
 ├── Makefile                      # Standardized commands (make proto, make generate, make run, make test)
@@ -150,7 +162,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 
 ### 4.3 Ledger Replay & Cost Basis Methods
 - The transaction ledger (`portfolio.transactions`) is the source of truth for portfolio history.
-- Adding transactions (`BUY`, `SELL`, `DEPOSIT`, `WITHDRAWAL`, `DIVIDEND`) appends records to `portfolio.transactions` and immediately invokes `service.RebuildProjections`.
+- Adding transactions (`BUY`, `SELL`, `DEPOSIT`, `WITHDRAWAL`, `DIVIDEND`) or deleting existing transactions (`DeleteTransaction`) alters `portfolio.transactions` and immediately invokes `service.RebuildProjections`.
 - Holding balances, tax lots, lot disposals, and cash balances are deterministic projections built by `service.ProcessLedger`.
 - Projection rebuilds acquire a row lock (`SELECT ... FOR UPDATE` on `portfolio.portfolios`) to serialize concurrent updates and atomically save recomputed state.
 - Both `AVERAGE_COST` (default) and `FIFO` cost-basis relieve algorithms are supported in `internal/service/projection.go`.
@@ -170,6 +182,12 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 - Service boundaries determine cutoff dates in UTC (`time.Now().UTC()`); `YTD` starts at January 1st 00:00:00 UTC of the current year.
 - Period returns compute net value change (`end_value - start_value`) and percentage return (`(end_value - start_value) / start_value * 100`) using exact `shopspring/decimal.Decimal` arithmetic with zero-start fallback handling.
 - The web frontend renders historical points using a custom interactive SVG cubic Bezier curve (`PerformanceChart`) with hovering crosshairs and dynamic positive/negative gradient styling.
+
+### 4.6 Transaction Ledger, Pagination & Deletion Integrity
+- Paginated transaction queries use the `TransactionFilter` domain model (`PortfolioID`, `InstrumentID`, `Type`, `Limit`, `Offset`).
+- Persistence layer uses PostgreSQL single-pass `COUNT(*) OVER() AS total_count` window function with dynamic SQL filters to retrieve transactions and exact total counts in a single round-trip.
+- Transaction deletion (`DeleteTransaction`) validates ownership, deletes the ledger record in `portfolio.transactions`, and immediately executes `RebuildProjections` under an exclusive portfolio lock to atomically clean up orphaned tax lots, holding projections, and recompute cash balances.
+- The web frontend renders historical records in `TransactionLedger` with type-specific color badges, date/amount formatting, pagination controls, and confirmation modals before triggering deletion.
 
 ---
 
