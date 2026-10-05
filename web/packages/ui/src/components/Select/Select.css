@@ -1,0 +1,74 @@
+.gf-select-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.gf-select-label {
+  font-size: 0.825rem;
+  font-weight: 500;
+  color: var(--text-secondary, #a1a1aa);
+  letter-spacing: 0.01em;
+}
+
+.gf-select-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.gf-select {
+  width: 100%;
+  padding: 0.65rem 2.25rem 0.65rem 0.85rem;
+  background-color: #0d0e15;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  border: 1px solid var(--input-border, rgba(255, 255, 255, 0.12));
+  border-radius: var(--radius-sm, 6px);
+  color: var(--text-primary, #ffffff);
+  font-size: 0.875rem;
+  outline: none;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  font-family: inherit;
+}
+
+.gf-select option {
+  background-color: #0d0e15;
+  color: #ffffff;
+}
+
+.gf-select:focus {
+  border-color: var(--input-focus-border, #3b82f6);
+  box-shadow: 0 0 0 2px var(--input-focus-glow, rgba(59, 130, 246, 0.25));
+}
+
+.gf-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gf-select--error {
+  border-color: var(--accent-red, #ef4444);
+}
+
+.gf-select--error:focus {
+  border-color: var(--accent-red, #ef4444);
+  box-shadow: 0 0 0 2px var(--accent-red-glow, rgba(239, 68, 68, 0.25));
+}
+
+.gf-select-error {
+  font-size: 0.775rem;
+  color: var(--accent-red, #ef4444);
+  margin-top: 0.15rem;
+}
+
+.gf-select-helper {
+  font-size: 0.775rem;
+  color: var(--text-muted, #71717a);
+  margin-top: 0.15rem;
+}

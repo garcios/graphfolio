@@ -1,0 +1,106 @@
+.gf-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  outline: none;
+  font-family: inherit;
+}
+
+.gf-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Sizes */
+.gf-button--sm {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.8rem;
+}
+
+.gf-button--md {
+  padding: 0.55rem 1rem;
+  font-size: 0.875rem;
+}
+
+.gf-button--lg {
+  padding: 0.75rem 1.4rem;
+  font-size: 1rem;
+}
+
+/* Variants */
+.gf-button--primary {
+  background-color: var(--accent-green, #10b981);
+  color: #ffffff;
+  box-shadow: 0 0 15px var(--accent-green-glow, rgba(16, 185, 129, 0.2));
+}
+
+.gf-button--primary:hover:not(:disabled) {
+  background-color: var(--accent-green-hover, #059669);
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
+}
+
+.gf-button--secondary {
+  background: var(--card-bg, rgba(255, 255, 255, 0.05));
+  color: var(--text-primary, #ffffff);
+  border-color: var(--card-border, rgba(255, 255, 255, 0.1));
+}
+
+.gf-button--secondary:hover:not(:disabled) {
+  background: var(--card-bg-hover, rgba(255, 255, 255, 0.1));
+  border-color: var(--card-border-active, rgba(255, 255, 255, 0.2));
+}
+
+.gf-button--danger {
+  background-color: var(--accent-red, #ef4444);
+  color: #ffffff;
+  box-shadow: 0 0 15px var(--accent-red-glow, rgba(239, 68, 68, 0.2));
+}
+
+.gf-button--danger:hover:not(:disabled) {
+  background-color: var(--accent-red-hover, #dc2626);
+}
+
+.gf-button--ghost {
+  background: transparent;
+  color: var(--text-secondary, #a1a1aa);
+}
+
+.gf-button--ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary, #ffffff);
+}
+
+.gf-button--outline {
+  background: transparent;
+  color: var(--text-primary, #ffffff);
+  border-color: var(--card-border, rgba(255, 255, 255, 0.15));
+}
+
+.gf-button--outline:hover:not(:disabled) {
+  border-color: var(--accent-blue, #3b82f6);
+  color: var(--accent-blue, #3b82f6);
+}
+
+/* Spinner */
+.gf-button__spinner {
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: gf-spin 0.75s linear infinite;
+}
+
+@keyframes gf-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

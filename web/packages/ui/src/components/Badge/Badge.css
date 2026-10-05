@@ -1,0 +1,66 @@
+.gf-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-xs, 4px);
+  font-size: 0.725rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  line-height: 1;
+  border: 1px solid transparent;
+}
+
+/* Transaction Types */
+.gf-badge--buy,
+.gf-badge--deposit,
+.gf-badge--success,
+.gf-badge--active {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border-color: rgba(16, 185, 129, 0.25);
+}
+
+.gf-badge--sell,
+.gf-badge--withdrawal,
+.gf-badge--danger,
+.gf-badge--inactive {
+  background: rgba(239, 68, 68, 0.12);
+  color: #f87171;
+  border-color: rgba(239, 68, 68, 0.25);
+}
+
+.gf-badge--dividend,
+.gf-badge--interest,
+.gf-badge--info,
+.gf-badge--etf {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+.gf-badge--fee,
+.gf-badge--tax,
+.gf-badge--warning,
+.gf-badge--crypto {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fbbf24;
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+.gf-badge--equity,
+.gf-badge--purple {
+  background: rgba(139, 92, 246, 0.12);
+  color: #a78bfa;
+  border-color: rgba(139, 92, 246, 0.25);
+}
+
+.gf-badge--neutral,
+.gf-badge--default {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-secondary, #a1a1aa);
+  border-color: var(--card-border, rgba(255, 255, 255, 0.08));
+}

@@ -1,0 +1,55 @@
+.gf-table-container {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: var(--radius-md, 10px);
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+  background: var(--card-bg, rgba(255, 255, 255, 0.02));
+}
+
+.gf-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.875rem;
+}
+
+.gf-table__th {
+  padding: 0.9rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #a1a1aa);
+  border-bottom: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+  background: rgba(0, 0, 0, 0.3);
+  white-space: nowrap;
+}
+
+.gf-table__td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--card-border, rgba(255, 255, 255, 0.04));
+  color: var(--text-primary, #ffffff);
+  vertical-align: middle;
+}
+
+.gf-table__row {
+  transition: background-color 0.15s ease;
+}
+
+.gf-table--hoverable .gf-table__row:hover {
+  background-color: var(--card-bg-hover, rgba(255, 255, 255, 0.05));
+}
+
+.gf-table--striped .gf-table__row:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.015);
+}
+
+.gf-table__th--right,
+.gf-table__td--right {
+  text-align: right;
+}
+
+.gf-table__th--center,
+.gf-table__td--center {
+  text-align: center;
+}

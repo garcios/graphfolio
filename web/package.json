@@ -1,13 +1,21 @@
 {
-  "name": "web",
+  "name": "graphfolio-web-monorepo",
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "oxlint",
-    "preview": "vite preview"
+    "dev": "npm run dev:main",
+    "dev:main": "npm run dev -w @graphfolio/main-app",
+    "dev:admin": "npm run dev -w @graphfolio/admin-app",
+    "build:main": "npm run build -w @graphfolio/main-app",
+    "build:admin": "npm run build -w @graphfolio/admin-app",
+    "build": "npm run build --workspaces",
+    "lint": "oxlint apps packages",
+    "codegen": "genql --schema ../bff/graph/schema.graphqls --output ./packages/api-client/src/generated"
   },
   "dependencies": {
     "react": "^19.2.8",
