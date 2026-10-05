@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { client } from '@graphfolio/api-client';
 import {
   Button,
@@ -22,10 +22,8 @@ interface PriceRecord {
   id: string;
   symbol: string;
   priceDate: string;
-  price: string;
-  currencyCode: string;
-  source: 'TWELVE_DATA' | 'YAHOO_FINANCE' | 'MANUAL_OVERRIDE' | 'ECB';
-  reason?: string;
+  price: { amount: string; currencyCode: string };
+  source: string;
   updatedAt: string;
 }
 
@@ -33,131 +31,161 @@ interface PriceManagementProps {
   onNotify: (msg: string) => void;
 }
 
-const INITIAL_PRICES: PriceRecord[] = [
-  {
-    id: 'p-1',
-    symbol: 'AAPL',
-    priceDate: '2026-10-02',
-    price: '228.45',
-    currencyCode: 'USD',
-    source: 'TWELVE_DATA',
-    updatedAt: '2026-10-02T21:05:00Z',
-  },
-  {
-    id: 'p-2',
-    symbol: 'MSFT',
-    priceDate: '2026-10-02',
-    price: '430.15',
-    currencyCode: 'USD',
-    source: 'TWELVE_DATA',
-    updatedAt: '2026-10-02T21:05:00Z',
-  },
-  {
-    id: 'p-3',
-    symbol: 'GOOGL',
-    priceDate: '2026-10-02',
-    price: '185.70',
-    currencyCode: 'USD',
-    source: 'TWELVE_DATA',
-    updatedAt: '2026-10-02T21:05:00Z',
-  },
-  {
-    id: 'p-4',
-    symbol: 'VOO',
-    priceDate: '2026-10-02',
-    price: '524.80',
-    currencyCode: 'USD',
-    source: 'YAHOO_FINANCE',
-    updatedAt: '2026-10-02T21:10:00Z',
-  },
-  {
-    id: 'p-5',
-    symbol: 'BTC',
-    priceDate: '2026-10-02',
-    price: '64500.00',
-    currencyCode: 'USD',
-    source: 'TWELVE_DATA',
-    updatedAt: '2026-10-02T21:00:00Z',
-  },
-  {
-    id: 'p-6',
-    symbol: 'AAPL',
-    priceDate: '2026-10-01',
-    price: '226.75',
-    currencyCode: 'USD',
-    source: 'TWELVE_DATA',
-    updatedAt: '2026-10-01T21:05:00Z',
-  },
-  {
-    id: 'p-7',
-    symbol: 'MSFT',
-    priceDate: '2026-10-01',
-    price: '428.90',
-    currencyCode: 'USD',
-    source: 'TWELVE_DATA',
-    updatedAt: '2026-10-01T21:05:00Z',
-  },
-];
-
 export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) => {
-  const [prices, setPrices] = useState<PriceRecord[]>(INITIAL_PRICES);
+  const [prices, setPrices] = useState<PriceRecord[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [symbolFilter, setSymbolFilter] = useState('ALL');
   const [dateFilter, setDateFilter] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
   const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
   const [selectedSymbolForOverride, setSelectedSymbolForOverride] = useState('AAPL');
+  const [availableSymbols, setAvailableSymbols] = useState<string[]>([]);
+  const [latestPriceDate, setLatestPriceDate] = useState<string>('—');
 
   // Load available instruments from BFF for the dropdown filter
-  const [availableSymbols, setAvailableSymbols] = useState<string[]>(['AAPL', 'MSFT', 'GOOGL', 'VOO', 'BTC']);
-
-  useEffect(() => {
+  const fetchInstruments = useCallback(() => {
     client
       .query({
-        instruments: {
+        allInstruments: {
           symbol: true,
+          isActive: true,
         },
       })
       .then((res) => {
-        if (res.instruments && res.instruments.length > 0) {
-          const syms = Array.from(new Set(res.instruments.map((i) => i.symbol)));
+        if (res.allInstruments && res.allInstruments.length > 0) {
+          const syms = Array.from(new Set(res.allInstruments.map((i) => i.symbol))).sort();
           setAvailableSymbols(syms);
+          if (syms.length > 0 && !syms.includes(selectedSymbolForOverride)) {
+            setSelectedSymbolForOverride(syms[0]);
+          }
         }
       })
       .catch((err) => console.warn('Could not fetch instrument symbols for filter:', err));
-  }, []);
+  }, [selectedSymbolForOverride]);
+
+  const fetchPrices = useCallback(() => {
+    setLoading(true);
+    client
+      .query({
+        instrumentPrices: {
+          __args: {
+            symbol: symbolFilter === 'ALL' ? undefined : symbolFilter,
+            fromDate: dateFilter || undefined,
+            toDate: dateFilter || undefined,
+            limit: 50,
+            offset: 0,
+          },
+          items: {
+            id: true,
+            symbol: true,
+            priceDate: true,
+            price: {
+              amount: true,
+              currencyCode: true,
+            },
+            source: true,
+            updatedAt: true,
+          },
+          totalCount: true,
+        },
+      })
+      .then((res) => {
+        if (res.instrumentPrices) {
+          setPrices(res.instrumentPrices.items);
+          setTotalCount(res.instrumentPrices.totalCount);
+          if (res.instrumentPrices.items.length > 0) {
+            setLatestPriceDate(res.instrumentPrices.items[0].priceDate);
+          }
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Failed to query instrument prices:', err);
+        onNotify(`Error loading prices: ${err?.message || 'Server error'}`);
+        setLoading(false);
+      });
+  }, [symbolFilter, dateFilter, onNotify]);
+
+  useEffect(() => {
+    fetchInstruments();
+  }, [fetchInstruments]);
+
+  useEffect(() => {
+    fetchPrices();
+  }, [fetchPrices]);
 
   const handleTriggerSync = async () => {
     setIsSyncing(true);
-    // Simulate pipeline ingestion step
-    setTimeout(() => {
+    try {
+      const res = await client.mutation({
+        triggerMarketSync: {
+          __args: {
+            symbols: symbolFilter !== 'ALL' ? [symbolFilter] : undefined,
+            syncFx: true,
+          },
+          success: true,
+          pricesSynced: true,
+          fxRatesSynced: true,
+          message: true,
+        },
+      });
+
+      if (res.triggerMarketSync.success) {
+        onNotify(res.triggerMarketSync.message || 'Market data ingestion completed successfully.');
+        fetchPrices();
+      } else {
+        onNotify(`Market sync issue: ${res.triggerMarketSync.message}`);
+      }
+    } catch (err: any) {
+      console.error('Market sync error:', err);
+      onNotify(`Market sync failed: ${err?.message || 'Server error'}`);
+    } finally {
       setIsSyncing(false);
-      onNotify('Market data ingestion pipeline triggered! 5 EOD prices refreshed.');
-    }, 1200);
+    }
   };
 
   const handleApplyOverride = async (data: PriceOverrideData) => {
-    const newRecord: PriceRecord = {
-      id: `override-${Date.now()}`,
-      symbol: data.symbol,
-      priceDate: data.priceDate,
-      price: data.price,
-      currencyCode: data.currencyCode,
-      source: 'MANUAL_OVERRIDE',
-      reason: data.reason,
-      updatedAt: new Date().toISOString(),
-    };
+    try {
+      const res = await client.mutation({
+        recordPriceOverride: {
+          __args: {
+            input: {
+              symbol: data.symbol,
+              priceDate: data.priceDate,
+              price: data.price,
+              reason: data.reason || undefined,
+              recomputeValuations: data.recomputeValuations,
+            },
+          },
+          price: {
+            id: true,
+            symbol: true,
+            priceDate: true,
+            price: {
+              amount: true,
+              currencyCode: true,
+            },
+            source: true,
+            updatedAt: true,
+          },
+          valuationsRecomputed: true,
+        },
+      });
 
-    setPrices((prev) => [newRecord, ...prev]);
-    onNotify(
-      `Closing price override applied for ${data.symbol} on ${data.priceDate}: $${data.price}`
-    );
+      const overridePrice = res.recordPriceOverride.price;
+      onNotify(
+        `Closing price override applied for ${data.symbol} on ${data.priceDate}: ${formatMoney(overridePrice.price)}${
+          res.recordPriceOverride.valuationsRecomputed ? ' (Valuations recalibrated)' : ''
+        }`
+      );
+      fetchPrices();
+    } catch (err: any) {
+      console.error('Price override error:', err);
+      onNotify(`Price override failed: ${err?.message || 'Server error'}`);
+      throw err;
+    }
   };
-
-  const filteredPrices = prices.filter((rec) => {
-    const matchesSymbol = symbolFilter === 'ALL' || rec.symbol === symbolFilter;
-    const matchesDate = !dateFilter || rec.priceDate === dateFilter;
-    return matchesSymbol && matchesDate;
-  });
 
   return (
     <div className="price-mgmt">
@@ -168,13 +196,11 @@ export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) =>
         </Card>
         <Card className="price-stat-card">
           <div className="stat-label">Latest Pricing Date</div>
-          <div className="stat-value">2026-10-02</div>
+          <div className="stat-value">{latestPriceDate !== '—' ? formatDate(latestPriceDate) : '—'}</div>
         </Card>
         <Card className="price-stat-card">
-          <div className="stat-label">Pipeline Feed Status</div>
-          <div className="stat-value" style={{ color: 'var(--accent-green)' }}>
-            Healthy (EOD Fixings OK)
-          </div>
+          <div className="stat-label">Authoritative Closing Records</div>
+          <div className="stat-value">{totalCount}</div>
         </Card>
       </div>
 
@@ -221,7 +247,7 @@ export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) =>
           <Button
             variant="primary"
             onClick={() => {
-              setSelectedSymbolForOverride(symbolFilter === 'ALL' ? 'AAPL' : symbolFilter);
+              setSelectedSymbolForOverride(symbolFilter === 'ALL' ? (availableSymbols[0] || 'AAPL') : symbolFilter);
               setIsOverrideModalOpen(true);
             }}
           >
@@ -230,71 +256,77 @@ export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) =>
         </div>
       </div>
 
-      <Table hoverable striped>
-        <TableHead>
-          <TableRow>
-            <TableHeaderCell>Date</TableHeaderCell>
-            <TableHeaderCell>Symbol</TableHeaderCell>
-            <TableHeaderCell>Closing Price</TableHeaderCell>
-            <TableHeaderCell>Currency</TableHeaderCell>
-            <TableHeaderCell>Data Source</TableHeaderCell>
-            <TableHeaderCell>Last Updated</TableHeaderCell>
-            <TableHeaderCell align="right">Actions</TableHeaderCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {filteredPrices.length === 0 ? (
+      {loading ? (
+        <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+          Loading authoritative closing prices...
+        </div>
+      ) : (
+        <Table hoverable striped>
+          <TableHead>
             <TableRow>
-              <TableCell colSpan={7} align="center">
-                No closing price records found for this filter.
-              </TableCell>
+              <TableHeaderCell>Date</TableHeaderCell>
+              <TableHeaderCell>Symbol</TableHeaderCell>
+              <TableHeaderCell>Closing Price</TableHeaderCell>
+              <TableHeaderCell>Currency</TableHeaderCell>
+              <TableHeaderCell>Data Source</TableHeaderCell>
+              <TableHeaderCell>Last Updated</TableHeaderCell>
+              <TableHeaderCell align="right">Actions</TableHeaderCell>
             </TableRow>
-          ) : (
-            filteredPrices.map((rec) => (
-              <TableRow key={rec.id}>
-                <TableCell>{formatDate(rec.priceDate)}</TableCell>
-                <TableCell>
-                  <strong style={{ fontFamily: 'var(--font-mono, monospace)' }}>
-                    {rec.symbol}
-                  </strong>
-                </TableCell>
-                <TableCell>
-                  <strong>{formatMoney({ amount: rec.price, currencyCode: rec.currencyCode })}</strong>
-                </TableCell>
-                <TableCell>{rec.currencyCode}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant={
-                      rec.source === 'MANUAL_OVERRIDE'
-                        ? 'warning'
-                        : rec.source === 'TWELVE_DATA'
-                        ? 'info'
-                        : 'neutral'
-                    }
-                  >
-                    {rec.source}
-                  </Badge>
-                </TableCell>
-                <TableCell style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                  {new Date(rec.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </TableCell>
-                <TableCell align="right">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => {
-                      setSelectedSymbolForOverride(rec.symbol);
-                      setIsOverrideModalOpen(true);
-                    }}
-                  >
-                    Override
-                  </Button>
+          </TableHead>
+          <TableBody>
+            {prices.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} align="center">
+                  No closing price records found for this filter.
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            ) : (
+              prices.map((rec) => (
+                <TableRow key={rec.id}>
+                  <TableCell>{formatDate(rec.priceDate)}</TableCell>
+                  <TableCell>
+                    <strong style={{ fontFamily: 'var(--font-mono, monospace)' }}>
+                      {rec.symbol}
+                    </strong>
+                  </TableCell>
+                  <TableCell>
+                    <strong>{formatMoney(rec.price)}</strong>
+                  </TableCell>
+                  <TableCell>{rec.price.currencyCode}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        rec.source === 'manual' || rec.source === 'MANUAL_OVERRIDE'
+                          ? 'warning'
+                          : rec.source === 'twelve_data' || rec.source === 'TWELVE_DATA'
+                          ? 'info'
+                          : 'neutral'
+                      }
+                    >
+                      {rec.source}
+                    </Badge>
+                  </TableCell>
+                  <TableCell style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    {new Date(rec.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </TableCell>
+                  <TableCell align="right">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        setSelectedSymbolForOverride(rec.symbol);
+                        setIsOverrideModalOpen(true);
+                      }}
+                    >
+                      Override
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      )}
 
       <PriceOverrideModal
         isOpen={isOverrideModalOpen}

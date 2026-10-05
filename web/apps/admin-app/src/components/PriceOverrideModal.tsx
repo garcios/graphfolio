@@ -6,8 +6,8 @@ export interface PriceOverrideData {
   symbol: string;
   priceDate: string;
   price: string;
-  currencyCode: string;
   reason: string;
+  recomputeValuations: boolean;
 }
 
 interface PriceOverrideModalProps {
@@ -24,17 +24,34 @@ export const PriceOverrideModal: React.FC<PriceOverrideModalProps> = ({
   onSubmit,
 }) => {
   const [symbol, setSymbol] = useState(defaultSymbol);
+  const [prevDefaultSymbol, setPrevDefaultSymbol] = useState(defaultSymbol);
   const [priceDate, setPriceDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [price, setPrice] = useState('');
-  const [currencyCode, setCurrencyCode] = useState('USD');
   const [reason, setReason] = useState('');
+  const [recomputeValuations, setRecomputeValuations] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  if (defaultSymbol !== prevDefaultSymbol) {
+    setPrevDefaultSymbol(defaultSymbol);
+    setSymbol(defaultSymbol);
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!symbol.trim() || !priceDate.trim() || !price.trim()) {
+    const cleanSymbol = symbol.trim().toUpperCase();
+    const cleanPrice = price.trim();
+    const cleanDate = priceDate.trim();
+    const cleanReason = reason.trim();
+
+    if (!cleanSymbol || !cleanDate || !cleanPrice) {
       setError('Symbol, date, and closing price are required.');
+      return;
+    }
+
+    const numPrice = Number(cleanPrice);
+    if (isNaN(numPrice) || numPrice <= 0) {
+      setError('Closing price must be a valid positive number.');
       return;
     }
 
@@ -42,11 +59,11 @@ export const PriceOverrideModal: React.FC<PriceOverrideModalProps> = ({
       setIsSubmitting(true);
       setError(null);
       await onSubmit({
-        symbol: symbol.trim().toUpperCase(),
-        priceDate: priceDate.trim(),
-        price: price.trim(),
-        currencyCode: currencyCode.trim().toUpperCase(),
-        reason: reason.trim(),
+        symbol: cleanSymbol,
+        priceDate: cleanDate,
+        price: cleanPrice,
+        reason: cleanReason,
+        recomputeValuations,
       });
       setPrice('');
       setReason('');
@@ -102,25 +119,16 @@ export const PriceOverrideModal: React.FC<PriceOverrideModalProps> = ({
           />
         </div>
 
-        <div className="price-override-form__row">
-          <Input
-            label="Corrected Closing Price *"
-            type="number"
-            step="0.000001"
-            placeholder="e.g. 182.50"
-            value={price}
-            onChange={(e) => setPrice(e.target.value)}
-            disabled={isSubmitting}
-            required
-          />
-          <Input
-            label="Currency *"
-            value={currencyCode}
-            onChange={(e) => setCurrencyCode(e.target.value)}
-            disabled={isSubmitting}
-            required
-          />
-        </div>
+        <Input
+          label="Corrected Closing Price *"
+          type="number"
+          step="0.000001"
+          placeholder="e.g. 182.50"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          disabled={isSubmitting}
+          required
+        />
 
         <Input
           label="Audit Justification / Source *"
@@ -130,6 +138,23 @@ export const PriceOverrideModal: React.FC<PriceOverrideModalProps> = ({
           disabled={isSubmitting}
           required
         />
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
+          <input
+            id="recompute-checkbox"
+            type="checkbox"
+            checked={recomputeValuations}
+            onChange={(e) => setRecomputeValuations(e.target.checked)}
+            disabled={isSubmitting}
+            style={{ width: '1rem', height: '1rem', cursor: 'pointer', accentColor: 'var(--accent-primary, #6366f1)' }}
+          />
+          <label
+            htmlFor="recompute-checkbox"
+            style={{ fontSize: '0.85rem', color: 'var(--text-secondary, #a1a1aa)', cursor: 'pointer' }}
+          >
+            Trigger retroactive portfolio valuation recalculations
+          </label>
+        </div>
       </form>
     </Modal>
   );

@@ -8,6 +8,7 @@ import (
 
 	"portfolio-api/internal/domain"
 	"portfolio-api/internal/repository"
+	"portfolio-api/internal/service"
 	mocks "portfolio-api/internal/service/mocks"
 
 	pb "graphfolio/proto/portfolio/v1"
@@ -862,6 +863,367 @@ func TestPortfolioServer_DeleteTransaction(t *testing.T) {
 		st, _ := status.FromError(err)
 		if st.Code() != codes.Internal {
 			t.Errorf("expected Internal code, got: %v", st.Code())
+		}
+	})
+}
+
+func TestPortfolioServer_ListAllInstruments(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success returns proto instruments", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		isin := "US0378331005"
+		mockSvc.EXPECT().
+			ListAllInstruments(ctx, gomock.Any(), gomock.Any()).
+			Return([]domain.Instrument{
+				{
+					ID:           uuid.MustParse("018f0000-0001-7000-8000-000000000001"),
+					Symbol:       "AAPL",
+					ExchangeCode: "XNAS",
+					Name:         "Apple Inc.",
+					AssetClass:   "EQUITY",
+					CurrencyCode: "USD",
+					ISIN:         &isin,
+					IsActive:     true,
+				},
+			}, nil)
+
+		isActive := true
+		search := "AAPL"
+		res, err := server.ListAllInstruments(ctx, &pb.ListAllInstrumentsRequest{
+			IsActive: &isActive,
+			Search:   &search,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if len(res.Instruments) != 1 {
+			t.Fatalf("expected 1 instrument, got: %d", len(res.Instruments))
+		}
+		if res.Instruments[0].Symbol != "AAPL" || res.Instruments[0].Isin != isin {
+			t.Errorf("unexpected instrument: %+v", res.Instruments[0])
+		}
+	})
+}
+
+func TestPortfolioServer_CreateInstrument(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success returns created instrument", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().
+			CreateInstrument(ctx, gomock.Any()).
+			Return(&domain.Instrument{
+				ID:           uuid.New(),
+				Symbol:       "NVDA",
+				ExchangeCode: "XNAS",
+				Name:         "NVIDIA Corp.",
+				AssetClass:   "EQUITY",
+				CurrencyCode: "USD",
+				IsActive:     true,
+			}, nil)
+
+		res, err := server.CreateInstrument(ctx, &pb.CreateInstrumentRequest{
+			Symbol:       "NVDA",
+			ExchangeCode: "XNAS",
+			Name:         "NVIDIA Corp.",
+			AssetClass:   "EQUITY",
+			CurrencyCode: "USD",
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if res.Instrument.Symbol != "NVDA" {
+			t.Errorf("expected symbol NVDA, got: %s", res.Instrument.Symbol)
+		}
+	})
+
+	t.Run("conflict returns AlreadyExists", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().
+			CreateInstrument(ctx, gomock.Any()).
+			Return(nil, repository.ErrInstrumentConflict)
+
+		_, err := server.CreateInstrument(ctx, &pb.CreateInstrumentRequest{
+			Symbol:       "AAPL",
+			ExchangeCode: "XNAS",
+			Name:         "Apple Inc.",
+			AssetClass:   "EQUITY",
+			CurrencyCode: "USD",
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.AlreadyExists {
+			t.Errorf("expected AlreadyExists, got: %v", st.Code())
+		}
+	})
+
+	t.Run("validation error returns InvalidArgument", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().
+			CreateInstrument(ctx, gomock.Any()).
+			Return(nil, service.ErrInvalidSymbol)
+
+		_, err := server.CreateInstrument(ctx, &pb.CreateInstrumentRequest{})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got: %v", st.Code())
+		}
+	})
+}
+
+func TestPortfolioServer_UpdateInstrument(t *testing.T) {
+	ctx := context.Background()
+	validID := uuid.New()
+
+	t.Run("success returns updated instrument", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		isActive := false
+		mockSvc.EXPECT().
+			UpdateInstrument(ctx, gomock.Any()).
+			Return(&domain.Instrument{
+				ID:           validID,
+				Symbol:       "AAPL",
+				ExchangeCode: "XNAS",
+				Name:         "Apple Inc.",
+				AssetClass:   "EQUITY",
+				CurrencyCode: "USD",
+				IsActive:     false,
+			}, nil)
+
+		idStr := validID.String()
+		res, err := server.UpdateInstrument(ctx, &pb.UpdateInstrumentRequest{
+			Id:       idStr,
+			IsActive: &isActive,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if res.Instrument.IsActive != false {
+			t.Errorf("expected IsActive false, got: %v", res.Instrument.IsActive)
+		}
+	})
+
+	t.Run("invalid UUID returns InvalidArgument", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		_, err := server.UpdateInstrument(ctx, &pb.UpdateInstrumentRequest{
+			Id: "not-a-uuid",
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got: %v", st.Code())
+		}
+	})
+}
+
+func TestPortfolioServer_ListInstrumentPrices(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success returns prices", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().
+			ListInstrumentPrices(ctx, gomock.Any()).
+			Return([]domain.InstrumentPrice{
+				{
+					InstrumentID: uuid.New(),
+					Symbol:       "AAPL",
+					PriceDate:    time.Date(2026, 10, 2, 0, 0, 0, 0, time.UTC),
+					Close:        decimal.NewFromFloat(228.45),
+					CurrencyCode: "USD",
+					Source:       "manual",
+				},
+			}, 1, nil)
+
+		sym := "AAPL"
+		res, err := server.ListInstrumentPrices(ctx, &pb.ListInstrumentPricesRequest{
+			Symbol: &sym,
+			Limit:  10,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if res.TotalCount != 1 || len(res.Prices) != 1 {
+			t.Errorf("expected 1 price, got: %d", len(res.Prices))
+		}
+	})
+
+	t.Run("invalid date format returns InvalidArgument", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		badDate := "02-10-2026"
+		_, err := server.ListInstrumentPrices(ctx, &pb.ListInstrumentPricesRequest{
+			FromDate: &badDate,
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got: %v", st.Code())
+		}
+	})
+}
+
+func TestPortfolioServer_RecordPriceOverride(t *testing.T) {
+	ctx := context.Background()
+	overridePrice := decimal.NewFromFloat(228.45)
+	priceDate := time.Date(2026, 10, 2, 0, 0, 0, 0, time.UTC)
+
+	t.Run("success returns overridden price item", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().
+			RecordPriceOverride(ctx, gomock.Any()).
+			Return(&domain.InstrumentPrice{
+				InstrumentID: uuid.New(),
+				Symbol:       "AAPL",
+				PriceDate:    priceDate,
+				Close:        overridePrice,
+				CurrencyCode: "USD",
+				Source:       "manual",
+			}, true, nil)
+
+		reason := "ECB fixing adjustment"
+		res, err := server.RecordPriceOverride(ctx, &pb.RecordPriceOverrideRequest{
+			Symbol:              "AAPL",
+			PriceDate:           "2026-10-02",
+			Price:               dec("228.45"),
+			Reason:              &reason,
+			RecomputeValuations: true,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if !res.ValuationsRecomputed {
+			t.Errorf("expected ValuationsRecomputed true")
+		}
+		if res.Price.Symbol != "AAPL" {
+			t.Errorf("expected symbol AAPL, got: %s", res.Price.Symbol)
+		}
+	})
+
+	t.Run("instrument not found returns NotFound", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().
+			RecordPriceOverride(ctx, gomock.Any()).
+			Return(nil, false, repository.ErrInstrumentNotFound)
+
+		_, err := server.RecordPriceOverride(ctx, &pb.RecordPriceOverrideRequest{
+			Symbol:    "UNKNOWN",
+			PriceDate: "2026-10-02",
+			Price:     dec("100.00"),
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.NotFound {
+			t.Errorf("expected NotFound, got: %v", st.Code())
+		}
+	})
+}
+
+func TestPortfolioServer_GetIngestionStatus(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success returns feed diagnostics", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		now := time.Now().UTC()
+		mockSvc.EXPECT().
+			GetIngestionStatus(ctx).
+			Return(&domain.IngestionStatus{
+				Feeds: []domain.FeedHealth{
+					{
+						Name:     "EOD Equity Feeds",
+						Status:   "ACTIVE",
+						Provider: "Twelve Data",
+						Schedule: "Daily at 21:00 UTC",
+						LastRun:  now,
+						Details:  "Healthy",
+					},
+				},
+				TrackedInstruments:  5,
+				TrackedCurrencies:   4,
+				RateLimitRemaining:  800,
+				RateLimitBudget:     800,
+				PendingBackfillJobs: 0,
+			}, nil)
+
+		res, err := server.GetIngestionStatus(ctx, &pb.GetIngestionStatusRequest{})
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if res.TrackedInstruments != 5 || len(res.Feeds) != 1 {
+			t.Errorf("unexpected ingestion status response: %+v", res)
+		}
+	})
+}
+
+func TestPortfolioServer_TriggerMarketSync(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success returns sync outcome", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().
+			TriggerMarketSync(ctx, []string{"AAPL"}, true).
+			Return(&domain.MarketSyncResult{
+				Success:       true,
+				PricesSynced:  1,
+				FXRatesSynced: 7,
+				Message:       "Sync successful",
+			}, nil)
+
+		res, err := server.TriggerMarketSync(ctx, &pb.TriggerMarketSyncRequest{
+			Symbols: []string{"AAPL"},
+			SyncFx:  true,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if !res.Success || res.PricesSynced != 1 || res.FxRatesSynced != 7 {
+			t.Errorf("unexpected sync response: %+v", res)
 		}
 	})
 }

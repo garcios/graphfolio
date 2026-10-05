@@ -31,4 +31,17 @@ type Repository interface {
 	FindInstrumentBySymbol(ctx context.Context, symbol string) (*domain.Instrument, error)
 	ListActiveInstruments(ctx context.Context) ([]domain.Instrument, error)
 	GetFXRate(ctx context.Context, fromCurrency, toCurrency string) (decimal.Decimal, error)
+
+	// Admin: Asset Directory Management
+	ListAllInstruments(ctx context.Context, isActive *bool, search *string) ([]domain.Instrument, error)
+	CreateInstrument(ctx context.Context, input domain.CreateInstrumentInput) (*domain.Instrument, error)
+	UpdateInstrument(ctx context.Context, input domain.UpdateInstrumentInput) (*domain.Instrument, error)
+
+	// Admin: Price Management & Overrides
+	ListInstrumentPrices(ctx context.Context, filter domain.PriceFilter) ([]domain.InstrumentPrice, int, error)
+	UpsertInstrumentPrice(ctx context.Context, instrumentID uuid.UUID, priceDate time.Time, closePrice decimal.Decimal, source string) (*domain.InstrumentPrice, error)
+	FindPortfoliosHoldingInstrument(ctx context.Context, instrumentID uuid.UUID) ([]uuid.UUID, error)
+
+	// Admin: Ingestion Diagnostics
+	GetIngestionMetrics(ctx context.Context) (*domain.IngestionStatus, error)
 }

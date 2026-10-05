@@ -12,3 +12,19 @@ type Instrument struct {
 	ISIN         *string
 	IsActive     bool
 }
+
+type CreateInstrumentInput struct {
+	Symbol       string
+	ExchangeCode string
+	Name         string
+	AssetClass   string
+	CurrencyCode string
+	ISIN         *string
+}
+
+type UpdateInstrumentInput struct {
+	ID       uuid.UUID
+	Name     *string
+	IsActive *bool
+	ISIN     *string
+}

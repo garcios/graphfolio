@@ -14,6 +14,7 @@ import (
 	commonpb "graphfolio/proto/common/v1"
 	pb "graphfolio/proto/portfolio/v1"
 
+	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -190,13 +191,7 @@ func (s *PortfolioServer) ListInstruments(ctx context.Context, req *pb.ListInstr
 
 	protoInsts := make([]*pb.Instrument, len(instruments))
 	for i, inst := range instruments {
-		protoInsts[i] = &pb.Instrument{
-			Id:           inst.ID.String(),
-			Symbol:       inst.Symbol,
-			Name:         inst.Name,
-			CurrencyCode: inst.CurrencyCode,
-			AssetClass:   inst.AssetClass,
-		}
+		protoInsts[i] = mapInstrumentToProto(inst)
 	}
 
 	return &pb.ListInstrumentsResponse{
@@ -403,6 +398,307 @@ func (s *PortfolioServer) DeleteTransaction(ctx context.Context, req *pb.DeleteT
 		Success:   true,
 		Portfolio: mapSummaryToProto(summary),
 	}, nil
+}
+
+// ------------------------------------------------------------------
+// Admin RPC Handlers
+// ------------------------------------------------------------------
+
+func (s *PortfolioServer) ListAllInstruments(ctx context.Context, req *pb.ListAllInstrumentsRequest) (*pb.ListAllInstrumentsResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	var isActive *bool
+	if req.IsActive != nil {
+		isActive = req.IsActive
+	}
+
+	var search *string
+	if req.Search != nil && *req.Search != "" {
+		search = req.Search
+	}
+
+	insts, err := s.svc.ListAllInstruments(ctx, isActive, search)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to list all instruments: %v", err)
+	}
+
+	protoInsts := make([]*pb.Instrument, len(insts))
+	for i, inst := range insts {
+		protoInsts[i] = mapInstrumentToProto(inst)
+	}
+
+	return &pb.ListAllInstrumentsResponse{
+		Instruments: protoInsts,
+	}, nil
+}
+
+func (s *PortfolioServer) CreateInstrument(ctx context.Context, req *pb.CreateInstrumentRequest) (*pb.CreateInstrumentResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	var isin *string
+	if req.Isin != nil && *req.Isin != "" {
+		isin = req.Isin
+	}
+
+	input := domain.CreateInstrumentInput{
+		Symbol:       req.GetSymbol(),
+		ExchangeCode: req.GetExchangeCode(),
+		Name:         req.GetName(),
+		AssetClass:   req.GetAssetClass(),
+		CurrencyCode: req.GetCurrencyCode(),
+		ISIN:         isin,
+	}
+
+	inst, err := s.svc.CreateInstrument(ctx, input)
+	if err != nil {
+		if errors.Is(err, repository.ErrInstrumentConflict) {
+			return nil, status.Errorf(codes.AlreadyExists, "instrument %s on %s already exists", req.GetSymbol(), req.GetExchangeCode())
+		}
+		if errors.Is(err, service.ErrInvalidSymbol) ||
+			errors.Is(err, service.ErrInvalidExchange) ||
+			errors.Is(err, service.ErrInvalidName) ||
+			errors.Is(err, service.ErrInvalidAssetClass) ||
+			errors.Is(err, service.ErrInvalidCurrency) ||
+			errors.Is(err, service.ErrInvalidISIN) {
+			return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to create instrument: %v", err)
+	}
+
+	return &pb.CreateInstrumentResponse{
+		Instrument: mapInstrumentToProto(*inst),
+	}, nil
+}
+
+func (s *PortfolioServer) UpdateInstrument(ctx context.Context, req *pb.UpdateInstrumentRequest) (*pb.UpdateInstrumentResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	id, err := uuid.Parse(req.GetId())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid instrument id: %v", err)
+	}
+
+	inst, err := s.svc.UpdateInstrument(ctx, domain.UpdateInstrumentInput{
+		ID:       id,
+		Name:     req.Name,
+		IsActive: req.IsActive,
+		ISIN:     req.Isin,
+	})
+	if err != nil {
+		if errors.Is(err, repository.ErrInstrumentNotFound) {
+			return nil, status.Errorf(codes.NotFound, "instrument not found: %s", req.GetId())
+		}
+		if errors.Is(err, service.ErrInvalidName) || errors.Is(err, service.ErrInvalidISIN) {
+			return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to update instrument: %v", err)
+	}
+
+	return &pb.UpdateInstrumentResponse{
+		Instrument: mapInstrumentToProto(*inst),
+	}, nil
+}
+
+func (s *PortfolioServer) ListInstrumentPrices(ctx context.Context, req *pb.ListInstrumentPricesRequest) (*pb.ListInstrumentPricesResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	var symbol *string
+	if req.Symbol != nil && *req.Symbol != "" {
+		symbol = req.Symbol
+	}
+
+	var fromDate *time.Time
+	if req.FromDate != nil && *req.FromDate != "" {
+		d, err := time.Parse("2006-01-02", *req.FromDate)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid from_date format (must be YYYY-MM-DD): %v", err)
+		}
+		fromDate = &d
+	}
+
+	var toDate *time.Time
+	if req.ToDate != nil && *req.ToDate != "" {
+		d, err := time.Parse("2006-01-02", *req.ToDate)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid to_date format (must be YYYY-MM-DD): %v", err)
+		}
+		toDate = &d
+	}
+
+	prices, total, err := s.svc.ListInstrumentPrices(ctx, domain.PriceFilter{
+		Symbol:   symbol,
+		FromDate: fromDate,
+		ToDate:   toDate,
+		Limit:    int(req.GetLimit()),
+		Offset:   int(req.GetOffset()),
+	})
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidDateRange) {
+			return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to list instrument prices: %v", err)
+	}
+
+	protoPrices := make([]*pb.InstrumentPriceItem, len(prices))
+	for i, p := range prices {
+		protoPrices[i] = mapInstrumentPriceToProto(p)
+	}
+
+	return &pb.ListInstrumentPricesResponse{
+		Prices:     protoPrices,
+		TotalCount: int32(total),
+	}, nil
+}
+
+func (s *PortfolioServer) RecordPriceOverride(ctx context.Context, req *pb.RecordPriceOverrideRequest) (*pb.RecordPriceOverrideResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	if req.GetSymbol() == "" {
+		return nil, status.Error(codes.InvalidArgument, "symbol is required")
+	}
+
+	if req.GetPriceDate() == "" {
+		return nil, status.Error(codes.InvalidArgument, "price_date is required")
+	}
+
+	priceDate, err := time.Parse("2006-01-02", req.GetPriceDate())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid price_date format (must be YYYY-MM-DD): %v", err)
+	}
+
+	if req.GetPrice() == nil {
+		return nil, status.Error(codes.InvalidArgument, "price is required")
+	}
+
+	priceDec, err := decimalpb.FromProto(req.GetPrice())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid price format: %v", err)
+	}
+
+	var reason *string
+	if req.Reason != nil && *req.Reason != "" {
+		reason = req.Reason
+	}
+
+	price, recomputed, err := s.svc.RecordPriceOverride(ctx, domain.PriceOverrideInput{
+		Symbol:              req.GetSymbol(),
+		PriceDate:           priceDate,
+		Price:               priceDec,
+		Reason:              reason,
+		RecomputeValuations: req.GetRecomputeValuations(),
+	})
+	if err != nil {
+		if errors.Is(err, repository.ErrInstrumentNotFound) {
+			return nil, status.Errorf(codes.NotFound, "instrument not found: %s", req.GetSymbol())
+		}
+		if errors.Is(err, service.ErrInvalidPrice) || errors.Is(err, service.ErrFutureDate) || errors.Is(err, service.ErrInvalidSymbol) {
+			return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to record price override: %v", err)
+	}
+
+	return &pb.RecordPriceOverrideResponse{
+		Price:                mapInstrumentPriceToProto(*price),
+		ValuationsRecomputed: recomputed,
+	}, nil
+}
+
+func (s *PortfolioServer) GetIngestionStatus(ctx context.Context, req *pb.GetIngestionStatusRequest) (*pb.GetIngestionStatusResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	statusMetrics, err := s.svc.GetIngestionStatus(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get ingestion status: %v", err)
+	}
+
+	feeds := make([]*pb.FeedHealthStatus, len(statusMetrics.Feeds))
+	for i, f := range statusMetrics.Feeds {
+		feeds[i] = &pb.FeedHealthStatus{
+			Name:     f.Name,
+			Status:   f.Status,
+			Provider: f.Provider,
+			Schedule: f.Schedule,
+			LastRun:  f.LastRun.Format(time.RFC3339),
+			Details:  f.Details,
+		}
+	}
+
+	resp := &pb.GetIngestionStatusResponse{
+		Feeds:               feeds,
+		TrackedInstruments:  int32(statusMetrics.TrackedInstruments),
+		TrackedCurrencies:   int32(statusMetrics.TrackedCurrencies),
+		RateLimitRemaining:  int32(statusMetrics.RateLimitRemaining),
+		RateLimitBudget:     int32(statusMetrics.RateLimitBudget),
+		PendingBackfillJobs: int32(statusMetrics.PendingBackfillJobs),
+	}
+	if statusMetrics.LatestPriceDate != nil {
+		resp.LatestPriceDate = statusMetrics.LatestPriceDate.Format("2006-01-02")
+	}
+	if statusMetrics.LatestFXDate != nil {
+		resp.LatestFxDate = statusMetrics.LatestFXDate.Format("2006-01-02")
+	}
+
+	return resp, nil
+}
+
+func (s *PortfolioServer) TriggerMarketSync(ctx context.Context, req *pb.TriggerMarketSyncRequest) (*pb.TriggerMarketSyncResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	res, err := s.svc.TriggerMarketSync(ctx, req.GetSymbols(), req.GetSyncFx())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to trigger market sync: %v", err)
+	}
+
+	return &pb.TriggerMarketSyncResponse{
+		Success:       res.Success,
+		PricesSynced:  int32(res.PricesSynced),
+		FxRatesSynced: int32(res.FXRatesSynced),
+		Message:       res.Message,
+	}, nil
+}
+
+func mapInstrumentToProto(inst domain.Instrument) *pb.Instrument {
+	p := &pb.Instrument{
+		Id:           inst.ID.String(),
+		Symbol:       inst.Symbol,
+		Name:         inst.Name,
+		CurrencyCode: inst.CurrencyCode,
+		AssetClass:   inst.AssetClass,
+		ExchangeCode: inst.ExchangeCode,
+		IsActive:     inst.IsActive,
+	}
+	if inst.ISIN != nil {
+		p.Isin = *inst.ISIN
+	}
+	return p
+}
+
+func mapInstrumentPriceToProto(p domain.InstrumentPrice) *pb.InstrumentPriceItem {
+	item := &pb.InstrumentPriceItem{
+		InstrumentId: p.InstrumentID.String(),
+		Symbol:       p.Symbol,
+		PriceDate:    p.PriceDate.Format("2006-01-02"),
+		Price:        decimalpb.MoneyToProto(p.Close, p.CurrencyCode),
+		Source:       p.Source,
+	}
+	if !p.CreatedAt.IsZero() {
+		item.UpdatedAt = p.CreatedAt.Format(time.RFC3339)
+	}
+	return item
 }
 
 func mapDomainTxTypeToProto(t domain.TransactionType) pb.TransactionType {

@@ -165,4 +165,69 @@ LIMIT $4 OFFSET $5;`
 	deleteTransactionSQL = `
 DELETE FROM portfolio.transactions
 WHERE id = $1 AND portfolio_id = $2;`
+
+	listAllInstrumentsSQL = `
+SELECT id, symbol, exchange_code, name, asset_class, currency_code, isin, is_active
+FROM portfolio.instruments
+WHERE ($1::boolean IS NULL OR is_active = $1)
+  AND ($2::text IS NULL OR symbol ILIKE '%' || $2 || '%' OR name ILIKE '%' || $2 || '%')
+ORDER BY symbol ASC;`
+
+	createInstrumentSQL = `
+INSERT INTO portfolio.instruments (
+    symbol, exchange_code, name, asset_class, currency_code, isin, is_active
+) VALUES (
+    $1, $2, $3, $4::portfolio.asset_class, $5, $6, true
+)
+RETURNING id, symbol, exchange_code, name, asset_class, currency_code, isin, is_active;`
+
+	updateInstrumentSQL = `
+UPDATE portfolio.instruments
+SET name = COALESCE($1, name),
+    is_active = COALESCE($2, is_active),
+    isin = COALESCE($3, isin),
+    updated_at = now()
+WHERE id = $4
+RETURNING id, symbol, exchange_code, name, asset_class, currency_code, isin, is_active;`
+
+	listInstrumentPricesSQL = `
+SELECT 
+    ip.instrument_id, i.symbol, ip.price_date, ip.close, i.currency_code, ip.source, ip.created_at,
+    COUNT(*) OVER() AS total_count
+FROM portfolio.instrument_prices ip
+JOIN portfolio.instruments i ON i.id = ip.instrument_id
+WHERE ($1::text IS NULL OR UPPER(i.symbol) = UPPER($1))
+  AND ($2::date IS NULL OR ip.price_date >= $2)
+  AND ($3::date IS NULL OR ip.price_date <= $3)
+ORDER BY ip.price_date DESC, i.symbol ASC
+LIMIT $4 OFFSET $5;`
+
+	upsertInstrumentPriceSQL = `
+WITH upserted AS (
+    INSERT INTO portfolio.instrument_prices (instrument_id, price_date, close, source, created_at)
+    VALUES ($1, $2, $3, $4, now())
+    ON CONFLICT (instrument_id, price_date)
+    DO UPDATE SET close = EXCLUDED.close, source = EXCLUDED.source, created_at = now()
+    RETURNING instrument_id, price_date, close, source, created_at
+)
+SELECT u.instrument_id, i.symbol, u.price_date, u.close, i.currency_code, u.source, u.created_at
+FROM upserted u
+JOIN portfolio.instruments i ON i.id = u.instrument_id;`
+
+	findPortfoliosHoldingInstrumentSQL = `
+SELECT DISTINCT portfolio_id
+FROM portfolio.holdings
+WHERE instrument_id = $1 AND quantity > 0;`
+
+	countActiveInstrumentsSQL = `
+SELECT COUNT(*) FROM portfolio.instruments WHERE is_active = true;`
+
+	countCurrenciesSQL = `
+SELECT COUNT(*) FROM portfolio.currencies;`
+
+	latestPriceDateSQL = `
+SELECT MAX(price_date) FROM portfolio.instrument_prices;`
+
+	latestFXDateSQL = `
+SELECT MAX(rate_date) FROM portfolio.fx_rates;`
 )

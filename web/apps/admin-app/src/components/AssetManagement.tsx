@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { client } from '@graphfolio/api-client';
 import {
   Button,
@@ -21,6 +21,8 @@ interface InstrumentRecord {
   name: string;
   currencyCode: string;
   assetClass: string;
+  exchangeCode: string;
+  isin?: string | null;
   isActive: boolean;
 }
 
@@ -33,74 +35,113 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({ onNotify }) =>
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [classFilter, setClassFilter] = useState('ALL');
+  const [statusFilter, setStatusFilter] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const fetchInstruments = () => {
+  const fetchInstruments = useCallback(() => {
     setLoading(true);
     client
       .query({
-        instruments: {
+        allInstruments: {
           id: true,
           symbol: true,
           name: true,
           currencyCode: true,
           assetClass: true,
+          exchangeCode: true,
+          isin: true,
+          isActive: true,
         },
       })
       .then((res) => {
-        if (res.instruments) {
-          // Normalize and enrich with active status
-          const enriched: InstrumentRecord[] = res.instruments.map((item) => ({
-            ...item,
-            isActive: true, // Default active
-          }));
-          setInstruments(enriched);
+        if (res.allInstruments) {
+          setInstruments(res.allInstruments);
         }
         setLoading(false);
       })
       .catch((err) => {
         console.error('Failed to query instruments:', err);
+        onNotify(`Error loading instruments: ${err?.message || 'Server error'}`);
         setLoading(false);
       });
-  };
+  }, [onNotify]);
 
   useEffect(() => {
     fetchInstruments();
-  }, []);
+  }, [fetchInstruments]);
 
-  const handleToggleStatus = (id: string, currentStatus: boolean) => {
-    setInstruments((prev) =>
-      prev.map((inst) =>
-        inst.id === id ? { ...inst, isActive: !currentStatus } : inst
-      )
-    );
+  const handleToggleStatus = async (id: string, currentStatus: boolean) => {
     const target = instruments.find((i) => i.id === id);
-    onNotify(
-      `Instrument ${target?.symbol || ''} ${currentStatus ? 'deactivated' : 'activated'} successfully.`
-    );
+    try {
+      const res = await client.mutation({
+        updateInstrument: {
+          __args: {
+            input: {
+              id,
+              isActive: !currentStatus,
+            },
+          },
+          id: true,
+          symbol: true,
+          isActive: true,
+        },
+      });
+      setInstruments((prev) =>
+        prev.map((inst) =>
+          inst.id === id ? { ...inst, isActive: res.updateInstrument.isActive } : inst
+        )
+      );
+      onNotify(
+        `Instrument ${target?.symbol || ''} ${res.updateInstrument.isActive ? 'activated' : 'deactivated'} successfully.`
+      );
+    } catch (err: any) {
+      console.error('Failed to update instrument status:', err);
+      onNotify(`Failed to update status for ${target?.symbol || ''}: ${err?.message || 'Server error'}`);
+    }
   };
 
   const handleRegisterInstrument = async (data: NewInstrumentData) => {
-    // Optimistically update list and simulate server registration
-    const newRecord: InstrumentRecord = {
-      id: `inst-${Date.now()}`,
-      symbol: data.symbol,
-      name: data.name,
-      currencyCode: data.currencyCode,
-      assetClass: data.assetClass,
-      isActive: true,
-    };
-    setInstruments((prev) => [newRecord, ...prev]);
-    onNotify(`Asset ${data.symbol} registered into master directory!`);
+    const res = await client.mutation({
+      createInstrument: {
+        __args: {
+          input: {
+            symbol: data.symbol,
+            exchangeCode: data.exchangeCode,
+            name: data.name,
+            assetClass: data.assetClass,
+            currencyCode: data.currencyCode,
+            isin: data.isin,
+          },
+        },
+        id: true,
+        symbol: true,
+        name: true,
+        currencyCode: true,
+        assetClass: true,
+        exchangeCode: true,
+        isin: true,
+        isActive: true,
+      },
+    });
+
+    if (res.createInstrument) {
+      setInstruments((prev) => [res.createInstrument, ...prev]);
+      onNotify(`Asset ${res.createInstrument.symbol} registered into master directory!`);
+    }
   };
 
   const filteredInstruments = instruments.filter((inst) => {
     const matchesSearch =
       inst.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      inst.name.toLowerCase().includes(searchQuery.toLowerCase());
+      inst.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (inst.isin && inst.isin.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesClass =
       classFilter === 'ALL' || inst.assetClass.toUpperCase() === classFilter.toUpperCase();
-    return matchesSearch && matchesClass;
+    const matchesStatus =
+      statusFilter === 'ALL' ||
+      (statusFilter === 'ACTIVE' && inst.isActive) ||
+      (statusFilter === 'INACTIVE' && !inst.isActive);
+    return matchesSearch && matchesClass && matchesStatus;
   });
 
   return (
@@ -109,7 +150,7 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({ onNotify }) =>
         <div className="asset-mgmt__filters">
           <Input
             className="asset-mgmt__search"
-            placeholder="Search by symbol or name..."
+            placeholder="Search by symbol, name, or ISIN..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -121,8 +162,20 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({ onNotify }) =>
               { label: 'All Asset Classes', value: 'ALL' },
               { label: 'Equities', value: 'EQUITY' },
               { label: 'ETFs', value: 'ETF' },
+              { label: 'Mutual Funds', value: 'FUND' },
+              { label: 'Fixed Income / Bonds', value: 'BOND' },
               { label: 'Cryptocurrencies', value: 'CRYPTO' },
-              { label: 'Commodities', value: 'COMMODITY' },
+              { label: 'Cash Equivalents', value: 'CASH_EQUIVALENT' },
+            ]}
+          />
+          <Select
+            className="asset-mgmt__status-filter"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            options={[
+              { label: 'All Statuses', value: 'ALL' },
+              { label: 'Active Only', value: 'ACTIVE' },
+              { label: 'Inactive Only', value: 'INACTIVE' },
             ]}
           />
         </div>
@@ -142,6 +195,7 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({ onNotify }) =>
             <TableRow>
               <TableHeaderCell>Symbol</TableHeaderCell>
               <TableHeaderCell>Instrument Name</TableHeaderCell>
+              <TableHeaderCell>Exchange</TableHeaderCell>
               <TableHeaderCell>Asset Class</TableHeaderCell>
               <TableHeaderCell>Base Currency</TableHeaderCell>
               <TableHeaderCell>Status</TableHeaderCell>
@@ -151,7 +205,7 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({ onNotify }) =>
           <TableBody>
             {filteredInstruments.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} align="center">
+                <TableCell colSpan={7} align="center">
                   No instruments matched your criteria.
                 </TableCell>
               </TableRow>
@@ -161,9 +215,19 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({ onNotify }) =>
                   <TableCell>
                     <div className="asset-table-symbol">
                       <span>{inst.symbol}</span>
+                      {inst.isin && (
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          {inst.isin}
+                        </span>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>{inst.name}</TableCell>
+                  <TableCell>
+                    <span style={{ fontFamily: 'var(--font-mono, monospace)', fontSize: '0.85rem' }}>
+                      {inst.exchangeCode || '—'}
+                    </span>
+                  </TableCell>
                   <TableCell>
                     <Badge variant={inst.assetClass.toLowerCase()}>{inst.assetClass}</Badge>
                   </TableCell>
