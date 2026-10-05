@@ -1,0 +1,1156 @@
+{
+  "info": {
+    "_postman_id": "c035aaf4-e7ca-40d1-8687-00e1efc72f01",
+    "name": "GraphFolio BFF GraphQL API",
+    "description": "Postman Collection v2.1.0 for the GraphFolio Backend-For-Frontend (BFF) service.\n\nThe BFF orchestrates communication between the frontend React client and the underlying gRPC microservices (`portfolio-api`, `user-api`). It serves a GraphQL API on `http://localhost:8080/query` supporting portfolio summaries, instrument catalogs, historical valuation curves, paginated transaction ledger, and trade mutations.\n\nAll queries and mutations feature exact arbitrary-precision Decimal serialization and automated test assertions.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Portfolio & Holdings",
+      "description": "Portfolio aggregates, total value, cash balances, daily returns, and individual asset holdings.",
+      "item": [
+        {
+          "name": "Get Portfolio Summary",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"GraphQL response has no errors\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.errors).to.be.undefined;",
+                  "    pm.expect(jsonData.data).to.be.an(\"object\");",
+                  "});",
+                  "",
+                  "pm.test(\"Portfolio summary contains total value and investments\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.portfolio).to.exist;",
+                  "    pm.expect(jsonData.data.portfolio.totalValue).to.exist;",
+                  "    pm.expect(jsonData.data.portfolio.cashBalance).to.exist;",
+                  "    pm.expect(jsonData.data.portfolio.investments).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query GetPortfolio {\n  portfolio {\n    totalValue {\n      amount\n      currencyCode\n    }\n    todayReturnAmount {\n      amount\n      currencyCode\n    }\n    todayReturnPercent\n    annualizedReturnPercent\n    cashBalance {\n      amount\n      currencyCode\n    }\n    investments {\n      id\n      ticker\n      name\n      price {\n        amount\n        currencyCode\n      }\n      quantity\n      totalValue {\n        amount\n        currencyCode\n      }\n      todayReturnAmount {\n        amount\n        currencyCode\n      }\n      todayReturnPercent\n      totalReturnAmount {\n        amount\n        currencyCode\n      }\n      totalReturnPercent\n    }\n  }\n}",
+                "variables": "{}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/query",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "query"
+              ]
+            },
+            "description": "Fetches the full consolidated portfolio state including net worth, cash balance, annualized returns, today's performance, and all active asset holdings."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Market Data & Instruments",
+      "description": "Tradable instruments, asset classes, and security master definitions.",
+      "item": [
+        {
+          "name": "List All Instruments",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"GraphQL response has no errors\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.errors).to.be.undefined;",
+                  "    pm.expect(jsonData.data).to.be.an(\"object\");",
+                  "});",
+                  "",
+                  "pm.test(\"Instruments list is returned\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.instruments).to.be.an(\"array\");",
+                  "    pm.expect(jsonData.data.instruments.length).to.be.above(0);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query ListInstruments {\n  instruments {\n    id\n    symbol\n    name\n    currencyCode\n    assetClass\n  }\n}",
+                "variables": "{}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/query",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "query"
+              ]
+            },
+            "description": "Retrieves the list of all available instruments (e.g. AAPL, MSFT, GOOGL, NVDA, SPY, QQQ) with their symbols, names, trading currencies, and asset classes."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Performance History",
+      "description": "Historical portfolio valuations, Time-Weighted Return (TWR) indexes, and timeframe boundary performance.",
+      "item": [
+        {
+          "name": "Get Portfolio History (Variable Timeframe)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"GraphQL response has no errors\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.errors).to.be.undefined;",
+                  "    pm.expect(jsonData.data).to.be.an(\"object\");",
+                  "});",
+                  "",
+                  "pm.test(\"Portfolio history contains valuation points and return metrics\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.portfolioHistory.points).to.be.an(\"array\");",
+                  "    pm.expect(jsonData.data.portfolioHistory.startValue).to.exist;",
+                  "    pm.expect(jsonData.data.portfolioHistory.endValue).to.exist;",
+                  "    pm.expect(jsonData.data.portfolioHistory.returnAmount).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query GetPortfolioHistory($timeframe: HistoryTimeframe!) {\n  portfolioHistory(timeframe: $timeframe) {\n    startValue {\n      amount\n      currencyCode\n    }\n    endValue {\n      amount\n      currencyCode\n    }\n    returnAmount {\n      amount\n      currencyCode\n    }\n    returnPercent\n    points {\n      date\n      totalValue {\n        amount\n        currencyCode\n      }\n      marketValue {\n        amount\n        currencyCode\n      }\n      cashValue {\n        amount\n        currencyCode\n      }\n      twrIndex\n      dailyReturn\n    }\n  }\n}",
+                "variables": "{\n  \"timeframe\": \"{{timeframe}}\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/query",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "query"
+              ]
+            },
+            "description": "Fetches time-series valuation points and period returns based on the {{timeframe}} collection variable (e.g., TIMEFRAME_1D, TIMEFRAME_1W, TIMEFRAME_1M, TIMEFRAME_1Y, TIMEFRAME_ALL)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Portfolio History (1 Day - 1D)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"GraphQL response has no errors\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.errors).to.be.undefined;",
+                  "    pm.expect(jsonData.data).to.be.an(\"object\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query GetPortfolioHistory1D {\n  portfolioHistory(timeframe: TIMEFRAME_1D) {\n    startValue {\n      amount\n      currencyCode\n    }\n    endValue {\n      amount\n      currencyCode\n    }\n    returnAmount {\n      amount\n      currencyCode\n    }\n    returnPercent\n    points {\n      date\n      totalValue {\n        amount\n        currencyCode\n      }\n      twrIndex\n    }\n  }\n}",
+                "variables": "{}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/query",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "query"
+              ]
+            },
+            "description": "Valuation history for the 1-day timeframe."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Portfolio History (1 Week - 1W)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"GraphQL response has no errors\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.errors).to.be.undefined;",
+                  "    pm.expect(jsonData.data).to.be.an(\"object\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query GetPortfolioHistory1W {\n  portfolioHistory(timeframe: TIMEFRAME_1W) {\n    startValue {\n      amount\n      currencyCode\n    }\n    endValue {\n      amount\n      currencyCode\n    }\n    returnAmount {\n      amount\n      currencyCode\n    }\n    returnPercent\n    points {\n      date\n      totalValue {\n        amount\n        currencyCode\n      }\n      twrIndex\n    }\n  }\n}",
+                "variables": "{}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/query",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "query"
+              ]
+            },
+            "description": "Valuation history for the 1-week timeframe."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Portfolio History (1 Month - 1M)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"GraphQL response has no errors\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.errors).to.be.undefined;",
+                  "    pm.expect(jsonData.data).to.be.an(\"object\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query GetPortfolioHistory1M {\n  portfolioHistory(timeframe: TIMEFRAME_1M) {\n    startValue {\n      amount\n      currencyCode\n    }\n    endValue {\n      amount\n      currencyCode\n    }\n    returnAmount {\n      amount\n      currencyCode\n    }\n    returnPercent\n    points {\n      date\n      totalValue {\n        amount\n        currencyCode\n      }\n      twrIndex\n    }\n  }\n}",
+                "variables": "{}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/query",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "query"
+              ]
+            },
+            "description": "Valuation history for the 1-month timeframe."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Portfolio History (1 Year - 1Y)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"GraphQL response has no errors\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.errors).to.be.undefined;",
+                  "    pm.expect(jsonData.data).to.be.an(\"object\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query GetPortfolioHistory1Y {\n  portfolioHistory(timeframe: TIMEFRAME_1Y) {\n    startValue {\n      amount\n      currencyCode\n    }\n    endValue {\n      amount\n      currencyCode\n    }\n    returnAmount {\n      amount\n      currencyCode\n    }\n    returnPercent\n    points {\n      date\n      totalValue {\n        amount\n        currencyCode\n      }\n      twrIndex\n    }\n  }\n}",
+                "variables": "{}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/query",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "query"
+              ]
+            },
+            "description": "Valuation history for the 1-year timeframe."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Portfolio History (All Time - ALL)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"GraphQL response has no errors\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.errors).to.be.undefined;",
+                  "    pm.expect(jsonData.data).to.be.an(\"object\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query GetPortfolioHistoryALL {\n  portfolioHistory(timeframe: TIMEFRAME_ALL) {\n    startValue {\n      amount\n      currencyCode\n    }\n    endValue {\n      amount\n      currencyCode\n    }\n    returnAmount {\n      amount\n      currencyCode\n    }\n    returnPercent\n    points {\n      date\n      totalValue {\n        amount\n        currencyCode\n      }\n      twrIndex\n    }\n  }\n}",
+                "variables": "{}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/query",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "query"
+              ]
+            },
+            "description": "Complete valuation history across all recorded trading days."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Transaction Ledger",
+      "description": "Paginated transaction ledger queries, multi-criteria filtering, and execution details.",
+      "item": [
+        {
+          "name": "List Transactions (Default Pagination)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"GraphQL response has no errors\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.errors).to.be.undefined;",
+                  "    pm.expect(jsonData.data).to.be.an(\"object\");",
+                  "});",
+                  "",
+                  "pm.test(\"Transaction connection parsed\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const txs = jsonData.data.transactions;",
+                  "    pm.expect(txs.items).to.be.an(\"array\");",
+                  "    pm.expect(txs.totalCount).to.be.a(\"number\");",
+                  "    pm.expect(txs.page).to.eql(1);",
+                  "    if (txs.items.length > 0) {",
+                  "        pm.collectionVariables.set(\"lastTransactionId\", txs.items[0].id);",
+                  "        console.log(\"Cached lastTransactionId:\", txs.items[0].id);",
+                  "    }",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query ListTransactions($type: TransactionType, $symbol: String, $page: Int, $pageSize: Int) {\n  transactions(type: $type, symbol: $symbol, page: $page, pageSize: $pageSize) {\n    items {\n      id\n      type\n      symbol\n      instrumentName\n      tradeDate\n      quantity\n      price {\n        amount\n        currencyCode\n      }\n      amount {\n        amount\n        currencyCode\n      }\n      fee {\n        amount\n        currencyCode\n      }\n      notes\n      createdAt\n    }\n    totalCount\n    page\n    pageSize\n  }\n}",
+                "variables": "{\n  \"page\": 1,\n  \"pageSize\": 20\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/query",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "query"
+              ]
+            },
+            "description": "Retrieves a paginated list of transactions from the ledger. Automatically caches the first item's ID into {{lastTransactionId}} for deletion testing."
+          },
+          "response": []
+        },
+        {
+          "name": "List Transactions Filtered by Type (BUY)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"GraphQL response has no errors\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.errors).to.be.undefined;",
+                  "    pm.expect(jsonData.data).to.be.an(\"object\");",
+                  "});",
+                  "",
+                  "pm.test(\"Only BUY transactions returned\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const items = jsonData.data.transactions.items;",
+                  "    items.forEach(item => {",
+                  "        pm.expect(item.type).to.eql(\"BUY\");",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query ListTransactionsByType($type: TransactionType, $page: Int, $pageSize: Int) {\n  transactions(type: $type, page: $page, pageSize: $pageSize) {\n    items {\n      id\n      type\n      symbol\n      instrumentName\n      tradeDate\n      quantity\n      amount {\n        amount\n        currencyCode\n      }\n      fee {\n        amount\n        currencyCode\n      }\n    }\n    totalCount\n    page\n    pageSize\n  }\n}",
+                "variables": "{\n  \"type\": \"BUY\",\n  \"page\": 1,\n  \"pageSize\": 10\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/query",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "query"
+              ]
+            },
+            "description": "Filters the transaction ledger to show only BUY transactions."
+          },
+          "response": []
+        },
+        {
+          "name": "List Transactions Filtered by Symbol (AAPL)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"GraphQL response has no errors\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.errors).to.be.undefined;",
+                  "    pm.expect(jsonData.data).to.be.an(\"object\");",
+                  "});",
+                  "",
+                  "pm.test(\"Only AAPL transactions returned\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const items = jsonData.data.transactions.items;",
+                  "    items.forEach(item => {",
+                  "        pm.expect(item.symbol).to.eql(\"AAPL\");",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query ListTransactionsBySymbol($symbol: String, $page: Int, $pageSize: Int) {\n  transactions(symbol: $symbol, page: $page, pageSize: $pageSize) {\n    items {\n      id\n      type\n      symbol\n      instrumentName\n      tradeDate\n      quantity\n      amount {\n        amount\n        currencyCode\n      }\n    }\n    totalCount\n    page\n    pageSize\n  }\n}",
+                "variables": "{\n  \"symbol\": \"AAPL\",\n  \"page\": 1,\n  \"pageSize\": 10\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/query",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "query"
+              ]
+            },
+            "description": "Filters the transaction ledger for transactions matching ticker symbol AAPL."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5. Transaction Mutations",
+      "description": "Mutations for recording trades, cash inflows/outflows, dividends, and deleting transactions with automatic projection replay.",
+      "item": [
+        {
+          "name": "Add Transaction - BUY Stock",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"GraphQL response has no errors\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.errors).to.be.undefined;",
+                  "    pm.expect(jsonData.data).to.be.an(\"object\");",
+                  "});",
+                  "",
+                  "pm.test(\"BUY transaction recorded and returned valid transactionId\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const payload = jsonData.data.addTransaction;",
+                  "    pm.expect(payload.transactionId).to.be.a(\"string\");",
+                  "    pm.collectionVariables.set(\"lastTransactionId\", payload.transactionId);",
+                  "    console.log(\"Recorded lastTransactionId:\", payload.transactionId);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation AddBuyTransaction($input: AddTransactionInput!) {\n  addTransaction(input: $input) {\n    transactionId\n    portfolio {\n      totalValue {\n        amount\n        currencyCode\n      }\n      cashBalance {\n        amount\n        currencyCode\n      }\n      investments {\n        ticker\n        name\n        quantity\n        totalValue {\n          amount\n          currencyCode\n        }\n      }\n    }\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"type\": \"BUY\",\n    \"symbol\": \"AAPL\",\n    \"tradeDate\": \"2026-03-15\",\n    \"quantity\": \"10\",\n    \"price\": \"175.50\",\n    \"amount\": \"1755.00\",\n    \"fee\": \"1.50\",\n    \"currencyCode\": \"USD\",\n    \"notes\": \"Postman BUY: 10 shares of AAPL\"\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/query",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "query"
+              ]
+            },
+            "description": "Records a BUY transaction for a given equity symbol. Updates tax lots and recomputes cash balances and portfolio valuation."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Transaction - SELL Stock",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"GraphQL response has no errors\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.errors).to.be.undefined;",
+                  "    pm.expect(jsonData.data).to.be.an(\"object\");",
+                  "});",
+                  "",
+                  "pm.test(\"SELL transaction recorded\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const payload = jsonData.data.addTransaction;",
+                  "    pm.expect(payload.transactionId).to.be.a(\"string\");",
+                  "    pm.collectionVariables.set(\"lastTransactionId\", payload.transactionId);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation AddSellTransaction($input: AddTransactionInput!) {\n  addTransaction(input: $input) {\n    transactionId\n    portfolio {\n      totalValue {\n        amount\n        currencyCode\n      }\n      cashBalance {\n        amount\n        currencyCode\n      }\n      investments {\n        ticker\n        quantity\n      }\n    }\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"type\": \"SELL\",\n    \"symbol\": \"AAPL\",\n    \"tradeDate\": \"2026-03-20\",\n    \"quantity\": \"5\",\n    \"price\": \"180.00\",\n    \"amount\": \"900.00\",\n    \"fee\": \"1.50\",\n    \"currencyCode\": \"USD\",\n    \"notes\": \"Postman SELL: 5 shares of AAPL\"\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/query",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "query"
+              ]
+            },
+            "description": "Records a SELL transaction for a given equity symbol. Relieves tax lots according to the active cost basis method and credits cash."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Transaction - DEPOSIT Cash",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"GraphQL response has no errors\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.errors).to.be.undefined;",
+                  "    pm.expect(jsonData.data).to.be.an(\"object\");",
+                  "});",
+                  "",
+                  "pm.test(\"DEPOSIT transaction recorded\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const payload = jsonData.data.addTransaction;",
+                  "    pm.expect(payload.transactionId).to.be.a(\"string\");",
+                  "    pm.collectionVariables.set(\"lastTransactionId\", payload.transactionId);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation AddDepositTransaction($input: AddTransactionInput!) {\n  addTransaction(input: $input) {\n    transactionId\n    portfolio {\n      cashBalance {\n        amount\n        currencyCode\n      }\n      totalValue {\n        amount\n        currencyCode\n      }\n    }\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"type\": \"DEPOSIT\",\n    \"tradeDate\": \"2026-03-01\",\n    \"amount\": \"5000.00\",\n    \"currencyCode\": \"USD\",\n    \"notes\": \"Postman Cash Deposit\"\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/query",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "query"
+              ]
+            },
+            "description": "Deposits cash into the portfolio cash account."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Transaction - WITHDRAWAL Cash",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"GraphQL response has no errors\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.errors).to.be.undefined;",
+                  "    pm.expect(jsonData.data).to.be.an(\"object\");",
+                  "});",
+                  "",
+                  "pm.test(\"WITHDRAWAL transaction recorded\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const payload = jsonData.data.addTransaction;",
+                  "    pm.expect(payload.transactionId).to.be.a(\"string\");",
+                  "    pm.collectionVariables.set(\"lastTransactionId\", payload.transactionId);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation AddWithdrawalTransaction($input: AddTransactionInput!) {\n  addTransaction(input: $input) {\n    transactionId\n    portfolio {\n      cashBalance {\n        amount\n        currencyCode\n      }\n      totalValue {\n        amount\n        currencyCode\n      }\n    }\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"type\": \"WITHDRAWAL\",\n    \"tradeDate\": \"2026-03-25\",\n    \"amount\": \"500.00\",\n    \"currencyCode\": \"USD\",\n    \"notes\": \"Postman Cash Withdrawal\"\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/query",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "query"
+              ]
+            },
+            "description": "Withdraws cash from the portfolio cash balance."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Transaction - DIVIDEND Income",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"GraphQL response has no errors\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.errors).to.be.undefined;",
+                  "    pm.expect(jsonData.data).to.be.an(\"object\");",
+                  "});",
+                  "",
+                  "pm.test(\"DIVIDEND transaction recorded\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const payload = jsonData.data.addTransaction;",
+                  "    pm.expect(payload.transactionId).to.be.a(\"string\");",
+                  "    pm.collectionVariables.set(\"lastTransactionId\", payload.transactionId);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation AddDividendTransaction($input: AddTransactionInput!) {\n  addTransaction(input: $input) {\n    transactionId\n    portfolio {\n      cashBalance {\n        amount\n        currencyCode\n      }\n      totalValue {\n        amount\n        currencyCode\n      }\n    }\n  }\n}",
+                "variables": "{\n  \"input\": {\n    \"type\": \"DIVIDEND\",\n    \"symbol\": \"MSFT\",\n    \"tradeDate\": \"2026-03-18\",\n    \"amount\": \"45.00\",\n    \"currencyCode\": \"USD\",\n    \"notes\": \"Postman Cash Dividend from MSFT\"\n  }\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/query",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "query"
+              ]
+            },
+            "description": "Records dividend income received for a specific stock holding."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Transaction",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"GraphQL response has no errors\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.errors).to.be.undefined;",
+                  "    pm.expect(jsonData.data).to.be.an(\"object\");",
+                  "});",
+                  "",
+                  "pm.test(\"Transaction successfully deleted\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    const payload = jsonData.data.deleteTransaction;",
+                  "    pm.expect(payload.success).to.be.true;",
+                  "    pm.expect(payload.portfolio).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "mutation DeleteTransaction($id: ID!) {\n  deleteTransaction(id: $id) {\n    success\n    portfolio {\n      totalValue {\n        amount\n        currencyCode\n      }\n      cashBalance {\n        amount\n        currencyCode\n      }\n      investments {\n        ticker\n        quantity\n      }\n    }\n  }\n}",
+                "variables": "{\n  \"id\": \"{{lastTransactionId}}\"\n}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/query",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "query"
+              ]
+            },
+            "description": "Deletes a transaction from the ledger by its ID (using {{lastTransactionId}} set by previous requests) and executes a projection rebuild to restore previous state."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6. Diagnostics & Introspection",
+      "description": "GraphQL schema introspection, type query metadata, and playground probes.",
+      "item": [
+        {
+          "name": "GraphQL Schema Introspection",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"GraphQL response has no errors\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.errors).to.be.undefined;",
+                  "    pm.expect(jsonData.data).to.be.an(\"object\");",
+                  "});",
+                  "",
+                  "pm.test(\"Schema types discovered\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.data.__schema.types).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "graphql",
+              "graphql": {
+                "query": "query IntrospectionQuery {\n  __schema {\n    types {\n      name\n      kind\n      description\n    }\n  }\n}",
+                "variables": "{}"
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/query",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "query"
+              ]
+            },
+            "description": "Queries the BFF GraphQL schema introspection endpoint to discover available types, queries, and mutations."
+          },
+          "response": []
+        },
+        {
+          "name": "GraphQL Playground (Web UI Probe)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test(\"Playground HTML served\", function () {",
+                  "    pm.expect(pm.response.text()).to.include(\"GraphQL playground\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "text/html,application/xhtml+xml,application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": []
+            },
+            "description": "Verifies that the GraphQL playground web interface responds at the root HTTP path."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string",
+      "description": "Base URL of the GraphFolio BFF service"
+    },
+    {
+      "key": "timeframe",
+      "value": "TIMEFRAME_1M",
+      "type": "string",
+      "description": "Default history timeframe: TIMEFRAME_1D, TIMEFRAME_1W, TIMEFRAME_1M, TIMEFRAME_1Y, TIMEFRAME_ALL"
+    },
+    {
+      "key": "lastTransactionId",
+      "value": "",
+      "type": "string",
+      "description": "Dynamically populated ID of the most recently created or listed transaction"
+    }
+  ]
+}

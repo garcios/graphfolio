@@ -1,80 +1,91 @@
 ---
 name: generate-postman-collection
 description: >-
-  Guide and step-by-step procedures for generating, updating, and validating Postman Collection v2.1 JSON files for the Spend Limit REST API.
+  Guide and step-by-step procedures for generating, updating, and validating Postman Collection v2.1 JSON files for the GraphFolio BFF GraphQL API.
   Use when the user asks to "generate postman collection", "create postman collection", "update postman collection",
-  "export postman", "generate-postman", "postman-collection", or generate API collections based on docs/prompts/prompt-postman.txt.
+  "export postman", "generate-postman", "postman-collection", or maintain GraphQL Postman collections for GraphFolio.
 ---
 
-# Generating Postman Collections for the Spend Limit API
+# Generating Postman Collections for the GraphFolio BFF GraphQL API
 
-This skill provides comprehensive instructions, architectural guidelines, payload catalogs, and verification procedures for generating and maintaining a complete, valid **Postman Collection v2.1.0** JSON file for the Spend Limit REST API.
+This skill provides comprehensive instructions, architectural guidelines, GraphQL operation catalogs, automated test assertions, and verification procedures for generating and maintaining a complete, valid **Postman Collection v2.1.0** JSON file for the GraphFolio Backend-For-Frontend (BFF) service.
 
 ---
 
 ## 1. Overview & Reference
 
-The reference prompt for this workflow is located at [docs/prompts/prompt-postman.txt](file:///Users/oscargarcia/workspace/spend-limit/docs/prompts/prompt-postman.txt).
-
-The target output file is [docs/postman/spend-limit.postman_collection.json](file:///Users/oscargarcia/workspace/spend-limit/docs/postman/spend-limit.postman_collection.json).
+- **Target Output File**: [`docs/graphfolio-bff.postman_collection.json`](file:///Users/oscargarcia/workspace/graphfolio/docs/graphfolio-bff.postman_collection.json)
+- **Accompanying Documentation**: [`docs/postman-collection.md`](file:///Users/oscargarcia/workspace/graphfolio/docs/postman-collection.md)
+- **BFF GraphQL Schema**: [`bff/graph/schema.graphqls`](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls)
+- **BFF Entry Point**: [`bff/cmd/server/main.go`](file:///Users/oscargarcia/workspace/graphfolio/bff/cmd/server/main.go)
+- **BFF Resolvers**: [`bff/graph/schema.resolvers.go`](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers.go)
 
 ### Core Goals
-1. **100% Endpoint Coverage**: Reflect all routes defined in [server/server.go](file:///Users/oscargarcia/workspace/spend-limit/server/server.go).
-2. **Accurate Payloads & Types**: Populate request bodies with realistic JSON matching Go request DTOs in [server/handlers.go](file:///Users/oscargarcia/workspace/spend-limit/server/handlers.go) and domain rules in [domain/domain.go](file:///Users/oscargarcia/workspace/spend-limit/domain/domain.go).
-3. **Environment & Variable Portability**: Use collection variables (`{{baseUrl}}`, `{{customerId}}`, `{{period}}`) and Postman dynamic macros (e.g. `{{$guid}}`) for seamless import and execution.
-4. **Valid Postman v2.1.0 Schema**: Ensure strict compliance with the Postman Collection v2.1.0 schema so it imports without syntax or structure errors.
-5. **In-Place Update Semantics**: When the output file already exists, **update it in place** rather than regenerating from scratch or creating duplicate files. Preserve stable metadata (`info._postman_id`), existing custom variables, headers, and test scripts while merging new endpoints or updated DTO payloads.
+1. **100% GraphQL Schema Parity**: Cover all queries (`portfolio`, `instruments`, `portfolioHistory`, `transactions`) and mutations (`addTransaction`, `deleteTransaction`) defined in `bff/graph/schema.graphqls`.
+2. **Native GraphQL Editor Integration**: Use Postman's native `"mode": "graphql"` body format with decoupled `query` and `variables` strings so Postman provides full schema autocomplete, syntax highlighting, and variable interpolation.
+3. **Exact Arbitrary-Precision Decimal Payloads**: Adhere to the Zero Floating-Point Policy. Quantities, prices, fees, and money amounts use stringified arbitrary-precision decimals (e.g. `"175.50"`) matching the GraphQL `Decimal` scalar.
+4. **Environment & Variable Portability**: Use collection variables (`{{baseUrl}}`, `{{timeframe}}`, `{{lastTransactionId}}`) to ensure painless switching between local development, staging, or containerized environments.
+5. **Dynamic Workflow Chaining**: Use Postman test scripts (`pm.test` and `pm.collectionVariables.set`) to extract identifiers from mutations (such as newly created transaction IDs) to feed subsequent operations (like `deleteTransaction`).
+6. **In-Place Update Semantics**: When updating an existing collection, **preserve** stable collection metadata (`info._postman_id`), existing custom variables, and custom test scripts while merging new schema fields or query variations.
 
 ---
 
-## 2. Postman Collection v2.1.0 Specification
+## 2. Postman Collection v2.1.0 GraphQL Specification
 
-Every generated collection must follow the Postman Collection Format v2.1.0:
+Every collection generated must strictly comply with the Postman Collection Format v2.1.0 specification with native GraphQL bodies:
 
 ```json
 {
   "info": {
-    "_postman_id": "<uuid-v4>",
-    "name": "Spend Limit REST API",
-    "description": "Comprehensive Postman collection for the Spend Limit and Responsible Gaming service.",
+    "_postman_id": "c6a2e457-4576-4e58-bb12-9c3f0b3ad291",
+    "name": "GraphFolio BFF GraphQL API",
+    "description": "Comprehensive Postman collection for the GraphFolio Backend-For-Frontend (BFF) GraphQL service.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
-      "name": "Folder Name",
-      "description": "Folder description",
+      "name": "1. Portfolio & Holdings",
+      "description": "Consolidated portfolio metrics, net worth, and holding positions.",
       "item": [
         {
-          "name": "Request Name",
+          "name": "Get Portfolio Summary",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status code is 200\", function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"GraphQL response has no errors\", function () {",
+                  "    const jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.errors).to.be.undefined;",
+                  "    pm.expect(jsonData.data.portfolio).to.exist;",
+                  "});"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" },
-              { "key": "X-Request-ID", "value": "{{$guid}}", "description": "Optional tracing ID" }
+              { "key": "Accept", "value": "application/json" }
             ],
             "body": {
-              "mode": "raw",
-              "raw": "{\n  \"period\": \"{{period}}\",\n  \"amount\": \"100.00\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
+              "mode": "graphql",
+              "graphql": {
+                "query": "query GetPortfolio {\n  portfolio {\n    totalValue {\n      amount\n      currencyCode\n    }\n    cashBalance {\n      amount\n      currencyCode\n    }\n    investments {\n      id\n      ticker\n      quantity\n    }\n  }\n}",
+                "variables": "{}"
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/api/v1/customers/:id/limits",
+              "raw": "{{baseUrl}}/query",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "v1", "customers", ":id", "limits"],
-              "variable": [
-                {
-                  "key": "id",
-                  "value": "{{customerId}}",
-                  "description": "Customer UUID"
-                }
-              ]
+              "path": ["query"]
             },
-            "description": "Detailed description of the endpoint."
+            "description": "Fetches the full consolidated portfolio state."
           },
           "response": []
         }
@@ -83,303 +94,332 @@ Every generated collection must follow the Postman Collection Format v2.1.0:
   ],
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:8080", "type": "string" },
-    { "key": "customerId", "value": "123e4567-e89b-12d3-a456-426614174000", "type": "string" },
-    { "key": "period", "value": "HOURS_24", "type": "string" }
+    { "key": "timeframe", "value": "TIMEFRAME_1M", "type": "string" },
+    { "key": "lastTransactionId", "value": "", "type": "string" }
   ]
 }
 ```
 
-### Key Schema Requirements
+### Key Schema Rules
 - `info.schema` MUST be `"https://schema.getpostman.com/json/collection/v2.1.0/collection.json"`.
-- `info._postman_id` MUST be a valid UUID string (e.g. `8a32d1ef-4576-4e58-bb12-9c3f0b3ad291`).
-- Path variables in `url.raw` use `:variableName` syntax and MUST be declared in `url.variable` array.
-- Query parameters in `url.raw` (e.g. `?client_id={{customerId}}`) MUST be declared in `url.query` array with `key`, `value`, and `description`.
-- Request bodies with JSON payloads MUST specify `"mode": "raw"` and `"options": { "raw": { "language": "json" } }`.
+- `info._postman_id` MUST be a valid UUID v4 string.
+- GraphQL POST requests MUST target `{{baseUrl}}/query`.
+- GraphQL requests MUST declare `"mode": "graphql"` with `"graphql": { "query": "...", "variables": "..." }`.
+- `variables` within the `graphql` object MUST be a JSON-serialized string (e.g. `"{\n  \"timeframe\": \"TIMEFRAME_1M\"\n}"`).
 
 ---
 
-## 3. Go Codebase Inspection Guide
+## 3. BFF Codebase Inspection Guide
 
-When updating or generating the collection, inspect the following files to ensure full parity with code:
+When updating or generating the collection, inspect the following files to ensure parity with the current backend state:
 
 | File | What to Inspect |
 |---|---|
-| [server/server.go](file:///Users/oscargarcia/workspace/spend-limit/server/server.go) | All route registrations on `mux.HandleFunc("<METHOD> <path>", ...)` |
-| [server/handlers.go](file:///Users/oscargarcia/workspace/spend-limit/server/handlers.go) | Handler implementations, request struct definitions (`readJSON`), path variables (`r.PathValue`), query parameters (`r.URL.Query().Get`), and status codes |
-| [server/response.go](file:///Users/oscargarcia/workspace/spend-limit/server/response.go) | Response envelopes (`ErrorResponse`, `ErrorDetail`, error codes) |
-| [domain/domain.go](file:///Users/oscargarcia/workspace/spend-limit/domain/domain.go) | Domain models, valid periods (`HOURS_24`, `DAYS_7`, `DAYS_30`), sources (`CUSTOMER`, `INTERNAL`, `ADMIN`), and transaction types |
-| [config/config.go](file:///Users/oscargarcia/workspace/spend-limit/config/config.go) | Default host and port configuration (`SERVER_HOST`, `SERVER_PORT`) |
+| [`bff/graph/schema.graphqls`](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls) | The source of truth for GraphQL Query, Mutation, Input, Object, and Enum types. |
+| [`bff/graph/schema.resolvers.go`](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers.go) | Resolver implementations, default parameters, and mapping to gRPC requests. |
+| [`bff/graph/helpers.go`](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/helpers.go) | Proto-to-GraphQL conversion rules, timeframe mappings, and pagination helpers. |
+| [`bff/cmd/server/main.go`](file:///Users/oscargarcia/workspace/graphfolio/bff/cmd/server/main.go) | HTTP route handlers (`/query` for GraphQL, `/` for Playground) and port configuration (`defaultPort = "8080"`). |
+| [`proto/portfolio/v1/portfolio.proto`](file:///Users/oscargarcia/workspace/graphfolio/proto/portfolio/v1/portfolio.proto) | gRPC service contract definitions, error codes, and field validation boundaries. |
 
 ---
 
-## 4. Spend Limit API Endpoint & Payload Catalog
+## 4. GraphFolio BFF Operation Catalog
 
-Organize collection items into 5 logical folders matching the API's architecture:
+Organize collection items into 6 logical folders matching the system architecture:
 
-### Folder 1: Health
-Service health probes and diagnostics.
+### Folder 1: Portfolio & Holdings
+Consolidated portfolio metrics, net worth, cash balance, and asset breakdown.
 
-- **GET `/health`**
-  - **Name**: Health Check & Database Probe
-  - **Headers**: `Accept: application/json`
-  - **URL**: `{{baseUrl}}/health`
-  - **Description**: Verifies service status and runs MySQL ping check.
+- **POST `{{baseUrl}}/query` - `Get Portfolio Summary`**
+  - **Query**:
+    ```graphql
+    query GetPortfolio {
+      portfolio {
+        totalValue { amount currencyCode }
+        todayReturnAmount { amount currencyCode }
+        todayReturnPercent
+        annualizedReturnPercent
+        cashBalance { amount currencyCode }
+        investments {
+          id
+          ticker
+          name
+          price { amount currencyCode }
+          quantity
+          totalValue { amount currencyCode }
+          todayReturnAmount { amount currencyCode }
+          todayReturnPercent
+          totalReturnAmount { amount currencyCode }
+          totalReturnPercent
+        }
+      }
+    }
+    ```
+  - **Variables**: `{}`
+  - **Assertions**: Verify 200 OK, `jsonData.errors` undefined, and `portfolio.investments` is an array.
 
 ---
 
-### Folder 2: Spend Limits
-Customer limit lifecycle, creation, immediate decreases, cooling-off increases, removals, and pending queries.
+### Folder 2: Market Data & Instruments
+Tradable instruments, asset classes, and security master definitions.
 
-- **POST `/api/v1/customers/:id/limits`**
-  - **Name**: Create Spend Limit
-  - **Headers**: `Content-Type: application/json`, `Accept: application/json`, `X-Request-ID: {{$guid}}`
-  - **URL**: `{{baseUrl}}/api/v1/customers/:id/limits` (`:id` = `{{customerId}}`)
-  - **Body (`raw/json`)**:
-    ```json
-    {
-      "period": "{{period}}",
-      "amount": "100.00",
-      "source": "CUSTOMER",
-      "requested_by": "customer"
+- **POST `{{baseUrl}}/query` - `List All Instruments`**
+  - **Query**:
+    ```graphql
+    query ListInstruments {
+      instruments {
+        id
+        symbol
+        name
+        currencyCode
+        assetClass
+      }
     }
     ```
-  - **Status**: 201 Created (or 409 Conflict if limit already exists).
-
-- **PUT `/api/v1/customers/:id/limits/:period`**
-  - **Name**: Update Spend Limit
-  - **Headers**: `Content-Type: application/json`, `Accept: application/json`, `X-Request-ID: {{$guid}}`
-  - **URL**: `{{baseUrl}}/api/v1/customers/:id/limits/:period` (`:id` = `{{customerId}}`, `:period` = `{{period}}`)
-  - **Body (`raw/json`)**:
-    ```json
-    {
-      "amount": "50.00",
-      "requested_by": "customer"
-    }
-    ```
-  - **Notes**: Decreases take effect immediately (200 OK). Increases queue with a mandatory 24h cooling-off period (202 Accepted).
-
-- **DELETE `/api/v1/customers/:id/limits/:period`**
-  - **Name**: Request Delete Spend Limit
-  - **Headers**: `Accept: application/json`, `X-Request-ID: {{$guid}}`
-  - **URL**: `{{baseUrl}}/api/v1/customers/:id/limits/:period?requested_by=customer`
-  - **Query Params**: `requested_by` (optional, defaults to customer ID)
-  - **Status**: 202 Accepted (enters 24h cooling-off period).
-
-- **POST `/api/v1/customers/:id/limits/:period/cancel`**
-  - **Name**: Cancel Pending Limit Request
-  - **Headers**: `Accept: application/json`, `X-Request-ID: {{$guid}}`
-  - **URL**: `{{baseUrl}}/api/v1/customers/:id/limits/:period/cancel`
-  - **Status**: 200 OK (cancels pending increase or removal before cooling-off expires).
-
-- **GET `/api/v1/customers/:id/limits`**
-  - **Name**: List Customer Spend Limits
-  - **Headers**: `Accept: application/json`
-  - **URL**: `{{baseUrl}}/api/v1/customers/:id/limits`
-  - **Status**: 200 OK (returns array of active limits across all periods).
-
-- **GET `/api/v1/customers/:id/limits/current`**
-  - **Name**: Get Current Restricting Spend Limit
-  - **Headers**: `Accept: application/json`
-  - **URL**: `{{baseUrl}}/api/v1/customers/:id/limits/current`
-  - **Status**: 200 OK (returns the most restrictive active limit detail).
-
-- **GET `/api/v1/customers/:id/requests/pending`**
-  - **Name**: List Customer Pending Requests
-  - **Headers**: `Accept: application/json`
-  - **URL**: `{{baseUrl}}/api/v1/customers/:id/requests/pending`
-  - **Status**: 200 OK.
-
-- **GET `/api/v1/requests/pending`**
-  - **Name**: List All Pending Requests (Admin/Global)
-  - **Headers**: `Accept: application/json`
-  - **URL**: `{{baseUrl}}/api/v1/requests/pending?client_id={{customerId}}`
-  - **Query Params**: `client_id` (optional filter).
+  - **Variables**: `{}`
+  - **Assertions**: Verify 200 OK, returns list of instruments (`AAPL`, `MSFT`, `GOOGL`, `NVDA`, `SPY`, `QQQ`).
 
 ---
 
-### Folder 3: Transactions
-Real-money betting, generosity/bonus bets, and refunds with limit validation.
+### Folder 3: Performance History
+Time-series valuation curves, Time-Weighted Return (TWR) indexes, and period return calculations across timeframes.
 
-- **POST `/api/v1/customers/:id/transactions/bet`**
-  - **Name**: Place Cash Bet
-  - **Headers**: `Content-Type: application/json`, `Accept: application/json`, `X-Request-ID: {{$guid}}`
-  - **URL**: `{{baseUrl}}/api/v1/customers/:id/transactions/bet`
-  - **Body (`raw/json`)**:
-    ```json
-    {
-      "amount": "25.00",
-      "txn_id": "txn-{{$guid}}"
+- **POST `{{baseUrl}}/query` - `Get Portfolio History (Variable Timeframe)`**
+  - **Variables**: `{"timeframe": "{{timeframe}}"}`
+  - **Query**:
+    ```graphql
+    query GetPortfolioHistory($timeframe: HistoryTimeframe!) {
+      portfolioHistory(timeframe: $timeframe) {
+        startValue { amount currencyCode }
+        endValue { amount currencyCode }
+        returnAmount { amount currencyCode }
+        returnPercent
+        points {
+          date
+          totalValue { amount currencyCode }
+          marketValue { amount currencyCode }
+          cashValue { amount currencyCode }
+          twrIndex
+          dailyReturn
+        }
+      }
     }
     ```
-  - **Status**: 201 Created on success, 422 Unprocessable Entity (`LIMIT_REACHED`) if limit is breached.
-
-- **POST `/api/v1/customers/:id/transactions/generosity`**
-  - **Name**: Place Bonus / Generosity Bet
-  - **Headers**: `Content-Type: application/json`, `Accept: application/json`, `X-Request-ID: {{$guid}}`
-  - **URL**: `{{baseUrl}}/api/v1/customers/:id/transactions/generosity`
-  - **Body (`raw/json`)**:
-    ```json
-    {
-      "amount": "10.00",
-      "txn_id": "txn-bonus-{{$guid}}"
-    }
-    ```
-  - **Notes**: Generosity bets do not consume spend limit budget, but are blocked if customer has reached $0 remaining balance.
-
-- **POST `/api/v1/customers/:id/transactions/refund`**
-  - **Name**: Refund Cash Bet
-  - **Headers**: `Content-Type: application/json`, `Accept: application/json`, `X-Request-ID: {{$guid}}`
-  - **URL**: `{{baseUrl}}/api/v1/customers/:id/transactions/refund`
-  - **Body (`raw/json`)**:
-    ```json
-    {
-      "amount": "25.00",
-      "txn_id": "ref-{{$guid}}"
-    }
-    ```
-  - **Status**: 200 OK (restores spent budget, floored at $0).
+- **Predefined Timeframe Variants**:
+  - `Get Portfolio History (1 Day - 1D)`: `TIMEFRAME_1D`
+  - `Get Portfolio History (1 Week - 1W)`: `TIMEFRAME_1W`
+  - `Get Portfolio History (1 Month - 1M)`: `TIMEFRAME_1M`
+  - `Get Portfolio History (1 Year - 1Y)`: `TIMEFRAME_1Y`
+  - `Get Portfolio History (All Time - ALL)`: `TIMEFRAME_ALL`
 
 ---
 
-### Folder 4: Admin & Operations
-Batch processing, testing maintenance, counter resets, and Transactional Outbox inspection.
+### Folder 4: Transaction Ledger
+Paginated transaction queries, multi-criteria filtering, and execution details.
 
-- **POST `/api/v1/admin/apply-pending-changes`**
-  - **Name**: Apply Expired Pending Changes
-  - **Headers**: `Content-Type: application/json`, `Accept: application/json`
-  - **URL**: `{{baseUrl}}/api/v1/admin/apply-pending-changes`
-  - **Body (`raw/json`)**:
-    ```json
-    {
-      "client_id": "{{customerId}}"
+- **POST `{{baseUrl}}/query` - `List Transactions (Default Pagination)`**
+  - **Variables**: `{"page": 1, "pageSize": 20}`
+  - **Query**:
+    ```graphql
+    query ListTransactions($type: TransactionType, $symbol: String, $page: Int, $pageSize: Int) {
+      transactions(type: $type, symbol: $symbol, page: $page, pageSize: $pageSize) {
+        items {
+          id
+          type
+          symbol
+          instrumentName
+          tradeDate
+          quantity
+          price { amount currencyCode }
+          amount { amount currencyCode }
+          fee { amount currencyCode }
+          notes
+          createdAt
+        }
+        totalCount
+        page
+        pageSize
+      }
     }
     ```
-  - **Notes**: Promotes expired cooling-off increases and deletions. `client_id` is optional.
-
-- **POST `/api/v1/admin/reset-counter`**
-  - **Name**: Reset Spend Counter
-  - **Headers**: `Content-Type: application/json`, `Accept: application/json`
-  - **URL**: `{{baseUrl}}/api/v1/admin/reset-counter`
-  - **Body (`raw/json`)**:
-    ```json
-    {
-      "client_id": "{{customerId}}",
-      "period": "{{period}}"
-    }
-    ```
-
-- **POST `/api/v1/admin/time-travel`**
-  - **Name**: Time Travel (Testing Utility)
-  - **Headers**: `Content-Type: application/json`, `Accept: application/json`
-  - **URL**: `{{baseUrl}}/api/v1/admin/time-travel`
-  - **Body (`raw/json`)**:
-    ```json
-    {
-      "client_id": "{{customerId}}",
-      "period": "{{period}}",
-      "field": "effectiveAt",
-      "at": "2026-09-01T00:00:00Z"
-    }
-    ```
-  - **Field Values**: `"effectiveAt"`, `"windowEnd"`, `"windowStart"`.
-
-- **GET `/api/v1/admin/events`**
-  - **Name**: List Outbox Domain Events
-  - **Headers**: `Accept: application/json`
-  - **URL**: `{{baseUrl}}/api/v1/admin/events?client_id={{customerId}}`
-  - **Query Params**: `client_id` (optional filter).
+  - **Dynamic Variable Script**: Extracts `items[0].id` and sets `pm.collectionVariables.set("lastTransactionId", items[0].id)` if transactions exist.
+- **POST `{{baseUrl}}/query` - `List Transactions Filtered by Type (BUY)`**
+  - **Variables**: `{"type": "BUY", "page": 1, "pageSize": 10}`
+- **POST `{{baseUrl}}/query` - `List Transactions Filtered by Symbol (AAPL)`**
+  - **Variables**: `{"symbol": "AAPL", "page": 1, "pageSize": 10}`
 
 ---
 
-### Folder 5: Observability & Metrics
-LRU memory cache and telemetry monitoring.
+### Folder 5: Transaction Mutations
+Recording trades, cash movements, dividend distributions, and deleting ledger records with automatic replay projection rebuilds.
 
-- **GET `/api/v1/admin/cache/metrics`**
-  - **Name**: Get Memory Cache Metrics
-  - **Headers**: `Accept: application/json`
-  - **URL**: `{{baseUrl}}/api/v1/admin/cache/metrics`
-  - **Alternative Aliases**: `/api/v1/cache/metrics`, `/api/v1/metrics/cache`.
-  - **Response Payload**: `{"hits": 120, "misses": 5, "evictions": 0, "len": 4, "capacity": 10000, "hit_rate": 0.96, "active_clients": 2}`.
+- **POST `{{baseUrl}}/query` - `Add Transaction - BUY Stock`**
+  - **Variables**:
+    ```json
+    {
+      "input": {
+        "type": "BUY",
+        "symbol": "AAPL",
+        "tradeDate": "2026-03-15",
+        "quantity": "10",
+        "price": "175.50",
+        "amount": "1755.00",
+        "fee": "1.50",
+        "currencyCode": "USD",
+        "notes": "Postman BUY: 10 shares of AAPL"
+      }
+    }
+    ```
+  - **Test Script**: Automatically caches `transactionId` into `{{lastTransactionId}}`:
+    ```javascript
+    pm.collectionVariables.set("lastTransactionId", jsonData.data.addTransaction.transactionId);
+    ```
+
+- **POST `{{baseUrl}}/query` - `Add Transaction - SELL Stock`**
+  - **Variables**:
+    ```json
+    {
+      "input": {
+        "type": "SELL",
+        "symbol": "AAPL",
+        "tradeDate": "2026-03-20",
+        "quantity": "5",
+        "price": "180.00",
+        "amount": "900.00",
+        "fee": "1.50",
+        "currencyCode": "USD",
+        "notes": "Postman SELL: 5 shares of AAPL"
+      }
+    }
+    ```
+
+- **POST `{{baseUrl}}/query` - `Add Transaction - DEPOSIT Cash`**
+  - **Variables**:
+    ```json
+    {
+      "input": {
+        "type": "DEPOSIT",
+        "tradeDate": "2026-03-01",
+        "amount": "5000.00",
+        "currencyCode": "USD",
+        "notes": "Postman Cash Deposit"
+      }
+    }
+    ```
+
+- **POST `{{baseUrl}}/query` - `Add Transaction - WITHDRAWAL Cash`**
+  - **Variables**:
+    ```json
+    {
+      "input": {
+        "type": "WITHDRAWAL",
+        "tradeDate": "2026-03-25",
+        "amount": "500.00",
+        "currencyCode": "USD",
+        "notes": "Postman Cash Withdrawal"
+      }
+    }
+    ```
+
+- **POST `{{baseUrl}}/query` - `Add Transaction - DIVIDEND Income`**
+  - **Variables**:
+    ```json
+    {
+      "input": {
+        "type": "DIVIDEND",
+        "symbol": "MSFT",
+        "tradeDate": "2026-03-18",
+        "amount": "45.00",
+        "currencyCode": "USD",
+        "notes": "Postman Cash Dividend MSFT"
+      }
+    }
+    ```
+
+- **POST `{{baseUrl}}/query` - `Delete Transaction`**
+  - **Variables**:
+    ```json
+    {
+      "id": "{{lastTransactionId}}"
+    }
+    ```
+  - **Query**:
+    ```graphql
+    mutation DeleteTransaction($id: ID!) {
+      deleteTransaction(id: $id) {
+        success
+        portfolio {
+          totalValue { amount currencyCode }
+          cashBalance { amount currencyCode }
+        }
+      }
+    }
+    ```
+  - **Assertions**: Verify `deleteTransaction.success === true`.
 
 ---
 
-## 5. Step-by-Step Generation & In-Place Update Workflow
+### Folder 6: Diagnostics & Introspection
+GraphQL schema discovery and service availability probes.
 
-Follow this procedure when creating or updating the Postman collection:
+- **POST `{{baseUrl}}/query` - `GraphQL Schema Introspection`**
+  - Discovers all types, query roots, and mutations using `__schema`.
+- **GET `{{baseUrl}}/` - `GraphQL Playground (Web UI Probe)`**
+  - Verifies that the interactive GraphQL playground responds with HTTP 200 and loads HTML.
 
-### Step 1: Check If Target File Exists & Load Existing Collection
-Before generating or updating, inspect the target path [docs/postman/spend-limit.postman_collection.json](file:///Users/oscargarcia/workspace/spend-limit/docs/postman/spend-limit.postman_collection.json):
+---
 
-1. **If the file ALREADY EXISTS**:
-   - Read and parse the existing JSON file into memory.
-   - **Preserve `info._postman_id`**: Reusing the existing UUID ensures Postman updates the collection on re-import rather than creating a duplicate collection in the user's workspace.
-   - **Preserve existing customizations**: Retain any existing collection variables, descriptions, pre-request scripts, or test scripts (`item[].event`).
-   - Extract the existing folder hierarchy and endpoints to perform an incremental merge.
+## 5. Generation & In-Place Update Workflow
 
-2. **If the file DOES NOT EXIST**:
-   - Initialize a new collection structure using a freshly generated UUID v4 for `info._postman_id`.
-   - Set up the standard collection variables (`baseUrl`, `customerId`, `period`).
+When generating or updating the Postman collection, follow this procedure:
 
-### Step 2: Scan Go Routes and Handlers
-Review [server/server.go](file:///Users/oscargarcia/workspace/spend-limit/server/server.go) and [server/handlers.go](file:///Users/oscargarcia/workspace/spend-limit/server/handlers.go) for:
-1. Any newly added endpoints.
-2. Changes in path patterns or query parameters.
-3. Updated DTO fields, validation tags, or default values.
+### Step 1: Check If Target File Exists
+Inspect [`docs/graphfolio-bff.postman_collection.json`](file:///Users/oscargarcia/workspace/graphfolio/docs/graphfolio-bff.postman_collection.json):
+1. **If already present**:
+   - Read the existing file.
+   - **Preserve `info._postman_id`**: Reusing the existing UUID prevents Postman from creating duplicate collections upon re-import.
+   - **Preserve existing variables**: Retain user-customized values in `variable` (e.g. custom `baseUrl` or credentials).
+   - Perform an incremental merge of new operations or updated GraphQL fields.
+2. **If missing**:
+   - Generate a new UUID v4 for `info._postman_id`.
+   - Initialize standard variables (`baseUrl`, `timeframe`, `lastTransactionId`).
 
-### Step 3: Merge & Update Endpoints and Folders
-Perform an in-place merge of discovered API endpoints against the collection:
-- **Match existing requests**: Match endpoints by HTTP method and relative path.
-  - If a route already exists: Update its URL parameters, request body payload (matching updated Go structs), or headers if they changed. Preserve any user-added test scripts or notes.
-  - If a route is new: Append it under the appropriate logical folder (`Health`, `Spend Limits`, `Transactions`, `Admin & Operations`, `Observability & Metrics`).
-- **Ensure Folder Structure**: If a required folder is missing, create it in logical order.
-- **Synchronize Variables**: Ensure default variables (`baseUrl`, `customerId`, `period`) exist in the `variable` array without overwriting existing custom variables.
+### Step 2: Validate Against Schema
+Verify that all field selections in query strings match [`bff/graph/schema.graphqls`](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls). Confirm that input objects specify exact decimal values as strings.
 
-### Step 4: Validate Updated JSON Output
-Always validate the updated JSON file using Python or `jq` before committing:
+### Step 3: Validate JSON Syntax
+Always run JSON validation before saving changes:
 
 ```bash
-# Validate JSON syntax
-python3 -c "import json; json.load(open('docs/postman/spend-limit.postman_collection.json')); print('JSON syntax is valid!')"
-
-# Verify top-level Postman schema key and preserved _postman_id
-python3 -c "import json; data=json.load(open('docs/postman/spend-limit.postman_collection.json')); assert data['info']['schema'] == 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'; assert '_postman_id' in data['info']; print('Postman v2.1 schema & ID confirmed!')"
+python3 -m json.tool docs/graphfolio-bff.postman_collection.json > /dev/null && echo "Valid JSON!"
 ```
 
-### Step 5: Save Updated Collection File In-Place
-Write the updated collection directly back to:
-- `docs/postman/spend-limit.postman_collection.json`
-
-> [!IMPORTANT]
-> Always update the existing file in place (`docs/postman/spend-limit.postman_collection.json`). Do not create new alternate files (like `spend-limit-v2.json` or timestamped files) unless explicitly instructed.
+Verify Postman v2.1.0 schema declaration:
+```bash
+python3 -c "import json; data=json.load(open('docs/graphfolio-bff.postman_collection.json')); assert data['info']['schema'] == 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'; assert '_postman_id' in data['info']; print('Postman v2.1.0 schema & ID verified!')"
+```
 
 ---
 
 ## 6. Testing & Execution
 
 ### Running with Newman (CLI)
-You can execute automated regression runs against a local server using Newman:
+You can run automated end-to-end regression tests against a locally running GraphFolio stack:
 
 ```bash
-# 1. Start the Spend Limit REST API server
-./spendlimit serve &
-SERVER_PID=$!
-
-# 2. Run the collection using newman
-npx -y newman run docs/postman/spend-limit.postman_collection.json \
-  --env-var "baseUrl=http://localhost:8080" \
-  --env-var "customerId=123e4567-e89b-12d3-a456-426614174000"
-
-# 3. Stop the test server
-kill $SERVER_PID
+# Run collection against local BFF on :8080
+npx newman run docs/graphfolio-bff.postman_collection.json \
+  --env-var "baseUrl=http://localhost:8080"
 ```
 
 ---
 
 ## 7. Maintenance Checklist
 
-Whenever modifying or adding API endpoints in Go:
-- [ ] Added endpoint to [server/server.go](file:///Users/oscargarcia/workspace/spend-limit/server/server.go) routes.
-- [ ] Created handler and request/response DTOs in [server/handlers.go](file:///Users/oscargarcia/workspace/spend-limit/server/handlers.go).
-- [ ] Updated [docs/postman/spend-limit.postman_collection.json](file:///Users/oscargarcia/workspace/spend-limit/docs/postman/spend-limit.postman_collection.json) in place (preserving `info._postman_id` and existing variables/scripts).
-- [ ] Provided realistic JSON payload matching DTO struct.
-- [ ] Validated JSON formatting with `python3 -m json.tool`.
+Whenever modifying GraphQL schema or BFF resolvers:
+- [ ] Updated schema definitions in [`bff/graph/schema.graphqls`](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls).
+- [ ] Ran `make generate` to synchronize Go models and frontend GenQL client.
+- [ ] Updated queries, mutations, or variables in [`docs/graphfolio-bff.postman_collection.json`](file:///Users/oscargarcia/workspace/graphfolio/docs/graphfolio-bff.postman_collection.json) in place.
+- [ ] Updated documentation in [`docs/postman-collection.md`](file:///Users/oscargarcia/workspace/graphfolio/docs/postman-collection.md) if new operations or parameters were introduced.
+- [ ] Confirmed JSON validity with `python3 -m json.tool`.
+- [ ] Ran backend unit tests: `make test`.
