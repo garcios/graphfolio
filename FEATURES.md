@@ -211,6 +211,18 @@ This document catalogs all implemented features, in-progress components, and pla
   - Earnings quality detection via the Sloan Accrual Ratio to highlight divergence between reported Net Income and cash realization.
   - "Business Owner" dashboard view contrasting Market Value growth against Business Intrinsic Value growth.
 
+### 3.6 Currency Pair Historical Prices (Admin Portal)
+- **Status**: **PLANNED**
+- **Plan Reference**: [currency-pair-historical-prices-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/currency-pair-historical-prices-implementation-plan.md)
+- **Scope**: `proto/portfolio/v1/`, `services/portfolio-api`, `bff/`, `web/apps/admin-app`
+- **Highlights**:
+  - Dedicated "Currency Pairs (FX)" management view in the internal Admin Portal (`:5174`).
+  - Interactive SVG historical exchange rate trend chart with timeframe filtering (`1W`, `1M`, `3M`, `1Y`, `ALL`) and hover crosshairs.
+  - Dynamic currency pair selector with reciprocal rate inversion toggle (`Base ⇄ Quote`, e.g. `EUR/USD` ↔ `USD/EUR`) computed with exact 10-decimal fixed-point precision.
+  - Real-time operational KPI telemetry: Spot Rate, 24h/1D change (% and delta), Period High/Low, Total Historical Fixings, and Data Source benchmark (`ECB`, `Twelve Data`).
+  - Filterable, paginated authoritative rates ledger (`portfolio.fx_rates`) with date pickers, direct & inverted rates, and manual rate override modal dialog.
+  - End-to-end gRPC, GraphQL BFF resolvers, and typed GenQL client integration strictly adhering to the zero floating-point arithmetic policy.
+
 ---
 
 ## 4. Future Roadmap Ideas (`ROADMAP`)
