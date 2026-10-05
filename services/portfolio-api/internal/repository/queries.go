@@ -230,4 +230,45 @@ SELECT MAX(price_date) FROM portfolio.instrument_prices;`
 
 	latestFXDateSQL = `
 SELECT MAX(rate_date) FROM portfolio.fx_rates;`
+
+	batchUpsertInstrumentPriceWithIDSQL = `
+INSERT INTO portfolio.instrument_prices (instrument_id, price_date, close, source, created_at)
+VALUES ($1, $2, $3, $4, now())
+ON CONFLICT (instrument_id, price_date)
+DO UPDATE SET close = EXCLUDED.close, source = EXCLUDED.source, created_at = now();`
+
+	batchUpsertInstrumentPriceWithSymbolSQL = `
+INSERT INTO portfolio.instrument_prices (instrument_id, price_date, close, source, created_at)
+SELECT id, $2, $3, $4, now()
+FROM portfolio.instruments
+WHERE UPPER(symbol) = UPPER($1)
+ON CONFLICT (instrument_id, price_date)
+DO UPDATE SET close = EXCLUDED.close, source = EXCLUDED.source, created_at = now();`
+
+	batchUpsertFXRateSQL = `
+INSERT INTO portfolio.fx_rates (base_currency, quote_currency, rate_date, rate, source)
+VALUES ($1, $2, $3, $4, $5)
+ON CONFLICT (base_currency, quote_currency, rate_date)
+DO UPDATE SET rate = EXCLUDED.rate, source = EXCLUDED.source;`
+
+	listActiveCurrenciesSQL = `
+WITH active AS (
+    SELECT DISTINCT c.code
+    FROM portfolio.currencies c
+    WHERE EXISTS (SELECT 1 FROM portfolio.portfolios p WHERE p.base_currency = c.code)
+       OR EXISTS (SELECT 1 FROM portfolio.instruments i WHERE i.currency_code = c.code AND i.is_active = true)
+       OR EXISTS (SELECT 1 FROM portfolio.cash_balances cb WHERE cb.currency_code = c.code)
+)
+SELECT code FROM active
+UNION
+SELECT code FROM portfolio.currencies WHERE code IN ('USD', 'EUR', 'GBP', 'AUD', 'CAD', 'JPY', 'CHF')
+ORDER BY code ASC;`
+
+	hasPricesForRangeSQL = `
+SELECT EXISTS (
+    SELECT 1 FROM portfolio.instrument_prices
+    WHERE instrument_id = $1
+      AND price_date >= $2
+      AND price_date <= $3
+);`
 )

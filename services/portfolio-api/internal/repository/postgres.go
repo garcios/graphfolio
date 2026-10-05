@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"portfolio-api/internal/domain"
+	"portfolio-api/internal/marketdata"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -782,4 +783,84 @@ func (r *PostgresRepository) GetIngestionMetrics(ctx context.Context) (*domain.I
 		RateLimitBudget:     800,
 		PendingBackfillJobs: 0,
 	}, nil
+}
+
+func (r *PostgresRepository) BatchUpsertInstrumentPrices(ctx context.Context, records []marketdata.PriceRecord) error {
+	if len(records) == 0 {
+		return nil
+	}
+
+	batch := &pgx.Batch{}
+	for _, rec := range records {
+		if rec.InstrumentID != uuid.Nil {
+			batch.Queue(batchUpsertInstrumentPriceWithIDSQL, rec.InstrumentID, rec.PriceDate, rec.ClosePrice, rec.Source)
+		} else if rec.Symbol != "" {
+			batch.Queue(batchUpsertInstrumentPriceWithSymbolSQL, rec.Symbol, rec.PriceDate, rec.ClosePrice, rec.Source)
+		}
+	}
+
+	if batch.Len() == 0 {
+		return nil
+	}
+
+	br := r.pool.SendBatch(ctx, batch)
+	defer br.Close()
+
+	for i := 0; i < batch.Len(); i++ {
+		if _, err := br.Exec(); err != nil {
+			return fmt.Errorf("repository: batch upsert instrument price item %d failed: %w", i, err)
+		}
+	}
+
+	return nil
+}
+
+func (r *PostgresRepository) BatchUpsertFXRates(ctx context.Context, records []marketdata.FXRecord) error {
+	if len(records) == 0 {
+		return nil
+	}
+
+	batch := &pgx.Batch{}
+	for _, rec := range records {
+		batch.Queue(batchUpsertFXRateSQL, rec.BaseCurrency, rec.QuoteCurrency, rec.RateDate, rec.Rate, rec.Source)
+	}
+
+	br := r.pool.SendBatch(ctx, batch)
+	defer br.Close()
+
+	for i := 0; i < batch.Len(); i++ {
+		if _, err := br.Exec(); err != nil {
+			return fmt.Errorf("repository: batch upsert fx rate item %d failed: %w", i, err)
+		}
+	}
+
+	return nil
+}
+
+func (r *PostgresRepository) ListActiveCurrencies(ctx context.Context) ([]string, error) {
+	rows, err := r.pool.Query(ctx, listActiveCurrenciesSQL)
+	if err != nil {
+		return nil, fmt.Errorf("repository: list active currencies failed: %w", err)
+	}
+	defer rows.Close()
+
+	var currencies []string
+	for rows.Next() {
+		var code string
+		if err := rows.Scan(&code); err != nil {
+			return nil, fmt.Errorf("repository: scan active currency failed: %w", err)
+		}
+		currencies = append(currencies, code)
+	}
+
+	return currencies, rows.Err()
+}
+
+func (r *PostgresRepository) HasPricesForRange(ctx context.Context, instrumentID uuid.UUID, fromDate, toDate time.Time) (bool, error) {
+	var exists bool
+	err := r.pool.QueryRow(ctx, hasPricesForRangeSQL, instrumentID, fromDate.UTC(), toDate.UTC()).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("repository: failed to check prices for range: %w", err)
+	}
+	return exists, nil
 }

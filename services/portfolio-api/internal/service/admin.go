@@ -183,6 +183,11 @@ func (s *portfolioService) GetIngestionStatus(ctx context.Context) (*domain.Inge
 }
 
 func (s *portfolioService) TriggerMarketSync(ctx context.Context, symbols []string, syncFX bool) (*domain.MarketSyncResult, error) {
+	if s.ingestion != nil {
+		todayUTC := s.nowFunc().UTC()
+		return s.ingestion.IngestDailyMarketData(ctx, todayUTC)
+	}
+
 	pricesCount := 0
 	if len(symbols) == 0 {
 		insts, err := s.repo.ListActiveInstruments(ctx)

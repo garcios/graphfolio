@@ -217,6 +217,13 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 - **Ingestion Telemetry & On-Demand Synchronization**: gRPC `GetIngestionStatus` aggregates active instrument counts, tracked currency pairs, latest pricing dates, and token-bucket budget metrics alongside feed status metadata (`Twelve Data`, `Yahoo Finance`, `ECB`). On-demand market synchronization (`TriggerMarketSync`) enables immediate batch pricing updates and FX triangulation checks.
 - **Admin Portal UI**: The internal operations portal (`apps/admin-app` on `:5174`) directly integrates with the BFF via live GenQL queries and mutations across `AssetManagement`, `PriceManagement`, and `IngestionPipeline` views.
 
+### 4.8 Market Data Ingestion Pipeline & FX Triangulation Standards
+- **Vendor Interfaces & Zero Float Policy**: All external feeds (`TwelveDataProvider`, `YahooFinanceProvider`, `ECBProvider`) implement `marketdata.PriceProvider` or `marketdata.FXRateProvider`. Closing marks and exchange rates are parsed strictly into `shopspring/decimal.Decimal` (using `json.Number` for JSON or string parsing for XML) with zero IEEE 754 float drift.
+- **ECB XML & 10-Decimal Triangulation**: European Central Bank reference fixings parse official XML feeds. `TriangulationEngine` resolves direct, inverse, and cross-currency rates using an anchor currency (default `EUR`) with exact 10-decimal precision. Last Observation Carried Forward (LOCF) carries the last available trading day mark over weekends and market holidays.
+- **Resilience & Rate Limiting**: Outbound HTTP traffic is governed by `RateLimiter` (`golang.org/x/time/rate`) and exponential backoff retry with randomized jitter (`ExecuteWithRetry`) on transient HTTP 429 and 5xx status codes.
+- **Transaction Ingestion Backfill**: Recording a trade in `AddTransaction` for an unpriced instrument automatically verifies range coverage (`HasPricesForRange`) and triggers historical backfill (`BackfillInstrumentPrices`) before `RebuildProjections` updates holding valuations and performance curves.
+- **Scheduled & On-Demand CLI Ingestion**: `cmd/market-ingest/main.go` (runnable via `make ingest-market-data`) orchestrates daily batch synchronization and historical date-range backfills.
+
 ---
 
 ## 5. Verification Commands

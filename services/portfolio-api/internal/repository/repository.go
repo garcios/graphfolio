@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"portfolio-api/internal/domain"
+	"portfolio-api/internal/marketdata"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
@@ -44,4 +45,10 @@ type Repository interface {
 
 	// Admin: Ingestion Diagnostics
 	GetIngestionMetrics(ctx context.Context) (*domain.IngestionStatus, error)
+
+	// Market Data & FX Ingestion Pipeline
+	BatchUpsertInstrumentPrices(ctx context.Context, records []marketdata.PriceRecord) error
+	BatchUpsertFXRates(ctx context.Context, records []marketdata.FXRecord) error
+	ListActiveCurrencies(ctx context.Context) ([]string, error)
+	HasPricesForRange(ctx context.Context, instrumentID uuid.UUID, fromDate, toDate time.Time) (bool, error)
 }

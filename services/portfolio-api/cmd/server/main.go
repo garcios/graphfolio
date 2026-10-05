@@ -11,6 +11,7 @@ import (
 
 	"pkg/database"
 	"portfolio-api/internal"
+	"portfolio-api/internal/marketdata"
 	"portfolio-api/internal/repository"
 	"portfolio-api/internal/service"
 	"portfolio-api/migrations"
@@ -52,7 +53,24 @@ func main() {
 			defer pool.Close()
 			log.Printf("portfolio-api: database pool connected")
 			repo := repository.NewPostgresRepository(pool)
-			svc = service.NewPortfolioService(repo)
+
+			// Market data providers & ingestion pipeline
+			rateLimiter := marketdata.NewRateLimiter(5.0, 5)
+			twelveDataKey := os.Getenv("TWELVE_DATA_API_KEY")
+			twelveProvider := marketdata.NewTwelveDataProvider(marketdata.TwelveDataConfig{
+				APIKey:  twelveDataKey,
+				Limiter: rateLimiter,
+			})
+			yahooProvider := marketdata.NewYahooFinanceProvider(marketdata.YahooFinanceConfig{
+				Limiter: rateLimiter,
+			})
+			priceProvider := marketdata.NewResilientPriceProvider(twelveProvider, yahooProvider)
+			ecbProvider := marketdata.NewECBProvider(marketdata.ECBProviderConfig{
+				Limiter: rateLimiter,
+			})
+			ingestionSvc := service.NewIngestionService(repo, priceProvider, ecbProvider, rateLimiter)
+
+			svc = service.NewPortfolioService(repo, service.WithIngestionService(ingestionSvc))
 		}
 	}
 

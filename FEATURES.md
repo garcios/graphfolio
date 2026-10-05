@@ -138,6 +138,22 @@ This document catalogs all implemented features, in-progress components, and pla
   - [PriceManagement.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/PriceManagement.tsx)
   - [IngestionPipeline.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/IngestionPipeline.tsx)
 
+### 2.11 Market Data Ingestion Pipeline (Daily EOD Pricing, ECB FX & Backfill Synchronizer)
+- **Status**: **DONE**
+- **Plan Reference**: [market-data-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/market-data-ingestion-implementation-plan.md)
+- **Description**: Automated EOD price and foreign exchange synchronization pipeline. Implements European Central Bank (ECB) daily and 90-day XML reference fixing feed parser with exact 10-decimal triangulation, resilient Twelve Data primary and Yahoo Finance fallback equity price adapters, token-bucket rate limiting (`golang.org/x/time/rate`) with exponential backoff and randomized jitter on HTTP 429/5xx, automated transaction ingestion backfill hooks that detect unpriced asset ranges upon trade entry, and a standalone scheduled CLI worker (`cmd/market-ingest/main.go`) runnable via `make ingest-market-data`.
+- **Key Files**:
+  - [provider.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/marketdata/provider.go)
+  - [validation.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/marketdata/validation.go)
+  - [triangulation.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/marketdata/triangulation.go)
+  - [limiter.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/marketdata/limiter.go)
+  - [ecb_provider.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/marketdata/ecb_provider.go)
+  - [equity_provider.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/marketdata/equity_provider.go)
+  - [ingestion.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/ingestion.go)
+  - [transaction.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/transaction.go)
+  - [main.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/cmd/market-ingest/main.go)
+  - [Makefile](file:///Users/oscargarcia/workspace/graphfolio/Makefile) target: `make ingest-market-data`
+
 ---
 
 ## 3. Planned Features (`PLANNED`)

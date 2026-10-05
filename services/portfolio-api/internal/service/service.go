@@ -33,16 +33,35 @@ type PortfolioService interface {
 	TriggerMarketSync(ctx context.Context, symbols []string, syncFX bool) (*domain.MarketSyncResult, error)
 }
 
-type portfolioService struct {
-	repo    repository.Repository
-	nowFunc func() time.Time
+type ServiceOption func(*portfolioService)
+
+func WithIngestionService(ingestion IngestionService) ServiceOption {
+	return func(s *portfolioService) {
+		s.ingestion = ingestion
+	}
 }
 
-func NewPortfolioService(repo repository.Repository) PortfolioService {
-	return &portfolioService{
+func WithNowFunc(fn func() time.Time) ServiceOption {
+	return func(s *portfolioService) {
+		s.nowFunc = fn
+	}
+}
+
+type portfolioService struct {
+	repo      repository.Repository
+	nowFunc   func() time.Time
+	ingestion IngestionService
+}
+
+func NewPortfolioService(repo repository.Repository, opts ...ServiceOption) PortfolioService {
+	s := &portfolioService{
 		repo:    repo,
 		nowFunc: func() time.Time { return time.Now().UTC() },
 	}
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s
 }
 
 func (s *portfolioService) GetPortfolioSummary(ctx context.Context, userID string) (*domain.PortfolioSummary, error) {
