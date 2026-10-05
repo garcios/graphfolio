@@ -123,7 +123,6 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   └── tsconfig.json
 │
 ├── docs/                         # Architecture designs & implementation plans
-│   ├── features.md               # Master features matrix & roadmap (DONE, PLANNED, ROADMAP)
 │   ├── db-implementation-plan.md
 │   ├── portfolio-service-implementation-plan.md
 │   ├── add-transactions-implementation-plan.md
@@ -134,8 +133,10 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   ├── cost-basis-switching-implementation-plan.md
 │   ├── user-preferences-implementation-plan.md
 │   ├── competitive-analysis.md
+│   ├── fundamental-cash-flow-engine-implementation-plan.md
 │   └── genql-usage.md
 │
+├── FEATURES.md                   # Master features matrix & roadmap (DONE, PLANNED, ROADMAP)
 ├── Makefile                      # Standardized commands (make proto, make generate, make run, make test)
 ├── go.work                       # Go workspace mapping (bff, pkg, proto, portfolio-api, user-api)
 └── .env.example                  # Environment variable template
