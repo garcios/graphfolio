@@ -11,6 +11,8 @@ service PortfolioService {
   rpc AddTransaction(AddTransactionRequest) returns (AddTransactionResponse) {}
   rpc ListInstruments(ListInstrumentsRequest) returns (ListInstrumentsResponse) {}
   rpc GetPortfolioHistory(GetPortfolioHistoryRequest) returns (GetPortfolioHistoryResponse) {}
+  rpc ListTransactions(ListTransactionsRequest) returns (ListTransactionsResponse) {}
+  rpc DeleteTransaction(DeleteTransactionRequest) returns (DeleteTransactionResponse) {}
 }
 
 message GetPortfolioRequest {
@@ -118,4 +120,43 @@ message GetPortfolioHistoryResponse {
   common.v1.Money         end_value      = 3;
   common.v1.Money         return_amount  = 4;
   common.v1.Decimal       return_percent = 5;
+}
+
+message TransactionItem {
+  string            id              = 1;
+  TransactionType   type            = 2;
+  string            symbol          = 3; // empty for cash events
+  string            instrument_name = 4;
+  string            trade_date      = 5; // YYYY-MM-DD
+  common.v1.Decimal quantity        = 6; // nullable
+  common.v1.Money   price           = 7; // nullable
+  common.v1.Money   amount          = 8;
+  common.v1.Money   fee             = 9;
+  string            notes           = 10;
+  string            created_at      = 11;
+}
+
+message ListTransactionsRequest {
+  string          user_id   = 1;
+  TransactionType type      = 2; // optional filter (0 = all)
+  string          symbol    = 3; // optional symbol filter
+  int32           page      = 4; // 1-indexed, default 1
+  int32           page_size = 5; // default 20, max 100
+}
+
+message ListTransactionsResponse {
+  repeated TransactionItem transactions = 1;
+  int32                    total_count  = 2;
+  int32                    page         = 3;
+  int32                    page_size    = 4;
+}
+
+message DeleteTransactionRequest {
+  string user_id        = 1;
+  string transaction_id = 2;
+}
+
+message DeleteTransactionResponse {
+  bool      success   = 1;
+  Portfolio portfolio = 2; // Recomputed portfolio metrics
 }

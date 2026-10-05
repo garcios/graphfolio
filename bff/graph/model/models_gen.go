@@ -26,6 +26,11 @@ type AddTransactionPayload struct {
 	Portfolio     *Portfolio `json:"portfolio"`
 }
 
+type DeleteTransactionPayload struct {
+	Success   bool       `json:"success"`
+	Portfolio *Portfolio `json:"portfolio"`
+}
+
 type Instrument struct {
 	ID           string `json:"id"`
 	Symbol       string `json:"symbol"`
@@ -73,6 +78,27 @@ type PortfolioHistory struct {
 }
 
 type Query struct {
+}
+
+type TransactionItem struct {
+	ID             string          `json:"id"`
+	Type           TransactionType `json:"type"`
+	Symbol         *string         `json:"symbol,omitempty"`
+	InstrumentName *string         `json:"instrumentName,omitempty"`
+	TradeDate      string          `json:"tradeDate"`
+	Quantity       *Decimal        `json:"quantity,omitempty"`
+	Price          *Money          `json:"price,omitempty"`
+	Amount         *Money          `json:"amount"`
+	Fee            *Money          `json:"fee"`
+	Notes          *string         `json:"notes,omitempty"`
+	CreatedAt      string          `json:"createdAt"`
+}
+
+type TransactionsConnection struct {
+	Items      []*TransactionItem `json:"items"`
+	TotalCount int                `json:"totalCount"`
+	Page       int                `json:"page"`
+	PageSize   int                `json:"pageSize"`
 }
 
 type ValuationPoint struct {

@@ -3,6 +3,7 @@ import { client } from '../graphql/client';
 import './Dashboard.css';
 import { AddTransactionModal } from './AddTransactionModal';
 import { PerformanceChart } from './PerformanceChart';
+import { TransactionLedger } from './TransactionLedger';
 
 interface Money {
   amount: string;
@@ -38,6 +39,8 @@ export const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'ledger'>('overview');
+  const [ledgerRefreshKey, setLedgerRefreshKey] = useState(0);
 
   useEffect(() => {
     client.query({
@@ -85,6 +88,24 @@ export const Dashboard = () => {
           <h1 className="dashboard-title">GraphFolio</h1>
           <p className="dashboard-subtitle">Total Portfolio Value</p>
         </div>
+
+        <div className="view-tabs">
+          <button
+            type="button"
+            className={`view-tab-btn ${activeTab === 'overview' ? 'active' : ''}`}
+            onClick={() => setActiveTab('overview')}
+          >
+            Overview
+          </button>
+          <button
+            type="button"
+            className={`view-tab-btn ${activeTab === 'ledger' ? 'active' : ''}`}
+            onClick={() => setActiveTab('ledger')}
+          >
+            Transaction Ledger
+          </button>
+        </div>
+
         <div className="header-actions">
           <button
             type="button"
@@ -98,7 +119,6 @@ export const Dashboard = () => {
           </div>
         </div>
       </header>
-
 
       <section className="hero-metrics">
         <div className="metric-primary">
@@ -121,65 +141,79 @@ export const Dashboard = () => {
         </div>
       </section>
 
-      <PerformanceChart />
+      {activeTab === 'overview' ? (
+        <>
+          <PerformanceChart />
 
-      <section className="investments-section">
-        <div className="table-card">
-          <h3>Your Investments</h3>
-          <div className="table-responsive">
-            <table className="investments-table">
-              <thead>
-                <tr>
-                  <th>Asset</th>
-                  <th>Price</th>
-                  <th>Quantity</th>
-                  <th>Total Value</th>
-                  <th>Today's Return</th>
-                  <th>Total Return</th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.investments.map((inv: any) => {
-                  const todayPos = isPositive(inv.todayReturnAmount);
-                  const totalPos = isPositive(inv.totalReturnAmount);
-
-                  return (
-                    <tr key={inv.id}>
-                      <td>
-                        <div className="asset-info">
-                          <span className="ticker">{inv.ticker}</span>
-                          <span className="name">{inv.name}</span>
-                        </div>
-                      </td>
-                      <td>{formatMoney(inv.price)}</td>
-                      <td>{inv.quantity}</td>
-                      <td>{formatMoney(inv.totalValue)}</td>
-                      <td>
-                        <div className={`return-info ${todayPos ? 'positive' : 'negative'}`}>
-                          <span className="amount">{todayPos ? '+' : ''}{formatMoney(inv.todayReturnAmount)}</span>
-                          <span className="percent">{formatPercent(inv.todayReturnPercent, 2)}</span>
-                        </div>
-                      </td>
-                      <td>
-                        <div className={`return-info ${totalPos ? 'positive' : 'negative'}`}>
-                          <span className="amount">{totalPos ? '+' : ''}{formatMoney(inv.totalReturnAmount)}</span>
-                          <span className="percent">{formatPercent(inv.totalReturnPercent, 1)}</span>
-                        </div>
-                      </td>
+          <section className="investments-section">
+            <div className="table-card">
+              <h3>Your Investments</h3>
+              <div className="table-responsive">
+                <table className="investments-table">
+                  <thead>
+                    <tr>
+                      <th>Asset</th>
+                      <th>Price</th>
+                      <th>Quantity</th>
+                      <th>Total Value</th>
+                      <th>Today's Return</th>
+                      <th>Total Return</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
+                  </thead>
+                  <tbody>
+                    {data.investments.map((inv: any) => {
+                      const todayPos = isPositive(inv.todayReturnAmount);
+                      const totalPos = isPositive(inv.totalReturnAmount);
+
+                      return (
+                        <tr key={inv.id}>
+                          <td>
+                            <div className="asset-info">
+                              <span className="ticker">{inv.ticker}</span>
+                              <span className="name">{inv.name}</span>
+                            </div>
+                          </td>
+                          <td>{formatMoney(inv.price)}</td>
+                          <td>{inv.quantity}</td>
+                          <td>{formatMoney(inv.totalValue)}</td>
+                          <td>
+                            <div className={`return-info ${todayPos ? 'positive' : 'negative'}`}>
+                              <span className="amount">{todayPos ? '+' : ''}{formatMoney(inv.todayReturnAmount)}</span>
+                              <span className="percent">{formatPercent(inv.todayReturnPercent, 2)}</span>
+                            </div>
+                          </td>
+                          <td>
+                            <div className={`return-info ${totalPos ? 'positive' : 'negative'}`}>
+                              <span className="amount">{totalPos ? '+' : ''}{formatMoney(inv.totalReturnAmount)}</span>
+                              <span className="percent">{formatPercent(inv.totalReturnPercent, 1)}</span>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+        </>
+      ) : (
+        <TransactionLedger
+          refreshTrigger={ledgerRefreshKey}
+          onTransactionDeleted={(updatedPortfolio) => {
+            setData(updatedPortfolio);
+            setToastMessage('Transaction deleted and projections recomputed!');
+            setTimeout(() => setToastMessage(null), 4000);
+          }}
+        />
+      )}
 
       <AddTransactionModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={(updatedPortfolio) => {
           setData(updatedPortfolio);
+          setLedgerRefreshKey((k) => k + 1);
           setToastMessage('Transaction recorded and projections updated!');
           setTimeout(() => setToastMessage(null), 4000);
         }}

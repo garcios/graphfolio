@@ -5,7 +5,8 @@ export default {
         3,
         7,
         9,
-        15
+        10,
+        16
     ],
     "types": {
         "Decimal": {},
@@ -59,7 +60,7 @@ export default {
                 2
             ],
             "portfolio": [
-                13
+                18
             ],
             "__typename": [
                 2
@@ -88,17 +89,34 @@ export default {
         "ID": {},
         "Query": {
             "portfolio": [
-                13
+                18
             ],
             "instruments": [
                 6
             ],
             "portfolioHistory": [
-                11,
+                12,
                 {
                     "timeframe": [
-                        9,
+                        10,
                         "HistoryTimeframe!"
+                    ]
+                }
+            ],
+            "transactions": [
+                14,
+                {
+                    "type": [
+                        3
+                    ],
+                    "symbol": [
+                        2
+                    ],
+                    "page": [
+                        9
+                    ],
+                    "pageSize": [
+                        9
                     ]
                 }
             ],
@@ -106,6 +124,7 @@ export default {
                 2
             ]
         },
+        "Int": {},
         "HistoryTimeframe": {},
         "ValuationPoint": {
             "date": [
@@ -132,7 +151,7 @@ export default {
         },
         "PortfolioHistory": {
             "points": [
-                10
+                11
             ],
             "startValue": [
                 1
@@ -150,6 +169,73 @@ export default {
                 2
             ]
         },
+        "TransactionItem": {
+            "id": [
+                7
+            ],
+            "type": [
+                3
+            ],
+            "symbol": [
+                2
+            ],
+            "instrumentName": [
+                2
+            ],
+            "tradeDate": [
+                2
+            ],
+            "quantity": [
+                0
+            ],
+            "price": [
+                1
+            ],
+            "amount": [
+                1
+            ],
+            "fee": [
+                1
+            ],
+            "notes": [
+                2
+            ],
+            "createdAt": [
+                2
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "TransactionsConnection": {
+            "items": [
+                13
+            ],
+            "totalCount": [
+                9
+            ],
+            "page": [
+                9
+            ],
+            "pageSize": [
+                9
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "DeleteTransactionPayload": {
+            "success": [
+                16
+            ],
+            "portfolio": [
+                18
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "Boolean": {},
         "Mutation": {
             "addTransaction": [
                 5,
@@ -157,6 +243,15 @@ export default {
                     "input": [
                         4,
                         "AddTransactionInput!"
+                    ]
+                }
+            ],
+            "deleteTransaction": [
+                15,
+                {
+                    "id": [
+                        7,
+                        "ID!"
                     ]
                 }
             ],
@@ -181,7 +276,7 @@ export default {
                 1
             ],
             "investments": [
-                14
+                19
             ],
             "__typename": [
                 2
@@ -221,7 +316,6 @@ export default {
             "__typename": [
                 2
             ]
-        },
-        "Boolean": {}
+        }
     }
 }

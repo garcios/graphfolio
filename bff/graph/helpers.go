@@ -167,3 +167,99 @@ func toModelPortfolioHistory(resp *pb.GetPortfolioHistoryResponse) *model.Portfo
 		ReturnPercent: toModelDecimal(resp.ReturnPercent),
 	}
 }
+
+func toModelTransactionItem(item *pb.TransactionItem) *model.TransactionItem {
+	if item == nil {
+		return nil
+	}
+	var qty *model.Decimal
+	if item.Quantity != nil {
+		d := toModelDecimal(item.Quantity)
+		qty = &d
+	}
+	var price *model.Money
+	if item.Price != nil {
+		price = toModelMoney(item.Price)
+	}
+	var symbol *string
+	if item.Symbol != "" {
+		s := item.Symbol
+		symbol = &s
+	}
+	var instName *string
+	if item.InstrumentName != "" {
+		n := item.InstrumentName
+		instName = &n
+	}
+	var notes *string
+	if item.Notes != "" {
+		n := item.Notes
+		notes = &n
+	}
+
+	return &model.TransactionItem{
+		ID:             item.Id,
+		Type:           toModelTransactionType(item.Type),
+		Symbol:         symbol,
+		InstrumentName: instName,
+		TradeDate:      item.TradeDate,
+		Quantity:       qty,
+		Price:          price,
+		Amount:         toModelMoney(item.Amount),
+		Fee:            toModelMoney(item.Fee),
+		Notes:          notes,
+		CreatedAt:      item.CreatedAt,
+	}
+}
+
+func toModelTransactionType(t pb.TransactionType) model.TransactionType {
+	switch t {
+	case pb.TransactionType_TRANSACTION_TYPE_BUY:
+		return model.TransactionTypeBuy
+	case pb.TransactionType_TRANSACTION_TYPE_SELL:
+		return model.TransactionTypeSell
+	case pb.TransactionType_TRANSACTION_TYPE_DIVIDEND:
+		return model.TransactionTypeDividend
+	case pb.TransactionType_TRANSACTION_TYPE_DEPOSIT:
+		return model.TransactionTypeDeposit
+	case pb.TransactionType_TRANSACTION_TYPE_WITHDRAWAL:
+		return model.TransactionTypeWithdrawal
+	case pb.TransactionType_TRANSACTION_TYPE_INTEREST:
+		return model.TransactionTypeInterest
+	case pb.TransactionType_TRANSACTION_TYPE_FEE:
+		return model.TransactionTypeFee
+	case pb.TransactionType_TRANSACTION_TYPE_TAX:
+		return model.TransactionTypeTax
+	case pb.TransactionType_TRANSACTION_TYPE_TRANSFER_IN:
+		return model.TransactionTypeTransferIn
+	case pb.TransactionType_TRANSACTION_TYPE_TRANSFER_OUT:
+		return model.TransactionTypeTransferOut
+	case pb.TransactionType_TRANSACTION_TYPE_FX_CONVERSION:
+		return model.TransactionTypeFxConversion
+	default:
+		return model.TransactionTypeBuy
+	}
+}
+
+func toModelTransactionsConnection(resp *pb.ListTransactionsResponse) *model.TransactionsConnection {
+	if resp == nil {
+		return &model.TransactionsConnection{
+			Items:      []*model.TransactionItem{},
+			TotalCount: 0,
+			Page:       1,
+			PageSize:   20,
+		}
+	}
+
+	items := make([]*model.TransactionItem, len(resp.Transactions))
+	for i, tx := range resp.Transactions {
+		items[i] = toModelTransactionItem(tx)
+	}
+
+	return &model.TransactionsConnection{
+		Items:      items,
+		TotalCount: int(resp.TotalCount),
+		Page:       int(resp.Page),
+		PageSize:   int(resp.PageSize),
+	}
+}

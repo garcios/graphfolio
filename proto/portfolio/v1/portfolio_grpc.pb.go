@@ -23,6 +23,8 @@ const (
 	PortfolioService_AddTransaction_FullMethodName      = "/portfolio.v1.PortfolioService/AddTransaction"
 	PortfolioService_ListInstruments_FullMethodName     = "/portfolio.v1.PortfolioService/ListInstruments"
 	PortfolioService_GetPortfolioHistory_FullMethodName = "/portfolio.v1.PortfolioService/GetPortfolioHistory"
+	PortfolioService_ListTransactions_FullMethodName    = "/portfolio.v1.PortfolioService/ListTransactions"
+	PortfolioService_DeleteTransaction_FullMethodName   = "/portfolio.v1.PortfolioService/DeleteTransaction"
 )
 
 // PortfolioServiceClient is the client API for PortfolioService service.
@@ -33,6 +35,8 @@ type PortfolioServiceClient interface {
 	AddTransaction(ctx context.Context, in *AddTransactionRequest, opts ...grpc.CallOption) (*AddTransactionResponse, error)
 	ListInstruments(ctx context.Context, in *ListInstrumentsRequest, opts ...grpc.CallOption) (*ListInstrumentsResponse, error)
 	GetPortfolioHistory(ctx context.Context, in *GetPortfolioHistoryRequest, opts ...grpc.CallOption) (*GetPortfolioHistoryResponse, error)
+	ListTransactions(ctx context.Context, in *ListTransactionsRequest, opts ...grpc.CallOption) (*ListTransactionsResponse, error)
+	DeleteTransaction(ctx context.Context, in *DeleteTransactionRequest, opts ...grpc.CallOption) (*DeleteTransactionResponse, error)
 }
 
 type portfolioServiceClient struct {
@@ -79,6 +83,24 @@ func (c *portfolioServiceClient) GetPortfolioHistory(ctx context.Context, in *Ge
 	return out, nil
 }
 
+func (c *portfolioServiceClient) ListTransactions(ctx context.Context, in *ListTransactionsRequest, opts ...grpc.CallOption) (*ListTransactionsResponse, error) {
+	out := new(ListTransactionsResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_ListTransactions_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portfolioServiceClient) DeleteTransaction(ctx context.Context, in *DeleteTransactionRequest, opts ...grpc.CallOption) (*DeleteTransactionResponse, error) {
+	out := new(DeleteTransactionResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_DeleteTransaction_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PortfolioServiceServer is the server API for PortfolioService service.
 // All implementations must embed UnimplementedPortfolioServiceServer
 // for forward compatibility
@@ -87,6 +109,8 @@ type PortfolioServiceServer interface {
 	AddTransaction(context.Context, *AddTransactionRequest) (*AddTransactionResponse, error)
 	ListInstruments(context.Context, *ListInstrumentsRequest) (*ListInstrumentsResponse, error)
 	GetPortfolioHistory(context.Context, *GetPortfolioHistoryRequest) (*GetPortfolioHistoryResponse, error)
+	ListTransactions(context.Context, *ListTransactionsRequest) (*ListTransactionsResponse, error)
+	DeleteTransaction(context.Context, *DeleteTransactionRequest) (*DeleteTransactionResponse, error)
 	mustEmbedUnimplementedPortfolioServiceServer()
 }
 
@@ -105,6 +129,12 @@ func (UnimplementedPortfolioServiceServer) ListInstruments(context.Context, *Lis
 }
 func (UnimplementedPortfolioServiceServer) GetPortfolioHistory(context.Context, *GetPortfolioHistoryRequest) (*GetPortfolioHistoryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPortfolioHistory not implemented")
+}
+func (UnimplementedPortfolioServiceServer) ListTransactions(context.Context, *ListTransactionsRequest) (*ListTransactionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTransactions not implemented")
+}
+func (UnimplementedPortfolioServiceServer) DeleteTransaction(context.Context, *DeleteTransactionRequest) (*DeleteTransactionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteTransaction not implemented")
 }
 func (UnimplementedPortfolioServiceServer) mustEmbedUnimplementedPortfolioServiceServer() {}
 
@@ -191,6 +221,42 @@ func _PortfolioService_GetPortfolioHistory_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortfolioService_ListTransactions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTransactionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).ListTransactions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_ListTransactions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).ListTransactions(ctx, req.(*ListTransactionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortfolioService_DeleteTransaction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteTransactionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).DeleteTransaction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_DeleteTransaction_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).DeleteTransaction(ctx, req.(*DeleteTransactionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PortfolioService_ServiceDesc is the grpc.ServiceDesc for PortfolioService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -213,6 +279,14 @@ var PortfolioService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPortfolioHistory",
 			Handler:    _PortfolioService_GetPortfolioHistory_Handler,
+		},
+		{
+			MethodName: "ListTransactions",
+			Handler:    _PortfolioService_ListTransactions_Handler,
+		},
+		{
+			MethodName: "DeleteTransaction",
+			Handler:    _PortfolioService_DeleteTransaction_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -7,6 +7,7 @@ export type Scalars = {
     Decimal: any,
     String: string,
     ID: string,
+    Int: number,
     Boolean: boolean,
 }
 
@@ -37,6 +38,7 @@ export interface Query {
     portfolio: Portfolio
     instruments: Instrument[]
     portfolioHistory: PortfolioHistory
+    transactions: TransactionsConnection
     __typename: 'Query'
 }
 
@@ -61,8 +63,38 @@ export interface PortfolioHistory {
     __typename: 'PortfolioHistory'
 }
 
+export interface TransactionItem {
+    id: Scalars['ID']
+    type: TransactionType
+    symbol: (Scalars['String'] | null)
+    instrumentName: (Scalars['String'] | null)
+    tradeDate: Scalars['String']
+    quantity: (Scalars['Decimal'] | null)
+    price: (Money | null)
+    amount: Money
+    fee: Money
+    notes: (Scalars['String'] | null)
+    createdAt: Scalars['String']
+    __typename: 'TransactionItem'
+}
+
+export interface TransactionsConnection {
+    items: TransactionItem[]
+    totalCount: Scalars['Int']
+    page: Scalars['Int']
+    pageSize: Scalars['Int']
+    __typename: 'TransactionsConnection'
+}
+
+export interface DeleteTransactionPayload {
+    success: Scalars['Boolean']
+    portfolio: Portfolio
+    __typename: 'DeleteTransactionPayload'
+}
+
 export interface Mutation {
     addTransaction: AddTransactionPayload
+    deleteTransaction: DeleteTransactionPayload
     __typename: 'Mutation'
 }
 
@@ -120,6 +152,7 @@ export interface QueryGenqlSelection{
     portfolio?: PortfolioGenqlSelection
     instruments?: InstrumentGenqlSelection
     portfolioHistory?: (PortfolioHistoryGenqlSelection & { __args: {timeframe: HistoryTimeframe} })
+    transactions?: (TransactionsConnectionGenqlSelection & { __args?: {type?: (TransactionType | null), symbol?: (Scalars['String'] | null), page?: (Scalars['Int'] | null), pageSize?: (Scalars['Int'] | null)} })
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -145,8 +178,41 @@ export interface PortfolioHistoryGenqlSelection{
     __scalar?: boolean | number
 }
 
+export interface TransactionItemGenqlSelection{
+    id?: boolean | number
+    type?: boolean | number
+    symbol?: boolean | number
+    instrumentName?: boolean | number
+    tradeDate?: boolean | number
+    quantity?: boolean | number
+    price?: MoneyGenqlSelection
+    amount?: MoneyGenqlSelection
+    fee?: MoneyGenqlSelection
+    notes?: boolean | number
+    createdAt?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface TransactionsConnectionGenqlSelection{
+    items?: TransactionItemGenqlSelection
+    totalCount?: boolean | number
+    page?: boolean | number
+    pageSize?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface DeleteTransactionPayloadGenqlSelection{
+    success?: boolean | number
+    portfolio?: PortfolioGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
 export interface MutationGenqlSelection{
     addTransaction?: (AddTransactionPayloadGenqlSelection & { __args: {input: AddTransactionInput} })
+    deleteTransaction?: (DeleteTransactionPayloadGenqlSelection & { __args: {id: Scalars['ID']} })
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -222,6 +288,30 @@ export interface InvestmentGenqlSelection{
     export const isPortfolioHistory = (obj?: { __typename?: any } | null): obj is PortfolioHistory => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isPortfolioHistory"')
       return PortfolioHistory_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const TransactionItem_possibleTypes: string[] = ['TransactionItem']
+    export const isTransactionItem = (obj?: { __typename?: any } | null): obj is TransactionItem => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isTransactionItem"')
+      return TransactionItem_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const TransactionsConnection_possibleTypes: string[] = ['TransactionsConnection']
+    export const isTransactionsConnection = (obj?: { __typename?: any } | null): obj is TransactionsConnection => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isTransactionsConnection"')
+      return TransactionsConnection_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const DeleteTransactionPayload_possibleTypes: string[] = ['DeleteTransactionPayload']
+    export const isDeleteTransactionPayload = (obj?: { __typename?: any } | null): obj is DeleteTransactionPayload => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isDeleteTransactionPayload"')
+      return DeleteTransactionPayload_possibleTypes.includes(obj.__typename)
     }
     
 

@@ -146,4 +146,23 @@ FROM portfolio.fx_rates
 WHERE base_currency = $2 AND quote_currency = $1
 ORDER BY rate_date DESC
 LIMIT 1;`
+
+	listTransactionsSQL = `
+SELECT 
+    t.id, t.portfolio_id, t.instrument_id, t.type, t.trade_date,
+    t.quantity, t.price, t.amount, t.currency_code, t.fee,
+    t.withholding_tax, t.fx_rate_to_base, t.external_ref, t.notes,
+    t.created_at, i.symbol, i.name AS instrument_name,
+    COUNT(*) OVER() AS total_count
+FROM portfolio.transactions t
+LEFT JOIN portfolio.instruments i ON i.id = t.instrument_id
+WHERE t.portfolio_id = $1
+  AND ($2::text IS NULL OR t.type::text = $2)
+  AND ($3::text IS NULL OR UPPER(i.symbol) = UPPER($3))
+ORDER BY t.trade_date DESC, t.created_at DESC, t.id DESC
+LIMIT $4 OFFSET $5;`
+
+	deleteTransactionSQL = `
+DELETE FROM portfolio.transactions
+WHERE id = $1 AND portfolio_id = $2;`
 )

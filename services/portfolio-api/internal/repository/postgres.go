@@ -15,8 +15,9 @@ import (
 )
 
 var (
-	ErrPortfolioNotFound  = errors.New("portfolio not found")
-	ErrInstrumentNotFound = errors.New("instrument not found")
+	ErrPortfolioNotFound   = errors.New("portfolio not found")
+	ErrInstrumentNotFound  = errors.New("instrument not found")
+	ErrTransactionNotFound = errors.New("transaction not found")
 )
 
 type PostgresRepository struct {
@@ -372,6 +373,84 @@ func (r *PostgresRepository) InsertTransaction(ctx context.Context, tx domain.Tr
 
 	tx.ID = id
 	return &tx, nil
+}
+
+func (r *PostgresRepository) ListTransactions(ctx context.Context, portfolioID uuid.UUID, filter domain.TransactionFilter) ([]domain.TransactionWithInstrument, int, error) {
+	page := filter.Page
+	if page < 1 {
+		page = 1
+	}
+	pageSize := filter.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	} else if pageSize > 100 {
+		pageSize = 100
+	}
+	limit := pageSize
+	offset := (page - 1) * pageSize
+
+	var typeFilter *string
+	if filter.Type != nil && *filter.Type != "" {
+		s := string(*filter.Type)
+		typeFilter = &s
+	}
+
+	rows, err := r.pool.Query(ctx, listTransactionsSQL, portfolioID, typeFilter, filter.Symbol, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("repository: list transactions failed: %w", err)
+	}
+	defer rows.Close()
+
+	var items []domain.TransactionWithInstrument
+	totalCount := 0
+	for rows.Next() {
+		var item domain.TransactionWithInstrument
+		var txType string
+		var count int
+		err := rows.Scan(
+			&item.ID,
+			&item.PortfolioID,
+			&item.InstrumentID,
+			&txType,
+			&item.TradeDate,
+			&item.Quantity,
+			&item.Price,
+			&item.Amount,
+			&item.CurrencyCode,
+			&item.Fee,
+			&item.WithholdingTax,
+			&item.FXRateToBase,
+			&item.ExternalRef,
+			&item.Notes,
+			&item.CreatedAt,
+			&item.Symbol,
+			&item.InstrumentName,
+			&count,
+		)
+		if err != nil {
+			return nil, 0, fmt.Errorf("repository: scan transaction failed: %w", err)
+		}
+		item.Type = domain.TransactionType(txType)
+		totalCount = count
+		items = append(items, item)
+	}
+
+	if items == nil {
+		items = []domain.TransactionWithInstrument{}
+	}
+
+	return items, totalCount, rows.Err()
+}
+
+func (r *PostgresRepository) DeleteTransaction(ctx context.Context, portfolioID uuid.UUID, transactionID uuid.UUID) error {
+	cmdTag, err := r.pool.Exec(ctx, deleteTransactionSQL, transactionID, portfolioID)
+	if err != nil {
+		return fmt.Errorf("repository: delete transaction failed: %w", err)
+	}
+	if cmdTag.RowsAffected() == 0 {
+		return ErrTransactionNotFound
+	}
+	return nil
 }
 
 func (r *PostgresRepository) FindInstrumentBySymbol(ctx context.Context, symbol string) (*domain.Instrument, error) {
