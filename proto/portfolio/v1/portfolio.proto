@@ -13,6 +13,19 @@ service PortfolioService {
   rpc GetPortfolioHistory(GetPortfolioHistoryRequest) returns (GetPortfolioHistoryResponse) {}
   rpc ListTransactions(ListTransactionsRequest) returns (ListTransactionsResponse) {}
   rpc DeleteTransaction(DeleteTransactionRequest) returns (DeleteTransactionResponse) {}
+
+  // Admin: Asset Directory Management
+  rpc ListAllInstruments(ListAllInstrumentsRequest) returns (ListAllInstrumentsResponse) {}
+  rpc CreateInstrument(CreateInstrumentRequest) returns (CreateInstrumentResponse) {}
+  rpc UpdateInstrument(UpdateInstrumentRequest) returns (UpdateInstrumentResponse) {}
+
+  // Admin: Closing Price Management & Overrides
+  rpc ListInstrumentPrices(ListInstrumentPricesRequest) returns (ListInstrumentPricesResponse) {}
+  rpc RecordPriceOverride(RecordPriceOverrideRequest) returns (RecordPriceOverrideResponse) {}
+
+  // Admin: Ingestion Pipeline & Diagnostics
+  rpc GetIngestionStatus(GetIngestionStatusRequest) returns (GetIngestionStatusResponse) {}
+  rpc TriggerMarketSync(TriggerMarketSyncRequest) returns (TriggerMarketSyncResponse) {}
 }
 
 message GetPortfolioRequest {
@@ -61,6 +74,9 @@ message Instrument {
   string name          = 3;
   string currency_code = 4;
   string asset_class   = 5;
+  string exchange_code = 6;
+  string isin          = 7;
+  bool   is_active     = 8;
 }
 
 message ListInstrumentsRequest {}
@@ -160,3 +176,118 @@ message DeleteTransactionResponse {
   bool      success   = 1;
   Portfolio portfolio = 2; // Recomputed portfolio metrics
 }
+
+// ------------------------------------------------------------------
+// Admin: Asset Directory Messages
+// ------------------------------------------------------------------
+
+message ListAllInstrumentsRequest {
+  optional bool   is_active = 1;
+  optional string search    = 2;
+}
+
+message ListAllInstrumentsResponse {
+  repeated Instrument instruments = 1;
+}
+
+message CreateInstrumentRequest {
+  string          symbol        = 1; // e.g. "NVDA"
+  string          exchange_code = 2; // e.g. "XNAS"
+  string          name          = 3; // e.g. "NVIDIA Corporation"
+  string          asset_class   = 4; // e.g. "EQUITY", "ETF", "CRYPTO"
+  string          currency_code = 5; // e.g. "USD"
+  optional string isin          = 6; // e.g. "US67066G1040"
+}
+
+message CreateInstrumentResponse {
+  Instrument instrument = 1;
+}
+
+message UpdateInstrumentRequest {
+  string          id        = 1; // Instrument UUID
+  optional string name      = 2;
+  optional bool   is_active = 3;
+  optional string isin      = 4;
+}
+
+message UpdateInstrumentResponse {
+  Instrument instrument = 1;
+}
+
+// ------------------------------------------------------------------
+// Admin: Price Management Messages
+// ------------------------------------------------------------------
+
+message InstrumentPriceItem {
+  string          instrument_id = 1;
+  string          symbol        = 2;
+  string          price_date    = 3; // YYYY-MM-DD
+  common.v1.Money price         = 4; // Unit close price + currency
+  string          source        = 5; // e.g. "TWELVE_DATA", "MANUAL_OVERRIDE"
+  string          updated_at    = 6; // ISO 8601 timestamp
+}
+
+message ListInstrumentPricesRequest {
+  optional string symbol    = 1;
+  optional string from_date = 2; // YYYY-MM-DD
+  optional string to_date   = 3; // YYYY-MM-DD
+  int32           limit     = 4; // Default 50, max 200
+  int32           offset    = 5;
+}
+
+message ListInstrumentPricesResponse {
+  repeated InstrumentPriceItem prices      = 1;
+  int32                        total_count = 2;
+}
+
+message RecordPriceOverrideRequest {
+  string            symbol               = 1;
+  string            price_date           = 2; // YYYY-MM-DD
+  common.v1.Decimal price                = 3; // Exact override price
+  optional string   reason               = 4; // Audit note
+  bool              recompute_valuations = 5; // Trigger retroactive portfolio valuation update
+}
+
+message RecordPriceOverrideResponse {
+  InstrumentPriceItem price                 = 1;
+  bool                valuations_recomputed = 2;
+}
+
+// ------------------------------------------------------------------
+// Admin: Ingestion Pipeline & Diagnostics Messages
+// ------------------------------------------------------------------
+
+message FeedHealthStatus {
+  string name     = 1;
+  string status   = 2;
+  string provider = 3;
+  string schedule = 4;
+  string last_run = 5;
+  string details  = 6;
+}
+
+message GetIngestionStatusRequest {}
+
+message GetIngestionStatusResponse {
+  repeated FeedHealthStatus feeds                 = 1;
+  int32                     tracked_instruments   = 2;
+  int32                     tracked_currencies    = 3;
+  string                    latest_price_date     = 4;
+  string                    latest_fx_date        = 5;
+  int32                     rate_limit_remaining  = 6;
+  int32                     rate_limit_budget     = 7;
+  int32                     pending_backfill_jobs = 8;
+}
+
+message TriggerMarketSyncRequest {
+  repeated string symbols = 1;
+  bool            sync_fx = 2;
+}
+
+message TriggerMarketSyncResponse {
+  bool   success         = 1;
+  int32  prices_synced   = 2;
+  int32  fx_rates_synced = 3;
+  string message         = 4;
+}
+

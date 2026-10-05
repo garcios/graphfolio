@@ -43,6 +43,9 @@ type Instrument {
   name: String!
   currencyCode: String!
   assetClass: String!
+  exchangeCode: String!
+  isin: String
+  isActive: Boolean!
 }
 
 type Query {
@@ -50,6 +53,9 @@ type Query {
   instruments: [Instrument!]!
   portfolioHistory(timeframe: HistoryTimeframe!): PortfolioHistory!
   transactions(type: TransactionType, symbol: String, page: Int = 1, pageSize: Int = 20): TransactionsConnection!
+  allInstruments(isActive: Boolean, search: String): [Instrument!]!
+  instrumentPrices(symbol: String, fromDate: String, toDate: String, limit: Int = 50, offset: Int = 0): InstrumentPricesConnection!
+  ingestionStatus: IngestionStatus!
 }
 
 enum HistoryTimeframe {
@@ -106,6 +112,80 @@ type DeleteTransactionPayload {
 type Mutation {
   addTransaction(input: AddTransactionInput!): AddTransactionPayload!
   deleteTransaction(id: ID!): DeleteTransactionPayload!
+  createInstrument(input: CreateInstrumentInput!): Instrument!
+  updateInstrument(input: UpdateInstrumentInput!): Instrument!
+  recordPriceOverride(input: RecordPriceOverrideInput!): RecordPriceOverridePayload!
+  triggerMarketSync(symbols: [String!], syncFx: Boolean): MarketSyncPayload!
+}
+
+type InstrumentPrice {
+  id: ID!
+  symbol: String!
+  priceDate: String!
+  price: Money!
+  source: String!
+  updatedAt: String!
+}
+
+type InstrumentPricesConnection {
+  items: [InstrumentPrice!]!
+  totalCount: Int!
+}
+
+input CreateInstrumentInput {
+  symbol: String!
+  exchangeCode: String!
+  name: String!
+  assetClass: String!
+  currencyCode: String!
+  isin: String
+}
+
+input UpdateInstrumentInput {
+  id: ID!
+  name: String
+  isActive: Boolean
+  isin: String
+}
+
+input RecordPriceOverrideInput {
+  symbol: String!
+  priceDate: String!
+  price: Decimal!
+  reason: String
+  recomputeValuations: Boolean
+}
+
+type RecordPriceOverridePayload {
+  price: InstrumentPrice!
+  valuationsRecomputed: Boolean!
+}
+
+type FeedHealthStatus {
+  name: String!
+  status: String!
+  provider: String!
+  schedule: String!
+  lastRun: String!
+  details: String!
+}
+
+type IngestionStatus {
+  feeds: [FeedHealthStatus!]!
+  trackedInstruments: Int!
+  trackedCurrencies: Int!
+  latestPriceDate: String
+  latestFxDate: String
+  rateLimitRemaining: Int!
+  rateLimitBudget: Int!
+  pendingBackfillJobs: Int!
+}
+
+type MarketSyncPayload {
+  success: Boolean!
+  pricesSynced: Int!
+  fxRatesSynced: Int!
+  message: String!
 }
 
 type Portfolio {

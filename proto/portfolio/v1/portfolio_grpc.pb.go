@@ -19,12 +19,19 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	PortfolioService_GetPortfolio_FullMethodName        = "/portfolio.v1.PortfolioService/GetPortfolio"
-	PortfolioService_AddTransaction_FullMethodName      = "/portfolio.v1.PortfolioService/AddTransaction"
-	PortfolioService_ListInstruments_FullMethodName     = "/portfolio.v1.PortfolioService/ListInstruments"
-	PortfolioService_GetPortfolioHistory_FullMethodName = "/portfolio.v1.PortfolioService/GetPortfolioHistory"
-	PortfolioService_ListTransactions_FullMethodName    = "/portfolio.v1.PortfolioService/ListTransactions"
-	PortfolioService_DeleteTransaction_FullMethodName   = "/portfolio.v1.PortfolioService/DeleteTransaction"
+	PortfolioService_GetPortfolio_FullMethodName         = "/portfolio.v1.PortfolioService/GetPortfolio"
+	PortfolioService_AddTransaction_FullMethodName       = "/portfolio.v1.PortfolioService/AddTransaction"
+	PortfolioService_ListInstruments_FullMethodName      = "/portfolio.v1.PortfolioService/ListInstruments"
+	PortfolioService_GetPortfolioHistory_FullMethodName  = "/portfolio.v1.PortfolioService/GetPortfolioHistory"
+	PortfolioService_ListTransactions_FullMethodName     = "/portfolio.v1.PortfolioService/ListTransactions"
+	PortfolioService_DeleteTransaction_FullMethodName    = "/portfolio.v1.PortfolioService/DeleteTransaction"
+	PortfolioService_ListAllInstruments_FullMethodName   = "/portfolio.v1.PortfolioService/ListAllInstruments"
+	PortfolioService_CreateInstrument_FullMethodName     = "/portfolio.v1.PortfolioService/CreateInstrument"
+	PortfolioService_UpdateInstrument_FullMethodName     = "/portfolio.v1.PortfolioService/UpdateInstrument"
+	PortfolioService_ListInstrumentPrices_FullMethodName = "/portfolio.v1.PortfolioService/ListInstrumentPrices"
+	PortfolioService_RecordPriceOverride_FullMethodName  = "/portfolio.v1.PortfolioService/RecordPriceOverride"
+	PortfolioService_GetIngestionStatus_FullMethodName   = "/portfolio.v1.PortfolioService/GetIngestionStatus"
+	PortfolioService_TriggerMarketSync_FullMethodName    = "/portfolio.v1.PortfolioService/TriggerMarketSync"
 )
 
 // PortfolioServiceClient is the client API for PortfolioService service.
@@ -37,6 +44,16 @@ type PortfolioServiceClient interface {
 	GetPortfolioHistory(ctx context.Context, in *GetPortfolioHistoryRequest, opts ...grpc.CallOption) (*GetPortfolioHistoryResponse, error)
 	ListTransactions(ctx context.Context, in *ListTransactionsRequest, opts ...grpc.CallOption) (*ListTransactionsResponse, error)
 	DeleteTransaction(ctx context.Context, in *DeleteTransactionRequest, opts ...grpc.CallOption) (*DeleteTransactionResponse, error)
+	// Admin: Asset Directory Management
+	ListAllInstruments(ctx context.Context, in *ListAllInstrumentsRequest, opts ...grpc.CallOption) (*ListAllInstrumentsResponse, error)
+	CreateInstrument(ctx context.Context, in *CreateInstrumentRequest, opts ...grpc.CallOption) (*CreateInstrumentResponse, error)
+	UpdateInstrument(ctx context.Context, in *UpdateInstrumentRequest, opts ...grpc.CallOption) (*UpdateInstrumentResponse, error)
+	// Admin: Closing Price Management & Overrides
+	ListInstrumentPrices(ctx context.Context, in *ListInstrumentPricesRequest, opts ...grpc.CallOption) (*ListInstrumentPricesResponse, error)
+	RecordPriceOverride(ctx context.Context, in *RecordPriceOverrideRequest, opts ...grpc.CallOption) (*RecordPriceOverrideResponse, error)
+	// Admin: Ingestion Pipeline & Diagnostics
+	GetIngestionStatus(ctx context.Context, in *GetIngestionStatusRequest, opts ...grpc.CallOption) (*GetIngestionStatusResponse, error)
+	TriggerMarketSync(ctx context.Context, in *TriggerMarketSyncRequest, opts ...grpc.CallOption) (*TriggerMarketSyncResponse, error)
 }
 
 type portfolioServiceClient struct {
@@ -101,6 +118,69 @@ func (c *portfolioServiceClient) DeleteTransaction(ctx context.Context, in *Dele
 	return out, nil
 }
 
+func (c *portfolioServiceClient) ListAllInstruments(ctx context.Context, in *ListAllInstrumentsRequest, opts ...grpc.CallOption) (*ListAllInstrumentsResponse, error) {
+	out := new(ListAllInstrumentsResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_ListAllInstruments_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portfolioServiceClient) CreateInstrument(ctx context.Context, in *CreateInstrumentRequest, opts ...grpc.CallOption) (*CreateInstrumentResponse, error) {
+	out := new(CreateInstrumentResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_CreateInstrument_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portfolioServiceClient) UpdateInstrument(ctx context.Context, in *UpdateInstrumentRequest, opts ...grpc.CallOption) (*UpdateInstrumentResponse, error) {
+	out := new(UpdateInstrumentResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_UpdateInstrument_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portfolioServiceClient) ListInstrumentPrices(ctx context.Context, in *ListInstrumentPricesRequest, opts ...grpc.CallOption) (*ListInstrumentPricesResponse, error) {
+	out := new(ListInstrumentPricesResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_ListInstrumentPrices_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portfolioServiceClient) RecordPriceOverride(ctx context.Context, in *RecordPriceOverrideRequest, opts ...grpc.CallOption) (*RecordPriceOverrideResponse, error) {
+	out := new(RecordPriceOverrideResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_RecordPriceOverride_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portfolioServiceClient) GetIngestionStatus(ctx context.Context, in *GetIngestionStatusRequest, opts ...grpc.CallOption) (*GetIngestionStatusResponse, error) {
+	out := new(GetIngestionStatusResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_GetIngestionStatus_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portfolioServiceClient) TriggerMarketSync(ctx context.Context, in *TriggerMarketSyncRequest, opts ...grpc.CallOption) (*TriggerMarketSyncResponse, error) {
+	out := new(TriggerMarketSyncResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_TriggerMarketSync_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PortfolioServiceServer is the server API for PortfolioService service.
 // All implementations must embed UnimplementedPortfolioServiceServer
 // for forward compatibility
@@ -111,6 +191,16 @@ type PortfolioServiceServer interface {
 	GetPortfolioHistory(context.Context, *GetPortfolioHistoryRequest) (*GetPortfolioHistoryResponse, error)
 	ListTransactions(context.Context, *ListTransactionsRequest) (*ListTransactionsResponse, error)
 	DeleteTransaction(context.Context, *DeleteTransactionRequest) (*DeleteTransactionResponse, error)
+	// Admin: Asset Directory Management
+	ListAllInstruments(context.Context, *ListAllInstrumentsRequest) (*ListAllInstrumentsResponse, error)
+	CreateInstrument(context.Context, *CreateInstrumentRequest) (*CreateInstrumentResponse, error)
+	UpdateInstrument(context.Context, *UpdateInstrumentRequest) (*UpdateInstrumentResponse, error)
+	// Admin: Closing Price Management & Overrides
+	ListInstrumentPrices(context.Context, *ListInstrumentPricesRequest) (*ListInstrumentPricesResponse, error)
+	RecordPriceOverride(context.Context, *RecordPriceOverrideRequest) (*RecordPriceOverrideResponse, error)
+	// Admin: Ingestion Pipeline & Diagnostics
+	GetIngestionStatus(context.Context, *GetIngestionStatusRequest) (*GetIngestionStatusResponse, error)
+	TriggerMarketSync(context.Context, *TriggerMarketSyncRequest) (*TriggerMarketSyncResponse, error)
 	mustEmbedUnimplementedPortfolioServiceServer()
 }
 
@@ -135,6 +225,27 @@ func (UnimplementedPortfolioServiceServer) ListTransactions(context.Context, *Li
 }
 func (UnimplementedPortfolioServiceServer) DeleteTransaction(context.Context, *DeleteTransactionRequest) (*DeleteTransactionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTransaction not implemented")
+}
+func (UnimplementedPortfolioServiceServer) ListAllInstruments(context.Context, *ListAllInstrumentsRequest) (*ListAllInstrumentsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListAllInstruments not implemented")
+}
+func (UnimplementedPortfolioServiceServer) CreateInstrument(context.Context, *CreateInstrumentRequest) (*CreateInstrumentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateInstrument not implemented")
+}
+func (UnimplementedPortfolioServiceServer) UpdateInstrument(context.Context, *UpdateInstrumentRequest) (*UpdateInstrumentResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateInstrument not implemented")
+}
+func (UnimplementedPortfolioServiceServer) ListInstrumentPrices(context.Context, *ListInstrumentPricesRequest) (*ListInstrumentPricesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListInstrumentPrices not implemented")
+}
+func (UnimplementedPortfolioServiceServer) RecordPriceOverride(context.Context, *RecordPriceOverrideRequest) (*RecordPriceOverrideResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RecordPriceOverride not implemented")
+}
+func (UnimplementedPortfolioServiceServer) GetIngestionStatus(context.Context, *GetIngestionStatusRequest) (*GetIngestionStatusResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetIngestionStatus not implemented")
+}
+func (UnimplementedPortfolioServiceServer) TriggerMarketSync(context.Context, *TriggerMarketSyncRequest) (*TriggerMarketSyncResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TriggerMarketSync not implemented")
 }
 func (UnimplementedPortfolioServiceServer) mustEmbedUnimplementedPortfolioServiceServer() {}
 
@@ -257,6 +368,132 @@ func _PortfolioService_DeleteTransaction_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortfolioService_ListAllInstruments_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListAllInstrumentsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).ListAllInstruments(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_ListAllInstruments_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).ListAllInstruments(ctx, req.(*ListAllInstrumentsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortfolioService_CreateInstrument_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateInstrumentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).CreateInstrument(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_CreateInstrument_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).CreateInstrument(ctx, req.(*CreateInstrumentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortfolioService_UpdateInstrument_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateInstrumentRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).UpdateInstrument(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_UpdateInstrument_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).UpdateInstrument(ctx, req.(*UpdateInstrumentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortfolioService_ListInstrumentPrices_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListInstrumentPricesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).ListInstrumentPrices(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_ListInstrumentPrices_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).ListInstrumentPrices(ctx, req.(*ListInstrumentPricesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortfolioService_RecordPriceOverride_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecordPriceOverrideRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).RecordPriceOverride(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_RecordPriceOverride_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).RecordPriceOverride(ctx, req.(*RecordPriceOverrideRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortfolioService_GetIngestionStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetIngestionStatusRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).GetIngestionStatus(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_GetIngestionStatus_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).GetIngestionStatus(ctx, req.(*GetIngestionStatusRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortfolioService_TriggerMarketSync_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TriggerMarketSyncRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).TriggerMarketSync(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_TriggerMarketSync_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).TriggerMarketSync(ctx, req.(*TriggerMarketSyncRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PortfolioService_ServiceDesc is the grpc.ServiceDesc for PortfolioService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -287,6 +524,34 @@ var PortfolioService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteTransaction",
 			Handler:    _PortfolioService_DeleteTransaction_Handler,
+		},
+		{
+			MethodName: "ListAllInstruments",
+			Handler:    _PortfolioService_ListAllInstruments_Handler,
+		},
+		{
+			MethodName: "CreateInstrument",
+			Handler:    _PortfolioService_CreateInstrument_Handler,
+		},
+		{
+			MethodName: "UpdateInstrument",
+			Handler:    _PortfolioService_UpdateInstrument_Handler,
+		},
+		{
+			MethodName: "ListInstrumentPrices",
+			Handler:    _PortfolioService_ListInstrumentPrices_Handler,
+		},
+		{
+			MethodName: "RecordPriceOverride",
+			Handler:    _PortfolioService_RecordPriceOverride_Handler,
+		},
+		{
+			MethodName: "GetIngestionStatus",
+			Handler:    _PortfolioService_GetIngestionStatus_Handler,
+		},
+		{
+			MethodName: "TriggerMarketSync",
+			Handler:    _PortfolioService_TriggerMarketSync_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -91,6 +91,17 @@ func (s *portfolioService) AddTransaction(ctx context.Context, input domain.AddT
 			return nil, nil, fmt.Errorf("service: insert transaction: %w", err)
 		}
 
+		if s.ingestion != nil && instID != nil {
+			todayUTC := s.nowFunc().UTC().Truncate(24 * time.Hour)
+			hasPrices, err := s.repo.HasPricesForRange(ctx, *instID, tradeDate, todayUTC)
+			if err == nil && !hasPrices {
+				_, _ = s.ingestion.BackfillInstrumentPrices(ctx, *instID, *input.Symbol, inst.ExchangeCode, tradeDate, todayUTC)
+				if inst.CurrencyCode != portfolio.BaseCurrency {
+					_, _ = s.ingestion.BackfillCurrencyPair(ctx, inst.CurrencyCode, portfolio.BaseCurrency, tradeDate, todayUTC)
+				}
+			}
+		}
+
 		if err := s.RebuildProjections(ctx, userID); err != nil {
 			return nil, nil, fmt.Errorf("service: rebuild projections: %w", err)
 		}

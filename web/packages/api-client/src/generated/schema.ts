@@ -7,8 +7,8 @@ export type Scalars = {
     Decimal: any,
     String: string,
     ID: string,
-    Int: number,
     Boolean: boolean,
+    Int: number,
 }
 
 export interface Money {
@@ -31,6 +31,9 @@ export interface Instrument {
     name: Scalars['String']
     currencyCode: Scalars['String']
     assetClass: Scalars['String']
+    exchangeCode: Scalars['String']
+    isin: (Scalars['String'] | null)
+    isActive: Scalars['Boolean']
     __typename: 'Instrument'
 }
 
@@ -39,6 +42,9 @@ export interface Query {
     instruments: Instrument[]
     portfolioHistory: PortfolioHistory
     transactions: TransactionsConnection
+    allInstruments: Instrument[]
+    instrumentPrices: InstrumentPricesConnection
+    ingestionStatus: IngestionStatus
     __typename: 'Query'
 }
 
@@ -95,7 +101,63 @@ export interface DeleteTransactionPayload {
 export interface Mutation {
     addTransaction: AddTransactionPayload
     deleteTransaction: DeleteTransactionPayload
+    createInstrument: Instrument
+    updateInstrument: Instrument
+    recordPriceOverride: RecordPriceOverridePayload
+    triggerMarketSync: MarketSyncPayload
     __typename: 'Mutation'
+}
+
+export interface InstrumentPrice {
+    id: Scalars['ID']
+    symbol: Scalars['String']
+    priceDate: Scalars['String']
+    price: Money
+    source: Scalars['String']
+    updatedAt: Scalars['String']
+    __typename: 'InstrumentPrice'
+}
+
+export interface InstrumentPricesConnection {
+    items: InstrumentPrice[]
+    totalCount: Scalars['Int']
+    __typename: 'InstrumentPricesConnection'
+}
+
+export interface RecordPriceOverridePayload {
+    price: InstrumentPrice
+    valuationsRecomputed: Scalars['Boolean']
+    __typename: 'RecordPriceOverridePayload'
+}
+
+export interface FeedHealthStatus {
+    name: Scalars['String']
+    status: Scalars['String']
+    provider: Scalars['String']
+    schedule: Scalars['String']
+    lastRun: Scalars['String']
+    details: Scalars['String']
+    __typename: 'FeedHealthStatus'
+}
+
+export interface IngestionStatus {
+    feeds: FeedHealthStatus[]
+    trackedInstruments: Scalars['Int']
+    trackedCurrencies: Scalars['Int']
+    latestPriceDate: (Scalars['String'] | null)
+    latestFxDate: (Scalars['String'] | null)
+    rateLimitRemaining: Scalars['Int']
+    rateLimitBudget: Scalars['Int']
+    pendingBackfillJobs: Scalars['Int']
+    __typename: 'IngestionStatus'
+}
+
+export interface MarketSyncPayload {
+    success: Scalars['Boolean']
+    pricesSynced: Scalars['Int']
+    fxRatesSynced: Scalars['Int']
+    message: Scalars['String']
+    __typename: 'MarketSyncPayload'
 }
 
 export interface Portfolio {
@@ -144,6 +206,9 @@ export interface InstrumentGenqlSelection{
     name?: boolean | number
     currencyCode?: boolean | number
     assetClass?: boolean | number
+    exchangeCode?: boolean | number
+    isin?: boolean | number
+    isActive?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -153,6 +218,9 @@ export interface QueryGenqlSelection{
     instruments?: InstrumentGenqlSelection
     portfolioHistory?: (PortfolioHistoryGenqlSelection & { __args: {timeframe: HistoryTimeframe} })
     transactions?: (TransactionsConnectionGenqlSelection & { __args?: {type?: (TransactionType | null), symbol?: (Scalars['String'] | null), page?: (Scalars['Int'] | null), pageSize?: (Scalars['Int'] | null)} })
+    allInstruments?: (InstrumentGenqlSelection & { __args?: {isActive?: (Scalars['Boolean'] | null), search?: (Scalars['String'] | null)} })
+    instrumentPrices?: (InstrumentPricesConnectionGenqlSelection & { __args?: {symbol?: (Scalars['String'] | null), fromDate?: (Scalars['String'] | null), toDate?: (Scalars['String'] | null), limit?: (Scalars['Int'] | null), offset?: (Scalars['Int'] | null)} })
+    ingestionStatus?: IngestionStatusGenqlSelection
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -213,6 +281,74 @@ export interface DeleteTransactionPayloadGenqlSelection{
 export interface MutationGenqlSelection{
     addTransaction?: (AddTransactionPayloadGenqlSelection & { __args: {input: AddTransactionInput} })
     deleteTransaction?: (DeleteTransactionPayloadGenqlSelection & { __args: {id: Scalars['ID']} })
+    createInstrument?: (InstrumentGenqlSelection & { __args: {input: CreateInstrumentInput} })
+    updateInstrument?: (InstrumentGenqlSelection & { __args: {input: UpdateInstrumentInput} })
+    recordPriceOverride?: (RecordPriceOverridePayloadGenqlSelection & { __args: {input: RecordPriceOverrideInput} })
+    triggerMarketSync?: (MarketSyncPayloadGenqlSelection & { __args?: {symbols?: (Scalars['String'][] | null), syncFx?: (Scalars['Boolean'] | null)} })
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface InstrumentPriceGenqlSelection{
+    id?: boolean | number
+    symbol?: boolean | number
+    priceDate?: boolean | number
+    price?: MoneyGenqlSelection
+    source?: boolean | number
+    updatedAt?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface InstrumentPricesConnectionGenqlSelection{
+    items?: InstrumentPriceGenqlSelection
+    totalCount?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface CreateInstrumentInput {symbol: Scalars['String'],exchangeCode: Scalars['String'],name: Scalars['String'],assetClass: Scalars['String'],currencyCode: Scalars['String'],isin?: (Scalars['String'] | null)}
+
+export interface UpdateInstrumentInput {id: Scalars['ID'],name?: (Scalars['String'] | null),isActive?: (Scalars['Boolean'] | null),isin?: (Scalars['String'] | null)}
+
+export interface RecordPriceOverrideInput {symbol: Scalars['String'],priceDate: Scalars['String'],price: Scalars['Decimal'],reason?: (Scalars['String'] | null),recomputeValuations?: (Scalars['Boolean'] | null)}
+
+export interface RecordPriceOverridePayloadGenqlSelection{
+    price?: InstrumentPriceGenqlSelection
+    valuationsRecomputed?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface FeedHealthStatusGenqlSelection{
+    name?: boolean | number
+    status?: boolean | number
+    provider?: boolean | number
+    schedule?: boolean | number
+    lastRun?: boolean | number
+    details?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface IngestionStatusGenqlSelection{
+    feeds?: FeedHealthStatusGenqlSelection
+    trackedInstruments?: boolean | number
+    trackedCurrencies?: boolean | number
+    latestPriceDate?: boolean | number
+    latestFxDate?: boolean | number
+    rateLimitRemaining?: boolean | number
+    rateLimitBudget?: boolean | number
+    pendingBackfillJobs?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface MarketSyncPayloadGenqlSelection{
+    success?: boolean | number
+    pricesSynced?: boolean | number
+    fxRatesSynced?: boolean | number
+    message?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -320,6 +456,54 @@ export interface InvestmentGenqlSelection{
     export const isMutation = (obj?: { __typename?: any } | null): obj is Mutation => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isMutation"')
       return Mutation_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const InstrumentPrice_possibleTypes: string[] = ['InstrumentPrice']
+    export const isInstrumentPrice = (obj?: { __typename?: any } | null): obj is InstrumentPrice => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isInstrumentPrice"')
+      return InstrumentPrice_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const InstrumentPricesConnection_possibleTypes: string[] = ['InstrumentPricesConnection']
+    export const isInstrumentPricesConnection = (obj?: { __typename?: any } | null): obj is InstrumentPricesConnection => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isInstrumentPricesConnection"')
+      return InstrumentPricesConnection_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const RecordPriceOverridePayload_possibleTypes: string[] = ['RecordPriceOverridePayload']
+    export const isRecordPriceOverridePayload = (obj?: { __typename?: any } | null): obj is RecordPriceOverridePayload => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isRecordPriceOverridePayload"')
+      return RecordPriceOverridePayload_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const FeedHealthStatus_possibleTypes: string[] = ['FeedHealthStatus']
+    export const isFeedHealthStatus = (obj?: { __typename?: any } | null): obj is FeedHealthStatus => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isFeedHealthStatus"')
+      return FeedHealthStatus_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const IngestionStatus_possibleTypes: string[] = ['IngestionStatus']
+    export const isIngestionStatus = (obj?: { __typename?: any } | null): obj is IngestionStatus => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isIngestionStatus"')
+      return IngestionStatus_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const MarketSyncPayload_possibleTypes: string[] = ['MarketSyncPayload']
+    export const isMarketSyncPayload = (obj?: { __typename?: any } | null): obj is MarketSyncPayload => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isMarketSyncPayload"')
+      return MarketSyncPayload_possibleTypes.includes(obj.__typename)
     }
     
 

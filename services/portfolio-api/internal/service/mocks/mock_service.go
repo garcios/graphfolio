@@ -57,6 +57,21 @@ func (mr *MockPortfolioServiceMockRecorder) AddTransaction(ctx, input any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTransaction", reflect.TypeOf((*MockPortfolioService)(nil).AddTransaction), ctx, input)
 }
 
+// CreateInstrument mocks base method.
+func (m *MockPortfolioService) CreateInstrument(ctx context.Context, input domain.CreateInstrumentInput) (*domain.Instrument, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateInstrument", ctx, input)
+	ret0, _ := ret[0].(*domain.Instrument)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateInstrument indicates an expected call of CreateInstrument.
+func (mr *MockPortfolioServiceMockRecorder) CreateInstrument(ctx, input any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateInstrument", reflect.TypeOf((*MockPortfolioService)(nil).CreateInstrument), ctx, input)
+}
+
 // DeleteTransaction mocks base method.
 func (m *MockPortfolioService) DeleteTransaction(ctx context.Context, userID, transactionID string) (*domain.PortfolioSummary, error) {
 	m.ctrl.T.Helper()
@@ -70,6 +85,21 @@ func (m *MockPortfolioService) DeleteTransaction(ctx context.Context, userID, tr
 func (mr *MockPortfolioServiceMockRecorder) DeleteTransaction(ctx, userID, transactionID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTransaction", reflect.TypeOf((*MockPortfolioService)(nil).DeleteTransaction), ctx, userID, transactionID)
+}
+
+// GetIngestionStatus mocks base method.
+func (m *MockPortfolioService) GetIngestionStatus(ctx context.Context) (*domain.IngestionStatus, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetIngestionStatus", ctx)
+	ret0, _ := ret[0].(*domain.IngestionStatus)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetIngestionStatus indicates an expected call of GetIngestionStatus.
+func (mr *MockPortfolioServiceMockRecorder) GetIngestionStatus(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIngestionStatus", reflect.TypeOf((*MockPortfolioService)(nil).GetIngestionStatus), ctx)
 }
 
 // GetPortfolioHistory mocks base method.
@@ -100,6 +130,37 @@ func (m *MockPortfolioService) GetPortfolioSummary(ctx context.Context, userID s
 func (mr *MockPortfolioServiceMockRecorder) GetPortfolioSummary(ctx, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPortfolioSummary", reflect.TypeOf((*MockPortfolioService)(nil).GetPortfolioSummary), ctx, userID)
+}
+
+// ListAllInstruments mocks base method.
+func (m *MockPortfolioService) ListAllInstruments(ctx context.Context, isActive *bool, search *string) ([]domain.Instrument, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListAllInstruments", ctx, isActive, search)
+	ret0, _ := ret[0].([]domain.Instrument)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListAllInstruments indicates an expected call of ListAllInstruments.
+func (mr *MockPortfolioServiceMockRecorder) ListAllInstruments(ctx, isActive, search any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllInstruments", reflect.TypeOf((*MockPortfolioService)(nil).ListAllInstruments), ctx, isActive, search)
+}
+
+// ListInstrumentPrices mocks base method.
+func (m *MockPortfolioService) ListInstrumentPrices(ctx context.Context, filter domain.PriceFilter) ([]domain.InstrumentPrice, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListInstrumentPrices", ctx, filter)
+	ret0, _ := ret[0].([]domain.InstrumentPrice)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ListInstrumentPrices indicates an expected call of ListInstrumentPrices.
+func (mr *MockPortfolioServiceMockRecorder) ListInstrumentPrices(ctx, filter any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListInstrumentPrices", reflect.TypeOf((*MockPortfolioService)(nil).ListInstrumentPrices), ctx, filter)
 }
 
 // ListInstruments mocks base method.
@@ -145,4 +206,50 @@ func (m *MockPortfolioService) RebuildProjections(ctx context.Context, userID st
 func (mr *MockPortfolioServiceMockRecorder) RebuildProjections(ctx, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RebuildProjections", reflect.TypeOf((*MockPortfolioService)(nil).RebuildProjections), ctx, userID)
+}
+
+// RecordPriceOverride mocks base method.
+func (m *MockPortfolioService) RecordPriceOverride(ctx context.Context, input domain.PriceOverrideInput) (*domain.InstrumentPrice, bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RecordPriceOverride", ctx, input)
+	ret0, _ := ret[0].(*domain.InstrumentPrice)
+	ret1, _ := ret[1].(bool)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// RecordPriceOverride indicates an expected call of RecordPriceOverride.
+func (mr *MockPortfolioServiceMockRecorder) RecordPriceOverride(ctx, input any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecordPriceOverride", reflect.TypeOf((*MockPortfolioService)(nil).RecordPriceOverride), ctx, input)
+}
+
+// TriggerMarketSync mocks base method.
+func (m *MockPortfolioService) TriggerMarketSync(ctx context.Context, symbols []string, syncFX bool) (*domain.MarketSyncResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TriggerMarketSync", ctx, symbols, syncFX)
+	ret0, _ := ret[0].(*domain.MarketSyncResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TriggerMarketSync indicates an expected call of TriggerMarketSync.
+func (mr *MockPortfolioServiceMockRecorder) TriggerMarketSync(ctx, symbols, syncFX any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TriggerMarketSync", reflect.TypeOf((*MockPortfolioService)(nil).TriggerMarketSync), ctx, symbols, syncFX)
+}
+
+// UpdateInstrument mocks base method.
+func (m *MockPortfolioService) UpdateInstrument(ctx context.Context, input domain.UpdateInstrumentInput) (*domain.Instrument, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateInstrument", ctx, input)
+	ret0, _ := ret[0].(*domain.Instrument)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateInstrument indicates an expected call of UpdateInstrument.
+func (mr *MockPortfolioServiceMockRecorder) UpdateInstrument(ctx, input any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateInstrument", reflect.TypeOf((*MockPortfolioService)(nil).UpdateInstrument), ctx, input)
 }

@@ -26,17 +26,63 @@ type AddTransactionPayload struct {
 	Portfolio     *Portfolio `json:"portfolio"`
 }
 
+type CreateInstrumentInput struct {
+	Symbol       string  `json:"symbol"`
+	ExchangeCode string  `json:"exchangeCode"`
+	Name         string  `json:"name"`
+	AssetClass   string  `json:"assetClass"`
+	CurrencyCode string  `json:"currencyCode"`
+	Isin         *string `json:"isin,omitempty"`
+}
+
 type DeleteTransactionPayload struct {
 	Success   bool       `json:"success"`
 	Portfolio *Portfolio `json:"portfolio"`
 }
 
+type FeedHealthStatus struct {
+	Name     string `json:"name"`
+	Status   string `json:"status"`
+	Provider string `json:"provider"`
+	Schedule string `json:"schedule"`
+	LastRun  string `json:"lastRun"`
+	Details  string `json:"details"`
+}
+
+type IngestionStatus struct {
+	Feeds               []*FeedHealthStatus `json:"feeds"`
+	TrackedInstruments  int                 `json:"trackedInstruments"`
+	TrackedCurrencies   int                 `json:"trackedCurrencies"`
+	LatestPriceDate     *string             `json:"latestPriceDate,omitempty"`
+	LatestFxDate        *string             `json:"latestFxDate,omitempty"`
+	RateLimitRemaining  int                 `json:"rateLimitRemaining"`
+	RateLimitBudget     int                 `json:"rateLimitBudget"`
+	PendingBackfillJobs int                 `json:"pendingBackfillJobs"`
+}
+
 type Instrument struct {
-	ID           string `json:"id"`
-	Symbol       string `json:"symbol"`
-	Name         string `json:"name"`
-	CurrencyCode string `json:"currencyCode"`
-	AssetClass   string `json:"assetClass"`
+	ID           string  `json:"id"`
+	Symbol       string  `json:"symbol"`
+	Name         string  `json:"name"`
+	CurrencyCode string  `json:"currencyCode"`
+	AssetClass   string  `json:"assetClass"`
+	ExchangeCode string  `json:"exchangeCode"`
+	Isin         *string `json:"isin,omitempty"`
+	IsActive     bool    `json:"isActive"`
+}
+
+type InstrumentPrice struct {
+	ID        string `json:"id"`
+	Symbol    string `json:"symbol"`
+	PriceDate string `json:"priceDate"`
+	Price     *Money `json:"price"`
+	Source    string `json:"source"`
+	UpdatedAt string `json:"updatedAt"`
+}
+
+type InstrumentPricesConnection struct {
+	Items      []*InstrumentPrice `json:"items"`
+	TotalCount int                `json:"totalCount"`
 }
 
 type Investment struct {
@@ -50,6 +96,13 @@ type Investment struct {
 	TodayReturnPercent Decimal `json:"todayReturnPercent"`
 	TotalReturnAmount  *Money  `json:"totalReturnAmount"`
 	TotalReturnPercent Decimal `json:"totalReturnPercent"`
+}
+
+type MarketSyncPayload struct {
+	Success       bool   `json:"success"`
+	PricesSynced  int    `json:"pricesSynced"`
+	FxRatesSynced int    `json:"fxRatesSynced"`
+	Message       string `json:"message"`
 }
 
 type Money struct {
@@ -80,6 +133,19 @@ type PortfolioHistory struct {
 type Query struct {
 }
 
+type RecordPriceOverrideInput struct {
+	Symbol              string  `json:"symbol"`
+	PriceDate           string  `json:"priceDate"`
+	Price               Decimal `json:"price"`
+	Reason              *string `json:"reason,omitempty"`
+	RecomputeValuations *bool   `json:"recomputeValuations,omitempty"`
+}
+
+type RecordPriceOverridePayload struct {
+	Price                *InstrumentPrice `json:"price"`
+	ValuationsRecomputed bool             `json:"valuationsRecomputed"`
+}
+
 type TransactionItem struct {
 	ID             string          `json:"id"`
 	Type           TransactionType `json:"type"`
@@ -99,6 +165,13 @@ type TransactionsConnection struct {
 	TotalCount int                `json:"totalCount"`
 	Page       int                `json:"page"`
 	PageSize   int                `json:"pageSize"`
+}
+
+type UpdateInstrumentInput struct {
+	ID       string  `json:"id"`
+	Name     *string `json:"name,omitempty"`
+	IsActive *bool   `json:"isActive,omitempty"`
+	Isin     *string `json:"isin,omitempty"`
 }
 
 type ValuationPoint struct {

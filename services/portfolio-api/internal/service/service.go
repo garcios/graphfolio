@@ -18,18 +18,50 @@ type PortfolioService interface {
 	GetPortfolioHistory(ctx context.Context, userID string, timeframe domain.HistoryTimeframe) (*domain.PortfolioHistory, error)
 	ListTransactions(ctx context.Context, userID string, filter domain.TransactionFilter) ([]domain.TransactionWithInstrument, int, error)
 	DeleteTransaction(ctx context.Context, userID string, transactionID string) (*domain.PortfolioSummary, error)
+
+	// Admin: Asset Directory Management
+	ListAllInstruments(ctx context.Context, isActive *bool, search *string) ([]domain.Instrument, error)
+	CreateInstrument(ctx context.Context, input domain.CreateInstrumentInput) (*domain.Instrument, error)
+	UpdateInstrument(ctx context.Context, input domain.UpdateInstrumentInput) (*domain.Instrument, error)
+
+	// Admin: Price Management & Overrides
+	ListInstrumentPrices(ctx context.Context, filter domain.PriceFilter) ([]domain.InstrumentPrice, int, error)
+	RecordPriceOverride(ctx context.Context, input domain.PriceOverrideInput) (*domain.InstrumentPrice, bool, error)
+
+	// Admin: Ingestion Pipeline & Diagnostics
+	GetIngestionStatus(ctx context.Context) (*domain.IngestionStatus, error)
+	TriggerMarketSync(ctx context.Context, symbols []string, syncFX bool) (*domain.MarketSyncResult, error)
+}
+
+type ServiceOption func(*portfolioService)
+
+func WithIngestionService(ingestion IngestionService) ServiceOption {
+	return func(s *portfolioService) {
+		s.ingestion = ingestion
+	}
+}
+
+func WithNowFunc(fn func() time.Time) ServiceOption {
+	return func(s *portfolioService) {
+		s.nowFunc = fn
+	}
 }
 
 type portfolioService struct {
-	repo    repository.Repository
-	nowFunc func() time.Time
+	repo      repository.Repository
+	nowFunc   func() time.Time
+	ingestion IngestionService
 }
 
-func NewPortfolioService(repo repository.Repository) PortfolioService {
-	return &portfolioService{
+func NewPortfolioService(repo repository.Repository, opts ...ServiceOption) PortfolioService {
+	s := &portfolioService{
 		repo:    repo,
 		nowFunc: func() time.Time { return time.Now().UTC() },
 	}
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s
 }
 
 func (s *portfolioService) GetPortfolioSummary(ctx context.Context, userID string) (*domain.PortfolioSummary, error) {

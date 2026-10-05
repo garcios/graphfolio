@@ -62,6 +62,93 @@ func (r *mutationResolver) DeleteTransaction(ctx context.Context, id string) (*m
 	}, nil
 }
 
+// CreateInstrument is the resolver for the createInstrument field.
+func (r *mutationResolver) CreateInstrument(ctx context.Context, input model.CreateInstrumentInput) (*model.Instrument, error) {
+	req := &pb.CreateInstrumentRequest{
+		Symbol:       input.Symbol,
+		ExchangeCode: input.ExchangeCode,
+		Name:         input.Name,
+		AssetClass:   input.AssetClass,
+		CurrencyCode: input.CurrencyCode,
+		Isin:         input.Isin,
+	}
+
+	resp, err := r.PortfolioClient.CreateInstrument(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return toModelInstrument(resp.Instrument), nil
+}
+
+// UpdateInstrument is the resolver for the updateInstrument field.
+func (r *mutationResolver) UpdateInstrument(ctx context.Context, input model.UpdateInstrumentInput) (*model.Instrument, error) {
+	req := &pb.UpdateInstrumentRequest{
+		Id:       input.ID,
+		Name:     input.Name,
+		IsActive: input.IsActive,
+		Isin:     input.Isin,
+	}
+
+	resp, err := r.PortfolioClient.UpdateInstrument(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return toModelInstrument(resp.Instrument), nil
+}
+
+// RecordPriceOverride is the resolver for the recordPriceOverride field.
+func (r *mutationResolver) RecordPriceOverride(ctx context.Context, input model.RecordPriceOverrideInput) (*model.RecordPriceOverridePayload, error) {
+	recompute := false
+	if input.RecomputeValuations != nil {
+		recompute = *input.RecomputeValuations
+	}
+
+	req := &pb.RecordPriceOverrideRequest{
+		Symbol:              input.Symbol,
+		PriceDate:           input.PriceDate,
+		Price:               toProtoDecimal(&input.Price),
+		Reason:              input.Reason,
+		RecomputeValuations: recompute,
+	}
+
+	resp, err := r.PortfolioClient.RecordPriceOverride(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.RecordPriceOverridePayload{
+		Price:                toModelInstrumentPrice(resp.Price),
+		ValuationsRecomputed: resp.ValuationsRecomputed,
+	}, nil
+}
+
+// TriggerMarketSync is the resolver for the triggerMarketSync field.
+func (r *mutationResolver) TriggerMarketSync(ctx context.Context, symbols []string, syncFx *bool) (*model.MarketSyncPayload, error) {
+	sync := false
+	if syncFx != nil {
+		sync = *syncFx
+	}
+
+	req := &pb.TriggerMarketSyncRequest{
+		Symbols: symbols,
+		SyncFx:  sync,
+	}
+
+	resp, err := r.PortfolioClient.TriggerMarketSync(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.MarketSyncPayload{
+		Success:       resp.Success,
+		PricesSynced:  int(resp.PricesSynced),
+		FxRatesSynced: int(resp.FxRatesSynced),
+		Message:       resp.Message,
+	}, nil
+}
+
 // Portfolio is the resolver for the portfolio field.
 func (r *queryResolver) Portfolio(ctx context.Context) (*model.Portfolio, error) {
 	resp, err := r.PortfolioClient.GetPortfolio(ctx, &pb.GetPortfolioRequest{
@@ -83,13 +170,7 @@ func (r *queryResolver) Instruments(ctx context.Context) ([]*model.Instrument, e
 
 	instruments := make([]*model.Instrument, len(resp.Instruments))
 	for i, inst := range resp.Instruments {
-		instruments[i] = &model.Instrument{
-			ID:           inst.Id,
-			Symbol:       inst.Symbol,
-			Name:         inst.Name,
-			CurrencyCode: inst.CurrencyCode,
-			AssetClass:   inst.AssetClass,
-		}
+		instruments[i] = toModelInstrument(inst)
 	}
 
 	return instruments, nil
@@ -133,6 +214,59 @@ func (r *queryResolver) Transactions(ctx context.Context, typeArg *model.Transac
 	}
 
 	return toModelTransactionsConnection(resp), nil
+}
+
+// AllInstruments is the resolver for the allInstruments field.
+func (r *queryResolver) AllInstruments(ctx context.Context, isActive *bool, search *string) ([]*model.Instrument, error) {
+	req := &pb.ListAllInstrumentsRequest{
+		IsActive: isActive,
+		Search:   search,
+	}
+
+	resp, err := r.PortfolioClient.ListAllInstruments(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	instruments := make([]*model.Instrument, len(resp.Instruments))
+	for i, inst := range resp.Instruments {
+		instruments[i] = toModelInstrument(inst)
+	}
+
+	return instruments, nil
+}
+
+// InstrumentPrices is the resolver for the instrumentPrices field.
+func (r *queryResolver) InstrumentPrices(ctx context.Context, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) (*model.InstrumentPricesConnection, error) {
+	req := &pb.ListInstrumentPricesRequest{
+		Symbol:   symbol,
+		FromDate: fromDate,
+		ToDate:   toDate,
+	}
+
+	if limit != nil {
+		req.Limit = int32(*limit)
+	}
+	if offset != nil {
+		req.Offset = int32(*offset)
+	}
+
+	resp, err := r.PortfolioClient.ListInstrumentPrices(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return toModelInstrumentPricesConnection(resp), nil
+}
+
+// IngestionStatus is the resolver for the ingestionStatus field.
+func (r *queryResolver) IngestionStatus(ctx context.Context) (*model.IngestionStatus, error) {
+	resp, err := r.PortfolioClient.GetIngestionStatus(ctx, &pb.GetIngestionStatusRequest{})
+	if err != nil {
+		return nil, err
+	}
+
+	return toModelIngestionStatus(resp), nil
 }
 
 // Mutation returns MutationResolver implementation.

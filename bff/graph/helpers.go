@@ -263,3 +263,93 @@ func toModelTransactionsConnection(resp *pb.ListTransactionsResponse) *model.Tra
 		PageSize:   int(resp.PageSize),
 	}
 }
+
+func toModelInstrument(inst *pb.Instrument) *model.Instrument {
+	if inst == nil {
+		return nil
+	}
+	var isin *string
+	if inst.Isin != "" {
+		isin = &inst.Isin
+	}
+	return &model.Instrument{
+		ID:           inst.Id,
+		Symbol:       inst.Symbol,
+		Name:         inst.Name,
+		CurrencyCode: inst.CurrencyCode,
+		AssetClass:   inst.AssetClass,
+		ExchangeCode: inst.ExchangeCode,
+		Isin:         isin,
+		IsActive:     inst.IsActive,
+	}
+}
+
+func toModelInstrumentPrice(p *pb.InstrumentPriceItem) *model.InstrumentPrice {
+	if p == nil {
+		return nil
+	}
+	return &model.InstrumentPrice{
+		ID:        p.InstrumentId + "_" + p.PriceDate,
+		Symbol:    p.Symbol,
+		PriceDate: p.PriceDate,
+		Price:     toModelMoney(p.Price),
+		Source:    p.Source,
+		UpdatedAt: p.UpdatedAt,
+	}
+}
+
+func toModelInstrumentPricesConnection(resp *pb.ListInstrumentPricesResponse) *model.InstrumentPricesConnection {
+	if resp == nil {
+		return &model.InstrumentPricesConnection{
+			Items:      []*model.InstrumentPrice{},
+			TotalCount: 0,
+		}
+	}
+
+	items := make([]*model.InstrumentPrice, len(resp.Prices))
+	for i, p := range resp.Prices {
+		items[i] = toModelInstrumentPrice(p)
+	}
+
+	return &model.InstrumentPricesConnection{
+		Items:      items,
+		TotalCount: int(resp.TotalCount),
+	}
+}
+
+func toModelIngestionStatus(resp *pb.GetIngestionStatusResponse) *model.IngestionStatus {
+	if resp == nil {
+		return nil
+	}
+	feeds := make([]*model.FeedHealthStatus, len(resp.Feeds))
+	for i, f := range resp.Feeds {
+		feeds[i] = &model.FeedHealthStatus{
+			Name:     f.Name,
+			Status:   f.Status,
+			Provider: f.Provider,
+			Schedule: f.Schedule,
+			LastRun:  f.LastRun,
+			Details:  f.Details,
+		}
+	}
+
+	var latestPriceDate *string
+	if resp.LatestPriceDate != "" {
+		latestPriceDate = &resp.LatestPriceDate
+	}
+	var latestFxDate *string
+	if resp.LatestFxDate != "" {
+		latestFxDate = &resp.LatestFxDate
+	}
+
+	return &model.IngestionStatus{
+		Feeds:               feeds,
+		TrackedInstruments:  int(resp.TrackedInstruments),
+		TrackedCurrencies:   int(resp.TrackedCurrencies),
+		LatestPriceDate:     latestPriceDate,
+		LatestFxDate:        latestFxDate,
+		RateLimitRemaining:  int(resp.RateLimitRemaining),
+		RateLimitBudget:     int(resp.RateLimitBudget),
+		PendingBackfillJobs: int(resp.PendingBackfillJobs),
+	}
+}

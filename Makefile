@@ -8,7 +8,7 @@ USER_DB_URL      ?= postgres://user_svc:user@localhost:5432/$(DB_NAME)?sslmode=d
 
 .PHONY: install install-web generate proto run-bff run-portfolio run-user run-web run-admin run-all-web build-web run \
 	db-check db-bootstrap db-drop db-reset db-test-setup \
-	migrate-up migrate-down migrate-create db-seed test
+	migrate-up migrate-down migrate-create db-seed test ingest-market-data
 
 install:
 	@echo "Installing frontend dependencies..."
@@ -73,6 +73,10 @@ db-test-setup:
 
 test:
 	go test ./bff/... ./pkg/... ./services/portfolio-api/... ./services/user-api/...
+
+ingest-market-data:
+	@echo "Running Market Data Ingestion Pipeline..."
+	cd services/portfolio-api && go run cmd/market-ingest/main.go $(ARGS)
 
 run-bff:
 	@echo "Starting BFF server..."

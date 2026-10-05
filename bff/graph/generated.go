@@ -47,12 +47,49 @@ type ComplexityRoot struct {
 		Success   func(childComplexity int) int
 	}
 
+	FeedHealthStatus struct {
+		Details  func(childComplexity int) int
+		LastRun  func(childComplexity int) int
+		Name     func(childComplexity int) int
+		Provider func(childComplexity int) int
+		Schedule func(childComplexity int) int
+		Status   func(childComplexity int) int
+	}
+
+	IngestionStatus struct {
+		Feeds               func(childComplexity int) int
+		LatestFxDate        func(childComplexity int) int
+		LatestPriceDate     func(childComplexity int) int
+		PendingBackfillJobs func(childComplexity int) int
+		RateLimitBudget     func(childComplexity int) int
+		RateLimitRemaining  func(childComplexity int) int
+		TrackedCurrencies   func(childComplexity int) int
+		TrackedInstruments  func(childComplexity int) int
+	}
+
 	Instrument struct {
 		AssetClass   func(childComplexity int) int
 		CurrencyCode func(childComplexity int) int
+		ExchangeCode func(childComplexity int) int
 		ID           func(childComplexity int) int
+		IsActive     func(childComplexity int) int
+		Isin         func(childComplexity int) int
 		Name         func(childComplexity int) int
 		Symbol       func(childComplexity int) int
+	}
+
+	InstrumentPrice struct {
+		ID        func(childComplexity int) int
+		Price     func(childComplexity int) int
+		PriceDate func(childComplexity int) int
+		Source    func(childComplexity int) int
+		Symbol    func(childComplexity int) int
+		UpdatedAt func(childComplexity int) int
+	}
+
+	InstrumentPricesConnection struct {
+		Items      func(childComplexity int) int
+		TotalCount func(childComplexity int) int
 	}
 
 	Investment struct {
@@ -68,14 +105,25 @@ type ComplexityRoot struct {
 		TotalValue         func(childComplexity int) int
 	}
 
+	MarketSyncPayload struct {
+		FxRatesSynced func(childComplexity int) int
+		Message       func(childComplexity int) int
+		PricesSynced  func(childComplexity int) int
+		Success       func(childComplexity int) int
+	}
+
 	Money struct {
 		Amount       func(childComplexity int) int
 		CurrencyCode func(childComplexity int) int
 	}
 
 	Mutation struct {
-		AddTransaction    func(childComplexity int, input model.AddTransactionInput) int
-		DeleteTransaction func(childComplexity int, id string) int
+		AddTransaction      func(childComplexity int, input model.AddTransactionInput) int
+		CreateInstrument    func(childComplexity int, input model.CreateInstrumentInput) int
+		DeleteTransaction   func(childComplexity int, id string) int
+		RecordPriceOverride func(childComplexity int, input model.RecordPriceOverrideInput) int
+		TriggerMarketSync   func(childComplexity int, symbols []string, syncFx *bool) int
+		UpdateInstrument    func(childComplexity int, input model.UpdateInstrumentInput) int
 	}
 
 	Portfolio struct {
@@ -96,10 +144,18 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		AllInstruments   func(childComplexity int, isActive *bool, search *string) int
+		IngestionStatus  func(childComplexity int) int
+		InstrumentPrices func(childComplexity int, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) int
 		Instruments      func(childComplexity int) int
 		Portfolio        func(childComplexity int) int
 		PortfolioHistory func(childComplexity int, timeframe model.HistoryTimeframe) int
 		Transactions     func(childComplexity int, typeArg *model.TransactionType, symbol *string, page *int, pageSize *int) int
+	}
+
+	RecordPriceOverridePayload struct {
+		Price                func(childComplexity int) int
+		ValuationsRecomputed func(childComplexity int) int
 	}
 
 	TransactionItem struct {
@@ -140,12 +196,19 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	AddTransaction(ctx context.Context, input model.AddTransactionInput) (*model.AddTransactionPayload, error)
 	DeleteTransaction(ctx context.Context, id string) (*model.DeleteTransactionPayload, error)
+	CreateInstrument(ctx context.Context, input model.CreateInstrumentInput) (*model.Instrument, error)
+	UpdateInstrument(ctx context.Context, input model.UpdateInstrumentInput) (*model.Instrument, error)
+	RecordPriceOverride(ctx context.Context, input model.RecordPriceOverrideInput) (*model.RecordPriceOverridePayload, error)
+	TriggerMarketSync(ctx context.Context, symbols []string, syncFx *bool) (*model.MarketSyncPayload, error)
 }
 type QueryResolver interface {
 	Portfolio(ctx context.Context) (*model.Portfolio, error)
 	Instruments(ctx context.Context) ([]*model.Instrument, error)
 	PortfolioHistory(ctx context.Context, timeframe model.HistoryTimeframe) (*model.PortfolioHistory, error)
 	Transactions(ctx context.Context, typeArg *model.TransactionType, symbol *string, page *int, pageSize *int) (*model.TransactionsConnection, error)
+	AllInstruments(ctx context.Context, isActive *bool, search *string) ([]*model.Instrument, error)
+	InstrumentPrices(ctx context.Context, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) (*model.InstrumentPricesConnection, error)
+	IngestionStatus(ctx context.Context) (*model.IngestionStatus, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -192,6 +255,92 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.DeleteTransactionPayload.Success(childComplexity), true
 
+	case "FeedHealthStatus.details":
+		if e.ComplexityRoot.FeedHealthStatus.Details == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FeedHealthStatus.Details(childComplexity), true
+	case "FeedHealthStatus.lastRun":
+		if e.ComplexityRoot.FeedHealthStatus.LastRun == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FeedHealthStatus.LastRun(childComplexity), true
+	case "FeedHealthStatus.name":
+		if e.ComplexityRoot.FeedHealthStatus.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FeedHealthStatus.Name(childComplexity), true
+	case "FeedHealthStatus.provider":
+		if e.ComplexityRoot.FeedHealthStatus.Provider == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FeedHealthStatus.Provider(childComplexity), true
+	case "FeedHealthStatus.schedule":
+		if e.ComplexityRoot.FeedHealthStatus.Schedule == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FeedHealthStatus.Schedule(childComplexity), true
+	case "FeedHealthStatus.status":
+		if e.ComplexityRoot.FeedHealthStatus.Status == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FeedHealthStatus.Status(childComplexity), true
+
+	case "IngestionStatus.feeds":
+		if e.ComplexityRoot.IngestionStatus.Feeds == nil {
+			break
+		}
+
+		return e.ComplexityRoot.IngestionStatus.Feeds(childComplexity), true
+	case "IngestionStatus.latestFxDate":
+		if e.ComplexityRoot.IngestionStatus.LatestFxDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.IngestionStatus.LatestFxDate(childComplexity), true
+	case "IngestionStatus.latestPriceDate":
+		if e.ComplexityRoot.IngestionStatus.LatestPriceDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.IngestionStatus.LatestPriceDate(childComplexity), true
+	case "IngestionStatus.pendingBackfillJobs":
+		if e.ComplexityRoot.IngestionStatus.PendingBackfillJobs == nil {
+			break
+		}
+
+		return e.ComplexityRoot.IngestionStatus.PendingBackfillJobs(childComplexity), true
+	case "IngestionStatus.rateLimitBudget":
+		if e.ComplexityRoot.IngestionStatus.RateLimitBudget == nil {
+			break
+		}
+
+		return e.ComplexityRoot.IngestionStatus.RateLimitBudget(childComplexity), true
+	case "IngestionStatus.rateLimitRemaining":
+		if e.ComplexityRoot.IngestionStatus.RateLimitRemaining == nil {
+			break
+		}
+
+		return e.ComplexityRoot.IngestionStatus.RateLimitRemaining(childComplexity), true
+	case "IngestionStatus.trackedCurrencies":
+		if e.ComplexityRoot.IngestionStatus.TrackedCurrencies == nil {
+			break
+		}
+
+		return e.ComplexityRoot.IngestionStatus.TrackedCurrencies(childComplexity), true
+	case "IngestionStatus.trackedInstruments":
+		if e.ComplexityRoot.IngestionStatus.TrackedInstruments == nil {
+			break
+		}
+
+		return e.ComplexityRoot.IngestionStatus.TrackedInstruments(childComplexity), true
+
 	case "Instrument.assetClass":
 		if e.ComplexityRoot.Instrument.AssetClass == nil {
 			break
@@ -204,12 +353,30 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Instrument.CurrencyCode(childComplexity), true
+	case "Instrument.exchangeCode":
+		if e.ComplexityRoot.Instrument.ExchangeCode == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Instrument.ExchangeCode(childComplexity), true
 	case "Instrument.id":
 		if e.ComplexityRoot.Instrument.ID == nil {
 			break
 		}
 
 		return e.ComplexityRoot.Instrument.ID(childComplexity), true
+	case "Instrument.isActive":
+		if e.ComplexityRoot.Instrument.IsActive == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Instrument.IsActive(childComplexity), true
+	case "Instrument.isin":
+		if e.ComplexityRoot.Instrument.Isin == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Instrument.Isin(childComplexity), true
 	case "Instrument.name":
 		if e.ComplexityRoot.Instrument.Name == nil {
 			break
@@ -222,6 +389,56 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Instrument.Symbol(childComplexity), true
+
+	case "InstrumentPrice.id":
+		if e.ComplexityRoot.InstrumentPrice.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.InstrumentPrice.ID(childComplexity), true
+	case "InstrumentPrice.price":
+		if e.ComplexityRoot.InstrumentPrice.Price == nil {
+			break
+		}
+
+		return e.ComplexityRoot.InstrumentPrice.Price(childComplexity), true
+	case "InstrumentPrice.priceDate":
+		if e.ComplexityRoot.InstrumentPrice.PriceDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.InstrumentPrice.PriceDate(childComplexity), true
+	case "InstrumentPrice.source":
+		if e.ComplexityRoot.InstrumentPrice.Source == nil {
+			break
+		}
+
+		return e.ComplexityRoot.InstrumentPrice.Source(childComplexity), true
+	case "InstrumentPrice.symbol":
+		if e.ComplexityRoot.InstrumentPrice.Symbol == nil {
+			break
+		}
+
+		return e.ComplexityRoot.InstrumentPrice.Symbol(childComplexity), true
+	case "InstrumentPrice.updatedAt":
+		if e.ComplexityRoot.InstrumentPrice.UpdatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.InstrumentPrice.UpdatedAt(childComplexity), true
+
+	case "InstrumentPricesConnection.items":
+		if e.ComplexityRoot.InstrumentPricesConnection.Items == nil {
+			break
+		}
+
+		return e.ComplexityRoot.InstrumentPricesConnection.Items(childComplexity), true
+	case "InstrumentPricesConnection.totalCount":
+		if e.ComplexityRoot.InstrumentPricesConnection.TotalCount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.InstrumentPricesConnection.TotalCount(childComplexity), true
 
 	case "Investment.id":
 		if e.ComplexityRoot.Investment.ID == nil {
@@ -284,6 +501,31 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.Investment.TotalValue(childComplexity), true
 
+	case "MarketSyncPayload.fxRatesSynced":
+		if e.ComplexityRoot.MarketSyncPayload.FxRatesSynced == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MarketSyncPayload.FxRatesSynced(childComplexity), true
+	case "MarketSyncPayload.message":
+		if e.ComplexityRoot.MarketSyncPayload.Message == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MarketSyncPayload.Message(childComplexity), true
+	case "MarketSyncPayload.pricesSynced":
+		if e.ComplexityRoot.MarketSyncPayload.PricesSynced == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MarketSyncPayload.PricesSynced(childComplexity), true
+	case "MarketSyncPayload.success":
+		if e.ComplexityRoot.MarketSyncPayload.Success == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MarketSyncPayload.Success(childComplexity), true
+
 	case "Money.amount":
 		if e.ComplexityRoot.Money.Amount == nil {
 			break
@@ -308,6 +550,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.AddTransaction(childComplexity, args["input"].(model.AddTransactionInput)), true
+	case "Mutation.createInstrument":
+		if e.ComplexityRoot.Mutation.CreateInstrument == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_createInstrument_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.CreateInstrument(childComplexity, args["input"].(model.CreateInstrumentInput)), true
 	case "Mutation.deleteTransaction":
 		if e.ComplexityRoot.Mutation.DeleteTransaction == nil {
 			break
@@ -319,6 +572,39 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.DeleteTransaction(childComplexity, args["id"].(string)), true
+	case "Mutation.recordPriceOverride":
+		if e.ComplexityRoot.Mutation.RecordPriceOverride == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_recordPriceOverride_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.RecordPriceOverride(childComplexity, args["input"].(model.RecordPriceOverrideInput)), true
+	case "Mutation.triggerMarketSync":
+		if e.ComplexityRoot.Mutation.TriggerMarketSync == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_triggerMarketSync_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.TriggerMarketSync(childComplexity, args["symbols"].([]string), args["syncFx"].(*bool)), true
+	case "Mutation.updateInstrument":
+		if e.ComplexityRoot.Mutation.UpdateInstrument == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateInstrument_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.UpdateInstrument(childComplexity, args["input"].(model.UpdateInstrumentInput)), true
 
 	case "Portfolio.annualizedReturnPercent":
 		if e.ComplexityRoot.Portfolio.AnnualizedReturnPercent == nil {
@@ -388,6 +674,34 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.PortfolioHistory.StartValue(childComplexity), true
 
+	case "Query.allInstruments":
+		if e.ComplexityRoot.Query.AllInstruments == nil {
+			break
+		}
+
+		args, err := ec.field_Query_allInstruments_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.AllInstruments(childComplexity, args["isActive"].(*bool), args["search"].(*string)), true
+	case "Query.ingestionStatus":
+		if e.ComplexityRoot.Query.IngestionStatus == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Query.IngestionStatus(childComplexity), true
+	case "Query.instrumentPrices":
+		if e.ComplexityRoot.Query.InstrumentPrices == nil {
+			break
+		}
+
+		args, err := ec.field_Query_instrumentPrices_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.InstrumentPrices(childComplexity, args["symbol"].(*string), args["fromDate"].(*string), args["toDate"].(*string), args["limit"].(*int), args["offset"].(*int)), true
 	case "Query.instruments":
 		if e.ComplexityRoot.Query.Instruments == nil {
 			break
@@ -423,6 +737,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.Transactions(childComplexity, args["type"].(*model.TransactionType), args["symbol"].(*string), args["page"].(*int), args["pageSize"].(*int)), true
+
+	case "RecordPriceOverridePayload.price":
+		if e.ComplexityRoot.RecordPriceOverridePayload.Price == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RecordPriceOverridePayload.Price(childComplexity), true
+	case "RecordPriceOverridePayload.valuationsRecomputed":
+		if e.ComplexityRoot.RecordPriceOverridePayload.ValuationsRecomputed == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RecordPriceOverridePayload.ValuationsRecomputed(childComplexity), true
 
 	case "TransactionItem.amount":
 		if e.ComplexityRoot.TransactionItem.Amount == nil {
@@ -562,6 +889,9 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := newExecutionContext(opCtx, e, make(chan graphql.DeferredResult))
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputAddTransactionInput,
+		ec.unmarshalInputCreateInstrumentInput,
+		ec.unmarshalInputRecordPriceOverrideInput,
+		ec.unmarshalInputUpdateInstrumentInput,
 	)
 	first := true
 
@@ -676,6 +1006,46 @@ func (ec *executionContext) childFields_DeleteTransactionPayload(ctx context.Con
 	return nil, fmt.Errorf("no field named %q was found under type DeleteTransactionPayload", field.Name)
 }
 
+func (ec *executionContext) childFields_FeedHealthStatus(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "name":
+		return ec.fieldContext_FeedHealthStatus_name(ctx, field)
+	case "status":
+		return ec.fieldContext_FeedHealthStatus_status(ctx, field)
+	case "provider":
+		return ec.fieldContext_FeedHealthStatus_provider(ctx, field)
+	case "schedule":
+		return ec.fieldContext_FeedHealthStatus_schedule(ctx, field)
+	case "lastRun":
+		return ec.fieldContext_FeedHealthStatus_lastRun(ctx, field)
+	case "details":
+		return ec.fieldContext_FeedHealthStatus_details(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type FeedHealthStatus", field.Name)
+}
+
+func (ec *executionContext) childFields_IngestionStatus(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "feeds":
+		return ec.fieldContext_IngestionStatus_feeds(ctx, field)
+	case "trackedInstruments":
+		return ec.fieldContext_IngestionStatus_trackedInstruments(ctx, field)
+	case "trackedCurrencies":
+		return ec.fieldContext_IngestionStatus_trackedCurrencies(ctx, field)
+	case "latestPriceDate":
+		return ec.fieldContext_IngestionStatus_latestPriceDate(ctx, field)
+	case "latestFxDate":
+		return ec.fieldContext_IngestionStatus_latestFxDate(ctx, field)
+	case "rateLimitRemaining":
+		return ec.fieldContext_IngestionStatus_rateLimitRemaining(ctx, field)
+	case "rateLimitBudget":
+		return ec.fieldContext_IngestionStatus_rateLimitBudget(ctx, field)
+	case "pendingBackfillJobs":
+		return ec.fieldContext_IngestionStatus_pendingBackfillJobs(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type IngestionStatus", field.Name)
+}
+
 func (ec *executionContext) childFields_Instrument(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "id":
@@ -688,8 +1058,42 @@ func (ec *executionContext) childFields_Instrument(ctx context.Context, field gr
 		return ec.fieldContext_Instrument_currencyCode(ctx, field)
 	case "assetClass":
 		return ec.fieldContext_Instrument_assetClass(ctx, field)
+	case "exchangeCode":
+		return ec.fieldContext_Instrument_exchangeCode(ctx, field)
+	case "isin":
+		return ec.fieldContext_Instrument_isin(ctx, field)
+	case "isActive":
+		return ec.fieldContext_Instrument_isActive(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Instrument", field.Name)
+}
+
+func (ec *executionContext) childFields_InstrumentPrice(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_InstrumentPrice_id(ctx, field)
+	case "symbol":
+		return ec.fieldContext_InstrumentPrice_symbol(ctx, field)
+	case "priceDate":
+		return ec.fieldContext_InstrumentPrice_priceDate(ctx, field)
+	case "price":
+		return ec.fieldContext_InstrumentPrice_price(ctx, field)
+	case "source":
+		return ec.fieldContext_InstrumentPrice_source(ctx, field)
+	case "updatedAt":
+		return ec.fieldContext_InstrumentPrice_updatedAt(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type InstrumentPrice", field.Name)
+}
+
+func (ec *executionContext) childFields_InstrumentPricesConnection(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "items":
+		return ec.fieldContext_InstrumentPricesConnection_items(ctx, field)
+	case "totalCount":
+		return ec.fieldContext_InstrumentPricesConnection_totalCount(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type InstrumentPricesConnection", field.Name)
 }
 
 func (ec *executionContext) childFields_Investment(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -716,6 +1120,20 @@ func (ec *executionContext) childFields_Investment(ctx context.Context, field gr
 		return ec.fieldContext_Investment_totalReturnPercent(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Investment", field.Name)
+}
+
+func (ec *executionContext) childFields_MarketSyncPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "success":
+		return ec.fieldContext_MarketSyncPayload_success(ctx, field)
+	case "pricesSynced":
+		return ec.fieldContext_MarketSyncPayload_pricesSynced(ctx, field)
+	case "fxRatesSynced":
+		return ec.fieldContext_MarketSyncPayload_fxRatesSynced(ctx, field)
+	case "message":
+		return ec.fieldContext_MarketSyncPayload_message(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type MarketSyncPayload", field.Name)
 }
 
 func (ec *executionContext) childFields_Money(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -760,6 +1178,16 @@ func (ec *executionContext) childFields_PortfolioHistory(ctx context.Context, fi
 		return ec.fieldContext_PortfolioHistory_returnPercent(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type PortfolioHistory", field.Name)
+}
+
+func (ec *executionContext) childFields_RecordPriceOverridePayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "price":
+		return ec.fieldContext_RecordPriceOverridePayload_price(ctx, field)
+	case "valuationsRecomputed":
+		return ec.fieldContext_RecordPriceOverridePayload_valuationsRecomputed(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type RecordPriceOverridePayload", field.Name)
 }
 
 func (ec *executionContext) childFields_TransactionItem(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -952,6 +1380,20 @@ func (ec *executionContext) field_Mutation_addTransaction_args(ctx context.Conte
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_createInstrument_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.CreateInstrumentInput, error) {
+			return ec.unmarshalNCreateInstrumentInput2bffᚋgraphᚋmodelᚐCreateInstrumentInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_deleteTransaction_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -966,6 +1408,56 @@ func (ec *executionContext) field_Mutation_deleteTransaction_args(ctx context.Co
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_recordPriceOverride_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.RecordPriceOverrideInput, error) {
+			return ec.unmarshalNRecordPriceOverrideInput2bffᚋgraphᚋmodelᚐRecordPriceOverrideInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_triggerMarketSync_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "symbols",
+		func(ctx context.Context, v any) ([]string, error) {
+			return ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["symbols"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "syncFx",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["syncFx"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateInstrument_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.UpdateInstrumentInput, error) {
+			return ec.unmarshalNUpdateInstrumentInput2bffᚋgraphᚋmodelᚐUpdateInstrumentInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -977,6 +1469,74 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		return nil, err
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_allInstruments_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "isActive",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["isActive"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "search",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["search"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_instrumentPrices_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "symbol",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["symbol"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "fromDate",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["fromDate"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "toDate",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["toDate"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "limit",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "offset",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["offset"] = arg4
 	return args, nil
 }
 
@@ -1202,6 +1762,337 @@ func (ec *executionContext) fieldContext_DeleteTransactionPayload_portfolio(_ co
 	return fc, nil
 }
 
+func (ec *executionContext) _FeedHealthStatus_name(ctx context.Context, field graphql.CollectedField, obj *model.FeedHealthStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FeedHealthStatus_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FeedHealthStatus_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FeedHealthStatus", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _FeedHealthStatus_status(ctx context.Context, field graphql.CollectedField, obj *model.FeedHealthStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FeedHealthStatus_status(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FeedHealthStatus_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FeedHealthStatus", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _FeedHealthStatus_provider(ctx context.Context, field graphql.CollectedField, obj *model.FeedHealthStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FeedHealthStatus_provider(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Provider, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FeedHealthStatus_provider(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FeedHealthStatus", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _FeedHealthStatus_schedule(ctx context.Context, field graphql.CollectedField, obj *model.FeedHealthStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FeedHealthStatus_schedule(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Schedule, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FeedHealthStatus_schedule(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FeedHealthStatus", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _FeedHealthStatus_lastRun(ctx context.Context, field graphql.CollectedField, obj *model.FeedHealthStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FeedHealthStatus_lastRun(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LastRun, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FeedHealthStatus_lastRun(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FeedHealthStatus", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _FeedHealthStatus_details(ctx context.Context, field graphql.CollectedField, obj *model.FeedHealthStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FeedHealthStatus_details(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Details, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FeedHealthStatus_details(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FeedHealthStatus", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _IngestionStatus_feeds(ctx context.Context, field graphql.CollectedField, obj *model.IngestionStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_IngestionStatus_feeds(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Feeds, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.FeedHealthStatus) graphql.Marshaler {
+			return ec.marshalNFeedHealthStatus2ᚕᚖbffᚋgraphᚋmodelᚐFeedHealthStatusᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_IngestionStatus_feeds(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "IngestionStatus",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_FeedHealthStatus(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _IngestionStatus_trackedInstruments(ctx context.Context, field graphql.CollectedField, obj *model.IngestionStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_IngestionStatus_trackedInstruments(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TrackedInstruments, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_IngestionStatus_trackedInstruments(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("IngestionStatus", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _IngestionStatus_trackedCurrencies(ctx context.Context, field graphql.CollectedField, obj *model.IngestionStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_IngestionStatus_trackedCurrencies(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TrackedCurrencies, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_IngestionStatus_trackedCurrencies(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("IngestionStatus", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _IngestionStatus_latestPriceDate(ctx context.Context, field graphql.CollectedField, obj *model.IngestionStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_IngestionStatus_latestPriceDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LatestPriceDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_IngestionStatus_latestPriceDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("IngestionStatus", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _IngestionStatus_latestFxDate(ctx context.Context, field graphql.CollectedField, obj *model.IngestionStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_IngestionStatus_latestFxDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LatestFxDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_IngestionStatus_latestFxDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("IngestionStatus", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _IngestionStatus_rateLimitRemaining(ctx context.Context, field graphql.CollectedField, obj *model.IngestionStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_IngestionStatus_rateLimitRemaining(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.RateLimitRemaining, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_IngestionStatus_rateLimitRemaining(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("IngestionStatus", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _IngestionStatus_rateLimitBudget(ctx context.Context, field graphql.CollectedField, obj *model.IngestionStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_IngestionStatus_rateLimitBudget(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.RateLimitBudget, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_IngestionStatus_rateLimitBudget(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("IngestionStatus", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _IngestionStatus_pendingBackfillJobs(ctx context.Context, field graphql.CollectedField, obj *model.IngestionStatus) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_IngestionStatus_pendingBackfillJobs(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PendingBackfillJobs, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_IngestionStatus_pendingBackfillJobs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("IngestionStatus", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
 func (ec *executionContext) _Instrument_id(ctx context.Context, field graphql.CollectedField, obj *model.Instrument) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -1315,6 +2206,277 @@ func (ec *executionContext) _Instrument_assetClass(ctx context.Context, field gr
 }
 func (ec *executionContext) fieldContext_Instrument_assetClass(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("Instrument", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Instrument_exchangeCode(ctx context.Context, field graphql.CollectedField, obj *model.Instrument) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Instrument_exchangeCode(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ExchangeCode, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Instrument_exchangeCode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Instrument", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Instrument_isin(ctx context.Context, field graphql.CollectedField, obj *model.Instrument) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Instrument_isin(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Isin, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Instrument_isin(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Instrument", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Instrument_isActive(ctx context.Context, field graphql.CollectedField, obj *model.Instrument) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Instrument_isActive(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.IsActive, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Instrument_isActive(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Instrument", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _InstrumentPrice_id(ctx context.Context, field graphql.CollectedField, obj *model.InstrumentPrice) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_InstrumentPrice_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_InstrumentPrice_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("InstrumentPrice", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _InstrumentPrice_symbol(ctx context.Context, field graphql.CollectedField, obj *model.InstrumentPrice) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_InstrumentPrice_symbol(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Symbol, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_InstrumentPrice_symbol(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("InstrumentPrice", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _InstrumentPrice_priceDate(ctx context.Context, field graphql.CollectedField, obj *model.InstrumentPrice) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_InstrumentPrice_priceDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PriceDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_InstrumentPrice_priceDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("InstrumentPrice", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _InstrumentPrice_price(ctx context.Context, field graphql.CollectedField, obj *model.InstrumentPrice) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_InstrumentPrice_price(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Price, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_InstrumentPrice_price(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InstrumentPrice",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InstrumentPrice_source(ctx context.Context, field graphql.CollectedField, obj *model.InstrumentPrice) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_InstrumentPrice_source(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Source, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_InstrumentPrice_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("InstrumentPrice", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _InstrumentPrice_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.InstrumentPrice) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_InstrumentPrice_updatedAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_InstrumentPrice_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("InstrumentPrice", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _InstrumentPricesConnection_items(ctx context.Context, field graphql.CollectedField, obj *model.InstrumentPricesConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_InstrumentPricesConnection_items(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Items, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.InstrumentPrice) graphql.Marshaler {
+			return ec.marshalNInstrumentPrice2ᚕᚖbffᚋgraphᚋmodelᚐInstrumentPriceᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_InstrumentPricesConnection_items(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "InstrumentPricesConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_InstrumentPrice(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _InstrumentPricesConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *model.InstrumentPricesConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_InstrumentPricesConnection_totalCount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TotalCount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_InstrumentPricesConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("InstrumentPricesConnection", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _Investment_id(ctx context.Context, field graphql.CollectedField, obj *model.Investment) (ret graphql.Marshaler) {
@@ -1583,6 +2745,98 @@ func (ec *executionContext) fieldContext_Investment_totalReturnPercent(_ context
 	return graphql.NewScalarFieldContext("Investment", field, false, false, errors.New("field of type Decimal does not have child fields"))
 }
 
+func (ec *executionContext) _MarketSyncPayload_success(ctx context.Context, field graphql.CollectedField, obj *model.MarketSyncPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MarketSyncPayload_success(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Success, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_MarketSyncPayload_success(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MarketSyncPayload", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _MarketSyncPayload_pricesSynced(ctx context.Context, field graphql.CollectedField, obj *model.MarketSyncPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MarketSyncPayload_pricesSynced(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PricesSynced, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_MarketSyncPayload_pricesSynced(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MarketSyncPayload", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _MarketSyncPayload_fxRatesSynced(ctx context.Context, field graphql.CollectedField, obj *model.MarketSyncPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MarketSyncPayload_fxRatesSynced(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FxRatesSynced, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_MarketSyncPayload_fxRatesSynced(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MarketSyncPayload", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _MarketSyncPayload_message(ctx context.Context, field graphql.CollectedField, obj *model.MarketSyncPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MarketSyncPayload_message(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Message, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_MarketSyncPayload_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MarketSyncPayload", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
 func (ec *executionContext) _Money_amount(ctx context.Context, field graphql.CollectedField, obj *model.Money) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -1711,6 +2965,182 @@ func (ec *executionContext) fieldContext_Mutation_deleteTransaction(ctx context.
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_deleteTransaction_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_createInstrument(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_createInstrument(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().CreateInstrument(ctx, fc.Args["input"].(model.CreateInstrumentInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Instrument) graphql.Marshaler {
+			return ec.marshalNInstrument2ᚖbffᚋgraphᚋmodelᚐInstrument(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_createInstrument(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Instrument(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_createInstrument_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_updateInstrument(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_updateInstrument(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().UpdateInstrument(ctx, fc.Args["input"].(model.UpdateInstrumentInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Instrument) graphql.Marshaler {
+			return ec.marshalNInstrument2ᚖbffᚋgraphᚋmodelᚐInstrument(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_updateInstrument(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Instrument(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateInstrument_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_recordPriceOverride(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_recordPriceOverride(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().RecordPriceOverride(ctx, fc.Args["input"].(model.RecordPriceOverrideInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.RecordPriceOverridePayload) graphql.Marshaler {
+			return ec.marshalNRecordPriceOverridePayload2ᚖbffᚋgraphᚋmodelᚐRecordPriceOverridePayload(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_recordPriceOverride(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_RecordPriceOverridePayload(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_recordPriceOverride_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_triggerMarketSync(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_triggerMarketSync(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().TriggerMarketSync(ctx, fc.Args["symbols"].([]string), fc.Args["syncFx"].(*bool))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.MarketSyncPayload) graphql.Marshaler {
+			return ec.marshalNMarketSyncPayload2ᚖbffᚋgraphᚋmodelᚐMarketSyncPayload(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_triggerMarketSync(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_MarketSyncPayload(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_triggerMarketSync_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -2194,6 +3624,126 @@ func (ec *executionContext) fieldContext_Query_transactions(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_allInstruments(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_allInstruments(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().AllInstruments(ctx, fc.Args["isActive"].(*bool), fc.Args["search"].(*string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Instrument) graphql.Marshaler {
+			return ec.marshalNInstrument2ᚕᚖbffᚋgraphᚋmodelᚐInstrumentᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_allInstruments(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Instrument(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_allInstruments_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_instrumentPrices(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_instrumentPrices(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().InstrumentPrices(ctx, fc.Args["symbol"].(*string), fc.Args["fromDate"].(*string), fc.Args["toDate"].(*string), fc.Args["limit"].(*int), fc.Args["offset"].(*int))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.InstrumentPricesConnection) graphql.Marshaler {
+			return ec.marshalNInstrumentPricesConnection2ᚖbffᚋgraphᚋmodelᚐInstrumentPricesConnection(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_instrumentPrices(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_InstrumentPricesConnection(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_instrumentPrices_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_ingestionStatus(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_ingestionStatus(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Query().IngestionStatus(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.IngestionStatus) graphql.Marshaler {
+			return ec.marshalNIngestionStatus2ᚖbffᚋgraphᚋmodelᚐIngestionStatus(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_ingestionStatus(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_IngestionStatus(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -2268,6 +3818,61 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _RecordPriceOverridePayload_price(ctx context.Context, field graphql.CollectedField, obj *model.RecordPriceOverridePayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RecordPriceOverridePayload_price(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Price, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.InstrumentPrice) graphql.Marshaler {
+			return ec.marshalNInstrumentPrice2ᚖbffᚋgraphᚋmodelᚐInstrumentPrice(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RecordPriceOverridePayload_price(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RecordPriceOverridePayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_InstrumentPrice(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RecordPriceOverridePayload_valuationsRecomputed(ctx context.Context, field graphql.CollectedField, obj *model.RecordPriceOverridePayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RecordPriceOverridePayload_valuationsRecomputed(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ValuationsRecomputed, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RecordPriceOverridePayload_valuationsRecomputed(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("RecordPriceOverridePayload", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _TransactionItem_id(ctx context.Context, field graphql.CollectedField, obj *model.TransactionItem) (ret graphql.Marshaler) {
@@ -3961,6 +5566,180 @@ func (ec *executionContext) unmarshalInputAddTransactionInput(ctx context.Contex
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCreateInstrumentInput(ctx context.Context, obj any) (model.CreateInstrumentInput, error) {
+	var it model.CreateInstrumentInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"symbol", "exchangeCode", "name", "assetClass", "currencyCode", "isin"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "symbol":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("symbol"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Symbol = data
+		case "exchangeCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("exchangeCode"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExchangeCode = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "assetClass":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("assetClass"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.AssetClass = data
+		case "currencyCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyCode"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyCode = data
+		case "isin":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isin"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Isin = data
+		}
+	}
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputRecordPriceOverrideInput(ctx context.Context, obj any) (model.RecordPriceOverrideInput, error) {
+	var it model.RecordPriceOverrideInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"symbol", "priceDate", "price", "reason", "recomputeValuations"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "symbol":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("symbol"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Symbol = data
+		case "priceDate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("priceDate"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.PriceDate = data
+		case "price":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("price"))
+			data, err := ec.unmarshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Price = data
+		case "reason":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reason"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Reason = data
+		case "recomputeValuations":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("recomputeValuations"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RecomputeValuations = data
+		}
+	}
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputUpdateInstrumentInput(ctx context.Context, obj any) (model.UpdateInstrumentInput, error) {
+	var it model.UpdateInstrumentInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "name", "isActive", "isin"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "isActive":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isActive"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IsActive = data
+		case "isin":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("isin"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Isin = data
+		}
+	}
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -4055,6 +5834,142 @@ func (ec *executionContext) _DeleteTransactionPayload(ctx context.Context, sel a
 	return out
 }
 
+var feedHealthStatusImplementors = []string{"FeedHealthStatus"}
+
+func (ec *executionContext) _FeedHealthStatus(ctx context.Context, sel ast.SelectionSet, obj *model.FeedHealthStatus) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, feedHealthStatusImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FeedHealthStatus")
+		case "name":
+			out.Values[i] = ec._FeedHealthStatus_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._FeedHealthStatus_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "provider":
+			out.Values[i] = ec._FeedHealthStatus_provider(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "schedule":
+			out.Values[i] = ec._FeedHealthStatus_schedule(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "lastRun":
+			out.Values[i] = ec._FeedHealthStatus_lastRun(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "details":
+			out.Values[i] = ec._FeedHealthStatus_details(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var ingestionStatusImplementors = []string{"IngestionStatus"}
+
+func (ec *executionContext) _IngestionStatus(ctx context.Context, sel ast.SelectionSet, obj *model.IngestionStatus) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, ingestionStatusImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("IngestionStatus")
+		case "feeds":
+			out.Values[i] = ec._IngestionStatus_feeds(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "trackedInstruments":
+			out.Values[i] = ec._IngestionStatus_trackedInstruments(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "trackedCurrencies":
+			out.Values[i] = ec._IngestionStatus_trackedCurrencies(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "latestPriceDate":
+			out.Values[i] = ec._IngestionStatus_latestPriceDate(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "latestFxDate":
+			out.Values[i] = ec._IngestionStatus_latestFxDate(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "rateLimitRemaining":
+			out.Values[i] = ec._IngestionStatus_rateLimitRemaining(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rateLimitBudget":
+			out.Values[i] = ec._IngestionStatus_rateLimitBudget(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pendingBackfillJobs":
+			out.Values[i] = ec._IngestionStatus_pendingBackfillJobs(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
 var instrumentImplementors = []string{"Instrument"}
 
 func (ec *executionContext) _Instrument(ctx context.Context, sel ast.SelectionSet, obj *model.Instrument) graphql.Marshaler {
@@ -4089,6 +6004,127 @@ func (ec *executionContext) _Instrument(ctx context.Context, sel ast.SelectionSe
 			}
 		case "assetClass":
 			out.Values[i] = ec._Instrument_assetClass(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "exchangeCode":
+			out.Values[i] = ec._Instrument_exchangeCode(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isin":
+			out.Values[i] = ec._Instrument_isin(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "isActive":
+			out.Values[i] = ec._Instrument_isActive(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var instrumentPriceImplementors = []string{"InstrumentPrice"}
+
+func (ec *executionContext) _InstrumentPrice(ctx context.Context, sel ast.SelectionSet, obj *model.InstrumentPrice) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, instrumentPriceImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("InstrumentPrice")
+		case "id":
+			out.Values[i] = ec._InstrumentPrice_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "symbol":
+			out.Values[i] = ec._InstrumentPrice_symbol(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "priceDate":
+			out.Values[i] = ec._InstrumentPrice_priceDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "price":
+			out.Values[i] = ec._InstrumentPrice_price(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "source":
+			out.Values[i] = ec._InstrumentPrice_source(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._InstrumentPrice_updatedAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var instrumentPricesConnectionImplementors = []string{"InstrumentPricesConnection"}
+
+func (ec *executionContext) _InstrumentPricesConnection(ctx context.Context, sel ast.SelectionSet, obj *model.InstrumentPricesConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, instrumentPricesConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("InstrumentPricesConnection")
+		case "items":
+			out.Values[i] = ec._InstrumentPricesConnection_items(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCount":
+			out.Values[i] = ec._InstrumentPricesConnection_totalCount(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -4196,6 +6232,59 @@ func (ec *executionContext) _Investment(ctx context.Context, sel ast.SelectionSe
 	return out
 }
 
+var marketSyncPayloadImplementors = []string{"MarketSyncPayload"}
+
+func (ec *executionContext) _MarketSyncPayload(ctx context.Context, sel ast.SelectionSet, obj *model.MarketSyncPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, marketSyncPayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MarketSyncPayload")
+		case "success":
+			out.Values[i] = ec._MarketSyncPayload_success(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pricesSynced":
+			out.Values[i] = ec._MarketSyncPayload_pricesSynced(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fxRatesSynced":
+			out.Values[i] = ec._MarketSyncPayload_fxRatesSynced(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "message":
+			out.Values[i] = ec._MarketSyncPayload_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
 var moneyImplementors = []string{"Money"}
 
 func (ec *executionContext) _Money(ctx context.Context, sel ast.SelectionSet, obj *model.Money) graphql.Marshaler {
@@ -4269,6 +6358,34 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "deleteTransaction":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_deleteTransaction(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createInstrument":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_createInstrument(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updateInstrument":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateInstrument(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "recordPriceOverride":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_recordPriceOverride(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "triggerMarketSync":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_triggerMarketSync(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -4523,6 +6640,72 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "allInstruments":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_allInstruments(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "instrumentPrices":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_instrumentPrices(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "ingestionStatus":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_ingestionStatus(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -4536,6 +6719,49 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			})
 			if out.Values[i] == graphql.RequiredNull {
 				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var recordPriceOverridePayloadImplementors = []string{"RecordPriceOverridePayload"}
+
+func (ec *executionContext) _RecordPriceOverridePayload(ctx context.Context, sel ast.SelectionSet, obj *model.RecordPriceOverridePayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, recordPriceOverridePayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RecordPriceOverridePayload")
+		case "price":
+			out.Values[i] = ec._RecordPriceOverridePayload_price(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "valuationsRecomputed":
+			out.Values[i] = ec._RecordPriceOverridePayload_valuationsRecomputed(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -5185,6 +7411,11 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) unmarshalNCreateInstrumentInput2bffᚋgraphᚋmodelᚐCreateInstrumentInput(ctx context.Context, v any) (model.CreateInstrumentInput, error) {
+	res, err := ec.unmarshalInputCreateInstrumentInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx context.Context, v any) (model.Decimal, error) {
 	var res model.Decimal
 	err := res.UnmarshalGQL(v)
@@ -5203,6 +7434,32 @@ func (ec *executionContext) marshalNDeleteTransactionPayload2ᚖbffᚋgraphᚋmo
 		return graphql.Null
 	}
 	return ec._DeleteTransactionPayload(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNFeedHealthStatus2ᚕᚖbffᚋgraphᚋmodelᚐFeedHealthStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FeedHealthStatus) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNFeedHealthStatus2ᚖbffᚋgraphᚋmodelᚐFeedHealthStatus(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNFeedHealthStatus2ᚖbffᚋgraphᚋmodelᚐFeedHealthStatus(ctx context.Context, sel ast.SelectionSet, v *model.FeedHealthStatus) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._FeedHealthStatus(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNHistoryTimeframe2bffᚋgraphᚋmodelᚐHistoryTimeframe(ctx context.Context, v any) (model.HistoryTimeframe, error) {
@@ -5231,6 +7488,16 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
+func (ec *executionContext) marshalNIngestionStatus2ᚖbffᚋgraphᚋmodelᚐIngestionStatus(ctx context.Context, sel ast.SelectionSet, v *model.IngestionStatus) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._IngestionStatus(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNInstrument2ᚕᚖbffᚋgraphᚋmodelᚐInstrumentᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Instrument) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
@@ -5255,6 +7522,42 @@ func (ec *executionContext) marshalNInstrument2ᚖbffᚋgraphᚋmodelᚐInstrume
 		return graphql.Null
 	}
 	return ec._Instrument(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNInstrumentPrice2ᚕᚖbffᚋgraphᚋmodelᚐInstrumentPriceᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.InstrumentPrice) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNInstrumentPrice2ᚖbffᚋgraphᚋmodelᚐInstrumentPrice(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNInstrumentPrice2ᚖbffᚋgraphᚋmodelᚐInstrumentPrice(ctx context.Context, sel ast.SelectionSet, v *model.InstrumentPrice) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._InstrumentPrice(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNInstrumentPricesConnection2ᚖbffᚋgraphᚋmodelᚐInstrumentPricesConnection(ctx context.Context, sel ast.SelectionSet, v *model.InstrumentPricesConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._InstrumentPricesConnection(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNInt2int(ctx context.Context, v any) (int, error) {
@@ -5299,6 +7602,16 @@ func (ec *executionContext) marshalNInvestment2ᚖbffᚋgraphᚋmodelᚐInvestme
 	return ec._Investment(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNMarketSyncPayload2ᚖbffᚋgraphᚋmodelᚐMarketSyncPayload(ctx context.Context, sel ast.SelectionSet, v *model.MarketSyncPayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._MarketSyncPayload(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx context.Context, sel ast.SelectionSet, v *model.Money) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -5327,6 +7640,21 @@ func (ec *executionContext) marshalNPortfolioHistory2ᚖbffᚋgraphᚋmodelᚐPo
 		return graphql.Null
 	}
 	return ec._PortfolioHistory(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNRecordPriceOverrideInput2bffᚋgraphᚋmodelᚐRecordPriceOverrideInput(ctx context.Context, v any) (model.RecordPriceOverrideInput, error) {
+	res, err := ec.unmarshalInputRecordPriceOverrideInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNRecordPriceOverridePayload2ᚖbffᚋgraphᚋmodelᚐRecordPriceOverridePayload(ctx context.Context, sel ast.SelectionSet, v *model.RecordPriceOverridePayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._RecordPriceOverridePayload(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v any) (string, error) {
@@ -5389,6 +7717,11 @@ func (ec *executionContext) marshalNTransactionsConnection2ᚖbffᚋgraphᚋmode
 		return graphql.Null
 	}
 	return ec._TransactionsConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNUpdateInstrumentInput2bffᚋgraphᚋmodelᚐUpdateInstrumentInput(ctx context.Context, v any) (model.UpdateInstrumentInput, error) {
+	res, err := ec.unmarshalInputUpdateInstrumentInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNValuationPoint2ᚕᚖbffᚋgraphᚋmodelᚐValuationPointᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ValuationPoint) graphql.Marshaler {
@@ -5626,6 +7959,41 @@ func (ec *executionContext) marshalOMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx con
 		return graphql.Null
 	}
 	return ec._Money(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	vSlice := graphql.CoerceList(v)
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalOString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalOString2ᚖstring(ctx context.Context, v any) (*string, error) {

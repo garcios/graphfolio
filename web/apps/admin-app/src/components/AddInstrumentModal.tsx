@@ -4,9 +4,11 @@ import './AddInstrumentModal.css';
 
 export interface NewInstrumentData {
   symbol: string;
+  exchangeCode: string;
   name: string;
   assetClass: string;
   currencyCode: string;
+  isin?: string;
 }
 
 interface AddInstrumentModalProps {
@@ -15,22 +17,42 @@ interface AddInstrumentModalProps {
   onSubmit: (data: NewInstrumentData) => Promise<void>;
 }
 
+const ISIN_REGEX = /^[A-Z]{2}[A-Z0-9]{9}[0-9]$/;
+
 export const AddInstrumentModal: React.FC<AddInstrumentModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
 }) => {
   const [symbol, setSymbol] = useState('');
+  const [exchangeCode, setExchangeCode] = useState('US');
   const [name, setName] = useState('');
   const [assetClass, setAssetClass] = useState('EQUITY');
   const [currencyCode, setCurrencyCode] = useState('USD');
+  const [isin, setIsin] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!symbol.trim() || !name.trim()) {
-      setError('Symbol and instrument name are required.');
+    const cleanSymbol = symbol.trim().toUpperCase();
+    const cleanExchange = exchangeCode.trim().toUpperCase();
+    const cleanName = name.trim();
+    const cleanCurrency = currencyCode.trim().toUpperCase();
+    const cleanIsin = isin.trim().toUpperCase();
+
+    if (!cleanSymbol || !cleanExchange || !cleanName) {
+      setError('Symbol, exchange code, and instrument name are required.');
+      return;
+    }
+
+    if (cleanCurrency.length !== 3) {
+      setError('Currency code must be exactly 3 characters (e.g. USD, EUR, GBP).');
+      return;
+    }
+
+    if (cleanIsin && !ISIN_REGEX.test(cleanIsin)) {
+      setError('ISIN must be 12 alphanumeric characters conforming to ISO 6166 (e.g. US0378331005).');
       return;
     }
 
@@ -38,16 +60,20 @@ export const AddInstrumentModal: React.FC<AddInstrumentModalProps> = ({
       setIsSubmitting(true);
       setError(null);
       await onSubmit({
-        symbol: symbol.trim().toUpperCase(),
-        name: name.trim(),
+        symbol: cleanSymbol,
+        exchangeCode: cleanExchange,
+        name: cleanName,
         assetClass,
-        currencyCode: currencyCode.trim().toUpperCase(),
+        currencyCode: cleanCurrency,
+        isin: cleanIsin || undefined,
       });
       // Reset form
       setSymbol('');
+      setExchangeCode('US');
       setName('');
       setAssetClass('EQUITY');
       setCurrencyCode('USD');
+      setIsin('');
       onClose();
     } catch (err: any) {
       setError(err?.message || 'Failed to register instrument.');
@@ -86,10 +112,10 @@ export const AddInstrumentModal: React.FC<AddInstrumentModalProps> = ({
             required
           />
           <Input
-            label="Trading Currency *"
-            placeholder="USD"
-            value={currencyCode}
-            onChange={(e) => setCurrencyCode(e.target.value)}
+            label="Exchange Code *"
+            placeholder="e.g. US, NASDAQ, NYSE"
+            value={exchangeCode}
+            onChange={(e) => setExchangeCode(e.target.value)}
             disabled={isSubmitting}
             required
           />
@@ -104,18 +130,37 @@ export const AddInstrumentModal: React.FC<AddInstrumentModalProps> = ({
           required
         />
 
-        <Select
-          label="Asset Class"
-          value={assetClass}
-          onChange={(e) => setAssetClass(e.target.value)}
+        <div className="instrument-form__row">
+          <Select
+            label="Asset Class"
+            value={assetClass}
+            onChange={(e) => setAssetClass(e.target.value)}
+            disabled={isSubmitting}
+            options={[
+              { label: 'Equity / Stock', value: 'EQUITY' },
+              { label: 'Exchange-Traded Fund (ETF)', value: 'ETF' },
+              { label: 'Mutual / Index Fund', value: 'FUND' },
+              { label: 'Fixed Income / Bond', value: 'BOND' },
+              { label: 'Cryptocurrency', value: 'CRYPTO' },
+              { label: 'Cash Equivalent', value: 'CASH_EQUIVALENT' },
+            ]}
+          />
+          <Input
+            label="Trading Currency *"
+            placeholder="USD"
+            value={currencyCode}
+            onChange={(e) => setCurrencyCode(e.target.value)}
+            disabled={isSubmitting}
+            required
+          />
+        </div>
+
+        <Input
+          label="ISIN (Optional)"
+          placeholder="e.g. US67066G1040"
+          value={isin}
+          onChange={(e) => setIsin(e.target.value)}
           disabled={isSubmitting}
-          options={[
-            { label: 'Equity / Stock', value: 'EQUITY' },
-            { label: 'Exchange-Traded Fund (ETF)', value: 'ETF' },
-            { label: 'Cryptocurrency', value: 'CRYPTO' },
-            { label: 'Commodity', value: 'COMMODITY' },
-            { label: 'Fixed Income / Bond', value: 'BOND' },
-          ]}
         />
       </form>
     </Modal>
