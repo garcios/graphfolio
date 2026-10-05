@@ -20,9 +20,10 @@ This document catalogs all implemented features, in-progress components, and pla
 | **10** | **User Preferences & Display Currency** | **PLANNED** | Proto, User API, BFF, Web | [user-preferences-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-preferences-implementation-plan.md) |
 | **11** | **Portfolio Valuation Engine & Historical Backfill** | **PLANNED** | Database, Svc, Worker | [portfolio-valuation-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/portfolio-valuation-engine-implementation-plan.md) |
 | **12** | **Market Data Ingestion (Asset Prices & FX Rates)** | **PLANNED** | Database, Svc, Worker | [market-data-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/market-data-ingestion-implementation-plan.md) |
-| **13** | **Tax Lot Inspector & Capital Gains Reports** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
-| **14** | **Dividend Calendar & Yield Analytics** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
-| **15** | **Real-Time Market Data & WebSocket Price Ticker** | **ROADMAP** | Market Data, Svc, Web | *(Future Plan)* |
+| **13** | **Look-Through Fundamental & Cash Flow Quality Engine** | **PLANNED** | Database, Proto, Svc, BFF, Web | [fundamental-cash-flow-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/fundamental-cash-flow-engine-implementation-plan.md) |
+| **14** | **Tax Lot Inspector & Capital Gains Reports** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
+| **15** | **Dividend Calendar & Yield Analytics** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
+| **16** | **Real-Time Market Data & WebSocket Price Ticker** | **ROADMAP** | Market Data, Svc, Web | *(Future Plan)* |
 
 ---
 
@@ -155,6 +156,17 @@ This document catalogs all implemented features, in-progress components, and pla
   - High-throughput batch upsert queries with idempotent conflict handling for `portfolio.instrument_prices` and `portfolio.fx_rates`.
   - Token-bucket rate limiting (`golang.org/x/time/rate`), exponential backoff retry policies, and price spike anomaly detection.
   - Automatic historical price and FX backfill triggered upon transaction ingestion for unpriced assets.
+
+### 3.6 Look-Through Fundamental & Cash Flow Quality Engine
+- **Status**: **PLANNED**
+- **Plan Reference**: [fundamental-cash-flow-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/fundamental-cash-flow-engine-implementation-plan.md)
+- **Scope**: `proto/`, `services/portfolio-api`, `bff/`, `web/`
+- **Highlights**:
+  - Table `portfolio.instrument_fundamentals` tracking GAAP/IFRS audited line items (NOPAT, Invested Capital, OCF, Maintenance CapEx, Diluted Shares, NIBCL).
+  - Proportional look-through calculations: investor's exact share of Operating Cash Flow, Owner Earnings, FCF, and Revenue.
+  - Portfolio Capital Allocation Scorecard: Weighted Average ROIC, Reinvestment Rate, Intrinsic Compounding Rate ($g = \text{ROIC} \times \text{RR}$), and Economic Value Added spread ($\text{ROIC} - \text{WACC}$).
+  - Earnings quality detection via the Sloan Accrual Ratio to highlight divergence between reported Net Income and cash realization.
+  - "Business Owner" dashboard view contrasting Market Value growth against Business Intrinsic Value growth.
 
 ---
 
