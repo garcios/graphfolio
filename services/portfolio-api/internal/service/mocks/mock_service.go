@@ -57,6 +57,21 @@ func (mr *MockPortfolioServiceMockRecorder) AddTransaction(ctx, input any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTransaction", reflect.TypeOf((*MockPortfolioService)(nil).AddTransaction), ctx, input)
 }
 
+// DeleteTransaction mocks base method.
+func (m *MockPortfolioService) DeleteTransaction(ctx context.Context, userID, transactionID string) (*domain.PortfolioSummary, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteTransaction", ctx, userID, transactionID)
+	ret0, _ := ret[0].(*domain.PortfolioSummary)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteTransaction indicates an expected call of DeleteTransaction.
+func (mr *MockPortfolioServiceMockRecorder) DeleteTransaction(ctx, userID, transactionID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTransaction", reflect.TypeOf((*MockPortfolioService)(nil).DeleteTransaction), ctx, userID, transactionID)
+}
+
 // GetPortfolioHistory mocks base method.
 func (m *MockPortfolioService) GetPortfolioHistory(ctx context.Context, userID string, timeframe domain.HistoryTimeframe) (*domain.PortfolioHistory, error) {
 	m.ctrl.T.Helper()
@@ -100,6 +115,22 @@ func (m *MockPortfolioService) ListInstruments(ctx context.Context) ([]domain.In
 func (mr *MockPortfolioServiceMockRecorder) ListInstruments(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListInstruments", reflect.TypeOf((*MockPortfolioService)(nil).ListInstruments), ctx)
+}
+
+// ListTransactions mocks base method.
+func (m *MockPortfolioService) ListTransactions(ctx context.Context, userID string, filter domain.TransactionFilter) ([]domain.TransactionWithInstrument, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListTransactions", ctx, userID, filter)
+	ret0, _ := ret[0].([]domain.TransactionWithInstrument)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ListTransactions indicates an expected call of ListTransactions.
+func (mr *MockPortfolioServiceMockRecorder) ListTransactions(ctx, userID, filter any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListTransactions", reflect.TypeOf((*MockPortfolioService)(nil).ListTransactions), ctx, userID, filter)
 }
 
 // RebuildProjections mocks base method.

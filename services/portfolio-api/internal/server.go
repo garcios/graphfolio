@@ -259,6 +259,181 @@ func (s *PortfolioServer) GetPortfolioHistory(ctx context.Context, req *pb.GetPo
 	}, nil
 }
 
+func (s *PortfolioServer) ListTransactions(ctx context.Context, req *pb.ListTransactionsRequest) (*pb.ListTransactionsResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	userID := req.GetUserId()
+	if userID == "" {
+		userID = "1"
+	}
+
+	if req.GetPage() < 0 {
+		return nil, status.Errorf(codes.InvalidArgument, "page cannot be negative")
+	}
+	if req.GetPageSize() < 0 || req.GetPageSize() > 100 {
+		return nil, status.Errorf(codes.InvalidArgument, "page size must be between 0 and 100")
+	}
+
+	page := int(req.GetPage())
+	if page == 0 {
+		page = 1
+	}
+	pageSize := int(req.GetPageSize())
+	if pageSize == 0 {
+		pageSize = 20
+	}
+
+	var typeFilter *domain.TransactionType
+	if req.GetType() != pb.TransactionType_TRANSACTION_TYPE_UNSPECIFIED {
+		var t domain.TransactionType
+		switch req.GetType() {
+		case pb.TransactionType_TRANSACTION_TYPE_BUY:
+			t = domain.TxTypeBuy
+		case pb.TransactionType_TRANSACTION_TYPE_SELL:
+			t = domain.TxTypeSell
+		case pb.TransactionType_TRANSACTION_TYPE_DIVIDEND:
+			t = domain.TxTypeDividend
+		case pb.TransactionType_TRANSACTION_TYPE_DEPOSIT:
+			t = domain.TxTypeDeposit
+		case pb.TransactionType_TRANSACTION_TYPE_WITHDRAWAL:
+			t = domain.TxTypeWithdrawal
+		case pb.TransactionType_TRANSACTION_TYPE_INTEREST:
+			t = domain.TxTypeInterest
+		case pb.TransactionType_TRANSACTION_TYPE_FEE:
+			t = domain.TxTypeFee
+		case pb.TransactionType_TRANSACTION_TYPE_TAX:
+			t = domain.TxTypeTax
+		case pb.TransactionType_TRANSACTION_TYPE_TRANSFER_IN:
+			t = domain.TxTypeTransferIn
+		case pb.TransactionType_TRANSACTION_TYPE_TRANSFER_OUT:
+			t = domain.TxTypeTransferOut
+		case pb.TransactionType_TRANSACTION_TYPE_FX_CONVERSION:
+			t = domain.TxTypeFXConversion
+		default:
+			return nil, status.Errorf(codes.InvalidArgument, "invalid transaction type filter: %v", req.GetType())
+		}
+		typeFilter = &t
+	}
+
+	var symbolFilter *string
+	if req.GetSymbol() != "" {
+		sym := req.GetSymbol()
+		symbolFilter = &sym
+	}
+
+	filter := domain.TransactionFilter{
+		Type:     typeFilter,
+		Symbol:   symbolFilter,
+		Page:     page,
+		PageSize: pageSize,
+	}
+
+	items, totalCount, err := s.svc.ListTransactions(ctx, userID, filter)
+	if err != nil {
+		if errors.Is(err, repository.ErrPortfolioNotFound) {
+			return nil, status.Errorf(codes.NotFound, "portfolio not found for user: %s", userID)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to list transactions: %v", err)
+	}
+
+	protoItems := make([]*pb.TransactionItem, len(items))
+	for i, item := range items {
+		protoItem := &pb.TransactionItem{
+			Id:        item.ID.String(),
+			Type:      mapDomainTxTypeToProto(item.Type),
+			TradeDate: item.TradeDate.Format("2006-01-02"),
+			Amount:    decimalpb.MoneyToProto(item.Amount, item.CurrencyCode),
+			Fee:       decimalpb.MoneyToProto(item.Fee, item.CurrencyCode),
+			CreatedAt: "",
+		}
+		if !item.CreatedAt.IsZero() {
+			protoItem.CreatedAt = item.CreatedAt.Format(time.RFC3339)
+		}
+		if item.Symbol != nil {
+			protoItem.Symbol = *item.Symbol
+		}
+		if item.InstrumentName != nil {
+			protoItem.InstrumentName = *item.InstrumentName
+		}
+		if item.Notes != nil {
+			protoItem.Notes = *item.Notes
+		}
+		if item.Quantity != nil {
+			protoItem.Quantity = decimalpb.ToProto(*item.Quantity)
+		}
+		if item.Price != nil {
+			protoItem.Price = decimalpb.MoneyToProto(*item.Price, item.CurrencyCode)
+		}
+		protoItems[i] = protoItem
+	}
+
+	return &pb.ListTransactionsResponse{
+		Transactions: protoItems,
+		TotalCount:   int32(totalCount),
+		Page:         int32(page),
+		PageSize:     int32(pageSize),
+	}, nil
+}
+
+func (s *PortfolioServer) DeleteTransaction(ctx context.Context, req *pb.DeleteTransactionRequest) (*pb.DeleteTransactionResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	if req.GetTransactionId() == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "transaction id is required")
+	}
+
+	userID := req.GetUserId()
+	if userID == "" {
+		userID = "1"
+	}
+
+	summary, err := s.svc.DeleteTransaction(ctx, userID, req.GetTransactionId())
+	if err != nil {
+		if errors.Is(err, repository.ErrTransactionNotFound) || errors.Is(err, repository.ErrPortfolioNotFound) {
+			return nil, status.Errorf(codes.NotFound, "transaction not found: %v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to delete transaction: %v", err)
+	}
+
+	return &pb.DeleteTransactionResponse{
+		Success:   true,
+		Portfolio: mapSummaryToProto(summary),
+	}, nil
+}
+
+func mapDomainTxTypeToProto(t domain.TransactionType) pb.TransactionType {
+	switch t {
+	case domain.TxTypeBuy:
+		return pb.TransactionType_TRANSACTION_TYPE_BUY
+	case domain.TxTypeSell:
+		return pb.TransactionType_TRANSACTION_TYPE_SELL
+	case domain.TxTypeDividend:
+		return pb.TransactionType_TRANSACTION_TYPE_DIVIDEND
+	case domain.TxTypeDeposit:
+		return pb.TransactionType_TRANSACTION_TYPE_DEPOSIT
+	case domain.TxTypeWithdrawal:
+		return pb.TransactionType_TRANSACTION_TYPE_WITHDRAWAL
+	case domain.TxTypeInterest:
+		return pb.TransactionType_TRANSACTION_TYPE_INTEREST
+	case domain.TxTypeFee:
+		return pb.TransactionType_TRANSACTION_TYPE_FEE
+	case domain.TxTypeTax:
+		return pb.TransactionType_TRANSACTION_TYPE_TAX
+	case domain.TxTypeTransferIn:
+		return pb.TransactionType_TRANSACTION_TYPE_TRANSFER_IN
+	case domain.TxTypeTransferOut:
+		return pb.TransactionType_TRANSACTION_TYPE_TRANSFER_OUT
+	case domain.TxTypeFXConversion:
+		return pb.TransactionType_TRANSACTION_TYPE_FX_CONVERSION
+	default:
+		return pb.TransactionType_TRANSACTION_TYPE_UNSPECIFIED
+	}
+}
+
 func mapSummaryToProto(summary *domain.PortfolioSummary) *pb.Portfolio {
 	investments := make([]*pb.Investment, len(summary.Investments))
 	for i, inv := range summary.Investments {

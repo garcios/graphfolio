@@ -498,3 +498,370 @@ func TestPortfolioServer_GetPortfolioHistory(t *testing.T) {
 		}
 	})
 }
+
+func TestPortfolioServer_ListTransactions(t *testing.T) {
+	ctx := context.Background()
+
+	qty := decimal.NewFromInt(10)
+	price := decimal.RequireFromString("150.00")
+	sym := "AAPL"
+	instName := "Apple Inc."
+	notes := "Initial buy"
+	createdAt := time.Date(2026, 1, 15, 10, 0, 0, 0, time.UTC)
+
+	mockItems := []domain.TransactionWithInstrument{
+		{
+			Transaction: domain.Transaction{
+				ID:           uuid.New(),
+				PortfolioID:  uuid.New(),
+				Type:         domain.TxTypeBuy,
+				TradeDate:    time.Date(2026, 1, 15, 0, 0, 0, 0, time.UTC),
+				Quantity:     &qty,
+				Price:        &price,
+				Amount:       decimal.RequireFromString("1500.00"),
+				CurrencyCode: "USD",
+				Fee:          decimal.RequireFromString("5.00"),
+				Notes:        &notes,
+				CreatedAt:    createdAt,
+			},
+			Symbol:         &sym,
+			InstrumentName: &instName,
+		},
+		{
+			Transaction: domain.Transaction{
+				ID:           uuid.New(),
+				PortfolioID:  uuid.New(),
+				Type:         domain.TxTypeDeposit,
+				TradeDate:    time.Date(2026, 1, 10, 0, 0, 0, 0, time.UTC),
+				Quantity:     nil, // nullable
+				Price:        nil, // nullable
+				Amount:       decimal.RequireFromString("5000.00"),
+				CurrencyCode: "USD",
+				Fee:          decimal.Zero,
+				Notes:        nil,
+				CreatedAt:    time.Time{},
+			},
+			Symbol:         nil, // empty for cash
+			InstrumentName: nil,
+		},
+	}
+
+	t.Run("success returns transaction items proto with nullable mapping", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().ListTransactions(ctx, "user-123", gomock.Any()).DoAndReturn(
+			func(_ context.Context, uid string, f domain.TransactionFilter) ([]domain.TransactionWithInstrument, int, error) {
+				if uid != "user-123" {
+					t.Errorf("expected user-123, got %s", uid)
+				}
+				if f.Page != 1 || f.PageSize != 20 {
+					t.Errorf("expected page 1, pageSize 20; got %d, %d", f.Page, f.PageSize)
+				}
+				return mockItems, 2, nil
+			},
+		)
+
+		res, err := server.ListTransactions(ctx, &pb.ListTransactionsRequest{
+			UserId: "user-123",
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res == nil {
+			t.Fatalf("expected non-nil response")
+		}
+		if res.TotalCount != 2 || res.Page != 1 || res.PageSize != 20 {
+			t.Errorf("unexpected pagination metadata: total=%d, page=%d, pageSize=%d", res.TotalCount, res.Page, res.PageSize)
+		}
+		if len(res.Transactions) != 2 {
+			t.Fatalf("expected 2 transactions, got %d", len(res.Transactions))
+		}
+
+		// Verify BUY item with non-nil fields
+		buyItem := res.Transactions[0]
+		if buyItem.Type != pb.TransactionType_TRANSACTION_TYPE_BUY {
+			t.Errorf("expected BUY, got %v", buyItem.Type)
+		}
+		if buyItem.Symbol != "AAPL" {
+			t.Errorf("expected symbol AAPL, got %s", buyItem.Symbol)
+		}
+		if buyItem.InstrumentName != "Apple Inc." {
+			t.Errorf("expected name Apple Inc., got %s", buyItem.InstrumentName)
+		}
+		if buyItem.Quantity == nil || buyItem.Quantity.Value != "10" {
+			t.Errorf("expected quantity 10, got %v", buyItem.Quantity)
+		}
+		if buyItem.Price == nil || buyItem.Price.Amount == nil || buyItem.Price.Amount.Value != "150" {
+			t.Errorf("expected price 150, got %v", buyItem.Price)
+		}
+		if buyItem.Notes != "Initial buy" {
+			t.Errorf("expected notes, got %s", buyItem.Notes)
+		}
+		if buyItem.CreatedAt == "" {
+			t.Errorf("expected non-empty created_at")
+		}
+
+		// Verify DEPOSIT item with nullable fields (quantity, price, symbol, notes)
+		depItem := res.Transactions[1]
+		if depItem.Type != pb.TransactionType_TRANSACTION_TYPE_DEPOSIT {
+			t.Errorf("expected DEPOSIT, got %v", depItem.Type)
+		}
+		if depItem.Symbol != "" {
+			t.Errorf("expected empty symbol for deposit, got %s", depItem.Symbol)
+		}
+		if depItem.Quantity != nil {
+			t.Errorf("expected nil quantity for deposit, got %v", depItem.Quantity)
+		}
+		if depItem.Price != nil {
+			t.Errorf("expected nil price for deposit, got %v", depItem.Price)
+		}
+		if depItem.Notes != "" {
+			t.Errorf("expected empty notes for deposit, got %s", depItem.Notes)
+		}
+	})
+
+	t.Run("defaults user id to 1 when empty", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().ListTransactions(ctx, "1", gomock.Any()).Return(mockItems, 2, nil)
+
+		res, err := server.ListTransactions(ctx, &pb.ListTransactionsRequest{})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res == nil || len(res.Transactions) != 2 {
+			t.Fatalf("expected 2 transactions, got %v", res)
+		}
+	})
+
+	t.Run("invalid argument on bad pagination", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		badRequests := []*pb.ListTransactionsRequest{
+			{Page: -1},
+			{PageSize: -5},
+			{PageSize: 101},
+		}
+
+		for _, req := range badRequests {
+			_, err := server.ListTransactions(ctx, req)
+			if err == nil {
+				t.Fatalf("expected error for bad pagination %v, got nil", req)
+			}
+			st, ok := status.FromError(err)
+			if !ok || st.Code() != codes.InvalidArgument {
+				t.Errorf("expected InvalidArgument code for %v, got: %v", req, err)
+			}
+		}
+	})
+
+	t.Run("unavailable when service is nil", func(t *testing.T) {
+		server := NewPortfolioServer(nil)
+		_, err := server.ListTransactions(ctx, &pb.ListTransactionsRequest{})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.Unavailable {
+			t.Errorf("expected Unavailable code, got: %v", st.Code())
+		}
+	})
+
+	t.Run("portfolio not found returns NotFound gRPC code", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().ListTransactions(ctx, "unknown-user", gomock.Any()).Return(nil, 0, repository.ErrPortfolioNotFound)
+
+		_, err := server.ListTransactions(ctx, &pb.ListTransactionsRequest{UserId: "unknown-user"})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.NotFound {
+			t.Errorf("expected NotFound code, got: %v", st.Code())
+		}
+	})
+
+	t.Run("internal error on service failure", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().ListTransactions(ctx, "user-err", gomock.Any()).Return(nil, 0, errors.New("db crash"))
+
+		_, err := server.ListTransactions(ctx, &pb.ListTransactionsRequest{UserId: "user-err"})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.Internal {
+			t.Errorf("expected Internal code, got: %v", st.Code())
+		}
+	})
+}
+
+func TestPortfolioServer_DeleteTransaction(t *testing.T) {
+	ctx := context.Background()
+
+	mockSummary := &domain.PortfolioSummary{
+		Portfolio: domain.Portfolio{
+			ID:           uuid.New(),
+			UserID:       uuid.New(),
+			Name:         "Main Tech",
+			BaseCurrency: "USD",
+		},
+		TotalValue: domain.Money{
+			Amount:       decimal.RequireFromString("150000.00"),
+			CurrencyCode: "USD",
+		},
+		CashBalance: domain.Money{
+			Amount:       decimal.RequireFromString("25000.00"),
+			CurrencyCode: "USD",
+		},
+	}
+
+	t.Run("success deletes transaction and returns updated portfolio", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		txID := uuid.New().String()
+		mockSvc.EXPECT().DeleteTransaction(ctx, "user-123", txID).Return(mockSummary, nil)
+
+		res, err := server.DeleteTransaction(ctx, &pb.DeleteTransactionRequest{
+			UserId:        "user-123",
+			TransactionId: txID,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res == nil {
+			t.Fatalf("expected non-nil response")
+		}
+		if !res.Success {
+			t.Errorf("expected Success=true")
+		}
+		if res.Portfolio == nil {
+			t.Fatalf("expected non-nil portfolio in response")
+		}
+	})
+
+	t.Run("defaults user id to 1 when empty", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		txID := uuid.New().String()
+		mockSvc.EXPECT().DeleteTransaction(ctx, "1", txID).Return(mockSummary, nil)
+
+		res, err := server.DeleteTransaction(ctx, &pb.DeleteTransactionRequest{
+			TransactionId: txID,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res == nil || !res.Success {
+			t.Fatalf("expected success response")
+		}
+	})
+
+	t.Run("invalid argument when transaction id is empty", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		_, err := server.DeleteTransaction(ctx, &pb.DeleteTransactionRequest{
+			UserId:        "user-123",
+			TransactionId: "",
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument code, got: %v", st.Code())
+		}
+	})
+
+	t.Run("not found for invalid or non-existent transaction id", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().DeleteTransaction(ctx, "user-123", "non-existent-id").Return(nil, repository.ErrTransactionNotFound)
+
+		_, err := server.DeleteTransaction(ctx, &pb.DeleteTransactionRequest{
+			UserId:        "user-123",
+			TransactionId: "non-existent-id",
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.NotFound {
+			t.Errorf("expected NotFound code, got: %v", st.Code())
+		}
+	})
+
+	t.Run("not found when portfolio not found", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().DeleteTransaction(ctx, "unknown-user", "tx-123").Return(nil, repository.ErrPortfolioNotFound)
+
+		_, err := server.DeleteTransaction(ctx, &pb.DeleteTransactionRequest{
+			UserId:        "unknown-user",
+			TransactionId: "tx-123",
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.NotFound {
+			t.Errorf("expected NotFound code, got: %v", st.Code())
+		}
+	})
+
+	t.Run("unavailable when service is nil", func(t *testing.T) {
+		server := NewPortfolioServer(nil)
+		_, err := server.DeleteTransaction(ctx, &pb.DeleteTransactionRequest{
+			TransactionId: "tx-123",
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.Unavailable {
+			t.Errorf("expected Unavailable code, got: %v", st.Code())
+		}
+	})
+
+	t.Run("internal error on service failure", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().DeleteTransaction(ctx, "user-123", "tx-123").Return(nil, errors.New("db error"))
+
+		_, err := server.DeleteTransaction(ctx, &pb.DeleteTransactionRequest{
+			UserId:        "user-123",
+			TransactionId: "tx-123",
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.Internal {
+			t.Errorf("expected Internal code, got: %v", st.Code())
+		}
+	})
+}

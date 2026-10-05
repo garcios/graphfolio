@@ -16,6 +16,8 @@ type PortfolioService interface {
 	AddTransaction(ctx context.Context, input domain.AddTransactionInput) (*domain.Transaction, *domain.PortfolioSummary, error)
 	ListInstruments(ctx context.Context) ([]domain.Instrument, error)
 	GetPortfolioHistory(ctx context.Context, userID string, timeframe domain.HistoryTimeframe) (*domain.PortfolioHistory, error)
+	ListTransactions(ctx context.Context, userID string, filter domain.TransactionFilter) ([]domain.TransactionWithInstrument, int, error)
+	DeleteTransaction(ctx context.Context, userID string, transactionID string) (*domain.PortfolioSummary, error)
 }
 
 type portfolioService struct {

@@ -15,7 +15,7 @@ This document catalogs all implemented features, in-progress components, and pla
 | **5** | **Investor Dashboard Web Application** | **DONE** | Web (React, Vite, GenQL) | [portfolio-service-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/portfolio-service-implementation-plan.md) |
 | **6** | **Interactive Transaction Ingestion Modal** | **DONE** | Proto, Svc, BFF, Web | [add-transactions-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/add-transactions-implementation-plan.md) |
 | **7** | **Interactive SVG Performance Chart & Time Range Filtering** | **DONE** | Proto, Svc, BFF, Web | [performance-chart-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/performance-chart-implementation-plan.md) |
-| **8** | **Transaction History & Ledger Management** | **PLANNED** | Proto, Svc, BFF, Web | [transaction-history-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/transaction-history-implementation-plan.md) |
+| **8** | **Transaction History & Ledger Management** | **DONE** | Proto, Svc, BFF, Web | [transaction-history-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/transaction-history-implementation-plan.md) |
 | **9** | **Dynamic Cost Basis Method Switching (Average Cost ↔ FIFO)** | **PLANNED** | Proto, Svc, BFF, Web | [cost-basis-switching-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/cost-basis-switching-implementation-plan.md) |
 | **10** | **User Preferences & Display Currency** | **PLANNED** | Proto, User API, BFF, Web | [user-preferences-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-preferences-implementation-plan.md) |
 | **11** | **Portfolio Valuation Engine & Historical Backfill** | **PLANNED** | Database, Svc, Worker | [portfolio-valuation-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/portfolio-valuation-engine-implementation-plan.md) |
@@ -98,21 +98,23 @@ This document catalogs all implemented features, in-progress components, and pla
   - [PerformanceChart.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/src/components/PerformanceChart.tsx)
   - [PerformanceChart.css](file:///Users/oscargarcia/workspace/graphfolio/web/src/components/PerformanceChart.css)
 
+### 2.8 Transaction History & Ledger Management
+- **Status**: **DONE**
+- **Plan Reference**: [transaction-history-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/transaction-history-implementation-plan.md)
+- **Description**: Full transaction ledger history with server-side pagination, multi-criteria filtering by transaction type and symbol, and safe transaction deletion with automatic deterministic projection replay (`RebuildProjections`). Deleting an entry atomically clears derived lots, disposals, holdings, and cash, re-running the ledger to update metrics and UI immediately.
+- **Key Files**:
+  - [portfolio.proto](file:///Users/oscargarcia/workspace/graphfolio/proto/portfolio/v1/portfolio.proto)
+  - [transaction.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/transaction.go)
+  - [schema.graphqls](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls)
+  - [schema.resolvers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers.go)
+  - [TransactionLedger.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/src/components/TransactionLedger.tsx)
+  - [TransactionLedger.css](file:///Users/oscargarcia/workspace/graphfolio/web/src/components/TransactionLedger.css)
+
 ---
 
 ## 3. Planned Features (`PLANNED`)
 
-### 3.1 Transaction History & Ledger Management
-- **Status**: **PLANNED**
-- **Plan Reference**: [transaction-history-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/transaction-history-implementation-plan.md)
-- **Scope**: `proto/`, `services/portfolio-api`, `bff/`, `web/`
-- **Highlights**:
-  - Paginated transaction history table (`1–20 of N`) with window function `COUNT(*) OVER()`.
-  - Multi-criteria filtering by transaction type (`BUY`, `SELL`, `DIVIDEND`, `DEPOSIT`, `WITHDRAWAL`) and ticker symbol.
-  - Safe transaction deletion with warning modal.
-  - Deleting an entry triggers automatic projection replay (`RebuildProjections`), recalculating open tax lots, disposals, holdings, and cash atomically.
-
-### 3.2 Dynamic Cost Basis Method Switching (Average Cost ↔ FIFO)
+### 3.1 Dynamic Cost Basis Method Switching (Average Cost ↔ FIFO)
 - **Status**: **PLANNED**
 - **Plan Reference**: [cost-basis-switching-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/cost-basis-switching-implementation-plan.md)
 - **Scope**: `proto/`, `services/portfolio-api`, `bff/`, `web/`

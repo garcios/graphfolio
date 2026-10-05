@@ -44,6 +44,20 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
+// DeleteTransaction mocks base method.
+func (m *MockRepository) DeleteTransaction(ctx context.Context, portfolioID, transactionID uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteTransaction", ctx, portfolioID, transactionID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteTransaction indicates an expected call of DeleteTransaction.
+func (mr *MockRepositoryMockRecorder) DeleteTransaction(ctx, portfolioID, transactionID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTransaction", reflect.TypeOf((*MockRepository)(nil).DeleteTransaction), ctx, portfolioID, transactionID)
+}
+
 // FindInstrumentBySymbol mocks base method.
 func (m *MockRepository) FindInstrumentBySymbol(ctx context.Context, symbol string) (*domain.Instrument, error) {
 	m.ctrl.T.Helper()
@@ -222,6 +236,22 @@ func (m *MockRepository) ListActiveInstruments(ctx context.Context) ([]domain.In
 func (mr *MockRepositoryMockRecorder) ListActiveInstruments(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListActiveInstruments", reflect.TypeOf((*MockRepository)(nil).ListActiveInstruments), ctx)
+}
+
+// ListTransactions mocks base method.
+func (m *MockRepository) ListTransactions(ctx context.Context, portfolioID uuid.UUID, filter domain.TransactionFilter) ([]domain.TransactionWithInstrument, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListTransactions", ctx, portfolioID, filter)
+	ret0, _ := ret[0].([]domain.TransactionWithInstrument)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ListTransactions indicates an expected call of ListTransactions.
+func (mr *MockRepositoryMockRecorder) ListTransactions(ctx, portfolioID, filter any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListTransactions", reflect.TypeOf((*MockRepository)(nil).ListTransactions), ctx, portfolioID, filter)
 }
 
 // SaveProjectionsTx mocks base method.

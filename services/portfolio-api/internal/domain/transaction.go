@@ -38,6 +38,20 @@ type Transaction struct {
 	FXRateToBase   *decimal.Decimal
 	ExternalRef    *string
 	Notes          *string
+	CreatedAt      time.Time
+}
+
+type TransactionWithInstrument struct {
+	Transaction
+	Symbol         *string
+	InstrumentName *string
+}
+
+type TransactionFilter struct {
+	Type     *TransactionType
+	Symbol   *string
+	Page     int
+	PageSize int
 }
 
 type AddTransactionInput struct {

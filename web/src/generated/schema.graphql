@@ -49,6 +49,7 @@ type Query {
   portfolio: Portfolio!
   instruments: [Instrument!]!
   portfolioHistory(timeframe: HistoryTimeframe!): PortfolioHistory!
+  transactions(type: TransactionType, symbol: String, page: Int = 1, pageSize: Int = 20): TransactionsConnection!
 }
 
 enum HistoryTimeframe {
@@ -76,8 +77,35 @@ type PortfolioHistory {
   returnPercent: Decimal!
 }
 
+type TransactionItem {
+  id: ID!
+  type: TransactionType!
+  symbol: String
+  instrumentName: String
+  tradeDate: String!
+  quantity: Decimal
+  price: Money
+  amount: Money!
+  fee: Money!
+  notes: String
+  createdAt: String!
+}
+
+type TransactionsConnection {
+  items: [TransactionItem!]!
+  totalCount: Int!
+  page: Int!
+  pageSize: Int!
+}
+
+type DeleteTransactionPayload {
+  success: Boolean!
+  portfolio: Portfolio!
+}
+
 type Mutation {
   addTransaction(input: AddTransactionInput!): AddTransactionPayload!
+  deleteTransaction(id: ID!): DeleteTransactionPayload!
 }
 
 type Portfolio {

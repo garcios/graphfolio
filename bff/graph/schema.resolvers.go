@@ -46,6 +46,22 @@ func (r *mutationResolver) AddTransaction(ctx context.Context, input model.AddTr
 	}, nil
 }
 
+// DeleteTransaction is the resolver for the deleteTransaction field.
+func (r *mutationResolver) DeleteTransaction(ctx context.Context, id string) (*model.DeleteTransactionPayload, error) {
+	resp, err := r.PortfolioClient.DeleteTransaction(ctx, &pb.DeleteTransactionRequest{
+		UserId:        "1", // Hardcoded for single-user/demo session
+		TransactionId: id,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.DeleteTransactionPayload{
+		Success:   resp.Success,
+		Portfolio: toModelPortfolio(resp.Portfolio),
+	}, nil
+}
+
 // Portfolio is the resolver for the portfolio field.
 func (r *queryResolver) Portfolio(ctx context.Context) (*model.Portfolio, error) {
 	resp, err := r.PortfolioClient.GetPortfolio(ctx, &pb.GetPortfolioRequest{
@@ -90,6 +106,33 @@ func (r *queryResolver) PortfolioHistory(ctx context.Context, timeframe model.Hi
 	}
 
 	return toModelPortfolioHistory(resp), nil
+}
+
+// Transactions is the resolver for the transactions field.
+func (r *queryResolver) Transactions(ctx context.Context, typeArg *model.TransactionType, symbol *string, page *int, pageSize *int) (*model.TransactionsConnection, error) {
+	req := &pb.ListTransactionsRequest{
+		UserId: "1", // Hardcoded for single-user/demo session
+	}
+
+	if typeArg != nil {
+		req.Type = toProtoTransactionType(*typeArg)
+	}
+	if symbol != nil {
+		req.Symbol = *symbol
+	}
+	if page != nil {
+		req.Page = int32(*page)
+	}
+	if pageSize != nil {
+		req.PageSize = int32(*pageSize)
+	}
+
+	resp, err := r.PortfolioClient.ListTransactions(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return toModelTransactionsConnection(resp), nil
 }
 
 // Mutation returns MutationResolver implementation.

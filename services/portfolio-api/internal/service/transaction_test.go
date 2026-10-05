@@ -295,3 +295,234 @@ func TestPortfolioService_ListInstruments(t *testing.T) {
 		}
 	})
 }
+
+func TestPortfolioService_ListTransactions(t *testing.T) {
+	ctx := context.Background()
+	userID := "user-123"
+	portfolioID := uuid.New()
+
+	mockPortfolio := &domain.Portfolio{
+		ID:              portfolioID,
+		UserID:          uuid.New(),
+		Name:            "Core Portfolio",
+		BaseCurrency:    "USD",
+		CostBasisMethod: domain.CostBasisMethodFIFO,
+		CreatedAt:       time.Now().UTC().Add(-200 * time.Hour),
+	}
+
+	t.Run("success with filters and pagination", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		txType := domain.TxTypeBuy
+		sym := "aapl"
+		filter := domain.TransactionFilter{
+			Type:     &txType,
+			Symbol:   &sym,
+			Page:     2,
+			PageSize: 10,
+		}
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().ListTransactions(ctx, portfolioID, gomock.Any()).DoAndReturn(
+			func(_ context.Context, pid uuid.UUID, f domain.TransactionFilter) ([]domain.TransactionWithInstrument, int, error) {
+				if pid != portfolioID {
+					t.Fatalf("expected portfolioID %s, got %s", portfolioID, pid)
+				}
+				if f.Page != 2 || f.PageSize != 10 {
+					t.Fatalf("expected page 2, pageSize 10; got page %d, pageSize %d", f.Page, f.PageSize)
+				}
+				if f.Type == nil || *f.Type != domain.TxTypeBuy {
+					t.Fatalf("expected type BUY, got %v", f.Type)
+				}
+				if f.Symbol == nil || *f.Symbol != "AAPL" {
+					t.Fatalf("expected uppercased symbol AAPL, got %v", f.Symbol)
+				}
+				qty := decimal.NewFromInt(10)
+				price := decimal.RequireFromString("150.00")
+				symbolStr := "AAPL"
+				nameStr := "Apple Inc."
+				return []domain.TransactionWithInstrument{
+					{
+						Transaction: domain.Transaction{
+							ID:           uuid.New(),
+							PortfolioID:  portfolioID,
+							Type:         domain.TxTypeBuy,
+							TradeDate:    time.Now().UTC(),
+							Quantity:     &qty,
+							Price:        &price,
+							Amount:       decimal.RequireFromString("1500.00"),
+							CurrencyCode: "USD",
+							Fee:          decimal.RequireFromString("5.00"),
+						},
+						Symbol:         &symbolStr,
+						InstrumentName: &nameStr,
+					},
+				}, 25, nil
+			},
+		)
+
+		items, total, err := svc.ListTransactions(ctx, userID, filter)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if total != 25 {
+			t.Fatalf("expected total 25, got %d", total)
+		}
+		if len(items) != 1 {
+			t.Fatalf("expected 1 item, got %d", len(items))
+		}
+		if *items[0].Symbol != "AAPL" {
+			t.Fatalf("expected symbol AAPL, got %s", *items[0].Symbol)
+		}
+	})
+
+	t.Run("defaults pagination bounds", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		filter := domain.TransactionFilter{
+			Page:     -1,
+			PageSize: 500,
+		}
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().ListTransactions(ctx, portfolioID, gomock.Any()).DoAndReturn(
+			func(_ context.Context, _ uuid.UUID, f domain.TransactionFilter) ([]domain.TransactionWithInstrument, int, error) {
+				if f.Page != 1 {
+					t.Errorf("expected page 1, got %d", f.Page)
+				}
+				if f.PageSize != 100 {
+					t.Errorf("expected capped pageSize 100, got %d", f.PageSize)
+				}
+				return []domain.TransactionWithInstrument{}, 0, nil
+			},
+		)
+
+		_, _, err := svc.ListTransactions(ctx, userID, filter)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("portfolio not found returns error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, "unknown-user").Return(nil, repository.ErrPortfolioNotFound)
+
+		_, _, err := svc.ListTransactions(ctx, "unknown-user", domain.TransactionFilter{})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		if !errors.Is(err, repository.ErrPortfolioNotFound) {
+			t.Fatalf("expected ErrPortfolioNotFound, got %v", err)
+		}
+	})
+}
+
+func TestPortfolioService_DeleteTransaction(t *testing.T) {
+	ctx := context.Background()
+	userID := "user-123"
+	portfolioID := uuid.New()
+	txID := uuid.New()
+
+	mockPortfolio := &domain.Portfolio{
+		ID:              portfolioID,
+		UserID:          uuid.New(),
+		Name:            "Core Portfolio",
+		BaseCurrency:    "USD",
+		CostBasisMethod: domain.CostBasisMethodFIFO,
+		CreatedAt:       time.Now().UTC().Add(-200 * time.Hour),
+	}
+
+	t.Run("successful deletion replays projections and returns summary", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		// 1. Initial delete
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().DeleteTransaction(ctx, portfolioID, txID).Return(nil)
+
+		// 2. RebuildProjections
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetTransactions(ctx, portfolioID).Return([]domain.Transaction{}, nil)
+		mockRepo.EXPECT().GetCorporateActions(ctx, gomock.Len(0)).Return([]domain.CorporateAction{}, nil)
+		mockRepo.EXPECT().SaveProjectionsTx(ctx, portfolioID, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+		// 3. GetPortfolioSummary
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetHoldingsWithMarketData(ctx, portfolioID).Return([]domain.HoldingWithPrice{}, nil)
+		mockRepo.EXPECT().GetCashBalances(ctx, portfolioID).Return([]domain.CashBalance{}, nil)
+		mockRepo.EXPECT().GetLatestValuation(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetCashFXRates(ctx, "USD").Return(map[string]decimal.Decimal{"USD": decimal.NewFromInt(1)}, nil)
+
+		summary, err := svc.DeleteTransaction(ctx, userID, txID.String())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if summary == nil {
+			t.Fatalf("expected non-nil summary")
+		}
+	})
+
+	t.Run("non-existent transaction returns not found error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().DeleteTransaction(ctx, portfolioID, txID).Return(repository.ErrTransactionNotFound)
+
+		summary, err := svc.DeleteTransaction(ctx, userID, txID.String())
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		if summary != nil {
+			t.Fatalf("expected nil summary on error")
+		}
+		if !errors.Is(err, repository.ErrTransactionNotFound) {
+			t.Fatalf("expected ErrTransactionNotFound, got %v", err)
+		}
+	})
+
+	t.Run("invalid transaction UUID returns not found error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		summary, err := svc.DeleteTransaction(ctx, userID, "not-a-valid-uuid")
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		if summary != nil {
+			t.Fatalf("expected nil summary on error")
+		}
+		if !errors.Is(err, repository.ErrTransactionNotFound) {
+			t.Fatalf("expected ErrTransactionNotFound, got %v", err)
+		}
+	})
+
+	t.Run("portfolio not found returns error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, "unknown-user").Return(nil, repository.ErrPortfolioNotFound)
+
+		summary, err := svc.DeleteTransaction(ctx, "unknown-user", txID.String())
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		if summary != nil {
+			t.Fatalf("expected nil summary on error")
+		}
+		if !errors.Is(err, repository.ErrPortfolioNotFound) {
+			t.Fatalf("expected ErrPortfolioNotFound, got %v", err)
+		}
+	})
+}
