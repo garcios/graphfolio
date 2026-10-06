@@ -143,18 +143,24 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │           │   └── client.ts     # Configurable GraphQL client singleton
 │           └── package.json
 │
-├── docs/                         # Architecture designs & implementation plans
-│   ├── db-implementation-plan.md
-│   ├── portfolio-service-implementation-plan.md
-│   ├── add-transactions-implementation-plan.md
-│   ├── performance-chart-implementation-plan.md
-│   ├── portfolio-valuation-engine-implementation-plan.md
-│   ├── market-data-ingestion-implementation-plan.md
-│   ├── transaction-history-implementation-plan.md
-│   ├── cost-basis-switching-implementation-plan.md
-│   ├── user-preferences-implementation-plan.md
+├── docs/                         # Architecture designs, plans & documentation
+│   ├── plans/                    # System implementation plans
+│   │   ├── db-implementation-plan.md
+│   │   ├── portfolio-service-implementation-plan.md
+│   │   ├── add-transactions-implementation-plan.md
+│   │   ├── performance-chart-implementation-plan.md
+│   │   ├── portfolio-valuation-engine-implementation-plan.md
+│   │   ├── market-data-ingestion-implementation-plan.md
+│   │   ├── transaction-history-implementation-plan.md
+│   │   ├── cost-basis-switching-implementation-plan.md
+│   │   ├── user-preferences-implementation-plan.md
+│   │   ├── fundamental-cash-flow-engine-implementation-plan.md
+│   │   ├── currency-pair-historical-prices-implementation-plan.md
+│   │   ├── admin-historical-backfill-implementation-plan.md
+│   │   ├── ingestion-job-history-implementation-plan.md
+│   │   └── web-workspace-refactoring-plan.md
+│   ├── user-stories/             # Agile user stories & acceptance criteria
 │   ├── competitive-analysis.md
-│   ├── fundamental-cash-flow-engine-implementation-plan.md
 │   └── genql-usage.md
 │
 ├── FEATURES.md                   # Master features matrix & roadmap (DONE, PLANNED, ROADMAP)

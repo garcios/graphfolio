@@ -190,17 +190,23 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │       ├── ui/                   # Shared Design System (@graphfolio/ui)
 │       └── api-client/           # Shared GraphQL Client (@graphfolio/api-client)
 ├── docs/                         # Implementation plans and guides
-│   ├── db-implementation-plan.md
-│   ├── portfolio-service-implementation-plan.md
-│   ├── add-transactions-implementation-plan.md
-│   ├── performance-chart-implementation-plan.md
-│   ├── portfolio-valuation-engine-implementation-plan.md
-│   ├── market-data-ingestion-implementation-plan.md
-│   ├── transaction-history-implementation-plan.md
-│   ├── cost-basis-switching-implementation-plan.md
-│   ├── user-preferences-implementation-plan.md
+│   ├── plans/                    # System implementation plans
+│   │   ├── db-implementation-plan.md
+│   │   ├── portfolio-service-implementation-plan.md
+│   │   ├── add-transactions-implementation-plan.md
+│   │   ├── performance-chart-implementation-plan.md
+│   │   ├── portfolio-valuation-engine-implementation-plan.md
+│   │   ├── market-data-ingestion-implementation-plan.md
+│   │   ├── transaction-history-implementation-plan.md
+│   │   ├── cost-basis-switching-implementation-plan.md
+│   │   ├── user-preferences-implementation-plan.md
+│   │   ├── fundamental-cash-flow-engine-implementation-plan.md
+│   │   ├── currency-pair-historical-prices-implementation-plan.md
+│   │   ├── admin-historical-backfill-implementation-plan.md
+│   │   ├── ingestion-job-history-implementation-plan.md
+│   │   └── web-workspace-refactoring-plan.md
+│   ├── user-stories/             # Product specifications & acceptance criteria
 │   ├── competitive-analysis.md
-│   ├── fundamental-cash-flow-engine-implementation-plan.md
 │   └── genql-usage.md
 ├── FEATURES.md                   # Master features matrix & roadmap (completed & planned)
 ├── Makefile                      # Standardized development workflows
@@ -262,16 +268,20 @@ make generate
 ## Documentation Links
 
 - **Repository Rules & Guidelines**: [`AGENTS.md`](./AGENTS.md)
-- **Frontend Workspace Architecture Plan**: [`docs/web-workspace-refactoring-plan.md`](./docs/web-workspace-refactoring-plan.md)
-- **Database Architecture & Schema Design**: [`docs/db-implementation-plan.md`](./docs/db-implementation-plan.md)
-- **Portfolio Service Implementation Plan**: [`docs/portfolio-service-implementation-plan.md`](./docs/portfolio-service-implementation-plan.md)
-- **Add Transactions Implementation Plan**: [`docs/add-transactions-implementation-plan.md`](./docs/add-transactions-implementation-plan.md)
-- **Performance Chart Implementation Plan**: [`docs/performance-chart-implementation-plan.md`](./docs/performance-chart-implementation-plan.md)
-- **Transaction History Implementation Plan**: [`docs/transaction-history-implementation-plan.md`](./docs/transaction-history-implementation-plan.md)
-- **Cost Basis Switching Plan**: [`docs/cost-basis-switching-implementation-plan.md`](./docs/cost-basis-switching-implementation-plan.md)
-- **Portfolio Valuation Engine Plan**: [`docs/portfolio-valuation-engine-implementation-plan.md`](./docs/portfolio-valuation-engine-implementation-plan.md)
-- **Market Data Ingestion Plan**: [`docs/market-data-ingestion-implementation-plan.md`](./docs/market-data-ingestion-implementation-plan.md)
-- **User Preferences Implementation Plan**: [`docs/user-preferences-implementation-plan.md`](./docs/user-preferences-implementation-plan.md)
+- **Frontend Workspace Architecture Plan**: [`docs/plans/web-workspace-refactoring-plan.md`](./docs/plans/web-workspace-refactoring-plan.md)
+- **Database Architecture & Schema Design**: [`docs/plans/db-implementation-plan.md`](./docs/plans/db-implementation-plan.md)
+- **Portfolio Service Implementation Plan**: [`docs/plans/portfolio-service-implementation-plan.md`](./docs/plans/portfolio-service-implementation-plan.md)
+- **Add Transactions Implementation Plan**: [`docs/plans/add-transactions-implementation-plan.md`](./docs/plans/add-transactions-implementation-plan.md)
+- **Performance Chart Implementation Plan**: [`docs/plans/performance-chart-implementation-plan.md`](./docs/plans/performance-chart-implementation-plan.md)
+- **Transaction History Implementation Plan**: [`docs/plans/transaction-history-implementation-plan.md`](./docs/plans/transaction-history-implementation-plan.md)
+- **Cost Basis Switching Plan**: [`docs/plans/cost-basis-switching-implementation-plan.md`](./docs/plans/cost-basis-switching-implementation-plan.md)
+- **Portfolio Valuation Engine Plan**: [`docs/plans/portfolio-valuation-engine-implementation-plan.md`](./docs/plans/portfolio-valuation-engine-implementation-plan.md)
+- **Market Data Ingestion Plan**: [`docs/plans/market-data-ingestion-implementation-plan.md`](./docs/plans/market-data-ingestion-implementation-plan.md)
+- **User Preferences Implementation Plan**: [`docs/plans/user-preferences-implementation-plan.md`](./docs/plans/user-preferences-implementation-plan.md)
+- **Fundamental & Cash Flow Quality Engine Plan**: [`docs/plans/fundamental-cash-flow-engine-implementation-plan.md`](./docs/plans/fundamental-cash-flow-engine-implementation-plan.md)
+- **Currency Pair Historical Prices Plan**: [`docs/plans/currency-pair-historical-prices-implementation-plan.md`](./docs/plans/currency-pair-historical-prices-implementation-plan.md)
+- **Admin Historical Backfill Plan**: [`docs/plans/admin-historical-backfill-implementation-plan.md`](./docs/plans/admin-historical-backfill-implementation-plan.md)
+- **Ingestion Job History Plan**: [`docs/plans/ingestion-job-history-implementation-plan.md`](./docs/plans/ingestion-job-history-implementation-plan.md)
 - **Competitive Strategy Analysis**: [`docs/competitive-analysis.md`](./docs/competitive-analysis.md)
 - **Frontend GraphQL Setup**: [`docs/genql-usage.md`](./docs/genql-usage.md)
 
