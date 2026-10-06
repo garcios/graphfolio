@@ -9,6 +9,7 @@ import (
 	"bff/graph/model"
 	"context"
 	pb "graphfolio/proto/portfolio/v1"
+	userpb "graphfolio/proto/user/v1"
 )
 
 // AddTransaction is the resolver for the addTransaction field.
@@ -149,16 +150,77 @@ func (r *mutationResolver) TriggerMarketSync(ctx context.Context, symbols []stri
 	}, nil
 }
 
-// Portfolio is the resolver for the portfolio field.
-func (r *queryResolver) Portfolio(ctx context.Context) (*model.Portfolio, error) {
-	resp, err := r.PortfolioClient.GetPortfolio(ctx, &pb.GetPortfolioRequest{
-		UserId: "1", // Hardcoded for single-user/demo session
-	})
+// UpdateUserPreferences is the resolver for the updateUserPreferences field.
+func (r *mutationResolver) UpdateUserPreferences(ctx context.Context, input model.UpdateUserPreferencesInput) (*model.UpdateUserPreferencesPayload, error) {
+	req := &userpb.UpdateUserPreferencesRequest{
+		UserId:          defaultUserID,
+		DisplayName:     input.DisplayName,
+		DisplayCurrency: input.DisplayCurrency,
+		Theme:           input.Theme,
+	}
+
+	resp, err := r.UserClient.UpdateUserPreferences(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
-	return toModelPortfolio(resp.Portfolio), nil
+	var portfolioModel *model.Portfolio
+	if input.DisplayCurrency != nil && *input.DisplayCurrency != "" {
+		portResp, err := r.PortfolioClient.UpdatePortfolioBaseCurrency(ctx, &pb.UpdatePortfolioBaseCurrencyRequest{
+			UserId:       defaultUserID,
+			BaseCurrency: *input.DisplayCurrency,
+		})
+		if err == nil && portResp != nil {
+			portfolioModel = toModelPortfolio(portResp.Portfolio)
+		}
+	}
+
+	if portfolioModel == nil {
+		portResp, err := r.PortfolioClient.GetPortfolio(ctx, &pb.GetPortfolioRequest{
+			UserId: defaultUserID,
+		})
+		if err == nil && portResp != nil {
+			portfolioModel = toModelPortfolio(portResp.Portfolio)
+		}
+	}
+
+	return &model.UpdateUserPreferencesPayload{
+		Preferences: toModelUserPreferences(resp.Preferences),
+		Portfolio:   portfolioModel,
+	}, nil
+}
+
+// Portfolio is the resolver for the portfolio field.
+func (r *queryResolver) Portfolio(ctx context.Context) (*model.Portfolio, error) {
+	var portResp *pb.GetPortfolioResponse
+
+	// Sync portfolio currency with user display currency preference if available
+	if r.UserClient != nil {
+		userResp, err := r.UserClient.GetUserPreferences(ctx, &userpb.GetUserPreferencesRequest{
+			UserId: defaultUserID,
+		})
+		if err == nil && userResp != nil && userResp.Preferences != nil && userResp.Preferences.DisplayCurrency != "" {
+			updateResp, updateErr := r.PortfolioClient.UpdatePortfolioBaseCurrency(ctx, &pb.UpdatePortfolioBaseCurrencyRequest{
+				UserId:       defaultUserID,
+				BaseCurrency: userResp.Preferences.DisplayCurrency,
+			})
+			if updateErr == nil && updateResp != nil && updateResp.Portfolio != nil {
+				portResp = &pb.GetPortfolioResponse{Portfolio: updateResp.Portfolio}
+			}
+		}
+	}
+
+	if portResp == nil {
+		var getErr error
+		portResp, getErr = r.PortfolioClient.GetPortfolio(ctx, &pb.GetPortfolioRequest{
+			UserId: defaultUserID,
+		})
+		if getErr != nil {
+			return nil, getErr
+		}
+	}
+
+	return toModelPortfolio(portResp.Portfolio), nil
 }
 
 // Instruments is the resolver for the instruments field.
@@ -267,6 +329,33 @@ func (r *queryResolver) IngestionStatus(ctx context.Context) (*model.IngestionSt
 	}
 
 	return toModelIngestionStatus(resp), nil
+}
+
+// UserPreferences is the resolver for the userPreferences field.
+func (r *queryResolver) UserPreferences(ctx context.Context) (*model.UserPreferences, error) {
+	resp, err := r.UserClient.GetUserPreferences(ctx, &userpb.GetUserPreferencesRequest{
+		UserId: defaultUserID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return toModelUserPreferences(resp.Preferences), nil
+}
+
+// SupportedCurrencies is the resolver for the supportedCurrencies field.
+func (r *queryResolver) SupportedCurrencies(ctx context.Context) ([]*model.Currency, error) {
+	resp, err := r.UserClient.ListSupportedCurrencies(ctx, &userpb.ListSupportedCurrenciesRequest{})
+	if err != nil {
+		return nil, err
+	}
+
+	currencies := make([]*model.Currency, len(resp.Currencies))
+	for i, c := range resp.Currencies {
+		currencies[i] = toModelCurrency(c)
+	}
+
+	return currencies, nil
 }
 
 // Mutation returns MutationResolver implementation.

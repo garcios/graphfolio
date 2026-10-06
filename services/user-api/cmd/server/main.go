@@ -10,7 +10,12 @@ import (
 	"time"
 
 	"pkg/database"
+	"user-api/internal"
+	"user-api/internal/repository"
+	"user-api/internal/service"
 	"user-api/migrations"
+
+	userpb "graphfolio/proto/user/v1"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"google.golang.org/grpc"
@@ -23,6 +28,7 @@ func main() {
 
 	// 1. Database Connection & Optional Migrations
 	var pool *pgxpool.Pool
+	var svc service.UserService
 	dbCfg, err := database.ConfigFromEnv("USER_DB_URL")
 	if err != nil {
 		log.Printf("user-api: %v (running without database)", err)
@@ -44,6 +50,8 @@ func main() {
 		} else {
 			defer pool.Close()
 			log.Printf("user-api: database pool connected")
+			repo := repository.NewPostgresRepository(pool)
+			svc = service.NewUserService(repo)
 		}
 	}
 
@@ -58,6 +66,7 @@ func main() {
 	}
 
 	s := grpc.NewServer()
+	userpb.RegisterUserServiceServer(s, internal.NewUserServer(svc))
 	reflection.Register(s)
 
 	// 3. Graceful Shutdown

@@ -55,6 +55,34 @@ func (s *PortfolioServer) GetPortfolio(ctx context.Context, req *pb.GetPortfolio
 	}, nil
 }
 
+func (s *PortfolioServer) UpdatePortfolioBaseCurrency(ctx context.Context, req *pb.UpdatePortfolioBaseCurrencyRequest) (*pb.UpdatePortfolioBaseCurrencyResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	userID := req.GetUserId()
+	if userID == "" {
+		userID = "1"
+	}
+
+	baseCurrency := req.GetBaseCurrency()
+	if baseCurrency == "" {
+		return nil, status.Error(codes.InvalidArgument, "base_currency cannot be empty")
+	}
+
+	summary, err := s.svc.UpdatePortfolioBaseCurrency(ctx, userID, baseCurrency)
+	if err != nil {
+		if errors.Is(err, repository.ErrPortfolioNotFound) {
+			return nil, status.Errorf(codes.NotFound, "portfolio not found for user: %s", userID)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to update portfolio base currency: %v", err)
+	}
+
+	return &pb.UpdatePortfolioBaseCurrencyResponse{
+		Portfolio: mapSummaryToProto(summary),
+	}, nil
+}
+
 func (s *PortfolioServer) AddTransaction(ctx context.Context, req *pb.AddTransactionRequest) (*pb.AddTransactionResponse, error) {
 	if s.svc == nil {
 		return nil, status.Error(codes.Unavailable, "service not initialized")

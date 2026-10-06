@@ -10,6 +10,25 @@ WHERE ($1 = '1' OR user_id::text = $1 OR id::text = $1)
 ORDER BY created_at ASC
 LIMIT 1;`
 
+	updatePortfolioBaseCurrencySQL = `
+UPDATE portfolio.portfolios
+SET base_currency = $2, updated_at = now()
+WHERE id = $1;`
+
+	updateValuationsBaseCurrencySQL = `
+UPDATE portfolio.portfolio_valuations
+SET market_value_base = ROUND((market_value_base * $2)::numeric, 10),
+    cash_value_base   = ROUND((cash_value_base * $2)::numeric, 10),
+    net_flow_base     = ROUND((net_flow_base * $2)::numeric, 10)
+WHERE portfolio_id = $1;`
+
+	updateHoldingsBaseCurrencySQL = `
+UPDATE portfolio.holdings
+SET cost_basis_base   = ROUND((cost_basis_base * $2)::numeric, 10),
+    realized_pnl_base = ROUND((realized_pnl_base * $2)::numeric, 10),
+    dividends_base    = ROUND((dividends_base * $2)::numeric, 10)
+WHERE portfolio_id = $1;`
+
 	getHoldingsWithMarketDataSQL = `
 SELECT 
     h.portfolio_id,

@@ -164,6 +164,12 @@ export default {
             "ingestionStatus": [
                 25
             ],
+            "userPreferences": [
+                29
+            ],
+            "supportedCurrencies": [
+                30
+            ],
             "__typename": [
                 2
             ]
@@ -334,6 +340,15 @@ export default {
                     ],
                     "syncFx": [
                         8
+                    ]
+                }
+            ],
+            "updateUserPreferences": [
+                32,
+                {
+                    "input": [
+                        31,
+                        "UpdateUserPreferencesInput!"
                     ]
                 }
             ],
@@ -568,6 +583,71 @@ export default {
             ],
             "totalReturnPercent": [
                 0
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "UserPreferences": {
+            "userId": [
+                7
+            ],
+            "email": [
+                2
+            ],
+            "displayName": [
+                2
+            ],
+            "displayCurrency": [
+                2
+            ],
+            "theme": [
+                2
+            ],
+            "createdAt": [
+                2
+            ],
+            "updatedAt": [
+                2
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "Currency": {
+            "code": [
+                2
+            ],
+            "name": [
+                2
+            ],
+            "symbol": [
+                2
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "UpdateUserPreferencesInput": {
+            "displayName": [
+                2
+            ],
+            "displayCurrency": [
+                2
+            ],
+            "theme": [
+                2
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "UpdateUserPreferencesPayload": {
+            "preferences": [
+                29
+            ],
+            "portfolio": [
+                27
             ],
             "__typename": [
                 2

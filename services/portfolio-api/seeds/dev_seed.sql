@@ -8,7 +8,10 @@ INSERT INTO portfolio.currencies (code, name, minor_units) VALUES
   ('USD', 'US Dollar', 2),
   ('AUD', 'Australian Dollar', 2),
   ('EUR', 'Euro', 2),
-  ('GBP', 'British Pound', 2)
+  ('GBP', 'British Pound', 2),
+  ('CAD', 'Canadian Dollar', 2),
+  ('JPY', 'Japanese Yen', 0),
+  ('CHF', 'Swiss Franc', 2)
 ON CONFLICT (code) DO NOTHING;
 
 -- 2. Reference Data: Exchanges
@@ -82,7 +85,10 @@ ON CONFLICT (instrument_id, price_date) DO UPDATE SET close = EXCLUDED.close;
 INSERT INTO portfolio.fx_rates (base_currency, quote_currency, rate_date, rate, source) VALUES
   ('USD', 'AUD', CURRENT_DATE, 1.5230, 'dev_seed'),
   ('USD', 'EUR', CURRENT_DATE, 0.9215, 'dev_seed'),
-  ('USD', 'GBP', CURRENT_DATE, 0.7890, 'dev_seed')
+  ('USD', 'GBP', CURRENT_DATE, 0.7890, 'dev_seed'),
+  ('USD', 'CAD', CURRENT_DATE, 1.3650, 'dev_seed'),
+  ('USD', 'JPY', CURRENT_DATE, 153.25, 'dev_seed'),
+  ('USD', 'CHF', CURRENT_DATE, 0.8840, 'dev_seed')
 ON CONFLICT (base_currency, quote_currency, rate_date) DO UPDATE SET rate = EXCLUDED.rate;
 
 -- 8. Projections: Cash Balances ($8,450 USD)

@@ -5,14 +5,26 @@ import './Dashboard.css';
 import { AddTransactionModal } from './AddTransactionModal';
 import { PerformanceChart } from './PerformanceChart';
 import { TransactionLedger } from './TransactionLedger';
+import { UserPreferencesModal, type UserPreferencesData, type CurrencyItem } from './UserPreferencesModal';
 
 export const Dashboard = () => {
   const [data, setData] = useState<any>(null);
+  const [userPrefs, setUserPrefs] = useState<UserPreferencesData | null>(null);
+  const [supportedCurrencies, setSupportedCurrencies] = useState<CurrencyItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'ledger'>('overview');
   const [ledgerRefreshKey, setLedgerRefreshKey] = useState(0);
+
+  const getInitials = (name: string): string => {
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase() || 'OG';
+  };
 
   useEffect(() => {
     client.query({
@@ -34,15 +46,61 @@ export const Dashboard = () => {
           totalReturnAmount: { amount: true, currencyCode: true },
           totalReturnPercent: true,
         }
+      },
+      userPreferences: {
+        userId: true,
+        email: true,
+        displayName: true,
+        displayCurrency: true,
+        theme: true,
+      },
+      supportedCurrencies: {
+        code: true,
+        name: true,
+        symbol: true,
       }
     })
     .then(res => {
       setData(res.portfolio);
+      if (res.userPreferences) {
+        setUserPrefs(res.userPreferences);
+      }
+      if (res.supportedCurrencies) {
+        setSupportedCurrencies(res.supportedCurrencies);
+      }
       setLoading(false);
     })
     .catch(err => {
-      console.error("Error fetching portfolio:", err);
-      setLoading(false);
+      console.warn("Combined dashboard query failed, attempting portfolio-only fallback:", err);
+      client.query({
+        portfolio: {
+          totalValue: { amount: true, currencyCode: true },
+          todayReturnAmount: { amount: true, currencyCode: true },
+          todayReturnPercent: true,
+          annualizedReturnPercent: true,
+          cashBalance: { amount: true, currencyCode: true },
+          investments: {
+            id: true,
+            ticker: true,
+            name: true,
+            price: { amount: true, currencyCode: true },
+            quantity: true,
+            totalValue: { amount: true, currencyCode: true },
+            todayReturnAmount: { amount: true, currencyCode: true },
+            todayReturnPercent: true,
+            totalReturnAmount: { amount: true, currencyCode: true },
+            totalReturnPercent: true,
+          }
+        }
+      })
+      .then(res => {
+        setData(res.portfolio);
+        setLoading(false);
+      })
+      .catch(fallbackErr => {
+        console.error("Error fetching portfolio fallback:", fallbackErr);
+        setLoading(false);
+      });
     });
   }, []);
 
@@ -86,9 +144,25 @@ export const Dashboard = () => {
           >
             + Add Transaction
           </Button>
-          <div className="user-profile">
-            <div className="avatar">OG</div>
-          </div>
+          <button
+            type="button"
+            className="user-profile-btn"
+            onClick={() => setIsPreferencesOpen(true)}
+            title="Investor Preferences"
+            aria-label="Open investor preferences"
+          >
+            <div className="avatar">
+              {getInitials(userPrefs?.displayName || 'Oscar Garcia')}
+            </div>
+            <div className="user-profile-details">
+              <span className="user-profile-name">
+                {userPrefs?.displayName || 'Oscar Garcia'}
+              </span>
+              <span className="user-profile-currency">
+                {userPrefs?.displayCurrency || 'USD'}
+              </span>
+            </div>
+          </button>
         </div>
       </header>
 
@@ -115,7 +189,7 @@ export const Dashboard = () => {
 
       {activeTab === 'overview' ? (
         <>
-          <PerformanceChart />
+          <PerformanceChart key={userPrefs?.displayCurrency || 'USD'} />
 
           <section className="investments-section">
             <div className="table-card">
@@ -187,6 +261,23 @@ export const Dashboard = () => {
           setData(updatedPortfolio);
           setLedgerRefreshKey((k) => k + 1);
           setToastMessage('Transaction recorded and projections updated!');
+          setTimeout(() => setToastMessage(null), 4000);
+        }}
+      />
+
+      <UserPreferencesModal
+        isOpen={isPreferencesOpen}
+        onClose={() => setIsPreferencesOpen(false)}
+        currentPreferences={userPrefs}
+        supportedCurrencies={supportedCurrencies}
+        onSuccess={(updatedPrefs, updatedPortfolio) => {
+          setUserPrefs(updatedPrefs);
+          if (updatedPortfolio) {
+            setData(updatedPortfolio);
+          }
+          setLedgerRefreshKey((k) => k + 1);
+          const currSymbol = supportedCurrencies.find((c) => c.code === updatedPrefs.displayCurrency)?.symbol || '$';
+          setToastMessage(`Preferences saved. Display currency updated to ${updatedPrefs.displayCurrency} (${currSymbol})`);
           setTimeout(() => setToastMessage(null), 4000);
         }}
       />

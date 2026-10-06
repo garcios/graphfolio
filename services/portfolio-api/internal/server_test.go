@@ -182,6 +182,61 @@ func TestPortfolioServer_GetPortfolio(t *testing.T) {
 	})
 }
 
+func TestPortfolioServer_UpdatePortfolioBaseCurrency(t *testing.T) {
+	ctx := context.Background()
+
+	mockSummary := &domain.PortfolioSummary{
+		Portfolio: domain.Portfolio{
+			ID:           uuid.New(),
+			BaseCurrency: "AUD",
+		},
+		TotalValue: domain.NewMoney(decimal.NewFromFloat(150000), "AUD"),
+	}
+
+	t.Run("successful base currency update", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().UpdatePortfolioBaseCurrency(ctx, "user-1", "AUD").Return(mockSummary, nil)
+
+		res, err := server.UpdatePortfolioBaseCurrency(ctx, &pb.UpdatePortfolioBaseCurrencyRequest{
+			UserId:       "user-1",
+			BaseCurrency: "AUD",
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res == nil || res.Portfolio == nil {
+			t.Fatalf("expected non-nil response")
+		}
+		if res.Portfolio.TotalValue.CurrencyCode != "AUD" {
+			t.Errorf("expected currency AUD, got %s", res.Portfolio.TotalValue.CurrencyCode)
+		}
+	})
+
+	t.Run("returns InvalidArgument when base_currency is empty", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		res, err := server.UpdatePortfolioBaseCurrency(ctx, &pb.UpdatePortfolioBaseCurrencyRequest{
+			UserId:       "user-1",
+			BaseCurrency: "",
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		if res != nil {
+			t.Fatalf("expected nil response on error")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument code, got: %v", err)
+		}
+	})
+}
+
 func TestPortfolioServer_AddTransaction(t *testing.T) {
 	ctx := context.Background()
 

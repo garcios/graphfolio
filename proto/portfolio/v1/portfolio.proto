@@ -8,6 +8,7 @@ option go_package = "graphfolio/proto/portfolio/v1;portfoliopb";
 
 service PortfolioService {
   rpc GetPortfolio(GetPortfolioRequest) returns (GetPortfolioResponse) {}
+  rpc UpdatePortfolioBaseCurrency(UpdatePortfolioBaseCurrencyRequest) returns (UpdatePortfolioBaseCurrencyResponse) {}
   rpc AddTransaction(AddTransactionRequest) returns (AddTransactionResponse) {}
   rpc ListInstruments(ListInstrumentsRequest) returns (ListInstrumentsResponse) {}
   rpc GetPortfolioHistory(GetPortfolioHistoryRequest) returns (GetPortfolioHistoryResponse) {}
@@ -33,6 +34,15 @@ message GetPortfolioRequest {
 }
 
 message GetPortfolioResponse {
+  Portfolio portfolio = 1;
+}
+
+message UpdatePortfolioBaseCurrencyRequest {
+  string user_id       = 1;
+  string base_currency = 2; // e.g. "AUD"
+}
+
+message UpdatePortfolioBaseCurrencyResponse {
   Portfolio portfolio = 1;
 }
 
