@@ -42,6 +42,12 @@ type ComplexityRoot struct {
 		TransactionID func(childComplexity int) int
 	}
 
+	Currency struct {
+		Code   func(childComplexity int) int
+		Name   func(childComplexity int) int
+		Symbol func(childComplexity int) int
+	}
+
 	DeleteTransactionPayload struct {
 		Portfolio func(childComplexity int) int
 		Success   func(childComplexity int) int
@@ -118,12 +124,13 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		AddTransaction      func(childComplexity int, input model.AddTransactionInput) int
-		CreateInstrument    func(childComplexity int, input model.CreateInstrumentInput) int
-		DeleteTransaction   func(childComplexity int, id string) int
-		RecordPriceOverride func(childComplexity int, input model.RecordPriceOverrideInput) int
-		TriggerMarketSync   func(childComplexity int, symbols []string, syncFx *bool) int
-		UpdateInstrument    func(childComplexity int, input model.UpdateInstrumentInput) int
+		AddTransaction        func(childComplexity int, input model.AddTransactionInput) int
+		CreateInstrument      func(childComplexity int, input model.CreateInstrumentInput) int
+		DeleteTransaction     func(childComplexity int, id string) int
+		RecordPriceOverride   func(childComplexity int, input model.RecordPriceOverrideInput) int
+		TriggerMarketSync     func(childComplexity int, symbols []string, syncFx *bool) int
+		UpdateInstrument      func(childComplexity int, input model.UpdateInstrumentInput) int
+		UpdateUserPreferences func(childComplexity int, input model.UpdateUserPreferencesInput) int
 	}
 
 	Portfolio struct {
@@ -144,13 +151,15 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		AllInstruments   func(childComplexity int, isActive *bool, search *string) int
-		IngestionStatus  func(childComplexity int) int
-		InstrumentPrices func(childComplexity int, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) int
-		Instruments      func(childComplexity int) int
-		Portfolio        func(childComplexity int) int
-		PortfolioHistory func(childComplexity int, timeframe model.HistoryTimeframe) int
-		Transactions     func(childComplexity int, typeArg *model.TransactionType, symbol *string, page *int, pageSize *int) int
+		AllInstruments      func(childComplexity int, isActive *bool, search *string) int
+		IngestionStatus     func(childComplexity int) int
+		InstrumentPrices    func(childComplexity int, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) int
+		Instruments         func(childComplexity int) int
+		Portfolio           func(childComplexity int) int
+		PortfolioHistory    func(childComplexity int, timeframe model.HistoryTimeframe) int
+		SupportedCurrencies func(childComplexity int) int
+		Transactions        func(childComplexity int, typeArg *model.TransactionType, symbol *string, page *int, pageSize *int) int
+		UserPreferences     func(childComplexity int) int
 	}
 
 	RecordPriceOverridePayload struct {
@@ -179,6 +188,21 @@ type ComplexityRoot struct {
 		TotalCount func(childComplexity int) int
 	}
 
+	UpdateUserPreferencesPayload struct {
+		Portfolio   func(childComplexity int) int
+		Preferences func(childComplexity int) int
+	}
+
+	UserPreferences struct {
+		CreatedAt       func(childComplexity int) int
+		DisplayCurrency func(childComplexity int) int
+		DisplayName     func(childComplexity int) int
+		Email           func(childComplexity int) int
+		Theme           func(childComplexity int) int
+		UpdatedAt       func(childComplexity int) int
+		UserID          func(childComplexity int) int
+	}
+
 	ValuationPoint struct {
 		CashValue   func(childComplexity int) int
 		DailyReturn func(childComplexity int) int
@@ -200,6 +224,7 @@ type MutationResolver interface {
 	UpdateInstrument(ctx context.Context, input model.UpdateInstrumentInput) (*model.Instrument, error)
 	RecordPriceOverride(ctx context.Context, input model.RecordPriceOverrideInput) (*model.RecordPriceOverridePayload, error)
 	TriggerMarketSync(ctx context.Context, symbols []string, syncFx *bool) (*model.MarketSyncPayload, error)
+	UpdateUserPreferences(ctx context.Context, input model.UpdateUserPreferencesInput) (*model.UpdateUserPreferencesPayload, error)
 }
 type QueryResolver interface {
 	Portfolio(ctx context.Context) (*model.Portfolio, error)
@@ -209,6 +234,8 @@ type QueryResolver interface {
 	AllInstruments(ctx context.Context, isActive *bool, search *string) ([]*model.Instrument, error)
 	InstrumentPrices(ctx context.Context, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) (*model.InstrumentPricesConnection, error)
 	IngestionStatus(ctx context.Context) (*model.IngestionStatus, error)
+	UserPreferences(ctx context.Context) (*model.UserPreferences, error)
+	SupportedCurrencies(ctx context.Context) ([]*model.Currency, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -241,6 +268,25 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.AddTransactionPayload.TransactionID(childComplexity), true
+
+	case "Currency.code":
+		if e.ComplexityRoot.Currency.Code == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Currency.Code(childComplexity), true
+	case "Currency.name":
+		if e.ComplexityRoot.Currency.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Currency.Name(childComplexity), true
+	case "Currency.symbol":
+		if e.ComplexityRoot.Currency.Symbol == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Currency.Symbol(childComplexity), true
 
 	case "DeleteTransactionPayload.portfolio":
 		if e.ComplexityRoot.DeleteTransactionPayload.Portfolio == nil {
@@ -605,6 +651,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.UpdateInstrument(childComplexity, args["input"].(model.UpdateInstrumentInput)), true
+	case "Mutation.updateUserPreferences":
+		if e.ComplexityRoot.Mutation.UpdateUserPreferences == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_updateUserPreferences_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.UpdateUserPreferences(childComplexity, args["input"].(model.UpdateUserPreferencesInput)), true
 
 	case "Portfolio.annualizedReturnPercent":
 		if e.ComplexityRoot.Portfolio.AnnualizedReturnPercent == nil {
@@ -726,6 +783,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.PortfolioHistory(childComplexity, args["timeframe"].(model.HistoryTimeframe)), true
+	case "Query.supportedCurrencies":
+		if e.ComplexityRoot.Query.SupportedCurrencies == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Query.SupportedCurrencies(childComplexity), true
 	case "Query.transactions":
 		if e.ComplexityRoot.Query.Transactions == nil {
 			break
@@ -737,6 +800,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.Transactions(childComplexity, args["type"].(*model.TransactionType), args["symbol"].(*string), args["page"].(*int), args["pageSize"].(*int)), true
+	case "Query.userPreferences":
+		if e.ComplexityRoot.Query.UserPreferences == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Query.UserPreferences(childComplexity), true
 
 	case "RecordPriceOverridePayload.price":
 		if e.ComplexityRoot.RecordPriceOverridePayload.Price == nil {
@@ -843,6 +912,62 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.TransactionsConnection.TotalCount(childComplexity), true
 
+	case "UpdateUserPreferencesPayload.portfolio":
+		if e.ComplexityRoot.UpdateUserPreferencesPayload.Portfolio == nil {
+			break
+		}
+
+		return e.ComplexityRoot.UpdateUserPreferencesPayload.Portfolio(childComplexity), true
+	case "UpdateUserPreferencesPayload.preferences":
+		if e.ComplexityRoot.UpdateUserPreferencesPayload.Preferences == nil {
+			break
+		}
+
+		return e.ComplexityRoot.UpdateUserPreferencesPayload.Preferences(childComplexity), true
+
+	case "UserPreferences.createdAt":
+		if e.ComplexityRoot.UserPreferences.CreatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.UserPreferences.CreatedAt(childComplexity), true
+	case "UserPreferences.displayCurrency":
+		if e.ComplexityRoot.UserPreferences.DisplayCurrency == nil {
+			break
+		}
+
+		return e.ComplexityRoot.UserPreferences.DisplayCurrency(childComplexity), true
+	case "UserPreferences.displayName":
+		if e.ComplexityRoot.UserPreferences.DisplayName == nil {
+			break
+		}
+
+		return e.ComplexityRoot.UserPreferences.DisplayName(childComplexity), true
+	case "UserPreferences.email":
+		if e.ComplexityRoot.UserPreferences.Email == nil {
+			break
+		}
+
+		return e.ComplexityRoot.UserPreferences.Email(childComplexity), true
+	case "UserPreferences.theme":
+		if e.ComplexityRoot.UserPreferences.Theme == nil {
+			break
+		}
+
+		return e.ComplexityRoot.UserPreferences.Theme(childComplexity), true
+	case "UserPreferences.updatedAt":
+		if e.ComplexityRoot.UserPreferences.UpdatedAt == nil {
+			break
+		}
+
+		return e.ComplexityRoot.UserPreferences.UpdatedAt(childComplexity), true
+	case "UserPreferences.userId":
+		if e.ComplexityRoot.UserPreferences.UserID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.UserPreferences.UserID(childComplexity), true
+
 	case "ValuationPoint.cashValue":
 		if e.ComplexityRoot.ValuationPoint.CashValue == nil {
 			break
@@ -892,6 +1017,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateInstrumentInput,
 		ec.unmarshalInputRecordPriceOverrideInput,
 		ec.unmarshalInputUpdateInstrumentInput,
+		ec.unmarshalInputUpdateUserPreferencesInput,
 	)
 	first := true
 
@@ -994,6 +1120,18 @@ func (ec *executionContext) childFields_AddTransactionPayload(ctx context.Contex
 		return ec.fieldContext_AddTransactionPayload_portfolio(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type AddTransactionPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_Currency(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "code":
+		return ec.fieldContext_Currency_code(ctx, field)
+	case "name":
+		return ec.fieldContext_Currency_name(ctx, field)
+	case "symbol":
+		return ec.fieldContext_Currency_symbol(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Currency", field.Name)
 }
 
 func (ec *executionContext) childFields_DeleteTransactionPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -1232,6 +1370,36 @@ func (ec *executionContext) childFields_TransactionsConnection(ctx context.Conte
 	return nil, fmt.Errorf("no field named %q was found under type TransactionsConnection", field.Name)
 }
 
+func (ec *executionContext) childFields_UpdateUserPreferencesPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "preferences":
+		return ec.fieldContext_UpdateUserPreferencesPayload_preferences(ctx, field)
+	case "portfolio":
+		return ec.fieldContext_UpdateUserPreferencesPayload_portfolio(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type UpdateUserPreferencesPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_UserPreferences(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "userId":
+		return ec.fieldContext_UserPreferences_userId(ctx, field)
+	case "email":
+		return ec.fieldContext_UserPreferences_email(ctx, field)
+	case "displayName":
+		return ec.fieldContext_UserPreferences_displayName(ctx, field)
+	case "displayCurrency":
+		return ec.fieldContext_UserPreferences_displayCurrency(ctx, field)
+	case "theme":
+		return ec.fieldContext_UserPreferences_theme(ctx, field)
+	case "createdAt":
+		return ec.fieldContext_UserPreferences_createdAt(ctx, field)
+	case "updatedAt":
+		return ec.fieldContext_UserPreferences_updatedAt(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type UserPreferences", field.Name)
+}
+
 func (ec *executionContext) childFields_ValuationPoint(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "date":
@@ -1450,6 +1618,20 @@ func (ec *executionContext) field_Mutation_updateInstrument_args(ctx context.Con
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (model.UpdateInstrumentInput, error) {
 			return ec.unmarshalNUpdateInstrumentInput2bffᚋgraphᚋmodelᚐUpdateInstrumentInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_updateUserPreferences_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.UpdateUserPreferencesInput, error) {
+			return ec.unmarshalNUpdateUserPreferencesInput2bffᚋgraphᚋmodelᚐUpdateUserPreferencesInput(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -1705,6 +1887,75 @@ func (ec *executionContext) fieldContext_AddTransactionPayload_portfolio(_ conte
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _Currency_code(ctx context.Context, field graphql.CollectedField, obj *model.Currency) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Currency_code(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Code, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Currency_code(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Currency", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Currency_name(ctx context.Context, field graphql.CollectedField, obj *model.Currency) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Currency_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Currency_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Currency", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Currency_symbol(ctx context.Context, field graphql.CollectedField, obj *model.Currency) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Currency_symbol(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Symbol, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Currency_symbol(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Currency", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _DeleteTransactionPayload_success(ctx context.Context, field graphql.CollectedField, obj *model.DeleteTransactionPayload) (ret graphql.Marshaler) {
@@ -3147,6 +3398,50 @@ func (ec *executionContext) fieldContext_Mutation_triggerMarketSync(ctx context.
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_updateUserPreferences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_updateUserPreferences(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().UpdateUserPreferences(ctx, fc.Args["input"].(model.UpdateUserPreferencesInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.UpdateUserPreferencesPayload) graphql.Marshaler {
+			return ec.marshalNUpdateUserPreferencesPayload2ᚖbffᚋgraphᚋmodelᚐUpdateUserPreferencesPayload(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_updateUserPreferences(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_UpdateUserPreferencesPayload(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_updateUserPreferences_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Portfolio_totalValue(ctx context.Context, field graphql.CollectedField, obj *model.Portfolio) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -3744,6 +4039,70 @@ func (ec *executionContext) fieldContext_Query_ingestionStatus(_ context.Context
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_userPreferences(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_userPreferences(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Query().UserPreferences(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.UserPreferences) graphql.Marshaler {
+			return ec.marshalNUserPreferences2ᚖbffᚋgraphᚋmodelᚐUserPreferences(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_userPreferences(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_UserPreferences(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_supportedCurrencies(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_supportedCurrencies(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Query().SupportedCurrencies(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Currency) graphql.Marshaler {
+			return ec.marshalNCurrency2ᚕᚖbffᚋgraphᚋmodelᚐCurrencyᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_supportedCurrencies(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Currency(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -4254,6 +4613,231 @@ func (ec *executionContext) _TransactionsConnection_pageSize(ctx context.Context
 }
 func (ec *executionContext) fieldContext_TransactionsConnection_pageSize(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("TransactionsConnection", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _UpdateUserPreferencesPayload_preferences(ctx context.Context, field graphql.CollectedField, obj *model.UpdateUserPreferencesPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UpdateUserPreferencesPayload_preferences(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Preferences, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.UserPreferences) graphql.Marshaler {
+			return ec.marshalNUserPreferences2ᚖbffᚋgraphᚋmodelᚐUserPreferences(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_UpdateUserPreferencesPayload_preferences(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpdateUserPreferencesPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_UserPreferences(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UpdateUserPreferencesPayload_portfolio(ctx context.Context, field graphql.CollectedField, obj *model.UpdateUserPreferencesPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UpdateUserPreferencesPayload_portfolio(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Portfolio, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Portfolio) graphql.Marshaler {
+			return ec.marshalOPortfolio2ᚖbffᚋgraphᚋmodelᚐPortfolio(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_UpdateUserPreferencesPayload_portfolio(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "UpdateUserPreferencesPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Portfolio(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _UserPreferences_userId(ctx context.Context, field graphql.CollectedField, obj *model.UserPreferences) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UserPreferences_userId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.UserID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_UserPreferences_userId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("UserPreferences", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _UserPreferences_email(ctx context.Context, field graphql.CollectedField, obj *model.UserPreferences) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UserPreferences_email(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Email, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_UserPreferences_email(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("UserPreferences", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _UserPreferences_displayName(ctx context.Context, field graphql.CollectedField, obj *model.UserPreferences) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UserPreferences_displayName(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DisplayName, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_UserPreferences_displayName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("UserPreferences", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _UserPreferences_displayCurrency(ctx context.Context, field graphql.CollectedField, obj *model.UserPreferences) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UserPreferences_displayCurrency(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DisplayCurrency, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_UserPreferences_displayCurrency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("UserPreferences", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _UserPreferences_theme(ctx context.Context, field graphql.CollectedField, obj *model.UserPreferences) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UserPreferences_theme(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Theme, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_UserPreferences_theme(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("UserPreferences", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _UserPreferences_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.UserPreferences) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UserPreferences_createdAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CreatedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_UserPreferences_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("UserPreferences", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _UserPreferences_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.UserPreferences) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UserPreferences_updatedAt(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.UpdatedAt, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_UserPreferences_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("UserPreferences", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _ValuationPoint_date(ctx context.Context, field graphql.CollectedField, obj *model.ValuationPoint) (ret graphql.Marshaler) {
@@ -5740,6 +6324,50 @@ func (ec *executionContext) unmarshalInputUpdateInstrumentInput(ctx context.Cont
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputUpdateUserPreferencesInput(ctx context.Context, obj any) (model.UpdateUserPreferencesInput, error) {
+	var it model.UpdateUserPreferencesInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"displayName", "displayCurrency", "theme"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "displayName":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("displayName"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DisplayName = data
+		case "displayCurrency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("displayCurrency"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DisplayCurrency = data
+		case "theme":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("theme"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Theme = data
+		}
+	}
+	return it, nil
+}
+
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -5767,6 +6395,54 @@ func (ec *executionContext) _AddTransactionPayload(ctx context.Context, sel ast.
 			}
 		case "portfolio":
 			out.Values[i] = ec._AddTransactionPayload_portfolio(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var currencyImplementors = []string{"Currency"}
+
+func (ec *executionContext) _Currency(ctx context.Context, sel ast.SelectionSet, obj *model.Currency) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, currencyImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Currency")
+		case "code":
+			out.Values[i] = ec._Currency_code(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._Currency_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "symbol":
+			out.Values[i] = ec._Currency_symbol(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -6390,6 +7066,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "updateUserPreferences":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_updateUserPreferences(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -6706,6 +7389,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "userPreferences":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_userPreferences(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "supportedCurrencies":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_supportedCurrencies(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -6901,6 +7628,117 @@ func (ec *executionContext) _TransactionsConnection(ctx context.Context, sel ast
 			}
 		case "pageSize":
 			out.Values[i] = ec._TransactionsConnection_pageSize(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var updateUserPreferencesPayloadImplementors = []string{"UpdateUserPreferencesPayload"}
+
+func (ec *executionContext) _UpdateUserPreferencesPayload(ctx context.Context, sel ast.SelectionSet, obj *model.UpdateUserPreferencesPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, updateUserPreferencesPayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UpdateUserPreferencesPayload")
+		case "preferences":
+			out.Values[i] = ec._UpdateUserPreferencesPayload_preferences(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "portfolio":
+			out.Values[i] = ec._UpdateUserPreferencesPayload_portfolio(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var userPreferencesImplementors = []string{"UserPreferences"}
+
+func (ec *executionContext) _UserPreferences(ctx context.Context, sel ast.SelectionSet, obj *model.UserPreferences) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, userPreferencesImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("UserPreferences")
+		case "userId":
+			out.Values[i] = ec._UserPreferences_userId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "email":
+			out.Values[i] = ec._UserPreferences_email(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "displayName":
+			out.Values[i] = ec._UserPreferences_displayName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "displayCurrency":
+			out.Values[i] = ec._UserPreferences_displayCurrency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "theme":
+			out.Values[i] = ec._UserPreferences_theme(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "createdAt":
+			out.Values[i] = ec._UserPreferences_createdAt(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "updatedAt":
+			out.Values[i] = ec._UserPreferences_updatedAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -7416,6 +8254,32 @@ func (ec *executionContext) unmarshalNCreateInstrumentInput2bffᚋgraphᚋmodel�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) marshalNCurrency2ᚕᚖbffᚋgraphᚋmodelᚐCurrencyᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Currency) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNCurrency2ᚖbffᚋgraphᚋmodelᚐCurrency(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNCurrency2ᚖbffᚋgraphᚋmodelᚐCurrency(ctx context.Context, sel ast.SelectionSet, v *model.Currency) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Currency(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx context.Context, v any) (model.Decimal, error) {
 	var res model.Decimal
 	err := res.UnmarshalGQL(v)
@@ -7724,6 +8588,31 @@ func (ec *executionContext) unmarshalNUpdateInstrumentInput2bffᚋgraphᚋmodel�
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNUpdateUserPreferencesInput2bffᚋgraphᚋmodelᚐUpdateUserPreferencesInput(ctx context.Context, v any) (model.UpdateUserPreferencesInput, error) {
+	res, err := ec.unmarshalInputUpdateUserPreferencesInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUpdateUserPreferencesPayload2ᚖbffᚋgraphᚋmodelᚐUpdateUserPreferencesPayload(ctx context.Context, sel ast.SelectionSet, v *model.UpdateUserPreferencesPayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UpdateUserPreferencesPayload(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNUserPreferences2ᚖbffᚋgraphᚋmodelᚐUserPreferences(ctx context.Context, sel ast.SelectionSet, v *model.UserPreferences) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._UserPreferences(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNValuationPoint2ᚕᚖbffᚋgraphᚋmodelᚐValuationPointᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ValuationPoint) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
@@ -7959,6 +8848,13 @@ func (ec *executionContext) marshalOMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx con
 		return graphql.Null
 	}
 	return ec._Money(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalOPortfolio2ᚖbffᚋgraphᚋmodelᚐPortfolio(ctx context.Context, sel ast.SelectionSet, v *model.Portfolio) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Portfolio(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {

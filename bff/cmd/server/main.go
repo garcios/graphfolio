@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	pb "graphfolio/proto/portfolio/v1"
+	userpb "graphfolio/proto/user/v1"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -27,7 +28,12 @@ func main() {
 		port = defaultPort
 	}
 
-	conn, err := grpc.Dial("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+	portfolioURL := os.Getenv("PORTFOLIO_API_URL")
+	if portfolioURL == "" {
+		portfolioURL = "localhost:50051"
+	}
+
+	conn, err := grpc.Dial(portfolioURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("did not connect to portfolio-api: %v", err)
 	}
@@ -35,8 +41,22 @@ func main() {
 
 	portfolioClient := pb.NewPortfolioServiceClient(conn)
 
+	userURL := os.Getenv("USER_API_URL")
+	if userURL == "" {
+		userURL = "localhost:50052"
+	}
+
+	userConn, err := grpc.Dial(userURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatalf("did not connect to user-api: %v", err)
+	}
+	defer userConn.Close()
+
+	userClient := userpb.NewUserServiceClient(userConn)
+
 	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{
 		PortfolioClient: portfolioClient,
+		UserClient:      userClient,
 	}}))
 
 	srv.AddTransport(transport.Options{})

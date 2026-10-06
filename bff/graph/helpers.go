@@ -5,6 +5,7 @@ import (
 
 	commonpb "graphfolio/proto/common/v1"
 	pb "graphfolio/proto/portfolio/v1"
+	userpb "graphfolio/proto/user/v1"
 
 	"github.com/shopspring/decimal"
 )
@@ -351,5 +352,31 @@ func toModelIngestionStatus(resp *pb.GetIngestionStatusResponse) *model.Ingestio
 		RateLimitRemaining:  int(resp.RateLimitRemaining),
 		RateLimitBudget:     int(resp.RateLimitBudget),
 		PendingBackfillJobs: int(resp.PendingBackfillJobs),
+	}
+}
+
+func toModelUserPreferences(p *userpb.UserPreferences) *model.UserPreferences {
+	if p == nil {
+		return nil
+	}
+	return &model.UserPreferences{
+		UserID:          p.UserId,
+		Email:           p.Email,
+		DisplayName:     p.DisplayName,
+		DisplayCurrency: p.DisplayCurrency,
+		Theme:           p.Theme,
+		CreatedAt:       p.CreatedAt,
+		UpdatedAt:       p.UpdatedAt,
+	}
+}
+
+func toModelCurrency(c *userpb.CurrencyInfo) *model.Currency {
+	if c == nil {
+		return nil
+	}
+	return &model.Currency{
+		Code:   c.Code,
+		Name:   c.Name,
+		Symbol: c.Symbol,
 	}
 }

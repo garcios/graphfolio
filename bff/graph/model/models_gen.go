@@ -35,6 +35,12 @@ type CreateInstrumentInput struct {
 	Isin         *string `json:"isin,omitempty"`
 }
 
+type Currency struct {
+	Code   string `json:"code"`
+	Name   string `json:"name"`
+	Symbol string `json:"symbol"`
+}
+
 type DeleteTransactionPayload struct {
 	Success   bool       `json:"success"`
 	Portfolio *Portfolio `json:"portfolio"`
@@ -172,6 +178,27 @@ type UpdateInstrumentInput struct {
 	Name     *string `json:"name,omitempty"`
 	IsActive *bool   `json:"isActive,omitempty"`
 	Isin     *string `json:"isin,omitempty"`
+}
+
+type UpdateUserPreferencesInput struct {
+	DisplayName     *string `json:"displayName,omitempty"`
+	DisplayCurrency *string `json:"displayCurrency,omitempty"`
+	Theme           *string `json:"theme,omitempty"`
+}
+
+type UpdateUserPreferencesPayload struct {
+	Preferences *UserPreferences `json:"preferences"`
+	Portfolio   *Portfolio       `json:"portfolio,omitempty"`
+}
+
+type UserPreferences struct {
+	UserID          string `json:"userId"`
+	Email           string `json:"email"`
+	DisplayName     string `json:"displayName"`
+	DisplayCurrency string `json:"displayCurrency"`
+	Theme           string `json:"theme"`
+	CreatedAt       string `json:"createdAt"`
+	UpdatedAt       string `json:"updatedAt"`
 }
 
 type ValuationPoint struct {

@@ -29,7 +29,7 @@ proto:
 	cd proto && protoc \
 		--go_out=. --go_opt=paths=source_relative \
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
-		common/v1/decimal.proto portfolio/v1/portfolio.proto
+		common/v1/decimal.proto portfolio/v1/portfolio.proto user/v1/user.proto
 
 generate: proto
 	@echo "Generating GraphQL backend models..."
@@ -38,6 +38,7 @@ generate: proto
 	cd web && npx genql --schema ../bff/graph/schema.graphqls --output ./packages/api-client/src/generated
 	@echo "Generating Go mocks..."
 	cd services/portfolio-api && go generate ./...
+	cd services/user-api && go generate ./...
 
 db-check:
 	@pg_isready -h localhost -p 5432
@@ -63,6 +64,7 @@ migrate-create:
 
 db-seed:
 	psql "$(PORTFOLIO_DB_URL)" -f services/portfolio-api/seeds/dev_seed.sql
+	psql "$(USER_DB_URL)" -f services/user-api/seeds/dev_seed.sql
 
 db-reset: db-drop db-bootstrap migrate-up db-seed
 
@@ -108,5 +110,5 @@ build-web:
 
 run:
 	@echo "Starting services..."
-	$(MAKE) -j 3 run-portfolio run-bff run-web
+	$(MAKE) -j 4 run-portfolio run-user run-bff run-web
 

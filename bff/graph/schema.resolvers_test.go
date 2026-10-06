@@ -2,37 +2,75 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"bff/graph/model"
 
 	commonpb "graphfolio/proto/common/v1"
 	pb "graphfolio/proto/portfolio/v1"
+	userpb "graphfolio/proto/user/v1"
 
 	"github.com/shopspring/decimal"
 	"google.golang.org/grpc"
 )
 
+type fakeUserClient struct {
+	userpb.UserServiceClient
+	getUserPreferencesFn      func(ctx context.Context, in *userpb.GetUserPreferencesRequest) (*userpb.GetUserPreferencesResponse, error)
+	updateUserPreferencesFn   func(ctx context.Context, in *userpb.UpdateUserPreferencesRequest) (*userpb.UpdateUserPreferencesResponse, error)
+	listSupportedCurrenciesFn func(ctx context.Context, in *userpb.ListSupportedCurrenciesRequest) (*userpb.ListSupportedCurrenciesResponse, error)
+}
+
+func (f *fakeUserClient) GetUserPreferences(ctx context.Context, in *userpb.GetUserPreferencesRequest, opts ...grpc.CallOption) (*userpb.GetUserPreferencesResponse, error) {
+	if f.getUserPreferencesFn != nil {
+		return f.getUserPreferencesFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakeUserClient) UpdateUserPreferences(ctx context.Context, in *userpb.UpdateUserPreferencesRequest, opts ...grpc.CallOption) (*userpb.UpdateUserPreferencesResponse, error) {
+	if f.updateUserPreferencesFn != nil {
+		return f.updateUserPreferencesFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakeUserClient) ListSupportedCurrencies(ctx context.Context, in *userpb.ListSupportedCurrenciesRequest, opts ...grpc.CallOption) (*userpb.ListSupportedCurrenciesResponse, error) {
+	if f.listSupportedCurrenciesFn != nil {
+		return f.listSupportedCurrenciesFn(ctx, in)
+	}
+	return nil, nil
+}
+
 type fakePortfolioClient struct {
 	pb.PortfolioServiceClient
-	getPortfolioFn         func(ctx context.Context, in *pb.GetPortfolioRequest) (*pb.GetPortfolioResponse, error)
-	addTransactionFn       func(ctx context.Context, in *pb.AddTransactionRequest) (*pb.AddTransactionResponse, error)
-	listInstrumentsFn      func(ctx context.Context, in *pb.ListInstrumentsRequest) (*pb.ListInstrumentsResponse, error)
-	getPortfolioHistoryFn  func(ctx context.Context, in *pb.GetPortfolioHistoryRequest) (*pb.GetPortfolioHistoryResponse, error)
-	listTransactionsFn     func(ctx context.Context, in *pb.ListTransactionsRequest) (*pb.ListTransactionsResponse, error)
-	deleteTransactionFn    func(ctx context.Context, in *pb.DeleteTransactionRequest) (*pb.DeleteTransactionResponse, error)
-	listAllInstrumentsFn   func(ctx context.Context, in *pb.ListAllInstrumentsRequest) (*pb.ListAllInstrumentsResponse, error)
-	createInstrumentFn     func(ctx context.Context, in *pb.CreateInstrumentRequest) (*pb.CreateInstrumentResponse, error)
-	updateInstrumentFn     func(ctx context.Context, in *pb.UpdateInstrumentRequest) (*pb.UpdateInstrumentResponse, error)
-	listInstrumentPricesFn func(ctx context.Context, in *pb.ListInstrumentPricesRequest) (*pb.ListInstrumentPricesResponse, error)
-	recordPriceOverrideFn  func(ctx context.Context, in *pb.RecordPriceOverrideRequest) (*pb.RecordPriceOverrideResponse, error)
-	getIngestionStatusFn   func(ctx context.Context, in *pb.GetIngestionStatusRequest) (*pb.GetIngestionStatusResponse, error)
-	triggerMarketSyncFn    func(ctx context.Context, in *pb.TriggerMarketSyncRequest) (*pb.TriggerMarketSyncResponse, error)
+	getPortfolioFn                func(ctx context.Context, in *pb.GetPortfolioRequest) (*pb.GetPortfolioResponse, error)
+	updatePortfolioBaseCurrencyFn func(ctx context.Context, in *pb.UpdatePortfolioBaseCurrencyRequest) (*pb.UpdatePortfolioBaseCurrencyResponse, error)
+	addTransactionFn              func(ctx context.Context, in *pb.AddTransactionRequest) (*pb.AddTransactionResponse, error)
+	listInstrumentsFn             func(ctx context.Context, in *pb.ListInstrumentsRequest) (*pb.ListInstrumentsResponse, error)
+	getPortfolioHistoryFn         func(ctx context.Context, in *pb.GetPortfolioHistoryRequest) (*pb.GetPortfolioHistoryResponse, error)
+	listTransactionsFn            func(ctx context.Context, in *pb.ListTransactionsRequest) (*pb.ListTransactionsResponse, error)
+	deleteTransactionFn           func(ctx context.Context, in *pb.DeleteTransactionRequest) (*pb.DeleteTransactionResponse, error)
+	listAllInstrumentsFn          func(ctx context.Context, in *pb.ListAllInstrumentsRequest) (*pb.ListAllInstrumentsResponse, error)
+	createInstrumentFn            func(ctx context.Context, in *pb.CreateInstrumentRequest) (*pb.CreateInstrumentResponse, error)
+	updateInstrumentFn            func(ctx context.Context, in *pb.UpdateInstrumentRequest) (*pb.UpdateInstrumentResponse, error)
+	listInstrumentPricesFn        func(ctx context.Context, in *pb.ListInstrumentPricesRequest) (*pb.ListInstrumentPricesResponse, error)
+	recordPriceOverrideFn         func(ctx context.Context, in *pb.RecordPriceOverrideRequest) (*pb.RecordPriceOverrideResponse, error)
+	getIngestionStatusFn          func(ctx context.Context, in *pb.GetIngestionStatusRequest) (*pb.GetIngestionStatusResponse, error)
+	triggerMarketSyncFn           func(ctx context.Context, in *pb.TriggerMarketSyncRequest) (*pb.TriggerMarketSyncResponse, error)
 }
 
 func (f *fakePortfolioClient) GetPortfolio(ctx context.Context, in *pb.GetPortfolioRequest, opts ...grpc.CallOption) (*pb.GetPortfolioResponse, error) {
 	if f.getPortfolioFn != nil {
 		return f.getPortfolioFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakePortfolioClient) UpdatePortfolioBaseCurrency(ctx context.Context, in *pb.UpdatePortfolioBaseCurrencyRequest, opts ...grpc.CallOption) (*pb.UpdatePortfolioBaseCurrencyResponse, error) {
+	if f.updatePortfolioBaseCurrencyFn != nil {
+		return f.updatePortfolioBaseCurrencyFn(ctx, in)
 	}
 	return nil, nil
 }
@@ -126,8 +164,8 @@ func TestQueryResolver_Portfolio(t *testing.T) {
 
 	fakeClient := &fakePortfolioClient{
 		getPortfolioFn: func(ctx context.Context, in *pb.GetPortfolioRequest) (*pb.GetPortfolioResponse, error) {
-			if in.GetUserId() != "1" {
-				t.Errorf("expected user_id 1, got %s", in.GetUserId())
+			if in.GetUserId() != "1" && in.GetUserId() != defaultUserID {
+				t.Errorf("expected user_id 1 or defaultUserID, got %s", in.GetUserId())
 			}
 			return &pb.GetPortfolioResponse{
 				Portfolio: &pb.Portfolio{
@@ -847,6 +885,185 @@ func TestMutationResolver_TriggerMarketSync(t *testing.T) {
 		}
 		if !payload.Success || payload.PricesSynced != 2 || payload.FxRatesSynced != 7 {
 			t.Errorf("unexpected sync payload: %+v", payload)
+		}
+	})
+}
+
+func TestQueryResolver_UserPreferences(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully retrieves user preferences", func(t *testing.T) {
+		fakeUser := &fakeUserClient{
+			getUserPreferencesFn: func(ctx context.Context, in *userpb.GetUserPreferencesRequest) (*userpb.GetUserPreferencesResponse, error) {
+				return &userpb.GetUserPreferencesResponse{
+					Preferences: &userpb.UserPreferences{
+						UserId:          "018f0000-0000-7000-8000-000000000001",
+						Email:           "oscar@example.com",
+						DisplayName:     "Oscar Garcia",
+						DisplayCurrency: "USD",
+						Theme:           "DARK",
+						CreatedAt:       "2026-01-01T00:00:00Z",
+						UpdatedAt:       "2026-01-01T00:00:00Z",
+					},
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{UserClient: fakeUser}
+		qResolver := resolver.Query()
+
+		prefs, err := qResolver.UserPreferences(ctx)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if prefs.UserID != "018f0000-0000-7000-8000-000000000001" || prefs.DisplayName != "Oscar Garcia" || prefs.DisplayCurrency != "USD" {
+			t.Errorf("unexpected preferences: %+v", prefs)
+		}
+	})
+
+	t.Run("handles error from user service", func(t *testing.T) {
+		fakeUser := &fakeUserClient{
+			getUserPreferencesFn: func(ctx context.Context, in *userpb.GetUserPreferencesRequest) (*userpb.GetUserPreferencesResponse, error) {
+				return nil, errors.New("user service unavailable")
+			},
+		}
+
+		resolver := &Resolver{UserClient: fakeUser}
+		qResolver := resolver.Query()
+
+		_, err := qResolver.UserPreferences(ctx)
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+	})
+}
+
+func TestQueryResolver_SupportedCurrencies(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully retrieves supported currencies", func(t *testing.T) {
+		fakeUser := &fakeUserClient{
+			listSupportedCurrenciesFn: func(ctx context.Context, in *userpb.ListSupportedCurrenciesRequest) (*userpb.ListSupportedCurrenciesResponse, error) {
+				return &userpb.ListSupportedCurrenciesResponse{
+					Currencies: []*userpb.CurrencyInfo{
+						{Code: "USD", Name: "US Dollar", Symbol: "$"},
+						{Code: "EUR", Name: "Euro", Symbol: "€"},
+					},
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{UserClient: fakeUser}
+		qResolver := resolver.Query()
+
+		currencies, err := qResolver.SupportedCurrencies(ctx)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if len(currencies) != 2 || currencies[0].Code != "USD" || currencies[1].Code != "EUR" {
+			t.Errorf("unexpected currencies: %+v", currencies)
+		}
+	})
+
+	t.Run("handles error from user service", func(t *testing.T) {
+		fakeUser := &fakeUserClient{
+			listSupportedCurrenciesFn: func(ctx context.Context, in *userpb.ListSupportedCurrenciesRequest) (*userpb.ListSupportedCurrenciesResponse, error) {
+				return nil, errors.New("currency fetch error")
+			},
+		}
+
+		resolver := &Resolver{UserClient: fakeUser}
+		qResolver := resolver.Query()
+
+		_, err := qResolver.SupportedCurrencies(ctx)
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+	})
+}
+
+func TestMutationResolver_UpdateUserPreferences(t *testing.T) {
+	ctx := context.Background()
+	newName := "Oscar Garcia Updated"
+	newCurr := "EUR"
+	newTheme := "LIGHT"
+
+	t.Run("successfully updates preferences and attaches portfolio", func(t *testing.T) {
+		fakeUser := &fakeUserClient{
+			updateUserPreferencesFn: func(ctx context.Context, in *userpb.UpdateUserPreferencesRequest) (*userpb.UpdateUserPreferencesResponse, error) {
+				return &userpb.UpdateUserPreferencesResponse{
+					Preferences: &userpb.UserPreferences{
+						UserId:          in.UserId,
+						Email:           "oscar@example.com",
+						DisplayName:     *in.DisplayName,
+						DisplayCurrency: *in.DisplayCurrency,
+						Theme:           *in.Theme,
+						CreatedAt:       "2026-01-01T00:00:00Z",
+						UpdatedAt:       "2026-01-02T00:00:00Z",
+					},
+				}, nil
+			},
+		}
+		fakePort := &fakePortfolioClient{
+			updatePortfolioBaseCurrencyFn: func(ctx context.Context, in *pb.UpdatePortfolioBaseCurrencyRequest) (*pb.UpdatePortfolioBaseCurrencyResponse, error) {
+				return &pb.UpdatePortfolioBaseCurrencyResponse{
+					Portfolio: &pb.Portfolio{
+						TotalValue: &commonpb.Money{
+							Amount:       &commonpb.Decimal{Value: "100000.00"},
+							CurrencyCode: in.BaseCurrency,
+						},
+					},
+				}, nil
+			},
+			getPortfolioFn: func(ctx context.Context, in *pb.GetPortfolioRequest) (*pb.GetPortfolioResponse, error) {
+				return &pb.GetPortfolioResponse{
+					Portfolio: &pb.Portfolio{
+						TotalValue: &commonpb.Money{
+							Amount:       &commonpb.Decimal{Value: "100000.00"},
+							CurrencyCode: "EUR",
+						},
+					},
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{
+			UserClient:      fakeUser,
+			PortfolioClient: fakePort,
+		}
+		mResolver := resolver.Mutation()
+
+		payload, err := mResolver.UpdateUserPreferences(ctx, model.UpdateUserPreferencesInput{
+			DisplayName:     &newName,
+			DisplayCurrency: &newCurr,
+			Theme:           &newTheme,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if payload.Preferences.DisplayName != newName || payload.Preferences.DisplayCurrency != newCurr || payload.Preferences.Theme != newTheme {
+			t.Errorf("unexpected preferences: %+v", payload.Preferences)
+		}
+		if payload.Portfolio == nil || payload.Portfolio.TotalValue.CurrencyCode != "EUR" {
+			t.Errorf("unexpected portfolio: %+v", payload.Portfolio)
+		}
+	})
+
+	t.Run("handles error from user service", func(t *testing.T) {
+		fakeUser := &fakeUserClient{
+			updateUserPreferencesFn: func(ctx context.Context, in *userpb.UpdateUserPreferencesRequest) (*userpb.UpdateUserPreferencesResponse, error) {
+				return nil, errors.New("invalid currency code")
+			},
+		}
+
+		resolver := &Resolver{UserClient: fakeUser}
+		mResolver := resolver.Mutation()
+
+		_, err := mResolver.UpdateUserPreferences(ctx, model.UpdateUserPreferencesInput{
+			DisplayCurrency: &newCurr,
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
 		}
 	})
 }

@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package user.v1;
+
+option go_package = "graphfolio/proto/user/v1;userpb";
+
+service UserService {
+  rpc GetUserPreferences(GetUserPreferencesRequest) returns (GetUserPreferencesResponse) {}
+  rpc UpdateUserPreferences(UpdateUserPreferencesRequest) returns (UpdateUserPreferencesResponse) {}
+  rpc ListSupportedCurrencies(ListSupportedCurrenciesRequest) returns (ListSupportedCurrenciesResponse) {}
+}
+
+message UserPreferences {
+  string user_id          = 1;
+  string email            = 2;
+  string display_name     = 3;
+  string display_currency = 4; // 3-letter ISO code: "USD", "EUR", "GBP", "AUD", etc.
+  string theme            = 5; // "DARK", "LIGHT", "SYSTEM"
+  string created_at       = 6;
+  string updated_at       = 7;
+}
+
+message CurrencyInfo {
+  string code   = 1; // "USD"
+  string name   = 2; // "US Dollar"
+  string symbol = 3; // "$"
+}
+
+message GetUserPreferencesRequest {
+  string user_id = 1;
+}
+
+message GetUserPreferencesResponse {
+  UserPreferences preferences = 1;
+}
+
+message UpdateUserPreferencesRequest {
+  string user_id                   = 1;
+  optional string display_name     = 2;
+  optional string display_currency = 3;
+  optional string theme            = 4;
+}
+
+message UpdateUserPreferencesResponse {
+  UserPreferences preferences = 1;
+}
+
+message ListSupportedCurrenciesRequest {}
+
+message ListSupportedCurrenciesResponse {
+  repeated CurrencyInfo currencies = 1;
+}

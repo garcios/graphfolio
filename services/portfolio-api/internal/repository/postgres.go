@@ -55,6 +55,29 @@ func (r *PostgresRepository) FindPortfolioByUser(ctx context.Context, userID str
 	return &p, nil
 }
 
+func (r *PostgresRepository) UpdatePortfolioBaseCurrency(ctx context.Context, portfolioID uuid.UUID, baseCurrency string, fxRate decimal.Decimal) error {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("repository: failed to begin tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	if _, err := tx.Exec(ctx, updatePortfolioBaseCurrencySQL, portfolioID, baseCurrency); err != nil {
+		return fmt.Errorf("repository: failed to update portfolio base currency: %w", err)
+	}
+
+	if !fxRate.Equal(decimal.NewFromInt(1)) && fxRate.IsPositive() {
+		if _, err := tx.Exec(ctx, updateValuationsBaseCurrencySQL, portfolioID, fxRate); err != nil {
+			return fmt.Errorf("repository: failed to update valuations base currency: %w", err)
+		}
+		if _, err := tx.Exec(ctx, updateHoldingsBaseCurrencySQL, portfolioID, fxRate); err != nil {
+			return fmt.Errorf("repository: failed to update holdings base currency: %w", err)
+		}
+	}
+
+	return tx.Commit(ctx)
+}
+
 func (r *PostgresRepository) GetHoldingsWithMarketData(ctx context.Context, portfolioID uuid.UUID) ([]domain.HoldingWithPrice, error) {
 	rows, err := r.pool.Query(ctx, getHoldingsWithMarketDataSQL, portfolioID)
 	if err != nil {
@@ -526,6 +549,15 @@ func (r *PostgresRepository) GetFXRate(ctx context.Context, fromCurrency, toCurr
 	err = r.pool.QueryRow(ctx, getInverseFXRateSQL, fromCurrency, toCurrency).Scan(&inverseRate)
 	if err == nil && inverseRate.IsPositive() {
 		return decimal.NewFromInt(1).Div(inverseRate), nil
+	}
+
+	// Try triangulation via USD
+	if fromCurrency != "USD" && toCurrency != "USD" {
+		rateFromUSD, err1 := r.GetFXRate(ctx, "USD", fromCurrency)
+		rateToUSD, err2 := r.GetFXRate(ctx, "USD", toCurrency)
+		if err1 == nil && err2 == nil && rateFromUSD.IsPositive() && rateToUSD.IsPositive() {
+			return rateToUSD.Div(rateFromUSD), nil
+		}
 	}
 
 	return decimal.NewFromInt(1), nil

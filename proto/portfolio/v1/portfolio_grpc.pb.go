@@ -19,19 +19,20 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	PortfolioService_GetPortfolio_FullMethodName         = "/portfolio.v1.PortfolioService/GetPortfolio"
-	PortfolioService_AddTransaction_FullMethodName       = "/portfolio.v1.PortfolioService/AddTransaction"
-	PortfolioService_ListInstruments_FullMethodName      = "/portfolio.v1.PortfolioService/ListInstruments"
-	PortfolioService_GetPortfolioHistory_FullMethodName  = "/portfolio.v1.PortfolioService/GetPortfolioHistory"
-	PortfolioService_ListTransactions_FullMethodName     = "/portfolio.v1.PortfolioService/ListTransactions"
-	PortfolioService_DeleteTransaction_FullMethodName    = "/portfolio.v1.PortfolioService/DeleteTransaction"
-	PortfolioService_ListAllInstruments_FullMethodName   = "/portfolio.v1.PortfolioService/ListAllInstruments"
-	PortfolioService_CreateInstrument_FullMethodName     = "/portfolio.v1.PortfolioService/CreateInstrument"
-	PortfolioService_UpdateInstrument_FullMethodName     = "/portfolio.v1.PortfolioService/UpdateInstrument"
-	PortfolioService_ListInstrumentPrices_FullMethodName = "/portfolio.v1.PortfolioService/ListInstrumentPrices"
-	PortfolioService_RecordPriceOverride_FullMethodName  = "/portfolio.v1.PortfolioService/RecordPriceOverride"
-	PortfolioService_GetIngestionStatus_FullMethodName   = "/portfolio.v1.PortfolioService/GetIngestionStatus"
-	PortfolioService_TriggerMarketSync_FullMethodName    = "/portfolio.v1.PortfolioService/TriggerMarketSync"
+	PortfolioService_GetPortfolio_FullMethodName                = "/portfolio.v1.PortfolioService/GetPortfolio"
+	PortfolioService_UpdatePortfolioBaseCurrency_FullMethodName = "/portfolio.v1.PortfolioService/UpdatePortfolioBaseCurrency"
+	PortfolioService_AddTransaction_FullMethodName              = "/portfolio.v1.PortfolioService/AddTransaction"
+	PortfolioService_ListInstruments_FullMethodName             = "/portfolio.v1.PortfolioService/ListInstruments"
+	PortfolioService_GetPortfolioHistory_FullMethodName         = "/portfolio.v1.PortfolioService/GetPortfolioHistory"
+	PortfolioService_ListTransactions_FullMethodName            = "/portfolio.v1.PortfolioService/ListTransactions"
+	PortfolioService_DeleteTransaction_FullMethodName           = "/portfolio.v1.PortfolioService/DeleteTransaction"
+	PortfolioService_ListAllInstruments_FullMethodName          = "/portfolio.v1.PortfolioService/ListAllInstruments"
+	PortfolioService_CreateInstrument_FullMethodName            = "/portfolio.v1.PortfolioService/CreateInstrument"
+	PortfolioService_UpdateInstrument_FullMethodName            = "/portfolio.v1.PortfolioService/UpdateInstrument"
+	PortfolioService_ListInstrumentPrices_FullMethodName        = "/portfolio.v1.PortfolioService/ListInstrumentPrices"
+	PortfolioService_RecordPriceOverride_FullMethodName         = "/portfolio.v1.PortfolioService/RecordPriceOverride"
+	PortfolioService_GetIngestionStatus_FullMethodName          = "/portfolio.v1.PortfolioService/GetIngestionStatus"
+	PortfolioService_TriggerMarketSync_FullMethodName           = "/portfolio.v1.PortfolioService/TriggerMarketSync"
 )
 
 // PortfolioServiceClient is the client API for PortfolioService service.
@@ -39,6 +40,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PortfolioServiceClient interface {
 	GetPortfolio(ctx context.Context, in *GetPortfolioRequest, opts ...grpc.CallOption) (*GetPortfolioResponse, error)
+	UpdatePortfolioBaseCurrency(ctx context.Context, in *UpdatePortfolioBaseCurrencyRequest, opts ...grpc.CallOption) (*UpdatePortfolioBaseCurrencyResponse, error)
 	AddTransaction(ctx context.Context, in *AddTransactionRequest, opts ...grpc.CallOption) (*AddTransactionResponse, error)
 	ListInstruments(ctx context.Context, in *ListInstrumentsRequest, opts ...grpc.CallOption) (*ListInstrumentsResponse, error)
 	GetPortfolioHistory(ctx context.Context, in *GetPortfolioHistoryRequest, opts ...grpc.CallOption) (*GetPortfolioHistoryResponse, error)
@@ -67,6 +69,15 @@ func NewPortfolioServiceClient(cc grpc.ClientConnInterface) PortfolioServiceClie
 func (c *portfolioServiceClient) GetPortfolio(ctx context.Context, in *GetPortfolioRequest, opts ...grpc.CallOption) (*GetPortfolioResponse, error) {
 	out := new(GetPortfolioResponse)
 	err := c.cc.Invoke(ctx, PortfolioService_GetPortfolio_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portfolioServiceClient) UpdatePortfolioBaseCurrency(ctx context.Context, in *UpdatePortfolioBaseCurrencyRequest, opts ...grpc.CallOption) (*UpdatePortfolioBaseCurrencyResponse, error) {
+	out := new(UpdatePortfolioBaseCurrencyResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_UpdatePortfolioBaseCurrency_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -186,6 +197,7 @@ func (c *portfolioServiceClient) TriggerMarketSync(ctx context.Context, in *Trig
 // for forward compatibility
 type PortfolioServiceServer interface {
 	GetPortfolio(context.Context, *GetPortfolioRequest) (*GetPortfolioResponse, error)
+	UpdatePortfolioBaseCurrency(context.Context, *UpdatePortfolioBaseCurrencyRequest) (*UpdatePortfolioBaseCurrencyResponse, error)
 	AddTransaction(context.Context, *AddTransactionRequest) (*AddTransactionResponse, error)
 	ListInstruments(context.Context, *ListInstrumentsRequest) (*ListInstrumentsResponse, error)
 	GetPortfolioHistory(context.Context, *GetPortfolioHistoryRequest) (*GetPortfolioHistoryResponse, error)
@@ -210,6 +222,9 @@ type UnimplementedPortfolioServiceServer struct {
 
 func (UnimplementedPortfolioServiceServer) GetPortfolio(context.Context, *GetPortfolioRequest) (*GetPortfolioResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPortfolio not implemented")
+}
+func (UnimplementedPortfolioServiceServer) UpdatePortfolioBaseCurrency(context.Context, *UpdatePortfolioBaseCurrencyRequest) (*UpdatePortfolioBaseCurrencyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdatePortfolioBaseCurrency not implemented")
 }
 func (UnimplementedPortfolioServiceServer) AddTransaction(context.Context, *AddTransactionRequest) (*AddTransactionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddTransaction not implemented")
@@ -274,6 +289,24 @@ func _PortfolioService_GetPortfolio_Handler(srv interface{}, ctx context.Context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PortfolioServiceServer).GetPortfolio(ctx, req.(*GetPortfolioRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortfolioService_UpdatePortfolioBaseCurrency_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdatePortfolioBaseCurrencyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).UpdatePortfolioBaseCurrency(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_UpdatePortfolioBaseCurrency_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).UpdatePortfolioBaseCurrency(ctx, req.(*UpdatePortfolioBaseCurrencyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -504,6 +537,10 @@ var PortfolioService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPortfolio",
 			Handler:    _PortfolioService_GetPortfolio_Handler,
+		},
+		{
+			MethodName: "UpdatePortfolioBaseCurrency",
+			Handler:    _PortfolioService_UpdatePortfolioBaseCurrency_Handler,
 		},
 		{
 			MethodName: "AddTransaction",

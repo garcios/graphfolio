@@ -418,6 +418,20 @@ func (mr *MockRepositoryMockRecorder) UpdateInstrument(ctx, input any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateInstrument", reflect.TypeOf((*MockRepository)(nil).UpdateInstrument), ctx, input)
 }
 
+// UpdatePortfolioBaseCurrency mocks base method.
+func (m *MockRepository) UpdatePortfolioBaseCurrency(ctx context.Context, portfolioID uuid.UUID, baseCurrency string, fxRate decimal.Decimal) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePortfolioBaseCurrency", ctx, portfolioID, baseCurrency, fxRate)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdatePortfolioBaseCurrency indicates an expected call of UpdatePortfolioBaseCurrency.
+func (mr *MockRepositoryMockRecorder) UpdatePortfolioBaseCurrency(ctx, portfolioID, baseCurrency, fxRate any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePortfolioBaseCurrency", reflect.TypeOf((*MockRepository)(nil).UpdatePortfolioBaseCurrency), ctx, portfolioID, baseCurrency, fxRate)
+}
+
 // UpsertInstrumentPrice mocks base method.
 func (m *MockRepository) UpsertInstrumentPrice(ctx context.Context, instrumentID uuid.UUID, priceDate time.Time, closePrice decimal.Decimal, source string) (*domain.InstrumentPrice, error) {
 	m.ctrl.T.Helper()

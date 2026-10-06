@@ -19,7 +19,7 @@ This document catalogs all implemented features, in-progress components, and pla
 | **9** | **Frontend Workspace Architecture (Main App & Admin Portal)** | **DONE** | Web (Monorepo, React, Vite), BFF | [web-workspace-refactoring-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/web-workspace-refactoring-plan.md) |
 | **10** | **Admin Portal Backend & BFF (Asset, Price & Ingestion Management)** | **DONE** | Proto, Svc, BFF, Web | [admin-portal-backend-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-portal-backend-implementation-plan.md) |
 | **11** | **Dynamic Cost Basis Method Switching (Average Cost ↔ FIFO)** | **PLANNED** | Proto, Svc, BFF, Web | [cost-basis-switching-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/cost-basis-switching-implementation-plan.md) |
-| **12** | **User Preferences & Display Currency** | **PLANNED** | Proto, User API, BFF, Web | [user-preferences-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/user-preferences-implementation-plan.md) |
+| **12** | **User Preferences & Display Currency** | **DONE** | Proto, User API, BFF, Web | [user-preferences-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/user-preferences-implementation-plan.md) |
 | **13** | **Portfolio Valuation Engine & Historical Backfill** | **PLANNED** | Database, Svc, Worker | [portfolio-valuation-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/portfolio-valuation-engine-implementation-plan.md) |
 | **14** | **Market Data Ingestion (Asset Prices & FX Rates)** | **PLANNED** | Database, Svc, Worker | [market-data-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/market-data-ingestion-implementation-plan.md) |
 | **15** | **Look-Through Fundamental & Cash Flow Quality Engine** | **PLANNED** | Database, Proto, Svc, BFF, Web | [fundamental-cash-flow-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/fundamental-cash-flow-engine-implementation-plan.md) |
@@ -157,6 +157,25 @@ This document catalogs all implemented features, in-progress components, and pla
   - [main.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/cmd/market-ingest/main.go)
   - [Makefile](file:///Users/oscargarcia/workspace/graphfolio/Makefile) target: `make ingest-market-data`
 
+### 2.12 User Preferences & Display Currency
+- **Status**: **DONE**
+- **Plan Reference**: [user-preferences-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/user-preferences-implementation-plan.md)
+- **Description**: User profile identity and personal preference management system. Features the dedicated `services/user-api` gRPC microservice on `:50052` backed by the isolated `users` PostgreSQL schema (`users.users`), managing display name, theme (`DARK`, `LIGHT`, `SYSTEM`), and base display currency. Integrated via BFF GraphQL queries (`userPreferences`, `supportedCurrencies`) and mutation (`updateUserPreferences`), with dynamic portfolio revaluation synchronization. Investor frontend features the interactive `UserPreferencesModal` accessible from the dashboard profile badge, multi-currency rich dropdown (`USD`, `EUR`, `GBP`, `AUD`, `CAD`, `JPY`, `CHF`), segmented theme picker, live character counter, and real-time toast feedback.
+- **Key Files**:
+  - [user.proto](file:///Users/oscargarcia/workspace/graphfolio/proto/user/v1/user.proto)
+  - [000002_add_theme.up.sql](file:///Users/oscargarcia/workspace/graphfolio/services/user-api/migrations/000002_add_theme.up.sql)
+  - [dev_seed.sql](file:///Users/oscargarcia/workspace/graphfolio/services/user-api/seeds/dev_seed.sql)
+  - [user.go](file:///Users/oscargarcia/workspace/graphfolio/services/user-api/internal/domain/user.go)
+  - [repository.go](file:///Users/oscargarcia/workspace/graphfolio/services/user-api/internal/repository/repository.go)
+  - [postgres.go](file:///Users/oscargarcia/workspace/graphfolio/services/user-api/internal/repository/postgres.go)
+  - [service.go](file:///Users/oscargarcia/workspace/graphfolio/services/user-api/internal/service/service.go)
+  - [server.go](file:///Users/oscargarcia/workspace/graphfolio/services/user-api/internal/server.go)
+  - [schema.graphqls](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls)
+  - [schema.resolvers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers.go)
+  - [UserPreferencesModal.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/UserPreferencesModal.tsx)
+  - [UserPreferencesModal.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/UserPreferencesModal.css)
+  - [Dashboard.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.tsx)
+
 ---
 
 ## 3. Planned Features (`PLANNED`)
@@ -170,17 +189,6 @@ This document catalogs all implemented features, in-progress components, and pla
   - Dynamically switches `portfolio.portfolios.cost_basis_method`.
   - Replays historical transaction ledger to instantly update realized capital gains, holding cost basis, and total return percentages.
   - Info tooltip explaining tax optimization differences (pooling vs selling oldest shares).
-
-### 3.2 User Preferences & Display Currency
-- **Status**: **PLANNED**
-- **Plan Reference**: [user-preferences-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/user-preferences-implementation-plan.md)
-- **Scope**: `proto/user/v1/`, `services/user-api`, `bff/`, `web/`
-- **Highlights**:
-  - Implementation of `user-api` gRPC microservice on `:50052` backed by `users` PostgreSQL schema.
-  - Viewing and editing user preferences: Display Name, Theme (`DARK`, `LIGHT`, `SYSTEM`), and Display Currency.
-  - Multi-currency selector (`USD`, `EUR`, `GBP`, `AUD`, `CAD`, `JPY`, `CHF`).
-  - Dynamic currency conversion across portfolio valuation and holding metrics via live FX rates.
-  - `UserPreferencesModal` component triggered from the user profile badge in the navigation bar.
 
 ### 3.3 Portfolio Valuation Engine & Historical Backfill
 - **Status**: **PLANNED**

@@ -16,7 +16,8 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 - **`proto/` (The Contract)**:
   Protocol Buffers are the single source of truth for microservice RPCs and shared types. Stored at the root to eliminate schema drift between gRPC servers and the BFF client wrappers.
   - `proto/common/v1/decimal.proto`: High-precision fixed-point `Decimal` (value, scale) and `Money` (amount, currency_code) types.
-  - `proto/portfolio/v1/portfolio.proto`: Portfolio service (`GetPortfolio`, `AddTransaction`, `ListInstruments`, `GetPortfolioHistory`, `ListTransactions`, `DeleteTransaction`, `ListAllInstruments`, `CreateInstrument`, `UpdateInstrument`, `ListInstrumentPrices`, `RecordPriceOverride`, `GetIngestionStatus`, `TriggerMarketSync`), investment summary, time-series valuation points, performance metrics, and administrative operations.
+  - `proto/portfolio/v1/portfolio.proto`: Portfolio service (`GetPortfolio`, `UpdatePortfolioBaseCurrency`, `AddTransaction`, `ListInstruments`, `GetPortfolioHistory`, `ListTransactions`, `DeleteTransaction`, `ListAllInstruments`, `CreateInstrument`, `UpdateInstrument`, `ListInstrumentPrices`, `RecordPriceOverride`, `GetIngestionStatus`, `TriggerMarketSync`), investment summary, time-series valuation points, performance metrics, and administrative operations.
+  - `proto/user/v1/user.proto`: User service (`GetUserPreferences`, `UpdateUserPreferences`, `ListSupportedCurrencies`), user profile preferences (`theme`, `display_currency`, `display_name`), and currency reference metadata.
 
 - **`pkg/` (Shared Infrastructure)**:
   Strictly non-domain-specific code shared across backend modules:
@@ -27,18 +28,24 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 
 - **`services/` (The Domain Microservices)**:
   Each microservice is an isolated Go module (`services/portfolio-api`, `services/user-api`):
-  - Domain models and calculators live in `internal/domain/` (`portfolio`, `holding`, `transaction`, `instrument`, `price`, `ingestion`, `tax_lot`, `history`).
-  - Persistence logic lives in `internal/repository/` with `pgxpool.Pool` queries and transactions (`InsertTransaction`, `ListTransactions`, `DeleteTransaction`, `FindInstrumentBySymbol`, `SaveProjectionsTx`, `GetPortfolioValuations`, `ListAllInstruments`, `CreateInstrument`, `UpdateInstrument`, `ListInstrumentPrices`, `UpsertInstrumentPrice`, `GetIngestionMetrics`).
-  - Business logic, calculation services, transaction ingestion (`AddTransaction`), transaction deletion (`DeleteTransaction`), ledger replay projections (`RebuildProjections`), paginated ledger queries (`ListTransactions`), administrative operations (`CreateInstrument`, `UpdateInstrument`, `RecordPriceOverride`, `GetIngestionStatus`, `TriggerMarketSync`), and historical valuation time-series retrieval (`GetPortfolioHistory`) live in `internal/service/`.
-  - Transport adapters (gRPC servers) live in `internal/` (`server.go`) and `cmd/server/main.go`.
+  - **`services/portfolio-api` (:50051)**:
+    - Domain models and calculators live in `internal/domain/` (`portfolio`, `holding`, `transaction`, `instrument`, `price`, `ingestion`, `tax_lot`, `history`).
+    - Persistence logic lives in `internal/repository/` with `pgxpool.Pool` queries and transactions (`InsertTransaction`, `ListTransactions`, `DeleteTransaction`, `UpdatePortfolioBaseCurrency`, `FindInstrumentBySymbol`, `SaveProjectionsTx`, `GetPortfolioValuations`, `ListAllInstruments`, `CreateInstrument`, `UpdateInstrument`, `ListInstrumentPrices`, `UpsertInstrumentPrice`, `GetIngestionMetrics`).
+    - Business logic, calculation services, transaction ingestion (`AddTransaction`), transaction deletion (`DeleteTransaction`), ledger replay projections (`RebuildProjections`), dynamic base currency re-anchoring (`UpdatePortfolioBaseCurrency`), paginated ledger queries (`ListTransactions`), administrative operations (`CreateInstrument`, `UpdateInstrument`, `RecordPriceOverride`, `GetIngestionStatus`, `TriggerMarketSync`), and historical valuation time-series retrieval (`GetPortfolioHistory`) live in `internal/service/`.
+    - Transport adapters (gRPC servers) live in `internal/` (`server.go`) and `cmd/server/main.go`.
+  - **`services/user-api` (:50052)**:
+    - Domain models live in `internal/domain/` (`User`, `CurrencyInfo`, `SupportedCurrencies`).
+    - Persistence logic lives in `internal/repository/` with `pgxpool.Pool` queries (`GetUserByID`, `UpdateUserPreferences`).
+    - Business logic, input validation (display name bounds, theme enum, ISO 4217 currencies), and demo user alias resolution (`1` ↔ `018f0000-0000-7000-8000-000000000001`) live in `internal/service/`.
+    - Transport adapters (gRPC servers) live in `internal/` (`server.go`) and `cmd/server/main.go`.
   - Microservices only interact with their dedicated database schemas and other gRPC APIs. They have zero awareness of GraphQL.
 
 - **`bff/` (The Orchestrator)**:
-  The Backend-for-Frontend is a Go service using `gqlgen` (GraphQL). It translates GraphQL queries (`portfolio`, `instruments`, `portfolioHistory`, `transactions`, `allInstruments`, `instrumentPrices`, `ingestionStatus`) and mutations (`addTransaction`, `deleteTransaction`, `createInstrument`, `updateInstrument`, `recordPriceOverride`, `triggerMarketSync`) into gRPC calls across domain microservices, maps exact decimal scalars, stitches data together, and shields the frontend from microservice topology.
+  The Backend-for-Frontend is a Go service using `gqlgen` (GraphQL). It translates GraphQL queries (`portfolio`, `instruments`, `portfolioHistory`, `transactions`, `allInstruments`, `instrumentPrices`, `ingestionStatus`, `userPreferences`, `supportedCurrencies`) and mutations (`addTransaction`, `deleteTransaction`, `createInstrument`, `updateInstrument`, `recordPriceOverride`, `triggerMarketSync`, `updateUserPreferences`) into gRPC calls across domain microservices, maps exact decimal scalars, orchestrates dynamic currency re-anchoring between `user-api` and `portfolio-api`, and shields the frontend from microservice topology.
 
 - **`web/` (The Consumer)**:
   Workspace monorepo containing multiple frontend applications and shared libraries:
-  - `apps/main-app`: Primary investor-facing application (Port 5173). Interactive portfolio dashboard, performance chart, transaction ledger, and trade ingestion modal.
+  - `apps/main-app`: Primary investor-facing application (Port 5173). Interactive portfolio dashboard, performance chart, transaction ledger, trade ingestion modal, and investor profile preferences modal (`UserPreferencesModal`).
   - `apps/admin-app`: Internal administrative portal (Port 5174). Master instrument/asset directory management, closing price ledger, manual price overrides, and market ingestion monitoring.
   - `packages/ui`: Shared design system (`@graphfolio/ui`) with dark glassmorphic design tokens, atomic components (`Button`, `Modal`, `Card`, `Badge`, `Table`, `Input`, `Select`), and precision financial formatters.
   - `packages/api-client`: Shared auto-generated typed GraphQL client (`@graphfolio/api-client`) communicating with the BFF.
@@ -52,9 +59,9 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   ├── common/v1/
 │   │   └── decimal.proto         # Decimal and Money contracts
 │   ├── portfolio/v1/
-│   │   └── portfolio.proto       # Portfolio gRPC service (GetPortfolio, AddTransaction, ListInstruments, GetPortfolioHistory, ListTransactions, DeleteTransaction)
+│   │   └── portfolio.proto       # Portfolio gRPC service (GetPortfolio, UpdatePortfolioBaseCurrency, AddTransaction, ListInstruments, GetPortfolioHistory, ListTransactions, DeleteTransaction)
 │   └── user/v1/
-│       └── user.proto            # User gRPC service definition
+│       └── user.proto            # User gRPC service definition (GetUserPreferences, UpdateUserPreferences, ListSupportedCurrencies)
 │
 ├── pkg/                          # 2. Shared Libraries (Backend)
 │   ├── database/                 # pgxpool connection pooling, config, migration runner
@@ -90,23 +97,30 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   │   │   │   ├── history.go    # GetPortfolioHistory and timeframe boundary logic
 │   │   │   │   ├── history_test.go# Unit tests for history filtering and period return math
 │   │   │   │   └── mocks/        # Uber-go mock service (MockPortfolioService)
-│   │   │   ├── server.go         # gRPC PortfolioServiceServer implementation (ListTransactions, RecordPriceOverride, etc.)
+│   │   │   ├── server.go         # gRPC PortfolioServiceServer implementation (ListTransactions, RecordPriceOverride, UpdatePortfolioBaseCurrency, etc.)
 │   │   │   └── server_test.go    # gRPC server unit tests with MockPortfolioService
 │   │   ├── migrations/           # Schema migrations (000001 to 000006)
 │   │   ├── seeds/                # Development seed data (dev_seed.sql with 365-day history)
 │   │   └── go.mod
 │   └── user-api/
 │       ├── cmd/server/           # Service entrypoint (gRPC on :50052)
-│       ├── migrations/           # User schema migrations (000001)
+│       ├── internal/             # Domain entities, repository, service, and gRPC server
+│       │   ├── domain/           # Domain entities (User, Theme, Currency)
+│       │   ├── repository/       # Repository interface & PostgreSQL (pgx) queries
+│       │   ├── service/          # UserService (preferences, validation, supported currencies)
+│       │   ├── server.go         # gRPC UserServiceServer implementation
+│       │   └── server_test.go    # gRPC server unit tests with MockUserService
+│       ├── migrations/           # User schema migrations (000001_initial_schema, 000002_add_theme)
+│       ├── seeds/                # User dev fixtures (dev_seed.sql with demo investor)
 │       └── go.mod
 │
 ├── bff/                          # 5. GraphQL Backend-for-Frontend
 │   ├── cmd/server/               # BFF entrypoint (GraphQL server on :8080)
 │   ├── graph/
-│   │   ├── schema.graphqls       # GraphQL schema (Queries: portfolio, transactions; Mutations: addTransaction, deleteTransaction)
-│   │   ├── schema.resolvers.go   # Resolver implementations calling gRPC (portfolio, portfolioHistory, transactions, deleteTransaction)
+│   │   ├── schema.graphqls       # GraphQL schema (Queries: portfolio, transactions, userPreferences; Mutations: addTransaction, deleteTransaction, updateUserPreferences)
+│   │   ├── schema.resolvers.go   # Resolver implementations calling gRPC (portfolio, portfolioHistory, transactions, deleteTransaction, userPreferences, updateUserPreferences)
 │   │   ├── schema.resolvers_test.go # Unit tests for resolvers
-│   │   ├── helpers.go            # Domain-to-GraphQL conversion helpers (history, transactions, timeframe)
+│   │   ├── helpers.go            # Domain-to-GraphQL conversion helpers (history, transactions, timeframe, preferences)
 │   │   └── model/
 │   │       ├── decimal.go        # Custom Decimal scalar unmarshaler/marshaler
 │   │       └── models_gen.go     # Generated GraphQL models
@@ -118,7 +132,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   ├── apps/
 │   │   ├── main-app/             # Primary Investor Application (:5173)
 │   │   │   ├── src/
-│   │   │   │   ├── components/   # Dashboard, PerformanceChart, TransactionLedger, AddTransactionModal
+│   │   │   │   ├── components/   # Dashboard, PerformanceChart, TransactionLedger, AddTransactionModal, UserPreferencesModal
 │   │   │   │   ├── App.tsx
 │   │   │   │   └── main.tsx
 │   │   │   ├── vite.config.ts    # Configured with resolve.alias for live package HMR
@@ -229,6 +243,15 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 - **Resilience & Rate Limiting**: Outbound HTTP traffic is governed by `RateLimiter` (`golang.org/x/time/rate`) and exponential backoff retry with randomized jitter (`ExecuteWithRetry`) on transient HTTP 429 and 5xx status codes.
 - **Transaction Ingestion Backfill**: Recording a trade in `AddTransaction` for an unpriced instrument automatically verifies range coverage (`HasPricesForRange`) and triggers historical backfill (`BackfillInstrumentPrices`) before `RebuildProjections` updates holding valuations and performance curves.
 - **Scheduled & On-Demand CLI Ingestion**: `cmd/market-ingest/main.go` (runnable via `make ingest-market-data`) orchestrates daily batch synchronization and historical date-range backfills.
+
+### 4.9 User Identity, Personal Preferences & Dynamic Currency Re-anchoring
+- **User Domain Microservice Isolation**: `services/user-api` (Port `:50052`) owns the `users` schema (`users.users`), completely decoupled from the portfolio ledger.
+- **Preference Invariants & Validation**: User profile models validate non-empty display names (1-100 characters), supported ISO 4217 currency codes (`USD`, `EUR`, `GBP`, `AUD`, `CAD`, `JPY`, `CHF`), and supported theme options (`DARK`, `LIGHT`, `SYSTEM`).
+- **Dynamic Portfolio Base Currency Re-anchoring**: Calling `UpdatePortfolioBaseCurrency` on `portfolio-api` atomically updates `portfolio.portfolios.base_currency` and scales both historical valuation time-series (`portfolio.portfolio_valuations`) and holding cost bases (`portfolio.holdings`) using official exchange rates via direct, inverse, or triangulated market marks.
+- **BFF Orchestration & Currency Synchronization**: The BFF ensures single-source-of-truth consistency across microservices:
+  - When fetching the portfolio (`Query.portfolio`), the BFF verifies that the portfolio's base currency matches the user's preferred currency, automatically triggering `UpdatePortfolioBaseCurrency` if a mismatch is detected.
+  - When mutating preferences (`Mutation.updateUserPreferences`), the BFF updates `user-api` and immediately synchronizes `portfolio-api` within the same workflow, returning the newly re-scaled portfolio state.
+- **Reactive UI Synchronization**: The investor frontend (`apps/main-app`) re-renders cards, tables, and metric badges upon preference changes, and explicitly remounts the SVG `PerformanceChart` with the new currency key to prevent canvas and tooltip currency ghosting.
 
 ---
 

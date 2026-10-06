@@ -45,6 +45,8 @@ export interface Query {
     allInstruments: Instrument[]
     instrumentPrices: InstrumentPricesConnection
     ingestionStatus: IngestionStatus
+    userPreferences: UserPreferences
+    supportedCurrencies: Currency[]
     __typename: 'Query'
 }
 
@@ -105,6 +107,7 @@ export interface Mutation {
     updateInstrument: Instrument
     recordPriceOverride: RecordPriceOverridePayload
     triggerMarketSync: MarketSyncPayload
+    updateUserPreferences: UpdateUserPreferencesPayload
     __typename: 'Mutation'
 }
 
@@ -184,6 +187,30 @@ export interface Investment {
     __typename: 'Investment'
 }
 
+export interface UserPreferences {
+    userId: Scalars['ID']
+    email: Scalars['String']
+    displayName: Scalars['String']
+    displayCurrency: Scalars['String']
+    theme: Scalars['String']
+    createdAt: Scalars['String']
+    updatedAt: Scalars['String']
+    __typename: 'UserPreferences'
+}
+
+export interface Currency {
+    code: Scalars['String']
+    name: Scalars['String']
+    symbol: Scalars['String']
+    __typename: 'Currency'
+}
+
+export interface UpdateUserPreferencesPayload {
+    preferences: UserPreferences
+    portfolio: (Portfolio | null)
+    __typename: 'UpdateUserPreferencesPayload'
+}
+
 export interface MoneyGenqlSelection{
     amount?: boolean | number
     currencyCode?: boolean | number
@@ -221,6 +248,8 @@ export interface QueryGenqlSelection{
     allInstruments?: (InstrumentGenqlSelection & { __args?: {isActive?: (Scalars['Boolean'] | null), search?: (Scalars['String'] | null)} })
     instrumentPrices?: (InstrumentPricesConnectionGenqlSelection & { __args?: {symbol?: (Scalars['String'] | null), fromDate?: (Scalars['String'] | null), toDate?: (Scalars['String'] | null), limit?: (Scalars['Int'] | null), offset?: (Scalars['Int'] | null)} })
     ingestionStatus?: IngestionStatusGenqlSelection
+    userPreferences?: UserPreferencesGenqlSelection
+    supportedCurrencies?: CurrencyGenqlSelection
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -285,6 +314,7 @@ export interface MutationGenqlSelection{
     updateInstrument?: (InstrumentGenqlSelection & { __args: {input: UpdateInstrumentInput} })
     recordPriceOverride?: (RecordPriceOverridePayloadGenqlSelection & { __args: {input: RecordPriceOverrideInput} })
     triggerMarketSync?: (MarketSyncPayloadGenqlSelection & { __args?: {symbols?: (Scalars['String'][] | null), syncFx?: (Scalars['Boolean'] | null)} })
+    updateUserPreferences?: (UpdateUserPreferencesPayloadGenqlSelection & { __args: {input: UpdateUserPreferencesInput} })
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -375,6 +405,35 @@ export interface InvestmentGenqlSelection{
     todayReturnPercent?: boolean | number
     totalReturnAmount?: MoneyGenqlSelection
     totalReturnPercent?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface UserPreferencesGenqlSelection{
+    userId?: boolean | number
+    email?: boolean | number
+    displayName?: boolean | number
+    displayCurrency?: boolean | number
+    theme?: boolean | number
+    createdAt?: boolean | number
+    updatedAt?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface CurrencyGenqlSelection{
+    code?: boolean | number
+    name?: boolean | number
+    symbol?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface UpdateUserPreferencesInput {displayName?: (Scalars['String'] | null),displayCurrency?: (Scalars['String'] | null),theme?: (Scalars['String'] | null)}
+
+export interface UpdateUserPreferencesPayloadGenqlSelection{
+    preferences?: UserPreferencesGenqlSelection
+    portfolio?: PortfolioGenqlSelection
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -520,6 +579,30 @@ export interface InvestmentGenqlSelection{
     export const isInvestment = (obj?: { __typename?: any } | null): obj is Investment => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isInvestment"')
       return Investment_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const UserPreferences_possibleTypes: string[] = ['UserPreferences']
+    export const isUserPreferences = (obj?: { __typename?: any } | null): obj is UserPreferences => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isUserPreferences"')
+      return UserPreferences_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const Currency_possibleTypes: string[] = ['Currency']
+    export const isCurrency = (obj?: { __typename?: any } | null): obj is Currency => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isCurrency"')
+      return Currency_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const UpdateUserPreferencesPayload_possibleTypes: string[] = ['UpdateUserPreferencesPayload']
+    export const isUpdateUserPreferencesPayload = (obj?: { __typename?: any } | null): obj is UpdateUserPreferencesPayload => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isUpdateUserPreferencesPayload"')
+      return UpdateUserPreferencesPayload_possibleTypes.includes(obj.__typename)
     }
     
 

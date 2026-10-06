@@ -13,8 +13,9 @@ A modern portfolio tracker built for serious investors. GraphFolio accurately me
 - **Transaction History & Ledger Management**: Paginated transaction history with type filtering, exact execution prices, fee tracking, and safe deletion with immediate atomic ledger replay.
 - **Transaction-Ledger Architecture**: Immutable transaction ledger acts as the authoritative source of truth, deterministically projecting holdings, cash balances, and valuations.
 - **Flexible Cost Basis Accounting**: Native support for both **Average Cost** (`AVERAGE_COST`, default) and **FIFO** (`FIFO`) tax lot relief strategies.
+- **User Preferences & Dynamic Multi-Currency Re-anchoring**: Manage investor profile display name, UI theme (`DARK`, `LIGHT`, `SYSTEM`), and base display currency (`USD`, `EUR`, `GBP`, `AUD`, `CAD`, `JPY`, `CHF`). Changing preferred currency automatically triggers atomic base currency re-anchoring on `portfolio-api`, re-scaling valuations and holdings cost bases via live FX triangulation without data drift.
 - **Clean Microservice Monorepo**: Contract-first gRPC services with a Go GraphQL Backend-for-Frontend (BFF) and strongly-typed frontend queries.
-- **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, Vite, modal transaction entry, and instant state refresh.
+- **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, Vite, modal transaction entry, investor preferences dialog, and instant reactive state refresh.
 
 > 📋 *For a comprehensive list of completed milestones, in-progress components, and planned roadmap items, see [`FEATURES.md`](file:///Users/oscargarcia/workspace/graphfolio/FEATURES.md).*
 
@@ -109,15 +110,17 @@ make generate
 
 ### 6. Start Development Servers
 
-Start the Portfolio gRPC API, the GraphQL BFF, and the Vite frontend concurrently:
+Start the Portfolio gRPC API, the User gRPC API, the GraphQL BFF, and the Vite frontend concurrently:
 
 ```bash
 make run
 ```
 
-- **Web Frontend**: [http://localhost:5173](http://localhost:5173)
+- **Primary Investor Web App**: [http://localhost:5173](http://localhost:5173)
+- **Internal Admin Portal**: [http://localhost:5174](http://localhost:5174) *(run separately via `make run-admin`)*
 - **GraphQL Playground (BFF)**: [http://localhost:8080/](http://localhost:8080/)
 - **Portfolio gRPC API**: `localhost:50051`
+- **User gRPC API**: `localhost:50052`
 
 ---
 
@@ -126,18 +129,19 @@ make run
 GraphFolio enforces a strict separation of concerns across layered boundaries:
 
 ```text
-React Component (Dashboard, AddTransactionModal, PerformanceChart, TransactionLedger)
+React Components (Dashboard, PerformanceChart, TransactionLedger, UserPreferencesModal)
       │
       ▼  (Typed queries & mutations via GenQL)
 GraphQL Backend-for-Frontend (BFF)  [localhost:8080]
+      ├── gRPC (proto/portfolio/v1)
+      │   ▼
+      │   Portfolio API Service  [localhost:50051]
+      │   └── pgxpool -> PostgreSQL [localhost:5432/graphfolio] -> portfolio schema
       │
-      ▼  (gRPC via Protocol Buffers)
-Portfolio API Service  [localhost:50051]
-      │
-      ▼  (pgxpool connection pool with shopspring/decimal)
-PostgreSQL Database  [localhost:5432/graphfolio]
-      ├── portfolio schema (owned by portfolio_svc)
-      └── users schema     (owned by user_svc)
+      └── gRPC (proto/user/v1)
+          ▼
+          User API Service  [localhost:50052]
+          └── pgxpool -> PostgreSQL [localhost:5432/graphfolio] -> users schema
 ```
 
 ### Exact Decimal Precision
@@ -160,6 +164,16 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
    - `AVERAGE_COST`: Disposals proportionally relieve cost basis across all open tax lots.
    - `FIFO`: Disposals relieve the earliest acquired tax lots first.
 
+### User Identity, Preferences & Dynamic Currency Re-anchoring
+
+1. **User Domain Microservice**: `services/user-api` (Port `:50052`) owns the `users.users` table, isolating user profile identity, display name, UI theme (`DARK`, `LIGHT`, `SYSTEM`), and preferred display currency (`USD`, `EUR`, `GBP`, `AUD`, `CAD`, `JPY`, `CHF`).
+2. **Atomic Base Currency Synchronization**: When an investor updates their display currency in `UserPreferencesModal`:
+   - BFF dispatches `UpdateUserPreferences` to `user-api` to persist user profile settings.
+   - BFF dispatches `UpdatePortfolioBaseCurrency` to `portfolio-api` within an atomic database transaction.
+   - `portfolio.portfolios.base_currency` is updated, and historical valuation snapshots (`portfolio.portfolio_valuations`) and holding cost bases (`portfolio.holdings`) are re-scaled proportionally via live FX rates with triangulation fallback.
+   - The GraphQL mutation returns the re-calculated portfolio, instantly updating all cards, tables, and metrics without floating-point error.
+3. **Query-Level Consistency**: The GraphQL `portfolio` query automatically verifies the investor's preferred display currency with `user-api` and aligns `portfolio-api`'s base currency if necessary.
+
 ---
 
 ## Directory Structure
@@ -167,24 +181,30 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 ```text
 ├── proto/                        # Single Source of Truth for APIs (Protobuf definitions)
 │   ├── common/v1/decimal.proto   # Decimal and Money contracts
-│   └── portfolio/v1/             # Portfolio gRPC service (GetPortfolio, AddTransaction, ListInstruments, GetPortfolioHistory, ListTransactions, DeleteTransaction)
+│   ├── portfolio/v1/             # Portfolio gRPC service (GetPortfolio, UpdatePortfolioBaseCurrency, AddTransaction, etc.)
+│   └── user/v1/user.proto        # User gRPC service (GetUserPreferences, UpdateUserPreferences, ListSupportedCurrencies)
 ├── pkg/                          # Shared Go infrastructure
 │   ├── database/                 # pgx connection pooling, auto .env loading, migration runner
 │   └── decimalpb/                # Decimal/Money conversions between proto and shopspring
 ├── scripts/db/                   # Database bootstrap and teardown scripts
 ├── services/                     # Domain Microservices
 │   ├── portfolio-api/            # Portfolio business logic, ledger replay, valuations, migrations, seeds
-│   │   ├── cmd/server/           # Application entrypoint
-│   │   ├── internal/             # Domain entities (history, holding, etc.), repository, service, and gRPC server
+│   │   ├── cmd/server/           # Application entrypoint (:50051)
+│   │   ├── internal/             # Domain entities, repository, service, and gRPC server
 │   │   ├── migrations/           # Versioned schema migrations (000001 - 000006)
 │   │   └── seeds/                # Seed fixtures (dev_seed.sql with 365-day history)
-│   └── user-api/                 # User domain microservice and migrations
-├── bff/                          # GraphQL Backend-for-Frontend (gqlgen)
-│   ├── graph/                    # Schema, resolvers (portfolio, instruments, addTransaction, portfolioHistory, transactions, deleteTransaction), helpers
+│   └── user-api/                 # User domain microservice (:50052)
+│       ├── cmd/server/           # Application entrypoint (:50052)
+│       ├── internal/             # User domain, repository (pgx), service, and gRPC server
+│       ├── migrations/           # Versioned schema migrations (000001, 000002_add_theme)
+│       └── seeds/                # User dev fixtures (dev_seed.sql with demo investor)
+├── bff/                          # GraphQL Backend-for-Frontend (gqlgen on :8080)
+│   ├── graph/                    # Schema, resolvers, helpers, model
 │   └── cmd/server/               # BFF entrypoint
 ├── web/                          # Frontend Workspace Monorepo
 │   ├── apps/
 │   │   ├── main-app/             # Primary Investor React App (:5173)
+│   │   │   └── src/components/   # Dashboard, PerformanceChart, TransactionLedger, UserPreferencesModal
 │   │   └── admin-app/            # Internal Operations Portal (:5174)
 │   └── packages/
 │       ├── ui/                   # Shared Design System (@graphfolio/ui)
@@ -261,7 +281,7 @@ make generate
 | `make run-admin` | Starts the Internal Operations Portal (`admin-app`) on port 5174 |
 | `make run-all-web` | Concurrently starts both `main-app` and `admin-app` |
 | `make build-web` | Builds production bundles for all web workspaces |
-| `make run` | Concurrently starts Portfolio API, BFF, and React web servers |
+| `make run` | Concurrently starts Portfolio API, User API, BFF, and React web servers |
 
 ---
 

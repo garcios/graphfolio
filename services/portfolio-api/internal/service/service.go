@@ -3,15 +3,19 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"portfolio-api/internal/domain"
 	"portfolio-api/internal/repository"
+
+	"github.com/shopspring/decimal"
 )
 
 //go:generate go run go.uber.org/mock/mockgen -destination=mocks/mock_service.go -package=mocks portfolio-api/internal/service PortfolioService
 type PortfolioService interface {
 	GetPortfolioSummary(ctx context.Context, userID string) (*domain.PortfolioSummary, error)
+	UpdatePortfolioBaseCurrency(ctx context.Context, userID string, baseCurrency string) (*domain.PortfolioSummary, error)
 	RebuildProjections(ctx context.Context, userID string) error
 	AddTransaction(ctx context.Context, input domain.AddTransactionInput) (*domain.Transaction, *domain.PortfolioSummary, error)
 	ListInstruments(ctx context.Context) ([]domain.Instrument, error)
@@ -92,4 +96,32 @@ func (s *portfolioService) GetPortfolioSummary(ctx context.Context, userID strin
 
 	summary := domain.CalculatePortfolioSummary(*portfolio, holdings, cash, valuation, fxRates)
 	return &summary, nil
+}
+
+func (s *portfolioService) UpdatePortfolioBaseCurrency(ctx context.Context, userID string, baseCurrency string) (*domain.PortfolioSummary, error) {
+	cleanCurrency := strings.TrimSpace(strings.ToUpper(baseCurrency))
+	if len(cleanCurrency) != 3 {
+		return nil, fmt.Errorf("service: invalid currency code %q (must be 3 letters)", baseCurrency)
+	}
+
+	portfolio, err := s.repo.FindPortfolioByUser(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if portfolio.BaseCurrency == cleanCurrency {
+		return s.GetPortfolioSummary(ctx, userID)
+	}
+
+	// Calculate conversion rate from current base currency to new base currency
+	rate, err := s.repo.GetFXRate(ctx, portfolio.BaseCurrency, cleanCurrency)
+	if err != nil || !rate.IsPositive() {
+		rate = decimal.NewFromInt(1)
+	}
+
+	if err := s.repo.UpdatePortfolioBaseCurrency(ctx, portfolio.ID, cleanCurrency, rate); err != nil {
+		return nil, fmt.Errorf("service: failed to update portfolio base currency: %w", err)
+	}
+
+	return s.GetPortfolioSummary(ctx, userID)
 }

@@ -371,3 +371,85 @@ func TestPortfolioService_RebuildProjections(t *testing.T) {
 		}
 	})
 }
+
+func TestPortfolioService_UpdatePortfolioBaseCurrency(t *testing.T) {
+	ctx := context.Background()
+	userID := "user-123"
+	portfolioID := uuid.New()
+
+	t.Run("successful base currency update with fx rate", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := NewPortfolioService(mockRepo)
+
+		pUSD := &domain.Portfolio{
+			ID:           portfolioID,
+			UserID:       uuid.New(),
+			BaseCurrency: "USD",
+		}
+		pAUD := &domain.Portfolio{
+			ID:           portfolioID,
+			UserID:       uuid.New(),
+			BaseCurrency: "AUD",
+		}
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(pUSD, nil)
+		mockRepo.EXPECT().GetFXRate(ctx, "USD", "AUD").Return(decimal.NewFromFloat(1.523), nil)
+		mockRepo.EXPECT().UpdatePortfolioBaseCurrency(ctx, portfolioID, "AUD", decimal.NewFromFloat(1.523)).Return(nil)
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(pAUD, nil)
+		mockRepo.EXPECT().GetHoldingsWithMarketData(ctx, portfolioID).Return([]domain.HoldingWithPrice{}, nil)
+		mockRepo.EXPECT().GetCashBalances(ctx, portfolioID).Return([]domain.CashBalance{}, nil)
+		mockRepo.EXPECT().GetLatestValuation(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetCashFXRates(ctx, "AUD").Return(map[string]decimal.Decimal{}, nil)
+
+		summary, err := svc.UpdatePortfolioBaseCurrency(ctx, userID, "AUD")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if summary == nil {
+			t.Fatalf("expected summary, got nil")
+		}
+		if summary.TotalValue.CurrencyCode != "AUD" {
+			t.Errorf("expected currency AUD, got %s", summary.TotalValue.CurrencyCode)
+		}
+	})
+
+	t.Run("returns error on invalid currency code", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := NewPortfolioService(mockRepo)
+
+		_, err := svc.UpdatePortfolioBaseCurrency(ctx, userID, "INVALID")
+		if err == nil {
+			t.Fatalf("expected error for invalid currency code")
+		}
+	})
+
+	t.Run("noop if currency is already set", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := NewPortfolioService(mockRepo)
+
+		pUSD := &domain.Portfolio{
+			ID:           portfolioID,
+			UserID:       uuid.New(),
+			BaseCurrency: "USD",
+		}
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(pUSD, nil)
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(pUSD, nil)
+		mockRepo.EXPECT().GetHoldingsWithMarketData(ctx, portfolioID).Return([]domain.HoldingWithPrice{}, nil)
+		mockRepo.EXPECT().GetCashBalances(ctx, portfolioID).Return([]domain.CashBalance{}, nil)
+		mockRepo.EXPECT().GetLatestValuation(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetCashFXRates(ctx, "USD").Return(map[string]decimal.Decimal{}, nil)
+
+		summary, err := svc.UpdatePortfolioBaseCurrency(ctx, userID, "USD")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if summary.TotalValue.CurrencyCode != "USD" {
+			t.Errorf("expected currency USD, got %s", summary.TotalValue.CurrencyCode)
+		}
+	})
+}

@@ -16,6 +16,7 @@ import (
 //go:generate go run go.uber.org/mock/mockgen -destination=mocks/mock_repository.go -package=mocks portfolio-api/internal/repository Repository
 type Repository interface {
 	FindPortfolioByUser(ctx context.Context, userID string) (*domain.Portfolio, error)
+	UpdatePortfolioBaseCurrency(ctx context.Context, portfolioID uuid.UUID, baseCurrency string, fxRate decimal.Decimal) error
 	GetHoldingsWithMarketData(ctx context.Context, portfolioID uuid.UUID) ([]domain.HoldingWithPrice, error)
 	GetCashBalances(ctx context.Context, portfolioID uuid.UUID) ([]domain.CashBalance, error)
 	GetLatestValuation(ctx context.Context, portfolioID uuid.UUID) (*domain.PortfolioValuation, error)

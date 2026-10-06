@@ -56,6 +56,8 @@ type Query {
   allInstruments(isActive: Boolean, search: String): [Instrument!]!
   instrumentPrices(symbol: String, fromDate: String, toDate: String, limit: Int = 50, offset: Int = 0): InstrumentPricesConnection!
   ingestionStatus: IngestionStatus!
+  userPreferences: UserPreferences!
+  supportedCurrencies: [Currency!]!
 }
 
 enum HistoryTimeframe {
@@ -116,6 +118,7 @@ type Mutation {
   updateInstrument(input: UpdateInstrumentInput!): Instrument!
   recordPriceOverride(input: RecordPriceOverrideInput!): RecordPriceOverridePayload!
   triggerMarketSync(symbols: [String!], syncFx: Boolean): MarketSyncPayload!
+  updateUserPreferences(input: UpdateUserPreferencesInput!): UpdateUserPreferencesPayload!
 }
 
 type InstrumentPrice {
@@ -208,4 +211,31 @@ type Investment {
   todayReturnPercent: Decimal!
   totalReturnAmount: Money!
   totalReturnPercent: Decimal!
+}
+
+type UserPreferences {
+  userId: ID!
+  email: String!
+  displayName: String!
+  displayCurrency: String!
+  theme: String!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type Currency {
+  code: String!
+  name: String!
+  symbol: String!
+}
+
+input UpdateUserPreferencesInput {
+  displayName: String
+  displayCurrency: String
+  theme: String
+}
+
+type UpdateUserPreferencesPayload {
+  preferences: UserPreferences!
+  portfolio: Portfolio
 }

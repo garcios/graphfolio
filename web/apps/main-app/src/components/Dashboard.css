@@ -30,22 +30,60 @@
   margin-top: 0.25rem;
 }
 
-.user-profile .avatar {
-  width: 40px;
-  height: 40px;
+.user-profile-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.35rem 0.85rem 0.35rem 0.4rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(10px);
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: inherit;
+}
+
+.user-profile-btn:hover {
+  background: var(--card-bg-hover);
+  border-color: var(--card-border-active);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.user-profile-btn .avatar {
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent-green), #047857);
+  background: linear-gradient(135deg, var(--accent-blue), #1d4ed8);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  box-shadow: 0 0 15px var(--card-glow);
-  cursor: pointer;
-  transition: transform 0.2s;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #ffffff;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
 }
 
-.user-profile .avatar:hover {
-  transform: scale(1.05);
+.user-profile-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  line-height: 1.2;
+}
+
+.user-profile-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.user-profile-currency {
+  font-size: 0.72rem;
+  color: var(--accent-green);
+  font-family: var(--font-mono);
+  font-weight: 600;
 }
 
 .hero-metrics {
