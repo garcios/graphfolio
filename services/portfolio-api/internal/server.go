@@ -699,6 +699,39 @@ func (s *PortfolioServer) TriggerMarketSync(ctx context.Context, req *pb.Trigger
 	}, nil
 }
 
+func (s *PortfolioServer) RebuildValuations(ctx context.Context, req *pb.RebuildValuationsRequest) (*pb.RebuildValuationsResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	userID := req.GetUserId()
+	if userID == "" {
+		userID = "1"
+	}
+
+	var fromDate *time.Time
+	if req.GetFromDate() != "" {
+		parsed, err := time.Parse("2006-01-02", req.GetFromDate())
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid from_date format: %v (expected YYYY-MM-DD)", err)
+		}
+		utcDate := parsed.UTC()
+		fromDate = &utcDate
+	}
+
+	if err := s.svc.RebuildValuations(ctx, userID, fromDate); err != nil {
+		if errors.Is(err, repository.ErrPortfolioNotFound) {
+			return nil, status.Errorf(codes.NotFound, "portfolio not found for user: %s", userID)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to rebuild valuations: %v", err)
+	}
+
+	return &pb.RebuildValuationsResponse{
+		Success: true,
+		Message: "Valuations recomputed successfully",
+	}, nil
+}
+
 func mapInstrumentToProto(inst domain.Instrument) *pb.Instrument {
 	p := &pb.Instrument{
 		Id:           inst.ID.String(),

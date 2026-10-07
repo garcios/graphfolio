@@ -102,13 +102,9 @@ func (s *portfolioService) AddTransaction(ctx context.Context, input domain.AddT
 			}
 		}
 
-		if err := s.RebuildProjections(ctx, userID); err != nil {
-			return nil, nil, fmt.Errorf("service: rebuild projections: %w", err)
-		}
-
-		summary, err := s.GetPortfolioSummary(ctx, userID)
+		summary, err := s.postTransactionUpdate(ctx, userID, portfolio.ID, tradeDate)
 		if err != nil {
-			return nil, nil, fmt.Errorf("service: get portfolio summary: %w", err)
+			return nil, nil, err
 		}
 
 		return savedTx, summary, nil
@@ -146,13 +142,9 @@ func (s *portfolioService) AddTransaction(ctx context.Context, input domain.AddT
 			return nil, nil, fmt.Errorf("service: insert transaction: %w", err)
 		}
 
-		if err := s.RebuildProjections(ctx, userID); err != nil {
-			return nil, nil, fmt.Errorf("service: rebuild projections: %w", err)
-		}
-
-		summary, err := s.GetPortfolioSummary(ctx, userID)
+		summary, err := s.postTransactionUpdate(ctx, userID, portfolio.ID, tradeDate)
 		if err != nil {
-			return nil, nil, fmt.Errorf("service: get portfolio summary: %w", err)
+			return nil, nil, err
 		}
 
 		return savedTx, summary, nil
@@ -199,13 +191,9 @@ func (s *portfolioService) AddTransaction(ctx context.Context, input domain.AddT
 			return nil, nil, fmt.Errorf("service: insert transaction: %w", err)
 		}
 
-		if err := s.RebuildProjections(ctx, userID); err != nil {
-			return nil, nil, fmt.Errorf("service: rebuild projections: %w", err)
-		}
-
-		summary, err := s.GetPortfolioSummary(ctx, userID)
+		summary, err := s.postTransactionUpdate(ctx, userID, portfolio.ID, tradeDate)
 		if err != nil {
-			return nil, nil, fmt.Errorf("service: get portfolio summary: %w", err)
+			return nil, nil, err
 		}
 
 		return savedTx, summary, nil
@@ -213,6 +201,29 @@ func (s *portfolioService) AddTransaction(ctx context.Context, input domain.AddT
 	default:
 		return nil, nil, fmt.Errorf("service: unsupported transaction type: %s", input.Type)
 	}
+}
+
+func (s *portfolioService) postTransactionUpdate(ctx context.Context, userID string, portfolioID uuid.UUID, tradeDate time.Time) (*domain.PortfolioSummary, error) {
+	if err := s.RebuildProjections(ctx, userID); err != nil {
+		return nil, fmt.Errorf("service: rebuild projections: %w", err)
+	}
+
+	if s.valuations != nil {
+		todayUTC := s.nowFunc().UTC().Truncate(24 * time.Hour)
+		tradeDateTruncated := tradeDate.UTC().Truncate(24 * time.Hour)
+		if tradeDateTruncated.Before(todayUTC) {
+			_ = s.valuations.BackfillPortfolioValuations(ctx, portfolioID, tradeDateTruncated)
+		} else {
+			_, _ = s.valuations.SnapshotValuation(ctx, portfolioID, todayUTC)
+		}
+	}
+
+	summary, err := s.GetPortfolioSummary(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("service: get portfolio summary: %w", err)
+	}
+
+	return summary, nil
 }
 
 func (s *portfolioService) ListInstruments(ctx context.Context) ([]domain.Instrument, error) {
@@ -272,6 +283,10 @@ func (s *portfolioService) DeleteTransaction(ctx context.Context, userID string,
 
 	if err := s.RebuildProjections(ctx, userID); err != nil {
 		return nil, fmt.Errorf("service: rebuild projections: %w", err)
+	}
+
+	if s.valuations != nil {
+		_ = s.valuations.BackfillPortfolioValuations(ctx, portfolio.ID, portfolio.CreatedAt)
 	}
 
 	summary, err := s.GetPortfolioSummary(ctx, userID)

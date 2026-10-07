@@ -10,6 +10,7 @@ import (
 	"portfolio-api/internal/repository"
 	repoMocks "portfolio-api/internal/repository/mocks"
 	"portfolio-api/internal/service"
+	serviceMocks "portfolio-api/internal/service/mocks"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
@@ -526,3 +527,223 @@ func TestPortfolioService_DeleteTransaction(t *testing.T) {
 		}
 	})
 }
+
+func TestPortfolioService_ValuationHooks(t *testing.T) {
+	ctx := context.Background()
+	userID := "user-123"
+	portfolioID := uuid.New()
+	instrumentID := uuid.New()
+
+	fixedNow := time.Date(2026, 6, 15, 14, 30, 0, 0, time.UTC)
+	todayUTC := fixedNow.Truncate(24 * time.Hour)
+
+	mockPortfolio := &domain.Portfolio{
+		ID:              portfolioID,
+		UserID:          uuid.New(),
+		Name:            "Core Portfolio",
+		BaseCurrency:    "USD",
+		CostBasisMethod: domain.CostBasisMethodFIFO,
+		CreatedAt:       fixedNow.Add(-30 * 24 * time.Hour),
+	}
+
+	mockInstrument := &domain.Instrument{
+		ID:           instrumentID,
+		Symbol:       "AAPL",
+		ExchangeCode: "XNAS",
+		Name:         "Apple Inc.",
+		AssetClass:   "EQUITY",
+		CurrencyCode: "USD",
+		IsActive:     true,
+	}
+
+	qty := decimal.NewFromInt(10)
+	price := decimal.RequireFromString("150.00")
+	symbol := "AAPL"
+
+	setupSummaryExpectations := func(mockRepo *repoMocks.MockRepository) {
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetHoldingsWithMarketData(ctx, portfolioID).Return([]domain.HoldingWithPrice{}, nil)
+		mockRepo.EXPECT().GetCashBalances(ctx, portfolioID).Return([]domain.CashBalance{}, nil)
+		mockRepo.EXPECT().GetLatestValuation(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetCashFXRates(ctx, "USD").Return(map[string]decimal.Decimal{}, nil)
+	}
+
+	setupProjectionsExpectations := func(mockRepo *repoMocks.MockRepository) {
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetTransactions(ctx, portfolioID).Return([]domain.Transaction{}, nil)
+		mockRepo.EXPECT().GetCorporateActions(ctx, gomock.Any()).Return([]domain.CorporateAction{}, nil)
+		mockRepo.EXPECT().SaveProjectionsTx(ctx, portfolioID, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+	}
+
+	t.Run("past-dated transaction triggers BackfillPortfolioValuations", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		mockValuation := serviceMocks.NewMockValuationService(ctrl)
+
+		svc := service.NewPortfolioService(mockRepo,
+			service.WithValuationService(mockValuation),
+			service.WithNowFunc(func() time.Time { return fixedNow }),
+		)
+
+		pastDate := fixedNow.Add(-5 * 24 * time.Hour)
+		input := domain.AddTransactionInput{
+			UserID:    userID,
+			Type:      domain.TxTypeBuy,
+			Symbol:    &symbol,
+			TradeDate: pastDate,
+			Quantity:  &qty,
+			Price:     &price,
+		}
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().FindInstrumentBySymbol(ctx, "AAPL").Return(mockInstrument, nil)
+		mockRepo.EXPECT().InsertTransaction(ctx, gomock.Any()).Return(&domain.Transaction{ID: uuid.New(), PortfolioID: portfolioID}, nil)
+
+		setupProjectionsExpectations(mockRepo)
+
+		// Hook expectation: backfill from truncated past date
+		mockValuation.EXPECT().
+			BackfillPortfolioValuations(ctx, portfolioID, pastDate.Truncate(24*time.Hour)).
+			Return(nil)
+
+		setupSummaryExpectations(mockRepo)
+
+		_, summary, err := svc.AddTransaction(ctx, input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if summary == nil {
+			t.Fatalf("expected non-nil summary")
+		}
+	})
+
+	t.Run("current-day transaction triggers SnapshotValuation", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		mockValuation := serviceMocks.NewMockValuationService(ctrl)
+
+		svc := service.NewPortfolioService(mockRepo,
+			service.WithValuationService(mockValuation),
+			service.WithNowFunc(func() time.Time { return fixedNow }),
+		)
+
+		input := domain.AddTransactionInput{
+			UserID:    userID,
+			Type:      domain.TxTypeBuy,
+			Symbol:    &symbol,
+			TradeDate: fixedNow,
+			Quantity:  &qty,
+			Price:     &price,
+		}
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().FindInstrumentBySymbol(ctx, "AAPL").Return(mockInstrument, nil)
+		mockRepo.EXPECT().InsertTransaction(ctx, gomock.Any()).Return(&domain.Transaction{ID: uuid.New(), PortfolioID: portfolioID}, nil)
+
+		setupProjectionsExpectations(mockRepo)
+
+		// Hook expectation: snapshot for todayUTC
+		mockValuation.EXPECT().
+			SnapshotValuation(ctx, portfolioID, todayUTC).
+			Return(&domain.PortfolioValuationSnapshot{}, nil)
+
+		setupSummaryExpectations(mockRepo)
+
+		_, summary, err := svc.AddTransaction(ctx, input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if summary == nil {
+			t.Fatalf("expected non-nil summary")
+		}
+	})
+
+	t.Run("DeleteTransaction triggers BackfillPortfolioValuations from CreatedAt", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		mockValuation := serviceMocks.NewMockValuationService(ctrl)
+
+		svc := service.NewPortfolioService(mockRepo,
+			service.WithValuationService(mockValuation),
+			service.WithNowFunc(func() time.Time { return fixedNow }),
+		)
+
+		txID := uuid.New()
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().DeleteTransaction(ctx, portfolioID, txID).Return(nil)
+
+		setupProjectionsExpectations(mockRepo)
+
+		// Hook expectation: backfill from portfolio.CreatedAt
+		mockValuation.EXPECT().
+			BackfillPortfolioValuations(ctx, portfolioID, mockPortfolio.CreatedAt).
+			Return(nil)
+
+		setupSummaryExpectations(mockRepo)
+
+		summary, err := svc.DeleteTransaction(ctx, userID, txID.String())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if summary == nil {
+			t.Fatalf("expected non-nil summary")
+		}
+	})
+}
+
+func TestPortfolioService_RebuildValuations(t *testing.T) {
+	ctx := context.Background()
+	userID := "user-123"
+	portfolioID := uuid.New()
+
+	createdAt := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	mockPortfolio := &domain.Portfolio{
+		ID:        portfolioID,
+		UserID:    uuid.New(),
+		CreatedAt: createdAt,
+	}
+
+	t.Run("success with explicit fromDate", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		mockValuation := serviceMocks.NewMockValuationService(ctrl)
+		svc := service.NewPortfolioService(mockRepo, service.WithValuationService(mockValuation))
+
+		fromDate := time.Date(2025, 6, 1, 0, 0, 0, 0, time.UTC)
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockValuation.EXPECT().BackfillPortfolioValuations(ctx, portfolioID, fromDate).Return(nil)
+
+		if err := svc.RebuildValuations(ctx, userID, &fromDate); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("success with nil fromDate defaults to portfolio CreatedAt", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		mockValuation := serviceMocks.NewMockValuationService(ctrl)
+		svc := service.NewPortfolioService(mockRepo, service.WithValuationService(mockValuation))
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockValuation.EXPECT().BackfillPortfolioValuations(ctx, portfolioID, createdAt).Return(nil)
+
+		if err := svc.RebuildValuations(ctx, userID, nil); err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("portfolio not found returns error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		mockValuation := serviceMocks.NewMockValuationService(ctrl)
+		svc := service.NewPortfolioService(mockRepo, service.WithValuationService(mockValuation))
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, "unknown-user").Return(nil, repository.ErrPortfolioNotFound)
+
+		err := svc.RebuildValuations(ctx, "unknown-user", nil)
+		if !errors.Is(err, repository.ErrPortfolioNotFound) {
+			t.Fatalf("expected ErrPortfolioNotFound, got %v", err)
+		}
+	})
+}
+

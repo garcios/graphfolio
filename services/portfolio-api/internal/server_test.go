@@ -1282,3 +1282,143 @@ func TestPortfolioServer_TriggerMarketSync(t *testing.T) {
 		}
 	})
 }
+
+func TestPortfolioServer_RebuildValuations(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success with explicit from_date", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		expectedDate := time.Date(2025, 6, 1, 0, 0, 0, 0, time.UTC)
+		mockSvc.EXPECT().RebuildValuations(ctx, "user-123", &expectedDate).Return(nil)
+
+		res, err := server.RebuildValuations(ctx, &pb.RebuildValuationsRequest{
+			UserId:   "user-123",
+			FromDate: "2025-06-01",
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res == nil || !res.Success {
+			t.Fatalf("expected successful response, got: %+v", res)
+		}
+	})
+
+	t.Run("success with empty from_date", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().RebuildValuations(ctx, "user-123", nil).Return(nil)
+
+		res, err := server.RebuildValuations(ctx, &pb.RebuildValuationsRequest{
+			UserId: "user-123",
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res == nil || !res.Success {
+			t.Fatalf("expected successful response, got: %+v", res)
+		}
+	})
+
+	t.Run("defaults user_id to 1 if empty", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().RebuildValuations(ctx, "1", nil).Return(nil)
+
+		res, err := server.RebuildValuations(ctx, &pb.RebuildValuationsRequest{})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !res.Success {
+			t.Fatalf("expected success")
+		}
+	})
+
+	t.Run("invalid from_date format returns InvalidArgument", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		res, err := server.RebuildValuations(ctx, &pb.RebuildValuationsRequest{
+			UserId:   "user-123",
+			FromDate: "06-01-2025",
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		if res != nil {
+			t.Fatalf("expected nil response on error")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", err)
+		}
+	})
+
+	t.Run("portfolio not found returns NotFound", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().RebuildValuations(ctx, "missing-user", nil).Return(repository.ErrPortfolioNotFound)
+
+		res, err := server.RebuildValuations(ctx, &pb.RebuildValuationsRequest{
+			UserId: "missing-user",
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		if res != nil {
+			t.Fatalf("expected nil response on error")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.NotFound {
+			t.Errorf("expected NotFound, got %v", err)
+		}
+	})
+
+	t.Run("service unavailable when svc is nil", func(t *testing.T) {
+		server := NewPortfolioServer(nil)
+
+		res, err := server.RebuildValuations(ctx, &pb.RebuildValuationsRequest{})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		if res != nil {
+			t.Fatalf("expected nil response")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.Unavailable {
+			t.Errorf("expected Unavailable, got %v", err)
+		}
+	})
+
+	t.Run("internal error on service failure", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().RebuildValuations(ctx, "user-123", nil).Return(errors.New("db connection failure"))
+
+		res, err := server.RebuildValuations(ctx, &pb.RebuildValuationsRequest{
+			UserId: "user-123",
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		if res != nil {
+			t.Fatalf("expected nil response")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.Internal {
+			t.Errorf("expected Internal, got %v", err)
+		}
+	})
+}
+

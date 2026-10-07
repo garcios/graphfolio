@@ -69,8 +69,12 @@ func main() {
 				Limiter: rateLimiter,
 			})
 			ingestionSvc := service.NewIngestionService(repo, priceProvider, ecbProvider, rateLimiter)
+			valuationSvc := service.NewValuationService(repo)
 
-			svc = service.NewPortfolioService(repo, service.WithIngestionService(ingestionSvc))
+			svc = service.NewPortfolioService(repo,
+				service.WithIngestionService(ingestionSvc),
+				service.WithValuationService(valuationSvc),
+			)
 		}
 	}
 

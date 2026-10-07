@@ -27,6 +27,19 @@ service PortfolioService {
   // Admin: Ingestion Pipeline & Diagnostics
   rpc GetIngestionStatus(GetIngestionStatusRequest) returns (GetIngestionStatusResponse) {}
   rpc TriggerMarketSync(TriggerMarketSyncRequest) returns (TriggerMarketSyncResponse) {}
+
+  // Historical Valuation Engine & Replay
+  rpc RebuildValuations(RebuildValuationsRequest) returns (RebuildValuationsResponse) {}
+}
+
+message RebuildValuationsRequest {
+  string user_id   = 1;
+  string from_date = 2; // Optional: YYYY-MM-DD
+}
+
+message RebuildValuationsResponse {
+  bool   success = 1;
+  string message = 2;
 }
 
 message GetPortfolioRequest {

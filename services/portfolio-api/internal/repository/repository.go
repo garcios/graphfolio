@@ -16,6 +16,7 @@ import (
 //go:generate go run go.uber.org/mock/mockgen -destination=mocks/mock_repository.go -package=mocks portfolio-api/internal/repository Repository
 type Repository interface {
 	FindPortfolioByUser(ctx context.Context, userID string) (*domain.Portfolio, error)
+	ListActivePortfolios(ctx context.Context) ([]uuid.UUID, error)
 	UpdatePortfolioBaseCurrency(ctx context.Context, portfolioID uuid.UUID, baseCurrency string, fxRate decimal.Decimal) error
 	GetHoldingsWithMarketData(ctx context.Context, portfolioID uuid.UUID) ([]domain.HoldingWithPrice, error)
 	GetCashBalances(ctx context.Context, portfolioID uuid.UUID) ([]domain.CashBalance, error)
@@ -52,4 +53,11 @@ type Repository interface {
 	BatchUpsertFXRates(ctx context.Context, records []marketdata.FXRecord) error
 	ListActiveCurrencies(ctx context.Context) ([]string, error)
 	HasPricesForRange(ctx context.Context, instrumentID uuid.UUID, fromDate, toDate time.Time) (bool, error)
+
+	// Portfolio Valuation Engine & Historical Backfill
+	UpsertValuationsBatch(ctx context.Context, valuations []domain.PortfolioValuation) error
+	GetLatestValuationBefore(ctx context.Context, portfolioID uuid.UUID, beforeDate time.Time) (*domain.PortfolioValuation, error)
+	GetHistoricalPriceMatrix(ctx context.Context, instrumentIDs []uuid.UUID, fromDate, toDate time.Time) (map[uuid.UUID]map[string]decimal.Decimal, error)
+	GetHistoricalFXMatrix(ctx context.Context, currencies []string, baseCurrency string, fromDate, toDate time.Time) (map[string]map[string]decimal.Decimal, error)
+	DeleteValuationsFromDate(ctx context.Context, portfolioID uuid.UUID, fromDate time.Time) error
 }

@@ -33,6 +33,7 @@ const (
 	PortfolioService_RecordPriceOverride_FullMethodName         = "/portfolio.v1.PortfolioService/RecordPriceOverride"
 	PortfolioService_GetIngestionStatus_FullMethodName          = "/portfolio.v1.PortfolioService/GetIngestionStatus"
 	PortfolioService_TriggerMarketSync_FullMethodName           = "/portfolio.v1.PortfolioService/TriggerMarketSync"
+	PortfolioService_RebuildValuations_FullMethodName           = "/portfolio.v1.PortfolioService/RebuildValuations"
 )
 
 // PortfolioServiceClient is the client API for PortfolioService service.
@@ -56,6 +57,8 @@ type PortfolioServiceClient interface {
 	// Admin: Ingestion Pipeline & Diagnostics
 	GetIngestionStatus(ctx context.Context, in *GetIngestionStatusRequest, opts ...grpc.CallOption) (*GetIngestionStatusResponse, error)
 	TriggerMarketSync(ctx context.Context, in *TriggerMarketSyncRequest, opts ...grpc.CallOption) (*TriggerMarketSyncResponse, error)
+	// Historical Valuation Engine & Replay
+	RebuildValuations(ctx context.Context, in *RebuildValuationsRequest, opts ...grpc.CallOption) (*RebuildValuationsResponse, error)
 }
 
 type portfolioServiceClient struct {
@@ -192,6 +195,15 @@ func (c *portfolioServiceClient) TriggerMarketSync(ctx context.Context, in *Trig
 	return out, nil
 }
 
+func (c *portfolioServiceClient) RebuildValuations(ctx context.Context, in *RebuildValuationsRequest, opts ...grpc.CallOption) (*RebuildValuationsResponse, error) {
+	out := new(RebuildValuationsResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_RebuildValuations_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PortfolioServiceServer is the server API for PortfolioService service.
 // All implementations must embed UnimplementedPortfolioServiceServer
 // for forward compatibility
@@ -213,6 +225,8 @@ type PortfolioServiceServer interface {
 	// Admin: Ingestion Pipeline & Diagnostics
 	GetIngestionStatus(context.Context, *GetIngestionStatusRequest) (*GetIngestionStatusResponse, error)
 	TriggerMarketSync(context.Context, *TriggerMarketSyncRequest) (*TriggerMarketSyncResponse, error)
+	// Historical Valuation Engine & Replay
+	RebuildValuations(context.Context, *RebuildValuationsRequest) (*RebuildValuationsResponse, error)
 	mustEmbedUnimplementedPortfolioServiceServer()
 }
 
@@ -261,6 +275,9 @@ func (UnimplementedPortfolioServiceServer) GetIngestionStatus(context.Context, *
 }
 func (UnimplementedPortfolioServiceServer) TriggerMarketSync(context.Context, *TriggerMarketSyncRequest) (*TriggerMarketSyncResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TriggerMarketSync not implemented")
+}
+func (UnimplementedPortfolioServiceServer) RebuildValuations(context.Context, *RebuildValuationsRequest) (*RebuildValuationsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RebuildValuations not implemented")
 }
 func (UnimplementedPortfolioServiceServer) mustEmbedUnimplementedPortfolioServiceServer() {}
 
@@ -527,6 +544,24 @@ func _PortfolioService_TriggerMarketSync_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortfolioService_RebuildValuations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RebuildValuationsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).RebuildValuations(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_RebuildValuations_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).RebuildValuations(ctx, req.(*RebuildValuationsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PortfolioService_ServiceDesc is the grpc.ServiceDesc for PortfolioService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -589,6 +624,10 @@ var PortfolioService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TriggerMarketSync",
 			Handler:    _PortfolioService_TriggerMarketSync_Handler,
+		},
+		{
+			MethodName: "RebuildValuations",
+			Handler:    _PortfolioService_RebuildValuations_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
