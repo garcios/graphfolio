@@ -16,7 +16,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 - **`proto/` (The Contract)**:
   Protocol Buffers are the single source of truth for microservice RPCs and shared types. Stored at the root to eliminate schema drift between gRPC servers and the BFF client wrappers.
   - `proto/common/v1/decimal.proto`: High-precision fixed-point `Decimal` (value, scale) and `Money` (amount, currency_code) types.
-  - `proto/portfolio/v1/portfolio.proto`: Portfolio service (`GetPortfolio`, `UpdatePortfolioBaseCurrency`, `AddTransaction`, `ListInstruments`, `GetPortfolioHistory`, `ListTransactions`, `DeleteTransaction`, `ListAllInstruments`, `CreateInstrument`, `UpdateInstrument`, `ListInstrumentPrices`, `RecordPriceOverride`, `GetIngestionStatus`, `TriggerMarketSync`), investment summary, time-series valuation points, performance metrics, and administrative operations.
+  - `proto/portfolio/v1/portfolio.proto`: Portfolio service (`GetPortfolio`, `UpdatePortfolioBaseCurrency`, `AddTransaction`, `ListInstruments`, `GetPortfolioHistory`, `ListTransactions`, `DeleteTransaction`, `ListAllInstruments`, `CreateInstrument`, `UpdateInstrument`, `ListInstrumentPrices`, `RecordPriceOverride`, `GetIngestionStatus`, `TriggerMarketSync`, `RebuildValuations`), investment summary, time-series valuation points, performance metrics, and administrative operations.
   - `proto/user/v1/user.proto`: User service (`GetUserPreferences`, `UpdateUserPreferences`, `ListSupportedCurrencies`), user profile preferences (`theme`, `display_currency`, `display_name`), and currency reference metadata.
 
 - **`pkg/` (Shared Infrastructure)**:
@@ -29,10 +29,10 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 - **`services/` (The Domain Microservices)**:
   Each microservice is an isolated Go module (`services/portfolio-api`, `services/user-api`):
   - **`services/portfolio-api` (:50051)**:
-    - Domain models and calculators live in `internal/domain/` (`portfolio`, `holding`, `transaction`, `instrument`, `price`, `ingestion`, `tax_lot`, `history`).
-    - Persistence logic lives in `internal/repository/` with `pgxpool.Pool` queries and transactions (`InsertTransaction`, `ListTransactions`, `DeleteTransaction`, `UpdatePortfolioBaseCurrency`, `FindInstrumentBySymbol`, `SaveProjectionsTx`, `GetPortfolioValuations`, `ListAllInstruments`, `CreateInstrument`, `UpdateInstrument`, `ListInstrumentPrices`, `UpsertInstrumentPrice`, `GetIngestionMetrics`).
-    - Business logic, calculation services, transaction ingestion (`AddTransaction`), transaction deletion (`DeleteTransaction`), ledger replay projections (`RebuildProjections`), dynamic base currency re-anchoring (`UpdatePortfolioBaseCurrency`), paginated ledger queries (`ListTransactions`), administrative operations (`CreateInstrument`, `UpdateInstrument`, `RecordPriceOverride`, `GetIngestionStatus`, `TriggerMarketSync`), and historical valuation time-series retrieval (`GetPortfolioHistory`) live in `internal/service/`.
-    - Transport adapters (gRPC servers) live in `internal/` (`server.go`) and `cmd/server/main.go`.
+    - Domain models and calculators live in `internal/domain/` (`portfolio`, `holding`, `transaction`, `instrument`, `price`, `ingestion`, `tax_lot`, `history`, `valuation`).
+    - Persistence logic lives in `internal/repository/` with `pgxpool.Pool` queries and transactions (`InsertTransaction`, `ListTransactions`, `DeleteTransaction`, `UpdatePortfolioBaseCurrency`, `FindInstrumentBySymbol`, `SaveProjectionsTx`, `GetPortfolioValuations`, `ListAllInstruments`, `CreateInstrument`, `UpdateInstrument`, `ListInstrumentPrices`, `UpsertInstrumentPrice`, `GetIngestionMetrics`, `UpsertValuationsBatch`, `GetLatestValuationBefore`, `GetHistoricalPriceMatrix`, `GetHistoricalFXMatrix`, `DeleteValuationsFromDate`, `ListActivePortfolios`).
+    - Business logic, calculation services, transaction ingestion (`AddTransaction`), transaction deletion (`DeleteTransaction`), ledger replay projections (`RebuildProjections`), dynamic base currency re-anchoring (`UpdatePortfolioBaseCurrency`), paginated ledger queries (`ListTransactions`), administrative operations (`CreateInstrument`, `UpdateInstrument`, `RecordPriceOverride`, `GetIngestionStatus`, `TriggerMarketSync`), historical valuation time-series retrieval (`GetPortfolioHistory`), and daily valuation snapshots & multi-day historical backfill replay engine (`ValuationService`, `RebuildValuations`) live in `internal/service/`.
+    - Transport adapters (gRPC servers) live in `internal/` (`server.go`), `cmd/server/main.go`, and scheduled CLI / background valuation worker in `cmd/worker/main.go`.
   - **`services/user-api` (:50052)**:
     - Domain models live in `internal/domain/` (`User`, `CurrencyInfo`, `SupportedCurrencies`).
     - Persistence logic lives in `internal/repository/` with `pgxpool.Pool` queries (`GetUserByID`, `UpdateUserPreferences`).
@@ -79,25 +79,29 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 ├── services/                     # 4. Core gRPC Microservices
 │   ├── portfolio-api/
 │   │   ├── cmd/server/           # Service entrypoint (gRPC on :50051)
+│   │   ├── cmd/worker/           # Scheduled EOD & on-demand valuation worker (runnable via make run-valuation-job)
 │   │   ├── internal/
-│   │   │   ├── domain/           # Domain entities (Portfolio, Holding, Transaction, Instrument, Price, Ingestion, TaxLot, Money, History)
+│   │   │   ├── domain/           # Domain entities (Portfolio, Holding, Transaction, Instrument, Price, Ingestion, TaxLot, Money, History, Valuation)
 │   │   │   │   ├── transaction.go# Transaction, TransactionFilter, TransactionPage
+│   │   │   │   ├── valuation.go  # PortfolioValuationSnapshot, sub-period return, TWR linking, GIPS CAGR
 │   │   │   │   ├── price.go      # InstrumentPrice, PriceFilter, PriceOverrideInput
 │   │   │   │   ├── ingestion.go  # FeedHealth, IngestionStatus
 │   │   │   │   ├── history.go    # ValuationPoint, PortfolioHistory, CalculatePortfolioHistory
 │   │   │   │   └── ...
 │   │   │   ├── repository/       # Repository interface & PostgreSQL (pgx) queries
-│   │   │   │   ├── postgres.go   # Queries: ListTransactions, ListAllInstruments, UpsertInstrumentPrice, etc.
+│   │   │   │   ├── postgres.go   # Queries: ListTransactions, ListAllInstruments, UpsertValuationsBatch, GetHistoricalPriceMatrix, etc.
 │   │   │   │   └── mocks/        # Uber-go mock repository (MockRepository)
-│   │   │   ├── service/          # PortfolioService, ledger projection engine, transaction & admin manager
-│   │   │   │   ├── transaction.go# AddTransaction, ListTransactions, DeleteTransaction (with RebuildProjections)
+│   │   │   ├── service/          # PortfolioService, ValuationService, ledger projection engine, transaction & admin manager
+│   │   │   │   ├── transaction.go# AddTransaction, ListTransactions, DeleteTransaction (with RebuildProjections & valuation hooks)
+│   │   │   │   ├── valuation.go  # ValuationService (SnapshotValuation, BackfillPortfolioValuations, RunDailyValuationJob)
+│   │   │   │   ├── valuation_test.go # Multi-day historical backfill replay and daily job unit tests
 │   │   │   │   ├── admin.go      # CreateInstrument, UpdateInstrument, RecordPriceOverride, GetIngestionStatus, TriggerMarketSync
 │   │   │   │   ├── admin_test.go # Table-driven unit tests for admin operations
-│   │   │   │   ├── transaction_test.go # Unit tests for transaction ingestion, filtering, and deletion
+│   │   │   │   ├── transaction_test.go # Unit tests for transaction ingestion, filtering, deletion, and valuation hooks
 │   │   │   │   ├── history.go    # GetPortfolioHistory and timeframe boundary logic
 │   │   │   │   ├── history_test.go# Unit tests for history filtering and period return math
-│   │   │   │   └── mocks/        # Uber-go mock service (MockPortfolioService)
-│   │   │   ├── server.go         # gRPC PortfolioServiceServer implementation (ListTransactions, RecordPriceOverride, UpdatePortfolioBaseCurrency, etc.)
+│   │   │   │   └── mocks/        # Uber-go mock service (MockPortfolioService, MockValuationService)
+│   │   │   ├── server.go         # gRPC PortfolioServiceServer implementation (ListTransactions, RecordPriceOverride, RebuildValuations, etc.)
 │   │   │   └── server_test.go    # gRPC server unit tests with MockPortfolioService
 │   │   ├── migrations/           # Schema migrations (000001 to 000006)
 │   │   ├── seeds/                # Development seed data (dev_seed.sql with 365-day history)
@@ -252,6 +256,13 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
   - When fetching the portfolio (`Query.portfolio`), the BFF verifies that the portfolio's base currency matches the user's preferred currency, automatically triggering `UpdatePortfolioBaseCurrency` if a mismatch is detected.
   - When mutating preferences (`Mutation.updateUserPreferences`), the BFF updates `user-api` and immediately synchronizes `portfolio-api` within the same workflow, returning the newly re-scaled portfolio state.
 - **Reactive UI Synchronization**: The investor frontend (`apps/main-app`) re-renders cards, tables, and metric badges upon preference changes, and explicitly remounts the SVG `PerformanceChart` with the new currency key to prevent canvas and tooltip currency ghosting.
+
+### 4.10 Portfolio Valuation Engine, Historical Backfill & Scheduled Worker
+- **Mathematical Modeling & Zero Drift**: Daily valuation points compute exact market value ($V_t = \sum \text{Holding Value} + \sum \text{Cash Value}$), net cash flows ($F_t = \text{Deposits} - \text{Withdrawals}$), sub-period return ($R_t = \frac{V_t - (V_{t-1} + F_t)}{V_{t-1} + F_t}$), and cumulative Time-Weighted Return ($\text{TWR}_t = \text{TWR}_{t-1} \times (1 + R_t)$) with exact `shopspring/decimal.Decimal` fixed-point precision. First-funding deposits and zero-start edge cases isolate market movement with $0\%$ return baseline.
+- **GIPS Annualized Return (CAGR)**: Cumulative compounding returns over periods exceeding 365.25 days are annualized via $( \text{TWR}_t )^{365.25 / \text{days}} - 1$. Periods under 365.25 days report non-annualized cumulative returns in compliance with GIPS 2.A.20 standards.
+- **LOCF Matrix Retrieval & Triangulation**: Historical replay fetches asset closing prices and FX rates across multi-day windows using optimized matrix queries with Last Observation Carried Forward (LOCF) to prevent weekend/holiday missing marks.
+- **Transaction Ingestion & Deletion Hooks**: `AddTransaction` automatically triggers `BackfillPortfolioValuations` when `tradeDate.Before(todayUTC)` and records `SnapshotValuation` on current-day trades. `DeleteTransaction` triggers retrospective backfill starting from `portfolio.CreatedAt`.
+- **Scheduled EOD Worker & On-Demand CLI**: `services/portfolio-api/cmd/worker/main.go` (runnable via `make run-valuation-job`) supports daily valuation snapshots across all active portfolios (`RunDailyValuationJob`), historical date backfills (`-from`), specific portfolio UUID targets (`-portfolio`), and a continuous background daemon mode (`-daemon`, `-cron-hour=22` UTC market close).
 
 ---
 
