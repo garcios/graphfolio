@@ -10,6 +10,7 @@ export interface SelectOption {
 export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   options?: SelectOption[];
+  placeholder?: string;
   error?: string;
   helperText?: string;
 }
@@ -17,6 +18,7 @@ export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElemen
 export const Select: React.FC<SelectProps> = ({
   label,
   options,
+  placeholder,
   error,
   helperText,
   id,
@@ -40,6 +42,11 @@ export const Select: React.FC<SelectProps> = ({
           className={cn('gf-select', error && 'gf-select--error', className)}
           {...props}
         >
+          {placeholder !== undefined && (
+            <option value="" disabled>
+              {placeholder}
+            </option>
+          )}
           {options
             ? options.map((opt) => (
                 <option key={opt.value} value={opt.value}>

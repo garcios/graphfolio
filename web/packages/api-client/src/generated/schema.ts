@@ -37,12 +37,23 @@ export interface Instrument {
     __typename: 'Instrument'
 }
 
+
+/** Trading venue reference data identified by its ISO 10383 MIC code. */
+export interface Exchange {
+    code: Scalars['String']
+    name: Scalars['String']
+    country: Scalars['String']
+    timezone: Scalars['String']
+    __typename: 'Exchange'
+}
+
 export interface Query {
     portfolio: Portfolio
     instruments: Instrument[]
     portfolioHistory: PortfolioHistory
     transactions: TransactionsConnection
     allInstruments: Instrument[]
+    exchanges: Exchange[]
     instrumentPrices: InstrumentPricesConnection
     ingestionStatus: IngestionStatus
     userPreferences: UserPreferences
@@ -315,12 +326,24 @@ export interface InstrumentGenqlSelection{
     __scalar?: boolean | number
 }
 
+
+/** Trading venue reference data identified by its ISO 10383 MIC code. */
+export interface ExchangeGenqlSelection{
+    code?: boolean | number
+    name?: boolean | number
+    country?: boolean | number
+    timezone?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
 export interface QueryGenqlSelection{
     portfolio?: PortfolioGenqlSelection
     instruments?: InstrumentGenqlSelection
     portfolioHistory?: (PortfolioHistoryGenqlSelection & { __args: {timeframe: HistoryTimeframe} })
     transactions?: (TransactionsConnectionGenqlSelection & { __args?: {type?: (TransactionType | null), symbol?: (Scalars['String'] | null), page?: (Scalars['Int'] | null), pageSize?: (Scalars['Int'] | null)} })
     allInstruments?: (InstrumentGenqlSelection & { __args?: {isActive?: (Scalars['Boolean'] | null), search?: (Scalars['String'] | null)} })
+    exchanges?: ExchangeGenqlSelection
     instrumentPrices?: (InstrumentPricesConnectionGenqlSelection & { __args?: {symbol?: (Scalars['String'] | null), fromDate?: (Scalars['String'] | null), toDate?: (Scalars['String'] | null), limit?: (Scalars['Int'] | null), offset?: (Scalars['Int'] | null)} })
     ingestionStatus?: IngestionStatusGenqlSelection
     userPreferences?: UserPreferencesGenqlSelection
@@ -620,6 +643,14 @@ export interface RecordFXRateOverridePayloadGenqlSelection{
     export const isInstrument = (obj?: { __typename?: any } | null): obj is Instrument => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isInstrument"')
       return Instrument_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const Exchange_possibleTypes: string[] = ['Exchange']
+    export const isExchange = (obj?: { __typename?: any } | null): obj is Exchange => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isExchange"')
+      return Exchange_possibleTypes.includes(obj.__typename)
     }
     
 

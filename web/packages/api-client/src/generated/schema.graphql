@@ -48,12 +48,21 @@ type Instrument {
   isActive: Boolean!
 }
 
+"""Trading venue reference data identified by its ISO 10383 MIC code."""
+type Exchange {
+  code: String!
+  name: String!
+  country: String!
+  timezone: String!
+}
+
 type Query {
   portfolio: Portfolio!
   instruments: [Instrument!]!
   portfolioHistory(timeframe: HistoryTimeframe!): PortfolioHistory!
   transactions(type: TransactionType, symbol: String, page: Int = 1, pageSize: Int = 20): TransactionsConnection!
   allInstruments(isActive: Boolean, search: String): [Instrument!]!
+  exchanges: [Exchange!]!
   instrumentPrices(symbol: String, fromDate: String, toDate: String, limit: Int = 50, offset: Int = 0): InstrumentPricesConnection!
   ingestionStatus: IngestionStatus!
   userPreferences: UserPreferences!

@@ -44,6 +44,14 @@ func (s *portfolioService) ListAllInstruments(ctx context.Context, isActive *boo
 	return s.repo.ListAllInstruments(ctx, isActive, search)
 }
 
+func (s *portfolioService) ListExchanges(ctx context.Context) ([]domain.Exchange, error) {
+	exchanges, err := s.repo.ListExchanges(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("service: list exchanges: %w", err)
+	}
+	return exchanges, nil
+}
+
 func (s *portfolioService) CreateInstrument(ctx context.Context, input domain.CreateInstrumentInput) (*domain.Instrument, error) {
 	input.Symbol = strings.ToUpper(strings.TrimSpace(input.Symbol))
 	if input.Symbol == "" {

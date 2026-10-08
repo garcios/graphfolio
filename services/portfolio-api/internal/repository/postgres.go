@@ -615,6 +615,25 @@ func (r *PostgresRepository) ListAllInstruments(ctx context.Context, isActive *b
 	return insts, rows.Err()
 }
 
+func (r *PostgresRepository) ListExchanges(ctx context.Context) ([]domain.Exchange, error) {
+	rows, err := r.pool.Query(ctx, listExchangesSQL)
+	if err != nil {
+		return nil, fmt.Errorf("repository: list exchanges failed: %w", err)
+	}
+	defer rows.Close()
+
+	exchanges := []domain.Exchange{}
+	for rows.Next() {
+		var ex domain.Exchange
+		if err := rows.Scan(&ex.Code, &ex.Name, &ex.Country, &ex.Timezone); err != nil {
+			return nil, fmt.Errorf("repository: scan exchange failed: %w", err)
+		}
+		exchanges = append(exchanges, ex)
+	}
+
+	return exchanges, rows.Err()
+}
+
 func (r *PostgresRepository) CreateInstrument(ctx context.Context, input domain.CreateInstrumentInput) (*domain.Instrument, error) {
 	row := r.pool.QueryRow(ctx, createInstrumentSQL,
 		input.Symbol,

@@ -463,6 +463,31 @@ func (s *PortfolioServer) ListAllInstruments(ctx context.Context, req *pb.ListAl
 	}, nil
 }
 
+func (s *PortfolioServer) ListExchanges(ctx context.Context, _ *pb.ListExchangesRequest) (*pb.ListExchangesResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	exchanges, err := s.svc.ListExchanges(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to list exchanges: %v", err)
+	}
+
+	protoExchanges := make([]*pb.Exchange, len(exchanges))
+	for i, ex := range exchanges {
+		protoExchanges[i] = &pb.Exchange{
+			Code:     ex.Code,
+			Name:     ex.Name,
+			Country:  ex.Country,
+			Timezone: ex.Timezone,
+		}
+	}
+
+	return &pb.ListExchangesResponse{
+		Exchanges: protoExchanges,
+	}, nil
+}
+
 func (s *PortfolioServer) CreateInstrument(ctx context.Context, req *pb.CreateInstrumentRequest) (*pb.CreateInstrumentResponse, error) {
 	if s.svc == nil {
 		return nil, status.Error(codes.Unavailable, "service not initialized")

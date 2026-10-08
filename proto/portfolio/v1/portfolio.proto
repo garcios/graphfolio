@@ -19,6 +19,7 @@ service PortfolioService {
   rpc ListAllInstruments(ListAllInstrumentsRequest) returns (ListAllInstrumentsResponse) {}
   rpc CreateInstrument(CreateInstrumentRequest) returns (CreateInstrumentResponse) {}
   rpc UpdateInstrument(UpdateInstrumentRequest) returns (UpdateInstrumentResponse) {}
+  rpc ListExchanges(ListExchangesRequest) returns (ListExchangesResponse) {}
 
   // Admin: Closing Price Management & Overrides
   rpc ListInstrumentPrices(ListInstrumentPricesRequest) returns (ListInstrumentPricesResponse) {}
@@ -244,6 +245,19 @@ message UpdateInstrumentRequest {
 
 message UpdateInstrumentResponse {
   Instrument instrument = 1;
+}
+
+message Exchange {
+  string code     = 1; // ISO 10383 MIC, e.g. "XNAS"
+  string name     = 2; // e.g. "NASDAQ Stock Market"
+  string country  = 3; // ISO 3166-1 alpha-2, e.g. "US"
+  string timezone = 4; // IANA timezone, e.g. "America/New_York"
+}
+
+message ListExchangesRequest {}
+
+message ListExchangesResponse {
+  repeated Exchange exchanges = 1;
 }
 
 // ------------------------------------------------------------------

@@ -370,6 +370,21 @@ func (r *queryResolver) AllInstruments(ctx context.Context, isActive *bool, sear
 	return instruments, nil
 }
 
+// Exchanges is the resolver for the exchanges field.
+func (r *queryResolver) Exchanges(ctx context.Context) ([]*model.Exchange, error) {
+	resp, err := r.PortfolioClient.ListExchanges(ctx, &pb.ListExchangesRequest{})
+	if err != nil {
+		return nil, err
+	}
+
+	exchanges := make([]*model.Exchange, len(resp.Exchanges))
+	for i, ex := range resp.Exchanges {
+		exchanges[i] = toModelExchange(ex)
+	}
+
+	return exchanges, nil
+}
+
 // InstrumentPrices is the resolver for the instrumentPrices field.
 func (r *queryResolver) InstrumentPrices(ctx context.Context, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) (*model.InstrumentPricesConnection, error) {
 	req := &pb.ListInstrumentPricesRequest{

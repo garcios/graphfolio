@@ -56,6 +56,67 @@ func TestPortfolioService_ListAllInstruments(t *testing.T) {
 	}
 }
 
+func TestPortfolioService_ListExchanges(t *testing.T) {
+	ctx := context.Background()
+	repoErr := errors.New("connection refused")
+
+	tests := []struct {
+		name      string
+		repoRows  []domain.Exchange
+		repoErr   error
+		wantCodes []string
+		wantErr   bool
+	}{
+		{
+			name: "returns exchanges in repository order",
+			repoRows: []domain.Exchange{
+				{Code: "XASX", Name: "Australian Securities Exchange", Country: "AU", Timezone: "Australia/Sydney"},
+				{Code: "XNAS", Name: "NASDAQ Stock Market", Country: "US", Timezone: "America/New_York"},
+			},
+			wantCodes: []string{"XASX", "XNAS"},
+		},
+		{
+			name:      "empty directory returns empty slice",
+			repoRows:  []domain.Exchange{},
+			wantCodes: []string{},
+		},
+		{
+			name:    "repository error is wrapped and propagated",
+			repoErr: repoErr,
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			mockRepo := mocks.NewMockRepository(ctrl)
+			svc := service.NewPortfolioService(mockRepo)
+
+			mockRepo.EXPECT().ListExchanges(ctx).Return(tt.repoRows, tt.repoErr)
+
+			got, err := svc.ListExchanges(ctx)
+			if tt.wantErr {
+				if !errors.Is(err, repoErr) {
+					t.Fatalf("expected wrapped repository error, got %v", err)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("expected no error, got %v", err)
+			}
+			if len(got) != len(tt.wantCodes) {
+				t.Fatalf("expected %d exchanges, got %d", len(tt.wantCodes), len(got))
+			}
+			for i, code := range tt.wantCodes {
+				if got[i].Code != code {
+					t.Errorf("index %d: expected code %s, got %s", i, code, got[i].Code)
+				}
+			}
+		})
+	}
+}
+
 func TestPortfolioService_CreateInstrument(t *testing.T) {
 	ctx := context.Background()
 	validISIN := "US67066G1040"

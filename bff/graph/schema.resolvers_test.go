@@ -55,6 +55,7 @@ type fakePortfolioClient struct {
 	listAllInstrumentsFn          func(ctx context.Context, in *pb.ListAllInstrumentsRequest) (*pb.ListAllInstrumentsResponse, error)
 	createInstrumentFn            func(ctx context.Context, in *pb.CreateInstrumentRequest) (*pb.CreateInstrumentResponse, error)
 	updateInstrumentFn            func(ctx context.Context, in *pb.UpdateInstrumentRequest) (*pb.UpdateInstrumentResponse, error)
+	listExchangesFn               func(ctx context.Context, in *pb.ListExchangesRequest) (*pb.ListExchangesResponse, error)
 	listInstrumentPricesFn        func(ctx context.Context, in *pb.ListInstrumentPricesRequest) (*pb.ListInstrumentPricesResponse, error)
 	recordPriceOverrideFn         func(ctx context.Context, in *pb.RecordPriceOverrideRequest) (*pb.RecordPriceOverrideResponse, error)
 	getIngestionStatusFn          func(ctx context.Context, in *pb.GetIngestionStatusRequest) (*pb.GetIngestionStatusResponse, error)
@@ -132,6 +133,13 @@ func (f *fakePortfolioClient) CreateInstrument(ctx context.Context, in *pb.Creat
 func (f *fakePortfolioClient) UpdateInstrument(ctx context.Context, in *pb.UpdateInstrumentRequest, opts ...grpc.CallOption) (*pb.UpdateInstrumentResponse, error) {
 	if f.updateInstrumentFn != nil {
 		return f.updateInstrumentFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakePortfolioClient) ListExchanges(ctx context.Context, in *pb.ListExchangesRequest, opts ...grpc.CallOption) (*pb.ListExchangesResponse, error) {
+	if f.listExchangesFn != nil {
+		return f.listExchangesFn(ctx, in)
 	}
 	return nil, nil
 }
@@ -1518,6 +1526,66 @@ func TestQueryResolver_FxRates(t *testing.T) {
 		qResolver := resolver.Query()
 
 		_, err := qResolver.FxRates(ctx, nil, nil, nil, nil, nil, nil)
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+	})
+}
+
+func TestQueryResolver_Exchanges(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("returns exchanges mapped correctly", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			listExchangesFn: func(ctx context.Context, in *pb.ListExchangesRequest) (*pb.ListExchangesResponse, error) {
+				return &pb.ListExchangesResponse{
+					Exchanges: []*pb.Exchange{
+						{
+							Code:     "XNAS",
+							Name:     "NASDAQ Stock Market",
+							Country:  "US",
+							Timezone: "America/New_York",
+						},
+						{
+							Code:     "XNYS",
+							Name:     "New York Stock Exchange",
+							Country:  "US",
+							Timezone: "America/New_York",
+						},
+					},
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		res, err := qResolver.Exchanges(ctx)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if len(res) != 2 {
+			t.Fatalf("expected 2 exchanges, got %d", len(res))
+		}
+		if res[0].Code != "XNAS" || res[0].Name != "NASDAQ Stock Market" || res[0].Country != "US" || res[0].Timezone != "America/New_York" {
+			t.Errorf("unexpected exchange item 0: %+v", res[0])
+		}
+		if res[1].Code != "XNYS" || res[1].Name != "New York Stock Exchange" {
+			t.Errorf("unexpected exchange item 1: %+v", res[1])
+		}
+	})
+
+	t.Run("handles error from portfolio service", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			listExchangesFn: func(ctx context.Context, in *pb.ListExchangesRequest) (*pb.ListExchangesResponse, error) {
+				return nil, errors.New("rpc unavailable")
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		_, err := qResolver.Exchanges(ctx)
 		if err == nil {
 			t.Fatalf("expected error, got nil")
 		}

@@ -89,6 +89,13 @@ type ComplexityRoot struct {
 		Success   func(childComplexity int) int
 	}
 
+	Exchange struct {
+		Code     func(childComplexity int) int
+		Country  func(childComplexity int) int
+		Name     func(childComplexity int) int
+		Timezone func(childComplexity int) int
+	}
+
 	FXHistoryPoint struct {
 		Date         func(childComplexity int) int
 		InvertedRate func(childComplexity int) int
@@ -214,6 +221,7 @@ type ComplexityRoot struct {
 		AllInstruments      func(childComplexity int, isActive *bool, search *string) int
 		CurrencyPairHistory func(childComplexity int, baseCurrency string, quoteCurrency string, timeframe model.HistoryTimeframe) int
 		CurrencyPairs       func(childComplexity int) int
+		Exchanges           func(childComplexity int) int
 		FxRates             func(childComplexity int, baseCurrency *string, quoteCurrency *string, fromDate *string, toDate *string, limit *int, offset *int) int
 		IngestionStatus     func(childComplexity int) int
 		InstrumentPrices    func(childComplexity int, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) int
@@ -302,6 +310,7 @@ type QueryResolver interface {
 	PortfolioHistory(ctx context.Context, timeframe model.HistoryTimeframe) (*model.PortfolioHistory, error)
 	Transactions(ctx context.Context, typeArg *model.TransactionType, symbol *string, page *int, pageSize *int) (*model.TransactionsConnection, error)
 	AllInstruments(ctx context.Context, isActive *bool, search *string) ([]*model.Instrument, error)
+	Exchanges(ctx context.Context) ([]*model.Exchange, error)
 	InstrumentPrices(ctx context.Context, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) (*model.InstrumentPricesConnection, error)
 	IngestionStatus(ctx context.Context) (*model.IngestionStatus, error)
 	UserPreferences(ctx context.Context) (*model.UserPreferences, error)
@@ -538,6 +547,31 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.DeleteTransactionPayload.Success(childComplexity), true
+
+	case "Exchange.code":
+		if e.ComplexityRoot.Exchange.Code == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Exchange.Code(childComplexity), true
+	case "Exchange.country":
+		if e.ComplexityRoot.Exchange.Country == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Exchange.Country(childComplexity), true
+	case "Exchange.name":
+		if e.ComplexityRoot.Exchange.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Exchange.Name(childComplexity), true
+	case "Exchange.timezone":
+		if e.ComplexityRoot.Exchange.Timezone == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Exchange.Timezone(childComplexity), true
 
 	case "FXHistoryPoint.date":
 		if e.ComplexityRoot.FXHistoryPoint.Date == nil {
@@ -1100,6 +1134,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.CurrencyPairs(childComplexity), true
+	case "Query.exchanges":
+		if e.ComplexityRoot.Query.Exchanges == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Query.Exchanges(childComplexity), true
 	case "Query.fxRates":
 		if e.ComplexityRoot.Query.FxRates == nil {
 			break
@@ -1598,6 +1638,20 @@ func (ec *executionContext) childFields_DeleteTransactionPayload(ctx context.Con
 		return ec.fieldContext_DeleteTransactionPayload_portfolio(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type DeleteTransactionPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_Exchange(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "code":
+		return ec.fieldContext_Exchange_code(ctx, field)
+	case "name":
+		return ec.fieldContext_Exchange_name(ctx, field)
+	case "country":
+		return ec.fieldContext_Exchange_country(ctx, field)
+	case "timezone":
+		return ec.fieldContext_Exchange_timezone(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Exchange", field.Name)
 }
 
 func (ec *executionContext) childFields_FXHistoryPoint(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -3263,6 +3317,98 @@ func (ec *executionContext) fieldContext_DeleteTransactionPayload_portfolio(_ co
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _Exchange_code(ctx context.Context, field graphql.CollectedField, obj *model.Exchange) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Exchange_code(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Code, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Exchange_code(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Exchange", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Exchange_name(ctx context.Context, field graphql.CollectedField, obj *model.Exchange) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Exchange_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Exchange_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Exchange", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Exchange_country(ctx context.Context, field graphql.CollectedField, obj *model.Exchange) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Exchange_country(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Country, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Exchange_country(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Exchange", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Exchange_timezone(ctx context.Context, field graphql.CollectedField, obj *model.Exchange) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Exchange_timezone(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Timezone, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Exchange_timezone(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Exchange", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _FXHistoryPoint_date(ctx context.Context, field graphql.CollectedField, obj *model.FXHistoryPoint) (ret graphql.Marshaler) {
@@ -5607,6 +5753,38 @@ func (ec *executionContext) fieldContext_Query_allInstruments(ctx context.Contex
 	if fc.Args, err = ec.field_Query_allInstruments_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_exchanges(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_exchanges(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Query().Exchanges(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Exchange) graphql.Marshaler {
+			return ec.marshalNExchange2ᚕᚖbffᚋgraphᚋmodelᚐExchangeᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_exchanges(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Exchange(ctx, field)
+		},
 	}
 	return fc, nil
 }
@@ -8704,6 +8882,59 @@ func (ec *executionContext) _DeleteTransactionPayload(ctx context.Context, sel a
 	return out
 }
 
+var exchangeImplementors = []string{"Exchange"}
+
+func (ec *executionContext) _Exchange(ctx context.Context, sel ast.SelectionSet, obj *model.Exchange) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, exchangeImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Exchange")
+		case "code":
+			out.Values[i] = ec._Exchange_code(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._Exchange_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "country":
+			out.Values[i] = ec._Exchange_country(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "timezone":
+			out.Values[i] = ec._Exchange_timezone(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
 var fXHistoryPointImplementors = []string{"FXHistoryPoint"}
 
 func (ec *executionContext) _FXHistoryPoint(ctx context.Context, sel ast.SelectionSet, obj *model.FXHistoryPoint) graphql.Marshaler {
@@ -9705,6 +9936,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_allInstruments(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "exchanges":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_exchanges(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -10825,6 +11078,32 @@ func (ec *executionContext) marshalNDeleteTransactionPayload2ᚖbffᚋgraphᚋmo
 		return graphql.Null
 	}
 	return ec._DeleteTransactionPayload(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNExchange2ᚕᚖbffᚋgraphᚋmodelᚐExchangeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Exchange) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNExchange2ᚖbffᚋgraphᚋmodelᚐExchange(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNExchange2ᚖbffᚋgraphᚋmodelᚐExchange(ctx context.Context, sel ast.SelectionSet, v *model.Exchange) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Exchange(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNFXHistoryPoint2ᚕᚖbffᚋgraphᚋmodelᚐFXHistoryPointᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FXHistoryPoint) graphql.Marshaler {

@@ -12,7 +12,7 @@ import {
   Input,
   Select,
 } from '@graphfolio/ui';
-import { AddInstrumentModal, type NewInstrumentData } from './AddInstrumentModal';
+import { AddInstrumentModal, type NewInstrumentData, type ExchangeOption } from './AddInstrumentModal';
 import './AssetManagement.css';
 
 interface InstrumentRecord {
@@ -37,6 +37,35 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({ onNotify }) =>
   const [classFilter, setClassFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [exchanges, setExchanges] = useState<ExchangeOption[]>([]);
+  const [exchangesLoading, setExchangesLoading] = useState(false);
+  const [exchangesError, setExchangesError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isModalOpen || exchanges.length > 0) return;
+    setExchangesLoading(true);
+    client
+      .query({
+        exchanges: {
+          code: true,
+          name: true,
+        },
+      })
+      .then((res) => {
+        if (res.exchanges) {
+          setExchanges(res.exchanges);
+        }
+        setExchangesError(null);
+      })
+      .catch((err: any) => {
+        console.error('Failed to query exchanges:', err);
+        setExchangesError(err?.message || 'Failed to load exchanges');
+      })
+      .finally(() => {
+        setExchangesLoading(false);
+      });
+  }, [isModalOpen, exchanges.length]);
 
   const fetchInstruments = useCallback(() => {
     setLoading(true);
@@ -259,6 +288,9 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({ onNotify }) =>
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleRegisterInstrument}
+        exchanges={exchanges}
+        exchangesLoading={exchangesLoading}
+        exchangesError={exchangesError}
       />
     </div>
   );

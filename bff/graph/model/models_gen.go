@@ -82,6 +82,14 @@ type DeleteTransactionPayload struct {
 	Portfolio *Portfolio `json:"portfolio"`
 }
 
+// Trading venue reference data identified by its ISO 10383 MIC code.
+type Exchange struct {
+	Code     string `json:"code"`
+	Name     string `json:"name"`
+	Country  string `json:"country"`
+	Timezone string `json:"timezone"`
+}
+
 type FXHistoryPoint struct {
 	Date         string  `json:"date"`
 	Rate         Decimal `json:"rate"`
