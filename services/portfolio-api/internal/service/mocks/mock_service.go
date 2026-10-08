@@ -13,6 +13,7 @@ import (
 	context "context"
 	domain "portfolio-api/internal/domain"
 	reflect "reflect"
+	time "time"
 
 	gomock "go.uber.org/mock/gomock"
 )
@@ -206,6 +207,20 @@ func (m *MockPortfolioService) RebuildProjections(ctx context.Context, userID st
 func (mr *MockPortfolioServiceMockRecorder) RebuildProjections(ctx, userID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RebuildProjections", reflect.TypeOf((*MockPortfolioService)(nil).RebuildProjections), ctx, userID)
+}
+
+// RebuildValuations mocks base method.
+func (m *MockPortfolioService) RebuildValuations(ctx context.Context, userID string, fromDate *time.Time) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RebuildValuations", ctx, userID, fromDate)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RebuildValuations indicates an expected call of RebuildValuations.
+func (mr *MockPortfolioServiceMockRecorder) RebuildValuations(ctx, userID, fromDate any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RebuildValuations", reflect.TypeOf((*MockPortfolioService)(nil).RebuildValuations), ctx, userID, fromDate)
 }
 
 // RecordPriceOverride mocks base method.

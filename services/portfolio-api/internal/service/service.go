@@ -22,6 +22,7 @@ type PortfolioService interface {
 	GetPortfolioHistory(ctx context.Context, userID string, timeframe domain.HistoryTimeframe) (*domain.PortfolioHistory, error)
 	ListTransactions(ctx context.Context, userID string, filter domain.TransactionFilter) ([]domain.TransactionWithInstrument, int, error)
 	DeleteTransaction(ctx context.Context, userID string, transactionID string) (*domain.PortfolioSummary, error)
+	RebuildValuations(ctx context.Context, userID string, fromDate *time.Time) error
 
 	// Admin: Asset Directory Management
 	ListAllInstruments(ctx context.Context, isActive *bool, search *string) ([]domain.Instrument, error)
@@ -45,6 +46,12 @@ func WithIngestionService(ingestion IngestionService) ServiceOption {
 	}
 }
 
+func WithValuationService(valuations ValuationService) ServiceOption {
+	return func(s *portfolioService) {
+		s.valuations = valuations
+	}
+}
+
 func WithNowFunc(fn func() time.Time) ServiceOption {
 	return func(s *portfolioService) {
 		s.nowFunc = fn
@@ -52,9 +59,10 @@ func WithNowFunc(fn func() time.Time) ServiceOption {
 }
 
 type portfolioService struct {
-	repo      repository.Repository
-	nowFunc   func() time.Time
-	ingestion IngestionService
+	repo       repository.Repository
+	nowFunc    func() time.Time
+	ingestion  IngestionService
+	valuations ValuationService
 }
 
 func NewPortfolioService(repo repository.Repository, opts ...ServiceOption) PortfolioService {
@@ -124,4 +132,19 @@ func (s *portfolioService) UpdatePortfolioBaseCurrency(ctx context.Context, user
 	}
 
 	return s.GetPortfolioSummary(ctx, userID)
+}
+
+func (s *portfolioService) RebuildValuations(ctx context.Context, userID string, fromDate *time.Time) error {
+	portfolio, err := s.repo.FindPortfolioByUser(ctx, userID)
+	if err != nil {
+		return err
+	}
+	from := portfolio.CreatedAt
+	if fromDate != nil {
+		from = *fromDate
+	}
+	if s.valuations != nil {
+		return s.valuations.BackfillPortfolioValuations(ctx, portfolio.ID, from)
+	}
+	return nil
 }

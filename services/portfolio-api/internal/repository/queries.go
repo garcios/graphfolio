@@ -10,6 +10,12 @@ WHERE ($1 = '1' OR user_id::text = $1 OR id::text = $1)
 ORDER BY created_at ASC
 LIMIT 1;`
 
+	listActivePortfoliosSQL = `
+SELECT id
+FROM portfolio.portfolios
+WHERE archived_at IS NULL
+ORDER BY created_at ASC;`
+
 	updatePortfolioBaseCurrencySQL = `
 UPDATE portfolio.portfolios
 SET base_currency = $2, updated_at = now()
@@ -290,4 +296,69 @@ SELECT EXISTS (
       AND price_date >= $2
       AND price_date <= $3
 );`
+
+	upsertValuationsBatchSQL = `
+INSERT INTO portfolio.portfolio_valuations (
+    portfolio_id, valuation_date, market_value_base, cash_value_base,
+    net_flow_base, daily_return, twr_index
+)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+ON CONFLICT (portfolio_id, valuation_date)
+DO UPDATE SET
+    market_value_base = EXCLUDED.market_value_base,
+    cash_value_base = EXCLUDED.cash_value_base,
+    net_flow_base = EXCLUDED.net_flow_base,
+    daily_return = EXCLUDED.daily_return,
+    twr_index = EXCLUDED.twr_index;`
+
+	getLatestValuationBeforeSQL = `
+SELECT 
+    portfolio_id, valuation_date, market_value_base, cash_value_base,
+    net_flow_base, COALESCE(daily_return, 0) AS daily_return, twr_index
+FROM portfolio.portfolio_valuations
+WHERE portfolio_id = $1 AND valuation_date < $2
+ORDER BY valuation_date DESC
+LIMIT 1;`
+
+	getHistoricalPricesForMatrixSQL = `
+WITH latest_before AS (
+    SELECT DISTINCT ON (instrument_id) instrument_id, price_date, close
+    FROM portfolio.instrument_prices
+    WHERE instrument_id = ANY($1) AND price_date <= $2
+    ORDER BY instrument_id, price_date DESC
+),
+in_range AS (
+    SELECT instrument_id, price_date, close
+    FROM portfolio.instrument_prices
+    WHERE instrument_id = ANY($1) AND price_date >= $2 AND price_date <= $3
+)
+SELECT instrument_id, price_date, close FROM latest_before
+UNION
+SELECT instrument_id, price_date, close FROM in_range
+ORDER BY instrument_id, price_date ASC;`
+
+	getHistoricalFXForMatrixSQL = `
+WITH latest_before AS (
+    SELECT DISTINCT ON (base_currency, quote_currency) base_currency, quote_currency, rate_date, rate
+    FROM portfolio.fx_rates
+    WHERE ((base_currency = ANY($1) AND quote_currency = $2)
+        OR (base_currency = $2 AND quote_currency = ANY($1)))
+      AND rate_date <= $3
+    ORDER BY base_currency, quote_currency, rate_date DESC
+),
+in_range AS (
+    SELECT base_currency, quote_currency, rate_date, rate
+    FROM portfolio.fx_rates
+    WHERE ((base_currency = ANY($1) AND quote_currency = $2)
+        OR (base_currency = $2 AND quote_currency = ANY($1)))
+      AND rate_date >= $3 AND rate_date <= $4
+)
+SELECT base_currency, quote_currency, rate_date, rate FROM latest_before
+UNION
+SELECT base_currency, quote_currency, rate_date, rate FROM in_range
+ORDER BY rate_date ASC;`
+
+	deleteValuationsFromDateSQL = `
+DELETE FROM portfolio.portfolio_valuations
+WHERE portfolio_id = $1 AND valuation_date >= $2;`
 )

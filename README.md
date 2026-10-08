@@ -13,6 +13,7 @@ A modern portfolio tracker built for serious investors. GraphFolio accurately me
 - **Transaction History & Ledger Management**: Paginated transaction history with type filtering, exact execution prices, fee tracking, and safe deletion with immediate atomic ledger replay.
 - **Transaction-Ledger Architecture**: Immutable transaction ledger acts as the authoritative source of truth, deterministically projecting holdings, cash balances, and valuations.
 - **Flexible Cost Basis Accounting**: Native support for both **Average Cost** (`AVERAGE_COST`, default) and **FIFO** (`FIFO`) tax lot relief strategies.
+- **Daily Portfolio Valuation Engine & Historical Backfill**: Automated daily End-of-Day (EOD) portfolio valuation engine and scheduled background worker (`make run-valuation-job`). Evaluates daily market values, net cash flows, sub-period returns, and cumulative Time-Weighted Return (TWR) indexes with zero float drift. Features GIPS-compliant annualized returns, multi-day historical price/FX matrix replay with Last Observation Carried Forward (LOCF), and automated backfill triggers on past-dated trade logging and deletions.
 - **User Preferences & Dynamic Multi-Currency Re-anchoring**: Manage investor profile display name, UI theme (`DARK`, `LIGHT`, `SYSTEM`), and base display currency (`USD`, `EUR`, `GBP`, `AUD`, `CAD`, `JPY`, `CHF`). Changing preferred currency automatically triggers atomic base currency re-anchoring on `portfolio-api`, re-scaling valuations and holdings cost bases via live FX triangulation without data drift.
 - **Clean Microservice Monorepo**: Contract-first gRPC services with a Go GraphQL Backend-for-Frontend (BFF) and strongly-typed frontend queries.
 - **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, Vite, modal transaction entry, investor preferences dialog, and instant reactive state refresh.
@@ -190,6 +191,8 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 ├── services/                     # Domain Microservices
 │   ├── portfolio-api/            # Portfolio business logic, ledger replay, valuations, migrations, seeds
 │   │   ├── cmd/server/           # Application entrypoint (:50051)
+│   │   ├── cmd/worker/           # Scheduled EOD & on-demand valuation worker (make run-valuation-job)
+│   │   ├── cmd/market-ingest/    # Market data ingestion & historical backfill CLI (make ingest-market-data)
 │   │   ├── internal/             # Domain entities, repository, service, and gRPC server
 │   │   ├── migrations/           # Versioned schema migrations (000001 - 000006)
 │   │   └── seeds/                # Seed fixtures (dev_seed.sql with 365-day history)
@@ -274,6 +277,8 @@ make generate
 | `make db-seed` | Seeds development instruments, market data, and demo portfolios |
 | `make db-reset` | Recreates database from scratch: drop, bootstrap, migrate, and seed |
 | `make test` | Runs unit tests across all modules in `go.work` with race detection |
+| `make ingest-market-data` | Runs the market data closing price and ECB FX fixing ingestion pipeline |
+| `make run-valuation-job` | Runs the scheduled EOD valuation snapshot across active portfolios or historical backfills |
 | `make run-portfolio` | Starts the Portfolio gRPC microservice on port 50051 |
 | `make run-user` | Starts the User gRPC microservice on port 50052 |
 | `make run-bff` | Starts the GraphQL BFF on port 8080 |

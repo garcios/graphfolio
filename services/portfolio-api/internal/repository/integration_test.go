@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"pkg/database"
+	"portfolio-api/internal/domain"
 	"portfolio-api/internal/marketdata"
 	"portfolio-api/internal/repository"
 
@@ -176,5 +177,94 @@ func TestPostgresRepositoryQueries(t *testing.T) {
 	}
 	if hasNoPrices {
 		t.Errorf("expected HasPricesForRange to be false for non-existent instrument")
+	}
+
+	// 8. UpsertValuationsBatch
+	vDate1 := time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)
+	vDate2 := time.Date(2026, 10, 2, 0, 0, 0, 0, time.UTC)
+	vDate3 := time.Date(2026, 10, 3, 0, 0, 0, 0, time.UTC)
+
+	batchVals := []domain.PortfolioValuation{
+		{
+			PortfolioID:     p.ID,
+			ValuationDate:   vDate1,
+			MarketValueBase: decimal.RequireFromString("10000.00"),
+			CashValueBase:   decimal.RequireFromString("2000.00"),
+			NetFlowBase:     decimal.Zero,
+			DailyReturn:     decimal.Zero,
+			TWRIndex:        decimal.RequireFromString("1.000000000000"),
+		},
+		{
+			PortfolioID:     p.ID,
+			ValuationDate:   vDate2,
+			MarketValueBase: decimal.RequireFromString("10500.00"),
+			CashValueBase:   decimal.RequireFromString("2000.00"),
+			NetFlowBase:     decimal.Zero,
+			DailyReturn:     decimal.RequireFromString("0.041666666667"),
+			TWRIndex:        decimal.RequireFromString("1.041666666667"),
+		},
+		{
+			PortfolioID:     p.ID,
+			ValuationDate:   vDate3,
+			MarketValueBase: decimal.RequireFromString("11000.00"),
+			CashValueBase:   decimal.RequireFromString("2000.00"),
+			NetFlowBase:     decimal.Zero,
+			DailyReturn:     decimal.RequireFromString("0.040000000000"),
+			TWRIndex:        decimal.RequireFromString("1.083333333334"),
+		},
+	}
+
+	if err := repo.UpsertValuationsBatch(ctx, batchVals); err != nil {
+		t.Fatalf("UpsertValuationsBatch failed: %v", err)
+	}
+
+	// 9. GetLatestValuationBefore
+	latestBefore, err := repo.GetLatestValuationBefore(ctx, p.ID, vDate3)
+	if err != nil {
+		t.Fatalf("GetLatestValuationBefore failed: %v", err)
+	}
+	if latestBefore == nil {
+		t.Fatalf("expected valuation before %s, got nil", vDate3)
+	}
+	if !latestBefore.ValuationDate.Equal(vDate2) {
+		t.Errorf("got valuation date %v, want %v", latestBefore.ValuationDate, vDate2)
+	}
+
+	// 10. GetHistoricalPriceMatrix with LOCF across weekend
+	priceMatrix, err := repo.GetHistoricalPriceMatrix(ctx, []uuid.UUID{aaplInst.ID}, vDate2, vDate2.AddDate(0, 0, 3))
+	if err != nil {
+		t.Fatalf("GetHistoricalPriceMatrix failed: %v", err)
+	}
+	if len(priceMatrix[aaplInst.ID]) < 4 {
+		t.Errorf("expected at least 4 daily price points for AAPL with LOCF, got %d", len(priceMatrix[aaplInst.ID]))
+	}
+	// Saturday and Sunday should have the carried-forward price
+	satDateStr := vDate2.AddDate(0, 0, 1).Format("2006-01-02")
+	if price, ok := priceMatrix[aaplInst.ID][satDateStr]; !ok || !price.IsPositive() {
+		t.Errorf("expected positive carried-forward price on Saturday %s, got %v", satDateStr, price)
+	}
+
+	// 11. GetHistoricalFXMatrix with LOCF
+	fxMatrix, err := repo.GetHistoricalFXMatrix(ctx, []string{"EUR", "USD"}, "USD", vDate2, vDate2.AddDate(0, 0, 3))
+	if err != nil {
+		t.Fatalf("GetHistoricalFXMatrix failed: %v", err)
+	}
+	if usdRate, ok := fxMatrix["USD"][satDateStr]; !ok || !usdRate.Equal(decimal.NewFromInt(1)) {
+		t.Errorf("expected USD rate to be 1.0, got %v", usdRate)
+	}
+	if eurRate, ok := fxMatrix["EUR"][satDateStr]; !ok || !eurRate.IsPositive() {
+		t.Errorf("expected positive EUR rate on Saturday %s, got %v", satDateStr, eurRate)
+	}
+
+	// 12. DeleteValuationsFromDate
+	if err := repo.DeleteValuationsFromDate(ctx, p.ID, vDate2); err != nil {
+		t.Fatalf("DeleteValuationsFromDate failed: %v", err)
+	}
+	afterDelete, err := repo.GetLatestValuationBefore(ctx, p.ID, vDate3)
+	if err != nil {
+		t.Fatalf("GetLatestValuationBefore after delete failed: %v", err)
+	}
+	if afterDelete != nil && afterDelete.ValuationDate.Equal(vDate2) {
+		t.Errorf("valuation for %v should have been deleted", vDate2)
 	}
 }

@@ -55,6 +55,24 @@ func (r *PostgresRepository) FindPortfolioByUser(ctx context.Context, userID str
 	return &p, nil
 }
 
+func (r *PostgresRepository) ListActivePortfolios(ctx context.Context) ([]uuid.UUID, error) {
+	rows, err := r.pool.Query(ctx, listActivePortfoliosSQL)
+	if err != nil {
+		return nil, fmt.Errorf("repository: list active portfolios failed: %w", err)
+	}
+	defer rows.Close()
+
+	var ids []uuid.UUID
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("repository: scan active portfolio failed: %w", err)
+		}
+		ids = append(ids, id)
+	}
+	return ids, rows.Err()
+}
+
 func (r *PostgresRepository) UpdatePortfolioBaseCurrency(ctx context.Context, portfolioID uuid.UUID, baseCurrency string, fxRate decimal.Decimal) error {
 	tx, err := r.pool.Begin(ctx)
 	if err != nil {
@@ -895,4 +913,266 @@ func (r *PostgresRepository) HasPricesForRange(ctx context.Context, instrumentID
 		return false, fmt.Errorf("repository: failed to check prices for range: %w", err)
 	}
 	return exists, nil
+}
+
+func (r *PostgresRepository) UpsertValuationsBatch(ctx context.Context, valuations []domain.PortfolioValuation) error {
+	if len(valuations) == 0 {
+		return nil
+	}
+
+	batch := &pgx.Batch{}
+	for _, v := range valuations {
+		batch.Queue(
+			upsertValuationsBatchSQL,
+			v.PortfolioID,
+			v.ValuationDate.UTC(),
+			v.MarketValueBase,
+			v.CashValueBase,
+			v.NetFlowBase,
+			v.DailyReturn,
+			v.TWRIndex,
+		)
+	}
+
+	br := r.pool.SendBatch(ctx, batch)
+	defer br.Close()
+
+	for i := 0; i < batch.Len(); i++ {
+		if _, err := br.Exec(); err != nil {
+			return fmt.Errorf("repository: upsert valuation batch item %d failed: %w", i, err)
+		}
+	}
+
+	return nil
+}
+
+func (r *PostgresRepository) GetLatestValuationBefore(ctx context.Context, portfolioID uuid.UUID, beforeDate time.Time) (*domain.PortfolioValuation, error) {
+	row := r.pool.QueryRow(ctx, getLatestValuationBeforeSQL, portfolioID, beforeDate.UTC())
+
+	var v domain.PortfolioValuation
+	err := row.Scan(
+		&v.PortfolioID,
+		&v.ValuationDate,
+		&v.MarketValueBase,
+		&v.CashValueBase,
+		&v.NetFlowBase,
+		&v.DailyReturn,
+		&v.TWRIndex,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("repository: get latest valuation before date failed: %w", err)
+	}
+
+	return &v, nil
+}
+
+func (r *PostgresRepository) GetHistoricalPriceMatrix(ctx context.Context, instrumentIDs []uuid.UUID, fromDate, toDate time.Time) (map[uuid.UUID]map[string]decimal.Decimal, error) {
+	result := make(map[uuid.UUID]map[string]decimal.Decimal, len(instrumentIDs))
+	if len(instrumentIDs) == 0 {
+		return result, nil
+	}
+
+	from := time.Date(fromDate.Year(), fromDate.Month(), fromDate.Day(), 0, 0, 0, 0, time.UTC)
+	to := time.Date(toDate.Year(), toDate.Month(), toDate.Day(), 0, 0, 0, 0, time.UTC)
+	if from.After(to) {
+		return nil, fmt.Errorf("repository: fromDate (%s) cannot be after toDate (%s)", from.Format("2006-01-02"), to.Format("2006-01-02"))
+	}
+
+	for _, id := range instrumentIDs {
+		result[id] = make(map[string]decimal.Decimal)
+	}
+
+	rows, err := r.pool.Query(ctx, getHistoricalPricesForMatrixSQL, instrumentIDs, from, to)
+	if err != nil {
+		return nil, fmt.Errorf("repository: query historical price matrix failed: %w", err)
+	}
+	defer rows.Close()
+
+	type pricePoint struct {
+		date  time.Time
+		price decimal.Decimal
+	}
+	obsByInst := make(map[uuid.UUID][]pricePoint)
+
+	for rows.Next() {
+		var (
+			instID    uuid.UUID
+			priceDate time.Time
+			close     decimal.Decimal
+		)
+		if err := rows.Scan(&instID, &priceDate, &close); err != nil {
+			return nil, fmt.Errorf("repository: scan price matrix observation failed: %w", err)
+		}
+		normDate := time.Date(priceDate.Year(), priceDate.Month(), priceDate.Day(), 0, 0, 0, 0, time.UTC)
+		obsByInst[instID] = append(obsByInst[instID], pricePoint{date: normDate, price: close})
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("repository: price matrix rows failed: %w", err)
+	}
+
+	for _, instID := range instrumentIDs {
+		obsList := obsByInst[instID]
+		obsMap := make(map[string]decimal.Decimal, len(obsList))
+		var (
+			runningPrice decimal.Decimal
+			hasPrice     bool
+		)
+
+		var latestPriorDate time.Time
+		for _, pt := range obsList {
+			obsMap[pt.date.Format("2006-01-02")] = pt.price
+			if !pt.date.After(from) {
+				if latestPriorDate.IsZero() || pt.date.After(latestPriorDate) {
+					latestPriorDate = pt.date
+					runningPrice = pt.price
+					hasPrice = true
+				}
+			}
+		}
+
+		for curr := from; !curr.After(to); curr = curr.AddDate(0, 0, 1) {
+			dateStr := curr.Format("2006-01-02")
+			if p, ok := obsMap[dateStr]; ok {
+				runningPrice = p
+				hasPrice = true
+			}
+			if hasPrice {
+				result[instID][dateStr] = runningPrice
+			}
+		}
+	}
+
+	return result, nil
+}
+
+func (r *PostgresRepository) GetHistoricalFXMatrix(ctx context.Context, currencies []string, baseCurrency string, fromDate, toDate time.Time) (map[string]map[string]decimal.Decimal, error) {
+	result := make(map[string]map[string]decimal.Decimal)
+	from := time.Date(fromDate.Year(), fromDate.Month(), fromDate.Day(), 0, 0, 0, 0, time.UTC)
+	to := time.Date(toDate.Year(), toDate.Month(), toDate.Day(), 0, 0, 0, 0, time.UTC)
+	if from.After(to) {
+		return nil, fmt.Errorf("repository: fromDate (%s) cannot be after toDate (%s)", from.Format("2006-01-02"), to.Format("2006-01-02"))
+	}
+
+	// 1. Base currency is always 1.0
+	result[baseCurrency] = make(map[string]decimal.Decimal)
+	for curr := from; !curr.After(to); curr = curr.AddDate(0, 0, 1) {
+		result[baseCurrency][curr.Format("2006-01-02")] = decimal.NewFromInt(1)
+	}
+
+	// 2. Filter distinct foreign currencies
+	foreignSet := make(map[string]struct{})
+	for _, c := range currencies {
+		if c != "" && c != baseCurrency {
+			foreignSet[c] = struct{}{}
+		}
+	}
+
+	if len(foreignSet) == 0 {
+		return result, nil
+	}
+
+	foreignCurrencies := make([]string, 0, len(foreignSet))
+	for c := range foreignSet {
+		foreignCurrencies = append(foreignCurrencies, c)
+		result[c] = make(map[string]decimal.Decimal)
+	}
+
+	rows, err := r.pool.Query(ctx, getHistoricalFXForMatrixSQL, foreignCurrencies, baseCurrency, from, to)
+	if err != nil {
+		return nil, fmt.Errorf("repository: query historical FX matrix failed: %w", err)
+	}
+	defer rows.Close()
+
+	type fxObservation struct {
+		date     time.Time
+		rate     decimal.Decimal
+		isDirect bool
+	}
+	obsByCurr := make(map[string][]fxObservation)
+
+	for rows.Next() {
+		var (
+			baseCode  string
+			quoteCode string
+			rateDate  time.Time
+			rate      decimal.Decimal
+		)
+		if err := rows.Scan(&baseCode, &quoteCode, &rateDate, &rate); err != nil {
+			return nil, fmt.Errorf("repository: scan FX matrix row failed: %w", err)
+		}
+
+		normDate := time.Date(rateDate.Year(), rateDate.Month(), rateDate.Day(), 0, 0, 0, 0, time.UTC)
+		if baseCode == baseCurrency {
+			if rate.IsPositive() {
+				effRate := decimal.NewFromInt(1).DivRound(rate, 12)
+				obsByCurr[quoteCode] = append(obsByCurr[quoteCode], fxObservation{date: normDate, rate: effRate, isDirect: false})
+			}
+		} else if quoteCode == baseCurrency {
+			obsByCurr[baseCode] = append(obsByCurr[baseCode], fxObservation{date: normDate, rate: rate, isDirect: true})
+		}
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("repository: FX matrix rows failed: %w", err)
+	}
+
+	// 3. For each foreign currency, forward-fill (LOCF) across from -> to
+	for _, c := range foreignCurrencies {
+		obsList := obsByCurr[c]
+		directMap := make(map[string]decimal.Decimal)
+		inverseMap := make(map[string]decimal.Decimal)
+
+		var (
+			runningRate     = decimal.NewFromInt(1)
+			hasObs          = false
+			latestPriorDate time.Time
+		)
+
+		for _, obs := range obsList {
+			dStr := obs.date.Format("2006-01-02")
+			if obs.isDirect {
+				directMap[dStr] = obs.rate
+			} else {
+				inverseMap[dStr] = obs.rate
+			}
+
+			if !obs.date.After(from) {
+				if latestPriorDate.IsZero() || obs.date.After(latestPriorDate) {
+					latestPriorDate = obs.date
+					runningRate = obs.rate
+					hasObs = true
+				}
+			}
+		}
+
+		for curr := from; !curr.After(to); curr = curr.AddDate(0, 0, 1) {
+			dStr := curr.Format("2006-01-02")
+			if r, ok := directMap[dStr]; ok {
+				runningRate = r
+				hasObs = true
+			} else if r, ok := inverseMap[dStr]; ok {
+				runningRate = r
+				hasObs = true
+			}
+
+			if hasObs {
+				result[c][dStr] = runningRate
+			} else {
+				result[c][dStr] = decimal.NewFromInt(1)
+			}
+		}
+	}
+
+	return result, nil
+}
+
+func (r *PostgresRepository) DeleteValuationsFromDate(ctx context.Context, portfolioID uuid.UUID, fromDate time.Time) error {
+	from := time.Date(fromDate.Year(), fromDate.Month(), fromDate.Day(), 0, 0, 0, 0, time.UTC)
+	_, err := r.pool.Exec(ctx, deleteValuationsFromDateSQL, portfolioID, from)
+	if err != nil {
+		return fmt.Errorf("repository: delete valuations from date failed: %w", err)
+	}
+	return nil
 }
