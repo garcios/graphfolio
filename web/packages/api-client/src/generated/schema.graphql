@@ -123,11 +123,17 @@ type DeleteTransactionPayload {
   portfolio: Portfolio!
 }
 
+type DeleteInstrumentPayload {
+  success: Boolean!
+  id: ID!
+}
+
 type Mutation {
   addTransaction(input: AddTransactionInput!): AddTransactionPayload!
   deleteTransaction(id: ID!): DeleteTransactionPayload!
   createInstrument(input: CreateInstrumentInput!): Instrument!
   updateInstrument(input: UpdateInstrumentInput!): Instrument!
+  deleteInstrument(id: ID!): DeleteInstrumentPayload!
   recordPriceOverride(input: RecordPriceOverrideInput!): RecordPriceOverridePayload!
   triggerMarketSync(symbols: [String!], syncFx: Boolean): MarketSyncPayload!
   triggerBackfill(input: TriggerBackfillInput!): BackfillPayload!

@@ -559,6 +559,37 @@ func (s *PortfolioServer) UpdateInstrument(ctx context.Context, req *pb.UpdateIn
 	}, nil
 }
 
+func (s *PortfolioServer) DeleteInstrument(ctx context.Context, req *pb.DeleteInstrumentRequest) (*pb.DeleteInstrumentResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	if req.GetId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "instrument id cannot be empty")
+	}
+
+	id, err := uuid.Parse(req.GetId())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid instrument id: %v", err)
+	}
+
+	err = s.svc.DeleteInstrument(ctx, id)
+	if err != nil {
+		if errors.Is(err, repository.ErrInstrumentNotFound) {
+			return nil, status.Errorf(codes.NotFound, "instrument %s not found", req.GetId())
+		}
+		if errors.Is(err, repository.ErrInstrumentInUse) {
+			return nil, status.Errorf(codes.FailedPrecondition, "cannot delete instrument: %v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to delete instrument: %v", err)
+	}
+
+	return &pb.DeleteInstrumentResponse{
+		Success: true,
+		Id:      req.GetId(),
+	}, nil
+}
+
 func (s *PortfolioServer) ListInstrumentPrices(ctx context.Context, req *pb.ListInstrumentPricesRequest) (*pb.ListInstrumentPricesResponse, error) {
 	if s.svc == nil {
 		return nil, status.Error(codes.Unavailable, "service not initialized")

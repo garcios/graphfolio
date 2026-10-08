@@ -15,6 +15,7 @@ import (
 	reflect "reflect"
 	time "time"
 
+	uuid "github.com/google/uuid"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -71,6 +72,20 @@ func (m *MockPortfolioService) CreateInstrument(ctx context.Context, input domai
 func (mr *MockPortfolioServiceMockRecorder) CreateInstrument(ctx, input any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateInstrument", reflect.TypeOf((*MockPortfolioService)(nil).CreateInstrument), ctx, input)
+}
+
+// DeleteInstrument mocks base method.
+func (m *MockPortfolioService) DeleteInstrument(ctx context.Context, id uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteInstrument", ctx, id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteInstrument indicates an expected call of DeleteInstrument.
+func (mr *MockPortfolioServiceMockRecorder) DeleteInstrument(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteInstrument", reflect.TypeOf((*MockPortfolioService)(nil).DeleteInstrument), ctx, id)
 }
 
 // DeleteTransaction mocks base method.

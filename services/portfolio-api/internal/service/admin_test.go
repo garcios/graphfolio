@@ -295,6 +295,46 @@ func TestPortfolioService_UpdateInstrument(t *testing.T) {
 	}
 }
 
+func TestPortfolioService_DeleteInstrument(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+	mockRepo := mocks.NewMockRepository(ctrl)
+	svc := service.NewPortfolioService(mockRepo)
+	ctx := context.Background()
+	instID := uuid.New()
+
+	t.Run("success", func(t *testing.T) {
+		mockRepo.EXPECT().DeleteInstrument(ctx, instID).Return(nil)
+		err := svc.DeleteInstrument(ctx, instID)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+	})
+
+	t.Run("nil uuid returns error", func(t *testing.T) {
+		err := svc.DeleteInstrument(ctx, uuid.Nil)
+		if err == nil {
+			t.Fatal("expected error for nil uuid, got nil")
+		}
+	})
+
+	t.Run("instrument not found returns ErrInstrumentNotFound", func(t *testing.T) {
+		mockRepo.EXPECT().DeleteInstrument(ctx, instID).Return(repository.ErrInstrumentNotFound)
+		err := svc.DeleteInstrument(ctx, instID)
+		if !errors.Is(err, repository.ErrInstrumentNotFound) {
+			t.Fatalf("expected ErrInstrumentNotFound, got %v", err)
+		}
+	})
+
+	t.Run("instrument in use returns ErrInstrumentInUse", func(t *testing.T) {
+		mockRepo.EXPECT().DeleteInstrument(ctx, instID).Return(repository.ErrInstrumentInUse)
+		err := svc.DeleteInstrument(ctx, instID)
+		if !errors.Is(err, repository.ErrInstrumentInUse) {
+			t.Fatalf("expected ErrInstrumentInUse, got %v", err)
+		}
+	})
+}
+
 func TestPortfolioService_ListInstrumentPrices(t *testing.T) {
 	ctx := context.Background()
 

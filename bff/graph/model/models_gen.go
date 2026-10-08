@@ -77,6 +77,11 @@ type CurrencyPairHistory struct {
 	PeriodLow       Decimal           `json:"periodLow"`
 }
 
+type DeleteInstrumentPayload struct {
+	Success bool   `json:"success"`
+	ID      string `json:"id"`
+}
+
 type DeleteTransactionPayload struct {
 	Success   bool       `json:"success"`
 	Portfolio *Portfolio `json:"portfolio"`

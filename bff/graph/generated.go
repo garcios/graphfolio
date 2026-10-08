@@ -84,6 +84,11 @@ type ComplexityRoot struct {
 		StartRate       func(childComplexity int) int
 	}
 
+	DeleteInstrumentPayload struct {
+		ID      func(childComplexity int) int
+		Success func(childComplexity int) int
+	}
+
 	DeleteTransactionPayload struct {
 		Portfolio func(childComplexity int) int
 		Success   func(childComplexity int) int
@@ -191,6 +196,7 @@ type ComplexityRoot struct {
 	Mutation struct {
 		AddTransaction        func(childComplexity int, input model.AddTransactionInput) int
 		CreateInstrument      func(childComplexity int, input model.CreateInstrumentInput) int
+		DeleteInstrument      func(childComplexity int, id string) int
 		DeleteTransaction     func(childComplexity int, id string) int
 		RecordFXRateOverride  func(childComplexity int, input model.RecordFXRateOverrideInput) int
 		RecordPriceOverride   func(childComplexity int, input model.RecordPriceOverrideInput) int
@@ -298,6 +304,7 @@ type MutationResolver interface {
 	DeleteTransaction(ctx context.Context, id string) (*model.DeleteTransactionPayload, error)
 	CreateInstrument(ctx context.Context, input model.CreateInstrumentInput) (*model.Instrument, error)
 	UpdateInstrument(ctx context.Context, input model.UpdateInstrumentInput) (*model.Instrument, error)
+	DeleteInstrument(ctx context.Context, id string) (*model.DeleteInstrumentPayload, error)
 	RecordPriceOverride(ctx context.Context, input model.RecordPriceOverrideInput) (*model.RecordPriceOverridePayload, error)
 	TriggerMarketSync(ctx context.Context, symbols []string, syncFx *bool) (*model.MarketSyncPayload, error)
 	TriggerBackfill(ctx context.Context, input model.TriggerBackfillInput) (*model.BackfillPayload, error)
@@ -534,6 +541,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.CurrencyPairHistory.StartRate(childComplexity), true
+
+	case "DeleteInstrumentPayload.id":
+		if e.ComplexityRoot.DeleteInstrumentPayload.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DeleteInstrumentPayload.ID(childComplexity), true
+	case "DeleteInstrumentPayload.success":
+		if e.ComplexityRoot.DeleteInstrumentPayload.Success == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DeleteInstrumentPayload.Success(childComplexity), true
 
 	case "DeleteTransactionPayload.portfolio":
 		if e.ComplexityRoot.DeleteTransactionPayload.Portfolio == nil {
@@ -960,6 +980,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.CreateInstrument(childComplexity, args["input"].(model.CreateInstrumentInput)), true
+	case "Mutation.deleteInstrument":
+		if e.ComplexityRoot.Mutation.DeleteInstrument == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_deleteInstrument_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.DeleteInstrument(childComplexity, args["id"].(string)), true
 	case "Mutation.deleteTransaction":
 		if e.ComplexityRoot.Mutation.DeleteTransaction == nil {
 			break
@@ -1630,6 +1661,16 @@ func (ec *executionContext) childFields_CurrencyPairHistory(ctx context.Context,
 	return nil, fmt.Errorf("no field named %q was found under type CurrencyPairHistory", field.Name)
 }
 
+func (ec *executionContext) childFields_DeleteInstrumentPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "success":
+		return ec.fieldContext_DeleteInstrumentPayload_success(ctx, field)
+	case "id":
+		return ec.fieldContext_DeleteInstrumentPayload_id(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type DeleteInstrumentPayload", field.Name)
+}
+
 func (ec *executionContext) childFields_DeleteTransactionPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "success":
@@ -2123,6 +2164,20 @@ func (ec *executionContext) field_Mutation_createInstrument_args(ctx context.Con
 		return nil, err
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_deleteInstrument_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "id",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -3262,6 +3317,52 @@ func (ec *executionContext) _CurrencyPairHistory_periodLow(ctx context.Context, 
 }
 func (ec *executionContext) fieldContext_CurrencyPairHistory_periodLow(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("CurrencyPairHistory", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _DeleteInstrumentPayload_success(ctx context.Context, field graphql.CollectedField, obj *model.DeleteInstrumentPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DeleteInstrumentPayload_success(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Success, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DeleteInstrumentPayload_success(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DeleteInstrumentPayload", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _DeleteInstrumentPayload_id(ctx context.Context, field graphql.CollectedField, obj *model.DeleteInstrumentPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DeleteInstrumentPayload_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DeleteInstrumentPayload_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DeleteInstrumentPayload", field, false, false, errors.New("field of type ID does not have child fields"))
 }
 
 func (ec *executionContext) _DeleteTransactionPayload_success(ctx context.Context, field graphql.CollectedField, obj *model.DeleteTransactionPayload) (ret graphql.Marshaler) {
@@ -5010,6 +5111,50 @@ func (ec *executionContext) fieldContext_Mutation_updateInstrument(ctx context.C
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_updateInstrument_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_deleteInstrument(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_deleteInstrument(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().DeleteInstrument(ctx, fc.Args["id"].(string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.DeleteInstrumentPayload) graphql.Marshaler {
+			return ec.marshalNDeleteInstrumentPayload2ᚖbffᚋgraphᚋmodelᚐDeleteInstrumentPayload(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_deleteInstrument(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_DeleteInstrumentPayload(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteInstrument_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -8839,6 +8984,49 @@ func (ec *executionContext) _CurrencyPairHistory(ctx context.Context, sel ast.Se
 	return out
 }
 
+var deleteInstrumentPayloadImplementors = []string{"DeleteInstrumentPayload"}
+
+func (ec *executionContext) _DeleteInstrumentPayload(ctx context.Context, sel ast.SelectionSet, obj *model.DeleteInstrumentPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, deleteInstrumentPayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DeleteInstrumentPayload")
+		case "success":
+			out.Values[i] = ec._DeleteInstrumentPayload_success(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "id":
+			out.Values[i] = ec._DeleteInstrumentPayload_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
 var deleteTransactionPayloadImplementors = []string{"DeleteTransactionPayload"}
 
 func (ec *executionContext) _DeleteTransactionPayload(ctx context.Context, sel ast.SelectionSet, obj *model.DeleteTransactionPayload) graphql.Marshaler {
@@ -9637,6 +9825,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "updateInstrument":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_updateInstrument(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "deleteInstrument":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_deleteInstrument(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -11068,6 +11263,16 @@ func (ec *executionContext) unmarshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx 
 
 func (ec *executionContext) marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx context.Context, sel ast.SelectionSet, v model.Decimal) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNDeleteInstrumentPayload2ᚖbffᚋgraphᚋmodelᚐDeleteInstrumentPayload(ctx context.Context, sel ast.SelectionSet, v *model.DeleteInstrumentPayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DeleteInstrumentPayload(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNDeleteTransactionPayload2ᚖbffᚋgraphᚋmodelᚐDeleteTransactionPayload(ctx context.Context, sel ast.SelectionSet, v *model.DeleteTransactionPayload) graphql.Marshaler {

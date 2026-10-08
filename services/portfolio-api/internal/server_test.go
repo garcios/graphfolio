@@ -1153,6 +1153,131 @@ func TestPortfolioServer_UpdateInstrument(t *testing.T) {
 	})
 }
 
+func TestPortfolioServer_DeleteInstrument(t *testing.T) {
+	ctx := context.Background()
+	validID := uuid.New()
+
+	t.Run("nil service returns Unavailable", func(t *testing.T) {
+		server := NewPortfolioServer(nil)
+		_, err := server.DeleteInstrument(ctx, &pb.DeleteInstrumentRequest{Id: validID.String()})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.Unavailable {
+			t.Errorf("expected Unavailable, got %v", st.Code())
+		}
+	})
+
+	t.Run("empty ID returns InvalidArgument", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		_, err := server.DeleteInstrument(ctx, &pb.DeleteInstrumentRequest{Id: ""})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", st.Code())
+		}
+	})
+
+	t.Run("invalid UUID returns InvalidArgument", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		_, err := server.DeleteInstrument(ctx, &pb.DeleteInstrumentRequest{Id: "invalid-uuid"})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", st.Code())
+		}
+	})
+
+	t.Run("success returns response", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().
+			DeleteInstrument(ctx, validID).
+			Return(nil)
+
+		res, err := server.DeleteInstrument(ctx, &pb.DeleteInstrumentRequest{Id: validID.String()})
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if !res.Success {
+			t.Errorf("expected Success true, got false")
+		}
+		if res.Id != validID.String() {
+			t.Errorf("expected Id %s, got %s", validID.String(), res.Id)
+		}
+	})
+
+	t.Run("not found returns NotFound", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().
+			DeleteInstrument(ctx, validID).
+			Return(repository.ErrInstrumentNotFound)
+
+		_, err := server.DeleteInstrument(ctx, &pb.DeleteInstrumentRequest{Id: validID.String()})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.NotFound {
+			t.Errorf("expected NotFound, got %v", st.Code())
+		}
+	})
+
+	t.Run("in use returns FailedPrecondition", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().
+			DeleteInstrument(ctx, validID).
+			Return(repository.ErrInstrumentInUse)
+
+		_, err := server.DeleteInstrument(ctx, &pb.DeleteInstrumentRequest{Id: validID.String()})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.FailedPrecondition {
+			t.Errorf("expected FailedPrecondition, got %v", st.Code())
+		}
+	})
+
+	t.Run("internal error returns Internal", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().
+			DeleteInstrument(ctx, validID).
+			Return(errors.New("db error"))
+
+		_, err := server.DeleteInstrument(ctx, &pb.DeleteInstrumentRequest{Id: validID.String()})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.Internal {
+			t.Errorf("expected Internal, got %v", st.Code())
+		}
+	})
+}
+
 func TestPortfolioServer_ListInstrumentPrices(t *testing.T) {
 	ctx := context.Background()
 

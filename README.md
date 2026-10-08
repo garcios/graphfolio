@@ -16,6 +16,7 @@ A modern portfolio tracker built for serious investors. GraphFolio accurately me
 - **Daily Portfolio Valuation Engine & Historical Backfill**: Automated daily End-of-Day (EOD) portfolio valuation engine and scheduled background worker (`make run-valuation-job`). Evaluates daily market values, net cash flows, sub-period returns, and cumulative Time-Weighted Return (TWR) indexes with zero float drift. Features GIPS-compliant annualized returns, multi-day historical price/FX matrix replay with Last Observation Carried Forward (LOCF), and automated backfill triggers on past-dated trade logging and deletions.
 - **Foreign Exchange (FX) & Currency Pair Management**: Dedicated operations view in the Admin Portal (`:5174`). Inspect tracked currency pairs (`EUR/USD`, `USD/GBP`, `USD/AUD`, `USD/JPY`, `EUR/GBP`, `USD/CAD`), toggle direct and reciprocal quotes (`Base ⇄ Quote`) with exact 10-decimal precision, explore interactive SVG historical trend curves across timeframes (`1W`, `1M`, `1Y`, `ALL`) with glowing area fills and hover crosshairs, browse the authoritative rates ledger, and apply audit-justified manual exchange rate overrides.
 - **Master Asset Directory & Exchange Reference Data**: Authoritative instrument catalog management in the Admin Portal. Operators register tradable assets with symbol, exchange selection powered by live `portfolio.exchanges` reference data (`ListExchanges` gRPC and `exchanges` GraphQL query), asset class categorization, currency, and ISO 6166 ISIN validation.
+- **Asset Deletion & Historical Price Cascading**: Permanently remove obsolete or erroneous assets from the master directory in the Admin Portal (`:5174`). Automatically cascades deletion to all associated closing marks in `portfolio.instrument_prices` within an atomic database transaction. Protects referential integrity by rejecting deletion if an asset is actively held or referenced by user transactions (`ErrInstrumentInUse`, `FailedPrecondition`), accompanied by a safety confirmation dialog (`DeleteAssetModal`).
 - **Admin Historical Market Data Backfill**: Operators can backfill daily closing prices and ECB FX fixings over custom date ranges (up to ~5 years) from the Admin Portal's `BackfillModal`. Offers date presets (`30D`, `90D`, `YTD`, `1Y`, `ALL`), All-Active vs. Specific symbol/pair scopes, API token budget impact projections, and optional retroactive valuation recompute for affected portfolios. Available from the Ingestion Pipeline console and the Price and FX management toolbars. Per-asset provider failures are reported as non-fatal warnings and do not abort the batch.
 - **User Preferences & Dynamic Multi-Currency Re-anchoring**: Manage investor profile display name, UI theme (`DARK`, `LIGHT`, `SYSTEM`), and base display currency (`USD`, `EUR`, `GBP`, `AUD`, `CAD`, `JPY`, `CHF`). Changing preferred currency automatically triggers atomic base currency re-anchoring on `portfolio-api`, re-scaling valuations and holdings cost bases via live FX triangulation without data drift.
 - **Clean Microservice Monorepo**: Contract-first gRPC services with a Go GraphQL Backend-for-Frontend (BFF) and strongly-typed frontend queries.
@@ -185,7 +186,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 ```text
 ├── proto/                        # Single Source of Truth for APIs (Protobuf definitions)
 │   ├── common/v1/decimal.proto   # Decimal and Money contracts
-│   ├── portfolio/v1/             # Portfolio gRPC service (GetPortfolio, UpdatePortfolioBaseCurrency, AddTransaction, TriggerBackfill, etc.)
+│   ├── portfolio/v1/             # Portfolio gRPC service (GetPortfolio, UpdatePortfolioBaseCurrency, AddTransaction, DeleteInstrument, TriggerBackfill, etc.)
 │   └── user/v1/user.proto        # User gRPC service (GetUserPreferences, UpdateUserPreferences, ListSupportedCurrencies)
 ├── pkg/                          # Shared Go infrastructure
 │   ├── database/                 # pgx connection pooling, auto .env loading, migration runner
@@ -197,7 +198,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── cmd/worker/           # Scheduled EOD & on-demand valuation worker (make run-valuation-job)
 │   │   ├── cmd/market-ingest/    # Market data ingestion & historical backfill CLI (make ingest-market-data)
 │   │   ├── internal/             # Domain entities, repository, service, and gRPC server
-│   │   ├── migrations/           # Versioned schema migrations (000001 - 000006)
+│   │   ├── migrations/           # Versioned schema migrations (000001 - 000007)
 │   │   └── seeds/                # Seed fixtures (dev_seed.sql with 365-day history)
 │   └── user-api/                 # User domain microservice (:50052)
 │       ├── cmd/server/           # Application entrypoint (:50052)
@@ -211,7 +212,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── main-app/             # Primary Investor React App (:5173)
 │   │   │   └── src/components/   # Dashboard, PerformanceChart, TransactionLedger, UserPreferencesModal
 │   │   └── admin-app/            # Internal Operations Portal (:5174)
-│   │       └── src/components/   # AssetManagement, PriceManagement, FXManagement, FXTrendChart, FXOverrideModal, BackfillModal, IngestionPipeline
+│   │       └── src/components/   # AssetManagement, DeleteAssetModal, PriceManagement, FXManagement, FXTrendChart, FXOverrideModal, BackfillModal, IngestionPipeline
 │   └── packages/
 │       ├── ui/                   # Shared Design System (@graphfolio/ui)
 │       └── api-client/           # Shared GraphQL Client (@graphfolio/api-client)
@@ -229,6 +230,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── fundamental-cash-flow-engine-implementation-plan.md
 │   │   ├── currency-pair-historical-prices-implementation-plan.md
 │   │   ├── admin-historical-backfill-implementation-plan.md
+│   │   ├── delete-asset-implementation-plan.md
 │   │   ├── ingestion-job-history-implementation-plan.md
 │   │   └── web-workspace-refactoring-plan.md
 │   ├── user-stories/             # Product specifications & acceptance criteria
@@ -310,6 +312,7 @@ make generate
 - **Fundamental & Cash Flow Quality Engine Plan**: [`docs/plans/fundamental-cash-flow-engine-implementation-plan.md`](./docs/plans/fundamental-cash-flow-engine-implementation-plan.md)
 - **Currency Pair Historical Prices Plan**: [`docs/plans/currency-pair-historical-prices-implementation-plan.md`](./docs/plans/currency-pair-historical-prices-implementation-plan.md)
 - **Admin Historical Backfill Plan**: [`docs/plans/admin-historical-backfill-implementation-plan.md`](./docs/plans/admin-historical-backfill-implementation-plan.md)
+- **Asset Deletion Implementation Plan**: [`docs/plans/delete-asset-implementation-plan.md`](./docs/plans/delete-asset-implementation-plan.md)
 - **Exchange Code Dropdown Plan**: [`docs/plans/exchange-dropdown-implementation-plan.md`](./docs/plans/exchange-dropdown-implementation-plan.md)
 - **Ingestion Job History Plan**: [`docs/plans/ingestion-job-history-implementation-plan.md`](./docs/plans/ingestion-job-history-implementation-plan.md)
 - **Competitive Strategy Analysis**: [`docs/competitive-analysis.md`](./docs/competitive-analysis.md)

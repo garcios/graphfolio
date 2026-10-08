@@ -220,6 +220,21 @@ SET name = COALESCE($1, name),
 WHERE id = $4
 RETURNING id, symbol, exchange_code, name, asset_class, currency_code, isin, is_active;`
 
+	checkInstrumentUsageSQL = `
+SELECT EXISTS (
+    SELECT 1 FROM portfolio.transactions WHERE instrument_id = $1
+) OR EXISTS (
+    SELECT 1 FROM portfolio.holdings WHERE instrument_id = $1
+);`
+
+	deleteInstrumentPricesByInstrumentSQL = `
+DELETE FROM portfolio.instrument_prices
+WHERE instrument_id = $1;`
+
+	deleteInstrumentSQL = `
+DELETE FROM portfolio.instruments
+WHERE id = $1;`
+
 	listInstrumentPricesSQL = `
 SELECT 
     ip.instrument_id, i.symbol, ip.price_date, ip.close, i.currency_code, ip.source, ip.created_at,

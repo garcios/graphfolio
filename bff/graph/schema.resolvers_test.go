@@ -55,6 +55,7 @@ type fakePortfolioClient struct {
 	listAllInstrumentsFn          func(ctx context.Context, in *pb.ListAllInstrumentsRequest) (*pb.ListAllInstrumentsResponse, error)
 	createInstrumentFn            func(ctx context.Context, in *pb.CreateInstrumentRequest) (*pb.CreateInstrumentResponse, error)
 	updateInstrumentFn            func(ctx context.Context, in *pb.UpdateInstrumentRequest) (*pb.UpdateInstrumentResponse, error)
+	deleteInstrumentFn            func(ctx context.Context, in *pb.DeleteInstrumentRequest) (*pb.DeleteInstrumentResponse, error)
 	listExchangesFn               func(ctx context.Context, in *pb.ListExchangesRequest) (*pb.ListExchangesResponse, error)
 	listInstrumentPricesFn        func(ctx context.Context, in *pb.ListInstrumentPricesRequest) (*pb.ListInstrumentPricesResponse, error)
 	recordPriceOverrideFn         func(ctx context.Context, in *pb.RecordPriceOverrideRequest) (*pb.RecordPriceOverrideResponse, error)
@@ -133,6 +134,13 @@ func (f *fakePortfolioClient) CreateInstrument(ctx context.Context, in *pb.Creat
 func (f *fakePortfolioClient) UpdateInstrument(ctx context.Context, in *pb.UpdateInstrumentRequest, opts ...grpc.CallOption) (*pb.UpdateInstrumentResponse, error) {
 	if f.updateInstrumentFn != nil {
 		return f.updateInstrumentFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakePortfolioClient) DeleteInstrument(ctx context.Context, in *pb.DeleteInstrumentRequest, opts ...grpc.CallOption) (*pb.DeleteInstrumentResponse, error) {
+	if f.deleteInstrumentFn != nil {
+		return f.deleteInstrumentFn(ctx, in)
 	}
 	return nil, nil
 }
@@ -777,6 +785,57 @@ func TestMutationResolver_UpdateInstrument(t *testing.T) {
 		}
 		if inst.IsActive != false {
 			t.Errorf("expected IsActive false, got %v", inst.IsActive)
+		}
+	})
+}
+
+func TestMutationResolver_DeleteInstrument(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully deletes instrument", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			deleteInstrumentFn: func(ctx context.Context, in *pb.DeleteInstrumentRequest) (*pb.DeleteInstrumentResponse, error) {
+				if in.Id != "inst-1" {
+					t.Errorf("expected id inst-1, got %s", in.Id)
+				}
+				return &pb.DeleteInstrumentResponse{
+					Success: true,
+					Id:      in.Id,
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		mResolver := resolver.Mutation()
+
+		payload, err := mResolver.DeleteInstrument(ctx, "inst-1")
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if !payload.Success {
+			t.Errorf("expected Success true, got false")
+		}
+		if payload.ID != "inst-1" {
+			t.Errorf("expected ID inst-1, got %s", payload.ID)
+		}
+	})
+
+	t.Run("propagates gRPC error", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			deleteInstrumentFn: func(ctx context.Context, in *pb.DeleteInstrumentRequest) (*pb.DeleteInstrumentResponse, error) {
+				return nil, errors.New("cannot delete instrument: in use")
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		mResolver := resolver.Mutation()
+
+		_, err := mResolver.DeleteInstrument(ctx, "inst-1")
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		if err.Error() != "cannot delete instrument: in use" {
+			t.Errorf("expected error message to match, got %v", err)
 		}
 	})
 }
