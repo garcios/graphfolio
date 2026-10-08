@@ -964,6 +964,62 @@ func TestPortfolioServer_ListAllInstruments(t *testing.T) {
 	})
 }
 
+func TestPortfolioServer_ListExchanges(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success maps all fields", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().ListExchanges(ctx).Return([]domain.Exchange{
+			{Code: "XNAS", Name: "NASDAQ Stock Market", Country: "US", Timezone: "America/New_York"},
+		}, nil)
+
+		res, err := server.ListExchanges(ctx, &pb.ListExchangesRequest{})
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if len(res.Exchanges) != 1 {
+			t.Fatalf("expected 1 exchange, got: %d", len(res.Exchanges))
+		}
+		ex := res.Exchanges[0]
+		if ex.Code != "XNAS" || ex.Name != "NASDAQ Stock Market" || ex.Country != "US" || ex.Timezone != "America/New_York" {
+			t.Errorf("unexpected exchange mapping: %+v", ex)
+		}
+	})
+
+	t.Run("empty list returns empty exchanges", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().ListExchanges(ctx).Return([]domain.Exchange{}, nil)
+
+		res, err := server.ListExchanges(ctx, &pb.ListExchangesRequest{})
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if len(res.Exchanges) != 0 {
+			t.Errorf("expected 0 exchanges, got: %d", len(res.Exchanges))
+		}
+	})
+
+	t.Run("service error returns Internal", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().ListExchanges(ctx).Return(nil, errors.New("db down"))
+
+		_, err := server.ListExchanges(ctx, &pb.ListExchangesRequest{})
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.Internal {
+			t.Errorf("expected Internal code, got: %v", err)
+		}
+	})
+}
+
 func TestPortfolioServer_CreateInstrument(t *testing.T) {
 	ctx := context.Background()
 

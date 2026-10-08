@@ -130,13 +130,14 @@ This document catalogs all implemented features, in-progress components, and pla
 ### 2.10 Admin Portal Backend & BFF (Asset, Price & Ingestion Management)
 - **Status**: **DONE**
 - **Plan Reference**: [admin-portal-backend-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-portal-backend-implementation-plan.md)
-- **Description**: Full administrative operations and market orchestration backend. Extends `portfolio-api` and GraphQL BFF with master instrument directory management (asset listing, creation with exchange code and ISO 6166 ISIN validation, active/inactive toggles), closing price ledger queries (`portfolio.instrument_prices`) and manual price overrides with audit justifications and retroactive valuation recalibrations, and ingestion pipeline diagnostics reporting feed health, ECB FX fixings, rate limit budgets, and on-demand market data synchronization. Connected directly to `@graphfolio/admin-app`.
+- **Description**: Full administrative operations and market orchestration backend. Extends `portfolio-api` and GraphQL BFF with master instrument directory management (asset listing, creation with exchange code dropdown populated from `portfolio.exchanges` reference data, ISO 6166 ISIN validation, active/inactive toggles), closing price ledger queries (`portfolio.instrument_prices`) and manual price overrides with audit justifications and retroactive valuation recalibrations, and ingestion pipeline diagnostics reporting feed health, ECB FX fixings, rate limit budgets, and on-demand market data synchronization. Connected directly to `@graphfolio/admin-app`.
 - **Key Files**:
   - [portfolio.proto](file:///Users/oscargarcia/workspace/graphfolio/proto/portfolio/v1/portfolio.proto)
   - [admin.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/admin.go)
   - [postgres.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/repository/postgres.go)
   - [schema.graphqls](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls)
   - [schema.resolvers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers.go)
+  - [AddInstrumentModal.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/AddInstrumentModal.tsx)
   - [AssetManagement.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/AssetManagement.tsx)
   - [PriceManagement.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/PriceManagement.tsx)
   - [IngestionPipeline.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/IngestionPipeline.tsx)

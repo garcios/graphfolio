@@ -198,6 +198,11 @@ WHERE ($1::boolean IS NULL OR is_active = $1)
   AND ($2::text IS NULL OR symbol ILIKE '%' || $2 || '%' OR name ILIKE '%' || $2 || '%')
 ORDER BY symbol ASC;`
 
+	listExchangesSQL = `
+SELECT code, name, country, timezone
+FROM portfolio.exchanges
+ORDER BY code ASC;`
+
 	createInstrumentSQL = `
 INSERT INTO portfolio.instruments (
     symbol, exchange_code, name, asset_class, currency_code, isin, is_active

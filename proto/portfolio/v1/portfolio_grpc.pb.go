@@ -29,6 +29,7 @@ const (
 	PortfolioService_ListAllInstruments_FullMethodName          = "/portfolio.v1.PortfolioService/ListAllInstruments"
 	PortfolioService_CreateInstrument_FullMethodName            = "/portfolio.v1.PortfolioService/CreateInstrument"
 	PortfolioService_UpdateInstrument_FullMethodName            = "/portfolio.v1.PortfolioService/UpdateInstrument"
+	PortfolioService_ListExchanges_FullMethodName               = "/portfolio.v1.PortfolioService/ListExchanges"
 	PortfolioService_ListInstrumentPrices_FullMethodName        = "/portfolio.v1.PortfolioService/ListInstrumentPrices"
 	PortfolioService_RecordPriceOverride_FullMethodName         = "/portfolio.v1.PortfolioService/RecordPriceOverride"
 	PortfolioService_GetIngestionStatus_FullMethodName          = "/portfolio.v1.PortfolioService/GetIngestionStatus"
@@ -56,6 +57,7 @@ type PortfolioServiceClient interface {
 	ListAllInstruments(ctx context.Context, in *ListAllInstrumentsRequest, opts ...grpc.CallOption) (*ListAllInstrumentsResponse, error)
 	CreateInstrument(ctx context.Context, in *CreateInstrumentRequest, opts ...grpc.CallOption) (*CreateInstrumentResponse, error)
 	UpdateInstrument(ctx context.Context, in *UpdateInstrumentRequest, opts ...grpc.CallOption) (*UpdateInstrumentResponse, error)
+	ListExchanges(ctx context.Context, in *ListExchangesRequest, opts ...grpc.CallOption) (*ListExchangesResponse, error)
 	// Admin: Closing Price Management & Overrides
 	ListInstrumentPrices(ctx context.Context, in *ListInstrumentPricesRequest, opts ...grpc.CallOption) (*ListInstrumentPricesResponse, error)
 	RecordPriceOverride(ctx context.Context, in *RecordPriceOverrideRequest, opts ...grpc.CallOption) (*RecordPriceOverrideResponse, error)
@@ -171,6 +173,15 @@ func (c *portfolioServiceClient) UpdateInstrument(ctx context.Context, in *Updat
 	return out, nil
 }
 
+func (c *portfolioServiceClient) ListExchanges(ctx context.Context, in *ListExchangesRequest, opts ...grpc.CallOption) (*ListExchangesResponse, error) {
+	out := new(ListExchangesResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_ListExchanges_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *portfolioServiceClient) ListInstrumentPrices(ctx context.Context, in *ListInstrumentPricesRequest, opts ...grpc.CallOption) (*ListInstrumentPricesResponse, error) {
 	out := new(ListInstrumentPricesResponse)
 	err := c.cc.Invoke(ctx, PortfolioService_ListInstrumentPrices_FullMethodName, in, out, opts...)
@@ -276,6 +287,7 @@ type PortfolioServiceServer interface {
 	ListAllInstruments(context.Context, *ListAllInstrumentsRequest) (*ListAllInstrumentsResponse, error)
 	CreateInstrument(context.Context, *CreateInstrumentRequest) (*CreateInstrumentResponse, error)
 	UpdateInstrument(context.Context, *UpdateInstrumentRequest) (*UpdateInstrumentResponse, error)
+	ListExchanges(context.Context, *ListExchangesRequest) (*ListExchangesResponse, error)
 	// Admin: Closing Price Management & Overrides
 	ListInstrumentPrices(context.Context, *ListInstrumentPricesRequest) (*ListInstrumentPricesResponse, error)
 	RecordPriceOverride(context.Context, *RecordPriceOverrideRequest) (*RecordPriceOverrideResponse, error)
@@ -327,6 +339,9 @@ func (UnimplementedPortfolioServiceServer) CreateInstrument(context.Context, *Cr
 }
 func (UnimplementedPortfolioServiceServer) UpdateInstrument(context.Context, *UpdateInstrumentRequest) (*UpdateInstrumentResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateInstrument not implemented")
+}
+func (UnimplementedPortfolioServiceServer) ListExchanges(context.Context, *ListExchangesRequest) (*ListExchangesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListExchanges not implemented")
 }
 func (UnimplementedPortfolioServiceServer) ListInstrumentPrices(context.Context, *ListInstrumentPricesRequest) (*ListInstrumentPricesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListInstrumentPrices not implemented")
@@ -547,6 +562,24 @@ func _PortfolioService_UpdateInstrument_Handler(srv interface{}, ctx context.Con
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PortfolioServiceServer).UpdateInstrument(ctx, req.(*UpdateInstrumentRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortfolioService_ListExchanges_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListExchangesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).ListExchanges(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_ListExchanges_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).ListExchanges(ctx, req.(*ListExchangesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -777,6 +810,10 @@ var PortfolioService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateInstrument",
 			Handler:    _PortfolioService_UpdateInstrument_Handler,
+		},
+		{
+			MethodName: "ListExchanges",
+			Handler:    _PortfolioService_ListExchanges_Handler,
 		},
 		{
 			MethodName: "ListInstrumentPrices",

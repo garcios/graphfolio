@@ -461,6 +461,21 @@ func (mr *MockRepositoryMockRecorder) ListCurrencyPairs(ctx any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListCurrencyPairs", reflect.TypeOf((*MockRepository)(nil).ListCurrencyPairs), ctx)
 }
 
+// ListExchanges mocks base method.
+func (m *MockRepository) ListExchanges(ctx context.Context) ([]domain.Exchange, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListExchanges", ctx)
+	ret0, _ := ret[0].([]domain.Exchange)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListExchanges indicates an expected call of ListExchanges.
+func (mr *MockRepositoryMockRecorder) ListExchanges(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListExchanges", reflect.TypeOf((*MockRepository)(nil).ListExchanges), ctx)
+}
+
 // ListFXRates mocks base method.
 func (m *MockRepository) ListFXRates(ctx context.Context, filter domain.FXRateFilter) ([]domain.FXRate, int, error) {
 	m.ctrl.T.Helper()

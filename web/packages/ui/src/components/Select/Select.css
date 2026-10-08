@@ -42,6 +42,14 @@
   color: #ffffff;
 }
 
+.gf-select option[value=""] {
+  color: var(--text-muted, #71717a);
+}
+
+.gf-select:has(option[value=""]:checked) {
+  color: var(--text-muted, #71717a);
+}
+
 .gf-select:focus {
   border-color: var(--input-focus-border, #3b82f6);
   box-shadow: 0 0 0 2px var(--input-focus-glow, rgba(59, 130, 246, 0.25));

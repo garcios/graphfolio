@@ -5,8 +5,8 @@ export default {
         3,
         7,
         8,
-        10,
-        11
+        11,
+        12
     ],
     "types": {
         "Decimal": {},
@@ -60,7 +60,7 @@ export default {
                 2
             ],
             "portfolio": [
-                29
+                30
             ],
             "__typename": [
                 2
@@ -97,24 +97,41 @@ export default {
         },
         "ID": {},
         "Boolean": {},
+        "Exchange": {
+            "code": [
+                2
+            ],
+            "name": [
+                2
+            ],
+            "country": [
+                2
+            ],
+            "timezone": [
+                2
+            ],
+            "__typename": [
+                2
+            ]
+        },
         "Query": {
             "portfolio": [
-                29
+                30
             ],
             "instruments": [
                 6
             ],
             "portfolioHistory": [
-                13,
+                14,
                 {
                     "timeframe": [
-                        11,
+                        12,
                         "HistoryTimeframe!"
                     ]
                 }
             ],
             "transactions": [
-                15,
+                16,
                 {
                     "type": [
                         3
@@ -123,10 +140,10 @@ export default {
                         2
                     ],
                     "page": [
-                        10
+                        11
                     ],
                     "pageSize": [
-                        10
+                        11
                     ]
                 }
             ],
@@ -141,8 +158,11 @@ export default {
                     ]
                 }
             ],
+            "exchanges": [
+                9
+            ],
             "instrumentPrices": [
-                19,
+                20,
                 {
                     "symbol": [
                         2
@@ -154,27 +174,27 @@ export default {
                         2
                     ],
                     "limit": [
-                        10
+                        11
                     ],
                     "offset": [
-                        10
+                        11
                     ]
                 }
             ],
             "ingestionStatus": [
-                25
+                26
             ],
             "userPreferences": [
-                31
-            ],
-            "supportedCurrencies": [
                 32
             ],
+            "supportedCurrencies": [
+                33
+            ],
             "currencyPairs": [
-                35
+                36
             ],
             "currencyPairHistory": [
-                39,
+                40,
                 {
                     "baseCurrency": [
                         2,
@@ -185,13 +205,13 @@ export default {
                         "String!"
                     ],
                     "timeframe": [
-                        11,
+                        12,
                         "HistoryTimeframe!"
                     ]
                 }
             ],
             "fxRates": [
-                37,
+                38,
                 {
                     "baseCurrency": [
                         2
@@ -206,10 +226,10 @@ export default {
                         2
                     ],
                     "limit": [
-                        10
+                        11
                     ],
                     "offset": [
-                        10
+                        11
                     ]
                 }
             ],
@@ -244,7 +264,7 @@ export default {
         },
         "PortfolioHistory": {
             "points": [
-                12
+                13
             ],
             "startValue": [
                 1
@@ -302,16 +322,16 @@ export default {
         },
         "TransactionsConnection": {
             "items": [
-                14
+                15
             ],
             "totalCount": [
-                10
+                11
             ],
             "page": [
-                10
+                11
             ],
             "pageSize": [
-                10
+                11
             ],
             "__typename": [
                 2
@@ -322,7 +342,7 @@ export default {
                 8
             ],
             "portfolio": [
-                29
+                30
             ],
             "__typename": [
                 2
@@ -339,7 +359,7 @@ export default {
                 }
             ],
             "deleteTransaction": [
-                16,
+                17,
                 {
                     "id": [
                         7,
@@ -351,7 +371,7 @@ export default {
                 6,
                 {
                     "input": [
-                        20,
+                        21,
                         "CreateInstrumentInput!"
                     ]
                 }
@@ -360,22 +380,22 @@ export default {
                 6,
                 {
                     "input": [
-                        21,
+                        22,
                         "UpdateInstrumentInput!"
                     ]
                 }
             ],
             "recordPriceOverride": [
-                23,
+                24,
                 {
                     "input": [
-                        22,
+                        23,
                         "RecordPriceOverrideInput!"
                     ]
                 }
             ],
             "triggerMarketSync": [
-                26,
+                27,
                 {
                     "symbols": [
                         2,
@@ -387,28 +407,28 @@ export default {
                 }
             ],
             "triggerBackfill": [
-                28,
+                29,
                 {
                     "input": [
-                        27,
+                        28,
                         "TriggerBackfillInput!"
                     ]
                 }
             ],
             "updateUserPreferences": [
-                34,
+                35,
                 {
                     "input": [
-                        33,
+                        34,
                         "UpdateUserPreferencesInput!"
                     ]
                 }
             ],
             "recordFXRateOverride": [
-                41,
+                42,
                 {
                     "input": [
-                        40,
+                        41,
                         "RecordFXRateOverrideInput!"
                     ]
                 }
@@ -442,10 +462,10 @@ export default {
         },
         "InstrumentPricesConnection": {
             "items": [
-                18
+                19
             ],
             "totalCount": [
-                10
+                11
             ],
             "__typename": [
                 2
@@ -513,7 +533,7 @@ export default {
         },
         "RecordPriceOverridePayload": {
             "price": [
-                18
+                19
             ],
             "valuationsRecomputed": [
                 8
@@ -547,13 +567,13 @@ export default {
         },
         "IngestionStatus": {
             "feeds": [
-                24
+                25
             ],
             "trackedInstruments": [
-                10
+                11
             ],
             "trackedCurrencies": [
-                10
+                11
             ],
             "latestPriceDate": [
                 2
@@ -562,13 +582,13 @@ export default {
                 2
             ],
             "rateLimitRemaining": [
-                10
+                11
             ],
             "rateLimitBudget": [
-                10
+                11
             ],
             "pendingBackfillJobs": [
-                10
+                11
             ],
             "__typename": [
                 2
@@ -579,10 +599,10 @@ export default {
                 8
             ],
             "pricesSynced": [
-                10
+                11
             ],
             "fxRatesSynced": [
-                10
+                11
             ],
             "message": [
                 2
@@ -622,10 +642,10 @@ export default {
                 8
             ],
             "pricesSynced": [
-                10
+                11
             ],
             "fxRatesSynced": [
-                10
+                11
             ],
             "message": [
                 2
@@ -654,7 +674,7 @@ export default {
                 1
             ],
             "investments": [
-                30
+                31
             ],
             "__typename": [
                 2
@@ -751,10 +771,10 @@ export default {
         },
         "UpdateUserPreferencesPayload": {
             "preferences": [
-                31
+                32
             ],
             "portfolio": [
-                29
+                30
             ],
             "__typename": [
                 2
@@ -789,7 +809,7 @@ export default {
                 0
             ],
             "totalRecords": [
-                10
+                11
             ],
             "firstDate": [
                 2
@@ -829,10 +849,10 @@ export default {
         },
         "FXRatesConnection": {
             "items": [
-                36
+                37
             ],
             "totalCount": [
-                10
+                11
             ],
             "__typename": [
                 2
@@ -866,7 +886,7 @@ export default {
                 2
             ],
             "points": [
-                38
+                39
             ],
             "startRate": [
                 0
@@ -915,7 +935,7 @@ export default {
         },
         "RecordFXRateOverridePayload": {
             "rate": [
-                36
+                37
             ],
             "valuationsRecomputed": [
                 8

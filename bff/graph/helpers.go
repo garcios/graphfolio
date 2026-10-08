@@ -482,3 +482,15 @@ func toModelCurrencyPairHistory(resp *pb.GetCurrencyPairHistoryResponse) *model.
 		PeriodLow:       toModelDecimal(resp.PeriodLow),
 	}
 }
+
+func toModelExchange(e *pb.Exchange) *model.Exchange {
+	if e == nil {
+		return nil
+	}
+	return &model.Exchange{
+		Code:     e.Code,
+		Name:     e.Name,
+		Country:  e.Country,
+		Timezone: e.Timezone,
+	}
+}

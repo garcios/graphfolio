@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Modal, Input, Select, Button } from '@graphfolio/ui';
 import './AddInstrumentModal.css';
 
@@ -11,10 +11,18 @@ export interface NewInstrumentData {
   isin?: string;
 }
 
+export interface ExchangeOption {
+  code: string;
+  name: string;
+}
+
 interface AddInstrumentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (data: NewInstrumentData) => Promise<void>;
+  exchanges: ExchangeOption[];
+  exchangesLoading?: boolean;
+  exchangesError?: string | null;
 }
 
 const ISIN_REGEX = /^[A-Z]{2}[A-Z0-9]{9}[0-9]$/;
@@ -23,15 +31,23 @@ export const AddInstrumentModal: React.FC<AddInstrumentModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
+  exchanges,
+  exchangesLoading = false,
+  exchangesError = null,
 }) => {
   const [symbol, setSymbol] = useState('');
-  const [exchangeCode, setExchangeCode] = useState('US');
+  const [exchangeCode, setExchangeCode] = useState('');
   const [name, setName] = useState('');
   const [assetClass, setAssetClass] = useState('EQUITY');
   const [currencyCode, setCurrencyCode] = useState('USD');
   const [isin, setIsin] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const exchangeOptions = useMemo(
+    () => exchanges.map((x) => ({ label: `${x.code} — ${x.name}`, value: x.code })),
+    [exchanges]
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +85,7 @@ export const AddInstrumentModal: React.FC<AddInstrumentModalProps> = ({
       });
       // Reset form
       setSymbol('');
-      setExchangeCode('US');
+      setExchangeCode('');
       setName('');
       setAssetClass('EQUITY');
       setCurrencyCode('USD');
@@ -111,12 +127,15 @@ export const AddInstrumentModal: React.FC<AddInstrumentModalProps> = ({
             disabled={isSubmitting}
             required
           />
-          <Input
+          <Select
+            id="instrument-exchange-code"
             label="Exchange Code *"
-            placeholder="e.g. US, NASDAQ, NYSE"
+            placeholder={exchangesLoading ? 'Loading exchanges…' : 'Select Exchange'}
             value={exchangeCode}
             onChange={(e) => setExchangeCode(e.target.value)}
-            disabled={isSubmitting}
+            options={exchangeOptions}
+            disabled={isSubmitting || exchangesLoading || !!exchangesError}
+            error={exchangesError ?? undefined}
             required
           />
         </div>
