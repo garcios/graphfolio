@@ -37,6 +37,7 @@ const (
 	PortfolioService_ListFXRates_FullMethodName                 = "/portfolio.v1.PortfolioService/ListFXRates"
 	PortfolioService_GetCurrencyPairHistory_FullMethodName      = "/portfolio.v1.PortfolioService/GetCurrencyPairHistory"
 	PortfolioService_RecordFXRateOverride_FullMethodName        = "/portfolio.v1.PortfolioService/RecordFXRateOverride"
+	PortfolioService_TriggerBackfill_FullMethodName             = "/portfolio.v1.PortfolioService/TriggerBackfill"
 	PortfolioService_RebuildValuations_FullMethodName           = "/portfolio.v1.PortfolioService/RebuildValuations"
 )
 
@@ -66,6 +67,8 @@ type PortfolioServiceClient interface {
 	ListFXRates(ctx context.Context, in *ListFXRatesRequest, opts ...grpc.CallOption) (*ListFXRatesResponse, error)
 	GetCurrencyPairHistory(ctx context.Context, in *GetCurrencyPairHistoryRequest, opts ...grpc.CallOption) (*GetCurrencyPairHistoryResponse, error)
 	RecordFXRateOverride(ctx context.Context, in *RecordFXRateOverrideRequest, opts ...grpc.CallOption) (*RecordFXRateOverrideResponse, error)
+	// Admin: Historical Market Data Backfill
+	TriggerBackfill(ctx context.Context, in *TriggerBackfillRequest, opts ...grpc.CallOption) (*TriggerBackfillResponse, error)
 	// Historical Valuation Engine & Replay
 	RebuildValuations(ctx context.Context, in *RebuildValuationsRequest, opts ...grpc.CallOption) (*RebuildValuationsResponse, error)
 }
@@ -240,6 +243,15 @@ func (c *portfolioServiceClient) RecordFXRateOverride(ctx context.Context, in *R
 	return out, nil
 }
 
+func (c *portfolioServiceClient) TriggerBackfill(ctx context.Context, in *TriggerBackfillRequest, opts ...grpc.CallOption) (*TriggerBackfillResponse, error) {
+	out := new(TriggerBackfillResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_TriggerBackfill_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *portfolioServiceClient) RebuildValuations(ctx context.Context, in *RebuildValuationsRequest, opts ...grpc.CallOption) (*RebuildValuationsResponse, error) {
 	out := new(RebuildValuationsResponse)
 	err := c.cc.Invoke(ctx, PortfolioService_RebuildValuations_FullMethodName, in, out, opts...)
@@ -275,6 +287,8 @@ type PortfolioServiceServer interface {
 	ListFXRates(context.Context, *ListFXRatesRequest) (*ListFXRatesResponse, error)
 	GetCurrencyPairHistory(context.Context, *GetCurrencyPairHistoryRequest) (*GetCurrencyPairHistoryResponse, error)
 	RecordFXRateOverride(context.Context, *RecordFXRateOverrideRequest) (*RecordFXRateOverrideResponse, error)
+	// Admin: Historical Market Data Backfill
+	TriggerBackfill(context.Context, *TriggerBackfillRequest) (*TriggerBackfillResponse, error)
 	// Historical Valuation Engine & Replay
 	RebuildValuations(context.Context, *RebuildValuationsRequest) (*RebuildValuationsResponse, error)
 	mustEmbedUnimplementedPortfolioServiceServer()
@@ -337,6 +351,9 @@ func (UnimplementedPortfolioServiceServer) GetCurrencyPairHistory(context.Contex
 }
 func (UnimplementedPortfolioServiceServer) RecordFXRateOverride(context.Context, *RecordFXRateOverrideRequest) (*RecordFXRateOverrideResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RecordFXRateOverride not implemented")
+}
+func (UnimplementedPortfolioServiceServer) TriggerBackfill(context.Context, *TriggerBackfillRequest) (*TriggerBackfillResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TriggerBackfill not implemented")
 }
 func (UnimplementedPortfolioServiceServer) RebuildValuations(context.Context, *RebuildValuationsRequest) (*RebuildValuationsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RebuildValuations not implemented")
@@ -678,6 +695,24 @@ func _PortfolioService_RecordFXRateOverride_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortfolioService_TriggerBackfill_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TriggerBackfillRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).TriggerBackfill(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_TriggerBackfill_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).TriggerBackfill(ctx, req.(*TriggerBackfillRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _PortfolioService_RebuildValuations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RebuildValuationsRequest)
 	if err := dec(in); err != nil {
@@ -774,6 +809,10 @@ var PortfolioService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RecordFXRateOverride",
 			Handler:    _PortfolioService_RecordFXRateOverride_Handler,
+		},
+		{
+			MethodName: "TriggerBackfill",
+			Handler:    _PortfolioService_TriggerBackfill_Handler,
 		},
 		{
 			MethodName: "RebuildValuations",

@@ -26,6 +26,14 @@ type AddTransactionPayload struct {
 	Portfolio     *Portfolio `json:"portfolio"`
 }
 
+type BackfillPayload struct {
+	Success       bool     `json:"success"`
+	PricesSynced  int      `json:"pricesSynced"`
+	FxRatesSynced int      `json:"fxRatesSynced"`
+	Message       string   `json:"message"`
+	Warnings      []string `json:"warnings"`
+}
+
 type CreateInstrumentInput struct {
 	Symbol       string  `json:"symbol"`
 	ExchangeCode string  `json:"exchangeCode"`
@@ -235,6 +243,16 @@ type TransactionsConnection struct {
 	TotalCount int                `json:"totalCount"`
 	Page       int                `json:"page"`
 	PageSize   int                `json:"pageSize"`
+}
+
+type TriggerBackfillInput struct {
+	FromDate            string   `json:"fromDate"`
+	ToDate              string   `json:"toDate"`
+	Symbols             []string `json:"symbols,omitempty"`
+	CurrencyPairs       []string `json:"currencyPairs,omitempty"`
+	BackfillAssets      *bool    `json:"backfillAssets,omitempty"`
+	BackfillFx          *bool    `json:"backfillFx,omitempty"`
+	RecomputeValuations *bool    `json:"recomputeValuations,omitempty"`
 }
 
 type UpdateInstrumentInput struct {

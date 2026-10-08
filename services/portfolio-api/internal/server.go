@@ -937,6 +937,64 @@ func (s *PortfolioServer) RecordFXRateOverride(ctx context.Context, req *pb.Reco
 	}, nil
 }
 
+func (s *PortfolioServer) TriggerBackfill(ctx context.Context, req *pb.TriggerBackfillRequest) (*pb.TriggerBackfillResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	if req.GetFromDate() == "" {
+		return nil, status.Error(codes.InvalidArgument, "from_date is required (YYYY-MM-DD)")
+	}
+
+	fromDate, err := time.Parse("2006-01-02", req.GetFromDate())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid from_date format (must be YYYY-MM-DD): %v", err)
+	}
+
+	toDate := time.Now().UTC()
+	if req.GetToDate() != "" {
+		toDate, err = time.Parse("2006-01-02", req.GetToDate())
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid to_date format (must be YYYY-MM-DD): %v", err)
+		}
+	}
+
+	input := domain.BackfillInput{
+		FromDate:            fromDate,
+		ToDate:              toDate,
+		Symbols:             req.GetSymbols(),
+		CurrencyPairs:       req.GetCurrencyPairs(),
+		BackfillAssets:      req.GetBackfillAssets(),
+		BackfillFX:          req.GetBackfillFx(),
+		RecomputeValuations: req.GetRecomputeValuations(),
+	}
+
+	res, err := s.svc.TriggerBackfill(ctx, input)
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidDateRange) ||
+			errors.Is(err, service.ErrFutureDate) ||
+			errors.Is(err, service.ErrDateRequired) ||
+			errors.Is(err, service.ErrNoBackfillTarget) ||
+			errors.Is(err, service.ErrBackfillRangeTooLarge) {
+			return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to trigger backfill: %v", err)
+	}
+
+	warnings := res.Warnings
+	if warnings == nil {
+		warnings = []string{}
+	}
+
+	return &pb.TriggerBackfillResponse{
+		Success:       res.Success,
+		PricesSynced:  int32(res.PricesSynced),
+		FxRatesSynced: int32(res.FXRatesSynced),
+		Message:       res.Message,
+		Warnings:      warnings,
+	}, nil
+}
+
 func mapFXRateToProto(r domain.FXRate) *pb.FXRateItem {
 	var inverted decimal.Decimal
 	if r.Rate.IsPositive() {

@@ -24,7 +24,7 @@ This document catalogs all implemented features, in-progress components, and pla
 | **14** | **Market Data Ingestion (Asset Prices & FX Rates)** | **DONE** | Database, Svc, Worker | [market-data-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/market-data-ingestion-implementation-plan.md) |
 | **15** | **Look-Through Fundamental & Cash Flow Quality Engine** | **PLANNED** | Database, Proto, Svc, BFF, Web | [fundamental-cash-flow-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/fundamental-cash-flow-engine-implementation-plan.md) |
 | **16** | **Currency Pair Historical Prices (Admin Portal)** | **DONE** | Proto, Svc, BFF, Web | [currency-pair-historical-prices-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/currency-pair-historical-prices-implementation-plan.md) |
-| **17** | **Admin UI Historical Market Data Backfill (Asset Prices & FX Rates)** | **PLANNED** | Proto, Svc, BFF, Web | [admin-historical-backfill-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-historical-backfill-implementation-plan.md) |
+| **17** | **Admin UI Historical Market Data Backfill (Asset Prices & FX Rates)** | **DONE** | Proto, Svc, BFF, Web | [admin-historical-backfill-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-historical-backfill-implementation-plan.md) |
 | **18** | **Ingestion Job History View (Admin Portal)** | **PLANNED** | Database, Proto, Svc, BFF, Web | [ingestion-job-history-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/ingestion-job-history-implementation-plan.md) |
 | **19** | **Tax Lot Inspector & Capital Gains Reports** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
 | **20** | **Dividend Calendar & Yield Analytics** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
@@ -215,6 +215,27 @@ This document catalogs all implemented features, in-progress components, and pla
   - [FXOverrideModal.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/FXOverrideModal.tsx)
   - [AdminLayout.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/AdminLayout.tsx)
 
+### 2.17 Admin UI Historical Market Data Backfill (Asset Prices & FX Rates)
+- **Status**: **DONE**
+- **Plan Reference**: [admin-historical-backfill-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-historical-backfill-implementation-plan.md)
+- **Scope**: `proto/portfolio/v1/`, `services/portfolio-api`, `bff/`, `web/apps/admin-app`
+- **Description**: Interactive multi-day historical market data backfill engine orchestrating batch ingestion of daily closing prices and foreign exchange reference fixings over custom date spans. Features an interactive, glassmorphic modal (`BackfillModal.tsx`) with dynamic date preset chips (`30D`, `90D`, `YTD`, `1Y`, `ALL`), granular scope selection (All Active vs Specific Symbols / Pairs), real-time API token budget impact projections, and optional automated retroactive valuation reconciliation. Screen integrations across `IngestionPipeline` (Backfill Console), `PriceManagement` ("Backfill Asset Prices" toolbar action), and `FXManagement` ("Backfill FX Rates" toolbar action). End-to-end gRPC `TriggerBackfill` RPC, GraphQL `triggerBackfill` mutation, and typed GenQL client integration strictly adhering to the zero floating-point arithmetic policy.
+- **Key Files**:
+  - [portfolio.proto](file:///Users/oscargarcia/workspace/graphfolio/proto/portfolio/v1/portfolio.proto)
+  - [backfill.go (Domain)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/domain/backfill.go)
+  - [admin.go (Service)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/admin.go)
+  - [admin_test.go (Service)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/admin_test.go)
+  - [server.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server.go)
+  - [server_test.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server_test.go)
+  - [schema.graphqls](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls)
+  - [schema.resolvers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers.go)
+  - [schema.resolvers_test.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers_test.go)
+  - [BackfillModal.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/BackfillModal.tsx)
+  - [BackfillModal.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/BackfillModal.css)
+  - [IngestionPipeline.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/IngestionPipeline.tsx)
+  - [PriceManagement.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/PriceManagement.tsx)
+  - [FXManagement.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/FXManagement.tsx)
+
 ---
 
 ## 3. Planned Features (`PLANNED`)
@@ -240,20 +261,7 @@ This document catalogs all implemented features, in-progress components, and pla
   - Earnings quality detection via the Sloan Accrual Ratio to highlight divergence between reported Net Income and cash realization.
   - "Business Owner" dashboard view contrasting Market Value growth against Business Intrinsic Value growth.
 
-### 3.3 Admin UI Historical Market Data Backfill (Asset Prices & FX Rates)
-- **Status**: **PLANNED**
-- **Plan Reference**: [admin-historical-backfill-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-historical-backfill-implementation-plan.md)
-- **Scope**: `proto/portfolio/v1/`, `services/portfolio-api`, `bff/`, `web/apps/admin-app`
-- **Highlights**:
-  - Interactive Backfill modal (`BackfillModal.tsx`) in internal Admin Portal (`:5174`) supporting custom date range selection (`fromDate`, `toDate`) and quick presets (`30D`, `90D`, `YTD`, `1Y`, `ALL`).
-  - Granular target toggles: Backfill Asset Closing Prices (Equities/ETFs) and/or Backfill Foreign Exchange Rates (ECB Daily Fixings).
-  - Flexible scope resolution: "All Active" market assets/currencies vs "Specific Selection" with ticker (`AAPL`, `MSFT`) and pair (`EUR/USD`) chip filters.
-  - Real-time token-bucket rate limit budget estimation badge (estimated outbound requests vs `rateLimitRemaining`).
-  - Optional retroactive portfolio valuation reconciliation trigger (`recompute_valuations`).
-  - Screen integrations across `IngestionPipeline` (Backfill Console), `PriceManagement` ("Backfill Prices" toolbar action), and `FXManagement` ("Backfill FX Rates" toolbar action).
-  - End-to-end gRPC `TriggerBackfill` RPC, GraphQL `triggerBackfill` mutation, and typed GenQL client integration strictly adhering to the zero floating-point arithmetic policy.
-
-### 3.4 Ingestion Job History View (Admin Portal)
+### 3.3 Ingestion Job History View (Admin Portal)
 - **Status**: **PLANNED**
 - **Plan Reference**: [ingestion-job-history-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/ingestion-job-history-implementation-plan.md)
 - **Scope**: Database (`portfolio.ingestion_jobs`), `proto/portfolio/v1/`, `services/portfolio-api`, `bff/`, `web/apps/admin-app`

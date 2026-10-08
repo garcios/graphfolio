@@ -42,6 +42,14 @@ type ComplexityRoot struct {
 		TransactionID func(childComplexity int) int
 	}
 
+	BackfillPayload struct {
+		FxRatesSynced func(childComplexity int) int
+		Message       func(childComplexity int) int
+		PricesSynced  func(childComplexity int) int
+		Success       func(childComplexity int) int
+		Warnings      func(childComplexity int) int
+	}
+
 	Currency struct {
 		Code   func(childComplexity int) int
 		Name   func(childComplexity int) int
@@ -179,6 +187,7 @@ type ComplexityRoot struct {
 		DeleteTransaction     func(childComplexity int, id string) int
 		RecordFXRateOverride  func(childComplexity int, input model.RecordFXRateOverrideInput) int
 		RecordPriceOverride   func(childComplexity int, input model.RecordPriceOverrideInput) int
+		TriggerBackfill       func(childComplexity int, input model.TriggerBackfillInput) int
 		TriggerMarketSync     func(childComplexity int, symbols []string, syncFx *bool) int
 		UpdateInstrument      func(childComplexity int, input model.UpdateInstrumentInput) int
 		UpdateUserPreferences func(childComplexity int, input model.UpdateUserPreferencesInput) int
@@ -283,6 +292,7 @@ type MutationResolver interface {
 	UpdateInstrument(ctx context.Context, input model.UpdateInstrumentInput) (*model.Instrument, error)
 	RecordPriceOverride(ctx context.Context, input model.RecordPriceOverrideInput) (*model.RecordPriceOverridePayload, error)
 	TriggerMarketSync(ctx context.Context, symbols []string, syncFx *bool) (*model.MarketSyncPayload, error)
+	TriggerBackfill(ctx context.Context, input model.TriggerBackfillInput) (*model.BackfillPayload, error)
 	UpdateUserPreferences(ctx context.Context, input model.UpdateUserPreferencesInput) (*model.UpdateUserPreferencesPayload, error)
 	RecordFXRateOverride(ctx context.Context, input model.RecordFXRateOverrideInput) (*model.RecordFXRateOverridePayload, error)
 }
@@ -331,6 +341,37 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.AddTransactionPayload.TransactionID(childComplexity), true
+
+	case "BackfillPayload.fxRatesSynced":
+		if e.ComplexityRoot.BackfillPayload.FxRatesSynced == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BackfillPayload.FxRatesSynced(childComplexity), true
+	case "BackfillPayload.message":
+		if e.ComplexityRoot.BackfillPayload.Message == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BackfillPayload.Message(childComplexity), true
+	case "BackfillPayload.pricesSynced":
+		if e.ComplexityRoot.BackfillPayload.PricesSynced == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BackfillPayload.PricesSynced(childComplexity), true
+	case "BackfillPayload.success":
+		if e.ComplexityRoot.BackfillPayload.Success == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BackfillPayload.Success(childComplexity), true
+	case "BackfillPayload.warnings":
+		if e.ComplexityRoot.BackfillPayload.Warnings == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BackfillPayload.Warnings(childComplexity), true
 
 	case "Currency.code":
 		if e.ComplexityRoot.Currency.Code == nil {
@@ -918,6 +959,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.RecordPriceOverride(childComplexity, args["input"].(model.RecordPriceOverrideInput)), true
+	case "Mutation.triggerBackfill":
+		if e.ComplexityRoot.Mutation.TriggerBackfill == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_triggerBackfill_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.TriggerBackfill(childComplexity, args["input"].(model.TriggerBackfillInput)), true
 	case "Mutation.triggerMarketSync":
 		if e.ComplexityRoot.Mutation.TriggerMarketSync == nil {
 			break
@@ -1347,6 +1399,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCreateInstrumentInput,
 		ec.unmarshalInputRecordFXRateOverrideInput,
 		ec.unmarshalInputRecordPriceOverrideInput,
+		ec.unmarshalInputTriggerBackfillInput,
 		ec.unmarshalInputUpdateInstrumentInput,
 		ec.unmarshalInputUpdateUserPreferencesInput,
 	)
@@ -1451,6 +1504,22 @@ func (ec *executionContext) childFields_AddTransactionPayload(ctx context.Contex
 		return ec.fieldContext_AddTransactionPayload_portfolio(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type AddTransactionPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_BackfillPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "success":
+		return ec.fieldContext_BackfillPayload_success(ctx, field)
+	case "pricesSynced":
+		return ec.fieldContext_BackfillPayload_pricesSynced(ctx, field)
+	case "fxRatesSynced":
+		return ec.fieldContext_BackfillPayload_fxRatesSynced(ctx, field)
+	case "message":
+		return ec.fieldContext_BackfillPayload_message(ctx, field)
+	case "warnings":
+		return ec.fieldContext_BackfillPayload_warnings(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type BackfillPayload", field.Name)
 }
 
 func (ec *executionContext) childFields_Currency(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -2045,6 +2114,20 @@ func (ec *executionContext) field_Mutation_recordPriceOverride_args(ctx context.
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_triggerBackfill_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.TriggerBackfillInput, error) {
+			return ec.unmarshalNTriggerBackfillInput2bffᚋgraphᚋmodelᚐTriggerBackfillInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_triggerMarketSync_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2426,6 +2509,121 @@ func (ec *executionContext) fieldContext_AddTransactionPayload_portfolio(_ conte
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _BackfillPayload_success(ctx context.Context, field graphql.CollectedField, obj *model.BackfillPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BackfillPayload_success(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Success, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BackfillPayload_success(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BackfillPayload", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _BackfillPayload_pricesSynced(ctx context.Context, field graphql.CollectedField, obj *model.BackfillPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BackfillPayload_pricesSynced(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PricesSynced, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BackfillPayload_pricesSynced(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BackfillPayload", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _BackfillPayload_fxRatesSynced(ctx context.Context, field graphql.CollectedField, obj *model.BackfillPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BackfillPayload_fxRatesSynced(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FxRatesSynced, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BackfillPayload_fxRatesSynced(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BackfillPayload", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _BackfillPayload_message(ctx context.Context, field graphql.CollectedField, obj *model.BackfillPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BackfillPayload_message(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Message, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BackfillPayload_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BackfillPayload", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _BackfillPayload_warnings(ctx context.Context, field graphql.CollectedField, obj *model.BackfillPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BackfillPayload_warnings(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Warnings, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []string) graphql.Marshaler {
+			return ec.marshalNString2ᚕstringᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BackfillPayload_warnings(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BackfillPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Currency_code(ctx context.Context, field graphql.CollectedField, obj *model.Currency) (ret graphql.Marshaler) {
@@ -4754,6 +4952,50 @@ func (ec *executionContext) fieldContext_Mutation_triggerMarketSync(ctx context.
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_triggerMarketSync_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_triggerBackfill(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_triggerBackfill(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().TriggerBackfill(ctx, fc.Args["input"].(model.TriggerBackfillInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.BackfillPayload) graphql.Marshaler {
+			return ec.marshalNBackfillPayload2ᚖbffᚋgraphᚋmodelᚐBackfillPayload(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_triggerBackfill(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_BackfillPayload(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_triggerBackfill_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -7919,6 +8161,78 @@ func (ec *executionContext) unmarshalInputRecordPriceOverrideInput(ctx context.C
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputTriggerBackfillInput(ctx context.Context, obj any) (model.TriggerBackfillInput, error) {
+	var it model.TriggerBackfillInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"fromDate", "toDate", "symbols", "currencyPairs", "backfillAssets", "backfillFx", "recomputeValuations"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "fromDate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fromDate"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FromDate = data
+		case "toDate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("toDate"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ToDate = data
+		case "symbols":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("symbols"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Symbols = data
+		case "currencyPairs":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyPairs"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyPairs = data
+		case "backfillAssets":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("backfillAssets"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BackfillAssets = data
+		case "backfillFx":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("backfillFx"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BackfillFx = data
+		case "recomputeValuations":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("recomputeValuations"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RecomputeValuations = data
+		}
+	}
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputUpdateInstrumentInput(ctx context.Context, obj any) (model.UpdateInstrumentInput, error) {
 	var it model.UpdateInstrumentInput
 	if obj == nil {
@@ -8041,6 +8355,64 @@ func (ec *executionContext) _AddTransactionPayload(ctx context.Context, sel ast.
 			}
 		case "portfolio":
 			out.Values[i] = ec._AddTransactionPayload_portfolio(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var backfillPayloadImplementors = []string{"BackfillPayload"}
+
+func (ec *executionContext) _BackfillPayload(ctx context.Context, sel ast.SelectionSet, obj *model.BackfillPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, backfillPayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BackfillPayload")
+		case "success":
+			out.Values[i] = ec._BackfillPayload_success(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pricesSynced":
+			out.Values[i] = ec._BackfillPayload_pricesSynced(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fxRatesSynced":
+			out.Values[i] = ec._BackfillPayload_fxRatesSynced(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "message":
+			out.Values[i] = ec._BackfillPayload_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "warnings":
+			out.Values[i] = ec._BackfillPayload_warnings(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -9048,6 +9420,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "triggerMarketSync":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_triggerMarketSync(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "triggerBackfill":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_triggerBackfill(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -10335,6 +10714,16 @@ func (ec *executionContext) marshalNAddTransactionPayload2ᚖbffᚋgraphᚋmodel
 	return ec._AddTransactionPayload(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNBackfillPayload2ᚖbffᚋgraphᚋmodelᚐBackfillPayload(ctx context.Context, sel ast.SelectionSet, v *model.BackfillPayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BackfillPayload(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v any) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -10752,6 +11141,35 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {
+	vSlice := graphql.CoerceList(v)
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
 func (ec *executionContext) marshalNTransactionItem2ᚕᚖbffᚋgraphᚋmodelᚐTransactionItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TransactionItem) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
@@ -10796,6 +11214,11 @@ func (ec *executionContext) marshalNTransactionsConnection2ᚖbffᚋgraphᚋmode
 		return graphql.Null
 	}
 	return ec._TransactionsConnection(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNTriggerBackfillInput2bffᚋgraphᚋmodelᚐTriggerBackfillInput(ctx context.Context, v any) (model.TriggerBackfillInput, error) {
+	res, err := ec.unmarshalInputTriggerBackfillInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNUpdateInstrumentInput2bffᚋgraphᚋmodelᚐUpdateInstrumentInput(ctx context.Context, v any) (model.UpdateInstrumentInput, error) {

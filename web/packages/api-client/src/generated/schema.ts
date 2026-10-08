@@ -110,6 +110,7 @@ export interface Mutation {
     updateInstrument: Instrument
     recordPriceOverride: RecordPriceOverridePayload
     triggerMarketSync: MarketSyncPayload
+    triggerBackfill: BackfillPayload
     updateUserPreferences: UpdateUserPreferencesPayload
     recordFXRateOverride: RecordFXRateOverridePayload
     __typename: 'Mutation'
@@ -165,6 +166,15 @@ export interface MarketSyncPayload {
     fxRatesSynced: Scalars['Int']
     message: Scalars['String']
     __typename: 'MarketSyncPayload'
+}
+
+export interface BackfillPayload {
+    success: Scalars['Boolean']
+    pricesSynced: Scalars['Int']
+    fxRatesSynced: Scalars['Int']
+    message: Scalars['String']
+    warnings: Scalars['String'][]
+    __typename: 'BackfillPayload'
 }
 
 export interface Portfolio {
@@ -382,6 +392,7 @@ export interface MutationGenqlSelection{
     updateInstrument?: (InstrumentGenqlSelection & { __args: {input: UpdateInstrumentInput} })
     recordPriceOverride?: (RecordPriceOverridePayloadGenqlSelection & { __args: {input: RecordPriceOverrideInput} })
     triggerMarketSync?: (MarketSyncPayloadGenqlSelection & { __args?: {symbols?: (Scalars['String'][] | null), syncFx?: (Scalars['Boolean'] | null)} })
+    triggerBackfill?: (BackfillPayloadGenqlSelection & { __args: {input: TriggerBackfillInput} })
     updateUserPreferences?: (UpdateUserPreferencesPayloadGenqlSelection & { __args: {input: UpdateUserPreferencesInput} })
     recordFXRateOverride?: (RecordFXRateOverridePayloadGenqlSelection & { __args: {input: RecordFXRateOverrideInput} })
     __typename?: boolean | number
@@ -448,6 +459,18 @@ export interface MarketSyncPayloadGenqlSelection{
     pricesSynced?: boolean | number
     fxRatesSynced?: boolean | number
     message?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface TriggerBackfillInput {fromDate: Scalars['String'],toDate: Scalars['String'],symbols?: (Scalars['String'][] | null),currencyPairs?: (Scalars['String'][] | null),backfillAssets?: (Scalars['Boolean'] | null),backfillFx?: (Scalars['Boolean'] | null),recomputeValuations?: (Scalars['Boolean'] | null)}
+
+export interface BackfillPayloadGenqlSelection{
+    success?: boolean | number
+    pricesSynced?: boolean | number
+    fxRatesSynced?: boolean | number
+    message?: boolean | number
+    warnings?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -701,6 +724,14 @@ export interface RecordFXRateOverridePayloadGenqlSelection{
     export const isMarketSyncPayload = (obj?: { __typename?: any } | null): obj is MarketSyncPayload => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isMarketSyncPayload"')
       return MarketSyncPayload_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const BackfillPayload_possibleTypes: string[] = ['BackfillPayload']
+    export const isBackfillPayload = (obj?: { __typename?: any } | null): obj is BackfillPayload => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isBackfillPayload"')
+      return BackfillPayload_possibleTypes.includes(obj.__typename)
     }
     
 

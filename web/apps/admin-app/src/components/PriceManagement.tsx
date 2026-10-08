@@ -16,6 +16,7 @@ import {
   formatDate,
 } from '@graphfolio/ui';
 import { PriceOverrideModal, type PriceOverrideData } from './PriceOverrideModal';
+import { BackfillModal, type BackfillSubmitData, type BackfillModalResult } from './BackfillModal';
 import './PriceManagement.css';
 
 interface PriceRecord {
@@ -39,6 +40,7 @@ export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) =>
   const [dateFilter, setDateFilter] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
   const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
+  const [isBackfillModalOpen, setIsBackfillModalOpen] = useState(false);
   const [selectedSymbolForOverride, setSelectedSymbolForOverride] = useState('AAPL');
   const [availableSymbols, setAvailableSymbols] = useState<string[]>([]);
   const [latestPriceDate, setLatestPriceDate] = useState<string>('—');
@@ -187,6 +189,51 @@ export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) =>
     }
   };
 
+  const handleExecuteBackfill = async (submitData: BackfillSubmitData): Promise<BackfillModalResult> => {
+    try {
+      const res = await client.mutation({
+        triggerBackfill: {
+          __args: {
+            input: {
+              fromDate: submitData.fromDate,
+              toDate: submitData.toDate,
+              symbols: submitData.symbols,
+              currencyPairs: submitData.currencyPairs,
+              backfillAssets: submitData.backfillAssets,
+              backfillFx: submitData.backfillFx,
+              recomputeValuations: submitData.recomputeValuations,
+            },
+          },
+          success: true,
+          pricesSynced: true,
+          fxRatesSynced: true,
+          message: true,
+          warnings: true,
+        },
+      });
+
+      const payload = res.triggerBackfill;
+      if (payload.success) {
+        onNotify(payload.message || 'Asset prices backfilled successfully.');
+        fetchPrices();
+      } else {
+        onNotify(`Backfill warning: ${payload.message}`);
+      }
+
+      return {
+        success: payload.success,
+        pricesSynced: payload.pricesSynced,
+        fxRatesSynced: payload.fxRatesSynced,
+        message: payload.message,
+        warnings: payload.warnings,
+      };
+    } catch (err: any) {
+      console.error('Backfill asset prices failed:', err);
+      onNotify(`Backfill failed: ${err?.message || 'Server error'}`);
+      throw err;
+    }
+  };
+
   return (
     <div className="price-mgmt">
       <div className="price-mgmt__stats">
@@ -242,6 +289,13 @@ export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) =>
             onClick={handleTriggerSync}
           >
             ⚡ Trigger EOD Ingestion
+          </Button>
+
+          <Button
+            variant="secondary"
+            onClick={() => setIsBackfillModalOpen(true)}
+          >
+            ⚡ Backfill Asset Prices
           </Button>
 
           <Button
@@ -333,6 +387,17 @@ export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) =>
         onClose={() => setIsOverrideModalOpen(false)}
         defaultSymbol={selectedSymbolForOverride}
         onSubmit={handleApplyOverride}
+      />
+
+      <BackfillModal
+        isOpen={isBackfillModalOpen}
+        onClose={() => setIsBackfillModalOpen(false)}
+        initialSymbols={symbolFilter !== 'ALL' ? [symbolFilter] : []}
+        initialBackfillAssets={true}
+        initialBackfillFx={false}
+        initialRecomputeValuations={true}
+        onSubmit={handleExecuteBackfill}
+        onSuccess={() => fetchPrices()}
       />
     </div>
   );

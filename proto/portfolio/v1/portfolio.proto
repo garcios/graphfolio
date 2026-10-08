@@ -34,6 +34,9 @@ service PortfolioService {
   rpc GetCurrencyPairHistory(GetCurrencyPairHistoryRequest) returns (GetCurrencyPairHistoryResponse) {}
   rpc RecordFXRateOverride(RecordFXRateOverrideRequest) returns (RecordFXRateOverrideResponse) {}
 
+  // Admin: Historical Market Data Backfill
+  rpc TriggerBackfill(TriggerBackfillRequest) returns (TriggerBackfillResponse) {}
+
   // Historical Valuation Engine & Replay
   rpc RebuildValuations(RebuildValuationsRequest) returns (RebuildValuationsResponse) {}
 }
@@ -405,4 +408,23 @@ message RecordFXRateOverrideResponse {
   FXRateItem rate                  = 1;
   bool       valuations_recomputed = 2;
 }
+
+message TriggerBackfillRequest {
+  string          from_date            = 1; // YYYY-MM-DD (inclusive start date)
+  string          to_date              = 2; // YYYY-MM-DD (inclusive end date, defaults to today)
+  repeated string symbols              = 3; // Optional list of ticker symbols. If empty & backfill_assets=true, all active instruments are backfilled.
+  repeated string currency_pairs       = 4; // Optional list of currency pairs (e.g. "EUR/USD"). If empty & backfill_fx=true, standard pairs are backfilled.
+  bool            backfill_assets      = 5; // Whether to backfill equity/ETF/fund closing prices
+  bool            backfill_fx          = 6; // Whether to backfill foreign exchange reference rates
+  bool            recompute_valuations = 7; // Whether to recompute affected portfolio historical valuations
+}
+
+message TriggerBackfillResponse {
+  bool            success         = 1;
+  int32           prices_synced   = 2;
+  int32           fx_rates_synced = 3;
+  string          message         = 4;
+  repeated string warnings        = 5;
+}
+
 
