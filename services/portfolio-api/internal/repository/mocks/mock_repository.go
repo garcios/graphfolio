@@ -88,6 +88,20 @@ func (mr *MockRepositoryMockRecorder) CreateInstrument(ctx, input any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateInstrument", reflect.TypeOf((*MockRepository)(nil).CreateInstrument), ctx, input)
 }
 
+// DeleteInstrument mocks base method.
+func (m *MockRepository) DeleteInstrument(ctx context.Context, id uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteInstrument", ctx, id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteInstrument indicates an expected call of DeleteInstrument.
+func (mr *MockRepositoryMockRecorder) DeleteInstrument(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteInstrument", reflect.TypeOf((*MockRepository)(nil).DeleteInstrument), ctx, id)
+}
+
 // DeleteTransaction mocks base method.
 func (m *MockRepository) DeleteTransaction(ctx context.Context, portfolioID, transactionID uuid.UUID) error {
 	m.ctrl.T.Helper()

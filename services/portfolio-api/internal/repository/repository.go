@@ -39,6 +39,7 @@ type Repository interface {
 	ListAllInstruments(ctx context.Context, isActive *bool, search *string) ([]domain.Instrument, error)
 	CreateInstrument(ctx context.Context, input domain.CreateInstrumentInput) (*domain.Instrument, error)
 	UpdateInstrument(ctx context.Context, input domain.UpdateInstrumentInput) (*domain.Instrument, error)
+	DeleteInstrument(ctx context.Context, id uuid.UUID) error
 	ListExchanges(ctx context.Context) ([]domain.Exchange, error)
 
 	// Admin: Price Management & Overrides

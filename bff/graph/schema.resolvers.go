@@ -100,6 +100,23 @@ func (r *mutationResolver) UpdateInstrument(ctx context.Context, input model.Upd
 	return toModelInstrument(resp.Instrument), nil
 }
 
+// DeleteInstrument is the resolver for the deleteInstrument field.
+func (r *mutationResolver) DeleteInstrument(ctx context.Context, id string) (*model.DeleteInstrumentPayload, error) {
+	req := &pb.DeleteInstrumentRequest{
+		Id: id,
+	}
+
+	resp, err := r.PortfolioClient.DeleteInstrument(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.DeleteInstrumentPayload{
+		Success: resp.Success,
+		ID:      resp.Id,
+	}, nil
+}
+
 // RecordPriceOverride is the resolver for the recordPriceOverride field.
 func (r *mutationResolver) RecordPriceOverride(ctx context.Context, input model.RecordPriceOverrideInput) (*model.RecordPriceOverridePayload, error) {
 	recompute := false

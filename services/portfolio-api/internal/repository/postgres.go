@@ -22,6 +22,7 @@ var (
 	ErrInstrumentNotFound  = errors.New("instrument not found")
 	ErrTransactionNotFound = errors.New("transaction not found")
 	ErrInstrumentConflict  = errors.New("instrument already exists")
+	ErrInstrumentInUse     = errors.New("cannot delete instrument: it is referenced by existing transactions or holdings")
 )
 
 type PostgresRepository struct {
@@ -693,6 +694,49 @@ func (r *PostgresRepository) UpdateInstrument(ctx context.Context, input domain.
 	}
 
 	return &inst, nil
+}
+
+func (r *PostgresRepository) DeleteInstrument(ctx context.Context, id uuid.UUID) error {
+	tx, err := r.pool.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("repository: begin tx for delete instrument: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// 1. Verify existence with row-lock
+	var existingID uuid.UUID
+	err = tx.QueryRow(ctx, "SELECT id FROM portfolio.instruments WHERE id = $1 FOR UPDATE;", id).Scan(&existingID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrInstrumentNotFound
+		}
+		return fmt.Errorf("repository: check instrument existence: %w", err)
+	}
+
+	// 2. Guard against in-use assets (transactions or active holdings)
+	var inUse bool
+	if err := tx.QueryRow(ctx, checkInstrumentUsageSQL, id).Scan(&inUse); err != nil {
+		return fmt.Errorf("repository: check instrument usage: %w", err)
+	}
+	if inUse {
+		return ErrInstrumentInUse
+	}
+
+	// 3. Atomically delete associated market prices
+	if _, err := tx.Exec(ctx, deleteInstrumentPricesByInstrumentSQL, id); err != nil {
+		return fmt.Errorf("repository: delete instrument prices: %w", err)
+	}
+
+	// 4. Delete the instrument record
+	cmdTag, err := tx.Exec(ctx, deleteInstrumentSQL, id)
+	if err != nil {
+		return fmt.Errorf("repository: delete instrument: %w", err)
+	}
+	if cmdTag.RowsAffected() == 0 {
+		return ErrInstrumentNotFound
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (r *PostgresRepository) ListInstrumentPrices(ctx context.Context, filter domain.PriceFilter) ([]domain.InstrumentPrice, int, error) {

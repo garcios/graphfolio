@@ -13,6 +13,7 @@ import {
   Select,
 } from '@graphfolio/ui';
 import { AddInstrumentModal, type NewInstrumentData, type ExchangeOption } from './AddInstrumentModal';
+import { DeleteAssetModal } from './DeleteAssetModal';
 import './AssetManagement.css';
 
 interface InstrumentRecord {
@@ -37,6 +38,9 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({ onNotify }) =>
   const [classFilter, setClassFilter] = useState('ALL');
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [assetToDelete, setAssetToDelete] = useState<InstrumentRecord | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const [exchanges, setExchanges] = useState<ExchangeOption[]>([]);
   const [exchangesLoading, setExchangesLoading] = useState(false);
@@ -159,6 +163,33 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({ onNotify }) =>
     }
   };
 
+  const handleConfirmDelete = async () => {
+    if (!assetToDelete) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await client.mutation({
+        deleteInstrument: {
+          __args: { id: assetToDelete.id },
+          success: true,
+          id: true,
+        },
+      });
+      if (res.deleteInstrument?.success) {
+        setInstruments((prev) => prev.filter((i) => i.id !== assetToDelete.id));
+        onNotify(`Asset ${assetToDelete.symbol} and its market prices were deleted.`);
+        setAssetToDelete(null);
+      }
+    } catch (err: any) {
+      console.error('Failed to delete instrument:', err);
+      const msg = err?.message || 'Cannot delete asset: in use by transactions or holdings';
+      setDeleteError(msg);
+      onNotify(`Cannot delete ${assetToDelete.symbol}: ${msg}`);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const filteredInstruments = instruments.filter((inst) => {
     const matchesSearch =
       inst.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -275,6 +306,16 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({ onNotify }) =>
                       >
                         {inst.isActive ? 'Deactivate' : 'Activate'}
                       </Button>
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        onClick={() => {
+                          setAssetToDelete(inst);
+                          setDeleteError(null);
+                        }}
+                      >
+                        Delete
+                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -291,6 +332,20 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({ onNotify }) =>
         exchanges={exchanges}
         exchangesLoading={exchangesLoading}
         exchangesError={exchangesError}
+      />
+
+      <DeleteAssetModal
+        isOpen={!!assetToDelete}
+        onClose={() => {
+          if (!isDeleting) {
+            setAssetToDelete(null);
+            setDeleteError(null);
+          }
+        }}
+        asset={assetToDelete}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+        error={deleteError}
       />
     </div>
   );

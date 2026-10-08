@@ -19,6 +19,7 @@ service PortfolioService {
   rpc ListAllInstruments(ListAllInstrumentsRequest) returns (ListAllInstrumentsResponse) {}
   rpc CreateInstrument(CreateInstrumentRequest) returns (CreateInstrumentResponse) {}
   rpc UpdateInstrument(UpdateInstrumentRequest) returns (UpdateInstrumentResponse) {}
+  rpc DeleteInstrument(DeleteInstrumentRequest) returns (DeleteInstrumentResponse) {}
   rpc ListExchanges(ListExchangesRequest) returns (ListExchangesResponse) {}
 
   // Admin: Closing Price Management & Overrides
@@ -245,6 +246,15 @@ message UpdateInstrumentRequest {
 
 message UpdateInstrumentResponse {
   Instrument instrument = 1;
+}
+
+message DeleteInstrumentRequest {
+  string id = 1; // Instrument UUID
+}
+
+message DeleteInstrumentResponse {
+  bool   success = 1;
+  string id      = 2; // Instrument UUID that was deleted
 }
 
 message Exchange {

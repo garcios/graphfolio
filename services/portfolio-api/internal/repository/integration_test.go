@@ -2,6 +2,7 @@ package repository_test
 
 import (
 	"context"
+	"errors"
 	"os"
 	"testing"
 	"time"
@@ -366,5 +367,64 @@ func TestPostgresRepositoryQueries(t *testing.T) {
 	}
 	if !historyPoints[0].Rate.Equal(rate1) || !historyPoints[1].Rate.Equal(rate2Updated) {
 		t.Errorf("unexpected historical points: %+v", historyPoints)
+	}
+
+	// 17. DeleteInstrument: Verify in-use protection on any asset referenced by transactions
+	var inUseID uuid.UUID
+	_ = pool.QueryRow(ctx, "SELECT instrument_id FROM portfolio.transactions WHERE instrument_id IS NOT NULL LIMIT 1;").Scan(&inUseID)
+	if inUseID != uuid.Nil {
+		err = repo.DeleteInstrument(ctx, inUseID)
+		if !errors.Is(err, repository.ErrInstrumentInUse) {
+			t.Errorf("expected ErrInstrumentInUse deleting in-use instrument, got: %v", err)
+		}
+	}
+
+	// 18. DeleteInstrument: Non-existent ID returns ErrInstrumentNotFound
+	err = repo.DeleteInstrument(ctx, uuid.New())
+	if !errors.Is(err, repository.ErrInstrumentNotFound) {
+		t.Errorf("expected ErrInstrumentNotFound for non-existent ID, got: %v", err)
+	}
+
+	// 19. DeleteInstrument: Create disposable asset, add price, and delete atomically
+	tempSymbol := "DELTEST"
+	// Ensure cleanup if previous test left it
+	_ = repo.DeleteInstrument(ctx, uuid.Nil)
+	tempInst, err := repo.CreateInstrument(ctx, domain.CreateInstrumentInput{
+		Symbol:       tempSymbol,
+		ExchangeCode: "XNAS",
+		Name:         "Delete Test Corp",
+		AssetClass:   "EQUITY",
+		CurrencyCode: "USD",
+	})
+	if err != nil {
+		// If it exists from previous run, find and delete it first
+		existing, findErr := repo.FindInstrumentBySymbol(ctx, tempSymbol)
+		if findErr == nil && existing != nil {
+			_ = repo.DeleteInstrument(ctx, existing.ID)
+			tempInst, err = repo.CreateInstrument(ctx, domain.CreateInstrumentInput{
+				Symbol:       tempSymbol,
+				ExchangeCode: "XNAS",
+				Name:         "Delete Test Corp",
+				AssetClass:   "EQUITY",
+				CurrencyCode: "USD",
+			})
+		}
+	}
+	if err != nil {
+		t.Fatalf("failed to create temp instrument: %v", err)
+	}
+	_, err = repo.UpsertInstrumentPrice(ctx, tempInst.ID, time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC), decimal.NewFromFloat(50.0), "manual")
+	if err != nil {
+		t.Fatalf("failed to upsert price for temp instrument: %v", err)
+	}
+
+	// Delete temp instrument
+	if err := repo.DeleteInstrument(ctx, tempInst.ID); err != nil {
+		t.Fatalf("failed to delete temp instrument: %v", err)
+	}
+
+	// Verify subsequent delete returns not found
+	if err := repo.DeleteInstrument(ctx, tempInst.ID); !errors.Is(err, repository.ErrInstrumentNotFound) {
+		t.Errorf("expected ErrInstrumentNotFound on deleted instrument, got: %v", err)
 	}
 }

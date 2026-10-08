@@ -38,6 +38,7 @@ var (
 	ErrDateRequired          = errors.New("from_date and to_date are required")
 	ErrNoBackfillTarget      = errors.New("at least one backfill target must be enabled (assets or fx)")
 	ErrBackfillRangeTooLarge = errors.New("backfill date range cannot exceed 5 years")
+	ErrInstrumentInUse       = repository.ErrInstrumentInUse
 )
 
 func (s *portfolioService) ListAllInstruments(ctx context.Context, isActive *bool, search *string) ([]domain.Instrument, error) {
@@ -119,6 +120,13 @@ func (s *portfolioService) UpdateInstrument(ctx context.Context, input domain.Up
 	}
 
 	return s.repo.UpdateInstrument(ctx, input)
+}
+
+func (s *portfolioService) DeleteInstrument(ctx context.Context, id uuid.UUID) error {
+	if id == uuid.Nil {
+		return errors.New("invalid instrument id")
+	}
+	return s.repo.DeleteInstrument(ctx, id)
 }
 
 func (s *portfolioService) ListInstrumentPrices(ctx context.Context, filter domain.PriceFilter) ([]domain.InstrumentPrice, int, error) {

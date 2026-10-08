@@ -114,11 +114,18 @@ export interface DeleteTransactionPayload {
     __typename: 'DeleteTransactionPayload'
 }
 
+export interface DeleteInstrumentPayload {
+    success: Scalars['Boolean']
+    id: Scalars['ID']
+    __typename: 'DeleteInstrumentPayload'
+}
+
 export interface Mutation {
     addTransaction: AddTransactionPayload
     deleteTransaction: DeleteTransactionPayload
     createInstrument: Instrument
     updateInstrument: Instrument
+    deleteInstrument: DeleteInstrumentPayload
     recordPriceOverride: RecordPriceOverridePayload
     triggerMarketSync: MarketSyncPayload
     triggerBackfill: BackfillPayload
@@ -408,11 +415,19 @@ export interface DeleteTransactionPayloadGenqlSelection{
     __scalar?: boolean | number
 }
 
+export interface DeleteInstrumentPayloadGenqlSelection{
+    success?: boolean | number
+    id?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
 export interface MutationGenqlSelection{
     addTransaction?: (AddTransactionPayloadGenqlSelection & { __args: {input: AddTransactionInput} })
     deleteTransaction?: (DeleteTransactionPayloadGenqlSelection & { __args: {id: Scalars['ID']} })
     createInstrument?: (InstrumentGenqlSelection & { __args: {input: CreateInstrumentInput} })
     updateInstrument?: (InstrumentGenqlSelection & { __args: {input: UpdateInstrumentInput} })
+    deleteInstrument?: (DeleteInstrumentPayloadGenqlSelection & { __args: {id: Scalars['ID']} })
     recordPriceOverride?: (RecordPriceOverridePayloadGenqlSelection & { __args: {input: RecordPriceOverrideInput} })
     triggerMarketSync?: (MarketSyncPayloadGenqlSelection & { __args?: {symbols?: (Scalars['String'][] | null), syncFx?: (Scalars['Boolean'] | null)} })
     triggerBackfill?: (BackfillPayloadGenqlSelection & { __args: {input: TriggerBackfillInput} })
@@ -699,6 +714,14 @@ export interface RecordFXRateOverridePayloadGenqlSelection{
     export const isDeleteTransactionPayload = (obj?: { __typename?: any } | null): obj is DeleteTransactionPayload => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isDeleteTransactionPayload"')
       return DeleteTransactionPayload_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const DeleteInstrumentPayload_possibleTypes: string[] = ['DeleteInstrumentPayload']
+    export const isDeleteInstrumentPayload = (obj?: { __typename?: any } | null): obj is DeleteInstrumentPayload => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isDeleteInstrumentPayload"')
+      return DeleteInstrumentPayload_possibleTypes.includes(obj.__typename)
     }
     
 
