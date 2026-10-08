@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"portfolio-api/internal/domain"
@@ -1175,4 +1176,168 @@ func (r *PostgresRepository) DeleteValuationsFromDate(ctx context.Context, portf
 		return fmt.Errorf("repository: delete valuations from date failed: %w", err)
 	}
 	return nil
+}
+
+func (r *PostgresRepository) ListCurrencyPairs(ctx context.Context) ([]domain.CurrencyPairSummary, error) {
+	rows, err := r.pool.Query(ctx, listCurrencyPairsSQL)
+	if err != nil {
+		return nil, fmt.Errorf("repository: list currency pairs failed: %w", err)
+	}
+	defer rows.Close()
+
+	var pairs []domain.CurrencyPairSummary
+	for rows.Next() {
+		var s domain.CurrencyPairSummary
+		var prevRate *decimal.Decimal
+		err := rows.Scan(
+			&s.BaseCurrency,
+			&s.QuoteCurrency,
+			&s.LatestRate,
+			&s.LatestDate,
+			&s.LatestSource,
+			&prevRate,
+			&s.TotalRecords,
+			&s.FirstDate,
+			&s.LastDate,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("repository: scan currency pair failed: %w", err)
+		}
+		s.BaseCurrency = strings.TrimSpace(s.BaseCurrency)
+		s.QuoteCurrency = strings.TrimSpace(s.QuoteCurrency)
+		s.PreviousRate = prevRate
+		if prevRate != nil && prevRate.IsPositive() {
+			diff := s.LatestRate.Sub(*prevRate)
+			pct := diff.DivRound(*prevRate, 6).Mul(decimal.NewFromInt(100))
+			s.Change1DAmount = &diff
+			s.Change1DPct = &pct
+		}
+		pairs = append(pairs, s)
+	}
+
+	if pairs == nil {
+		pairs = []domain.CurrencyPairSummary{}
+	}
+
+	return pairs, rows.Err()
+}
+
+func (r *PostgresRepository) ListFXRates(ctx context.Context, filter domain.FXRateFilter) ([]domain.FXRate, int, error) {
+	limit := filter.Limit
+	if limit <= 0 {
+		limit = 50
+	}
+	offset := filter.Offset
+	if offset < 0 {
+		offset = 0
+	}
+
+	rows, err := r.pool.Query(ctx, listFXRatesSQL,
+		filter.BaseCurrency,
+		filter.QuoteCurrency,
+		filter.FromDate,
+		filter.ToDate,
+		limit,
+		offset,
+	)
+	if err != nil {
+		return nil, 0, fmt.Errorf("repository: list fx rates failed: %w", err)
+	}
+	defer rows.Close()
+
+	var rates []domain.FXRate
+	var totalCount int
+	for rows.Next() {
+		var fx domain.FXRate
+		var count int
+		err := rows.Scan(
+			&fx.BaseCurrency,
+			&fx.QuoteCurrency,
+			&fx.RateDate,
+			&fx.Rate,
+			&fx.Source,
+			&count,
+		)
+		if err != nil {
+			return nil, 0, fmt.Errorf("repository: scan fx rate failed: %w", err)
+		}
+		fx.BaseCurrency = strings.TrimSpace(fx.BaseCurrency)
+		fx.QuoteCurrency = strings.TrimSpace(fx.QuoteCurrency)
+		totalCount = count
+		rates = append(rates, fx)
+	}
+
+	if rates == nil {
+		rates = []domain.FXRate{}
+	}
+
+	return rates, totalCount, rows.Err()
+}
+
+func (r *PostgresRepository) GetHistoricalFXRates(ctx context.Context, baseCurrency, quoteCurrency string, fromDate, toDate *time.Time) ([]domain.FXRate, error) {
+	rows, err := r.pool.Query(ctx, getHistoricalFXRatesSQL,
+		strings.TrimSpace(baseCurrency),
+		strings.TrimSpace(quoteCurrency),
+		fromDate,
+		toDate,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("repository: get historical fx rates failed: %w", err)
+	}
+	defer rows.Close()
+
+	var rates []domain.FXRate
+	for rows.Next() {
+		var fx domain.FXRate
+		err := rows.Scan(
+			&fx.BaseCurrency,
+			&fx.QuoteCurrency,
+			&fx.RateDate,
+			&fx.Rate,
+			&fx.Source,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("repository: scan historical fx rate failed: %w", err)
+		}
+		fx.BaseCurrency = strings.TrimSpace(fx.BaseCurrency)
+		fx.QuoteCurrency = strings.TrimSpace(fx.QuoteCurrency)
+		rates = append(rates, fx)
+	}
+
+	if rates == nil {
+		rates = []domain.FXRate{}
+	}
+
+	return rates, rows.Err()
+}
+
+func (r *PostgresRepository) UpsertFXRate(ctx context.Context, baseCurrency, quoteCurrency string, rateDate time.Time, rate decimal.Decimal, source string) (*domain.FXRate, error) {
+	d := time.Date(rateDate.Year(), rateDate.Month(), rateDate.Day(), 0, 0, 0, 0, time.UTC)
+	if source == "" {
+		source = "manual"
+	}
+
+	row := r.pool.QueryRow(ctx, upsertFXRateSQL,
+		strings.ToUpper(strings.TrimSpace(baseCurrency)),
+		strings.ToUpper(strings.TrimSpace(quoteCurrency)),
+		d,
+		rate,
+		source,
+	)
+
+	var fx domain.FXRate
+	err := row.Scan(
+		&fx.BaseCurrency,
+		&fx.QuoteCurrency,
+		&fx.RateDate,
+		&fx.Rate,
+		&fx.Source,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("repository: upsert fx rate failed: %w", err)
+	}
+	fx.BaseCurrency = strings.TrimSpace(fx.BaseCurrency)
+	fx.QuoteCurrency = strings.TrimSpace(fx.QuoteCurrency)
+
+	return &fx, nil
 }

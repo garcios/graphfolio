@@ -59,6 +59,10 @@ type fakePortfolioClient struct {
 	recordPriceOverrideFn         func(ctx context.Context, in *pb.RecordPriceOverrideRequest) (*pb.RecordPriceOverrideResponse, error)
 	getIngestionStatusFn          func(ctx context.Context, in *pb.GetIngestionStatusRequest) (*pb.GetIngestionStatusResponse, error)
 	triggerMarketSyncFn           func(ctx context.Context, in *pb.TriggerMarketSyncRequest) (*pb.TriggerMarketSyncResponse, error)
+	listCurrencyPairsFn           func(ctx context.Context, in *pb.ListCurrencyPairsRequest) (*pb.ListCurrencyPairsResponse, error)
+	listFXRatesFn                 func(ctx context.Context, in *pb.ListFXRatesRequest) (*pb.ListFXRatesResponse, error)
+	getCurrencyPairHistoryFn      func(ctx context.Context, in *pb.GetCurrencyPairHistoryRequest) (*pb.GetCurrencyPairHistoryResponse, error)
+	recordFXRateOverrideFn        func(ctx context.Context, in *pb.RecordFXRateOverrideRequest) (*pb.RecordFXRateOverrideResponse, error)
 }
 
 func (f *fakePortfolioClient) GetPortfolio(ctx context.Context, in *pb.GetPortfolioRequest, opts ...grpc.CallOption) (*pb.GetPortfolioResponse, error) {
@@ -155,6 +159,34 @@ func (f *fakePortfolioClient) GetIngestionStatus(ctx context.Context, in *pb.Get
 func (f *fakePortfolioClient) TriggerMarketSync(ctx context.Context, in *pb.TriggerMarketSyncRequest, opts ...grpc.CallOption) (*pb.TriggerMarketSyncResponse, error) {
 	if f.triggerMarketSyncFn != nil {
 		return f.triggerMarketSyncFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakePortfolioClient) ListCurrencyPairs(ctx context.Context, in *pb.ListCurrencyPairsRequest, opts ...grpc.CallOption) (*pb.ListCurrencyPairsResponse, error) {
+	if f.listCurrencyPairsFn != nil {
+		return f.listCurrencyPairsFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakePortfolioClient) ListFXRates(ctx context.Context, in *pb.ListFXRatesRequest, opts ...grpc.CallOption) (*pb.ListFXRatesResponse, error) {
+	if f.listFXRatesFn != nil {
+		return f.listFXRatesFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakePortfolioClient) GetCurrencyPairHistory(ctx context.Context, in *pb.GetCurrencyPairHistoryRequest, opts ...grpc.CallOption) (*pb.GetCurrencyPairHistoryResponse, error) {
+	if f.getCurrencyPairHistoryFn != nil {
+		return f.getCurrencyPairHistoryFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakePortfolioClient) RecordFXRateOverride(ctx context.Context, in *pb.RecordFXRateOverrideRequest, opts ...grpc.CallOption) (*pb.RecordFXRateOverrideResponse, error) {
+	if f.recordFXRateOverrideFn != nil {
+		return f.recordFXRateOverrideFn(ctx, in)
 	}
 	return nil, nil
 }
@@ -1062,6 +1094,303 @@ func TestMutationResolver_UpdateUserPreferences(t *testing.T) {
 		_, err := mResolver.UpdateUserPreferences(ctx, model.UpdateUserPreferencesInput{
 			DisplayCurrency: &newCurr,
 		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+	})
+}
+
+func TestMutationResolver_RecordFXRateOverride(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully records fx rate override", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			recordFXRateOverrideFn: func(ctx context.Context, in *pb.RecordFXRateOverrideRequest) (*pb.RecordFXRateOverrideResponse, error) {
+				if in.BaseCurrency != "EUR" || in.QuoteCurrency != "USD" {
+					t.Errorf("unexpected currency pair: %s/%s", in.BaseCurrency, in.QuoteCurrency)
+				}
+				if in.RateDate != "2026-10-05" {
+					t.Errorf("unexpected rate date: %s", in.RateDate)
+				}
+				if !in.RecomputeValuations {
+					t.Errorf("expected recompute valuations to be true")
+				}
+				return &pb.RecordFXRateOverrideResponse{
+					Rate: &pb.FXRateItem{
+						BaseCurrency:  in.BaseCurrency,
+						QuoteCurrency: in.QuoteCurrency,
+						RateDate:      in.RateDate,
+						Rate:          in.Rate,
+						InvertedRate:  &commonpb.Decimal{Value: "0.92165899"},
+						Source:        "manual: audit note",
+					},
+					ValuationsRecomputed: true,
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		mResolver := resolver.Mutation()
+
+		reason := "audit note"
+		recompute := true
+		payload, err := mResolver.RecordFXRateOverride(ctx, model.RecordFXRateOverrideInput{
+			BaseCurrency:        "EUR",
+			QuoteCurrency:       "USD",
+			RateDate:            "2026-10-05",
+			Rate:                model.Decimal(decimal.RequireFromString("1.0850")),
+			Reason:              &reason,
+			RecomputeValuations: &recompute,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if !payload.ValuationsRecomputed {
+			t.Errorf("expected ValuationsRecomputed true")
+		}
+		if payload.Rate.Pair != "EUR/USD" || payload.Rate.Rate.String() != "1.085" {
+			t.Errorf("unexpected fx rate payload: %+v", payload.Rate)
+		}
+		if payload.Rate.InvertedRate.String() != "0.92165899" {
+			t.Errorf("unexpected inverted rate: %s", payload.Rate.InvertedRate.String())
+		}
+	})
+
+	t.Run("handles error from portfolio service", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			recordFXRateOverrideFn: func(ctx context.Context, in *pb.RecordFXRateOverrideRequest) (*pb.RecordFXRateOverrideResponse, error) {
+				return nil, errors.New("rate must be positive")
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		mResolver := resolver.Mutation()
+
+		_, err := mResolver.RecordFXRateOverride(ctx, model.RecordFXRateOverrideInput{
+			BaseCurrency:  "EUR",
+			QuoteCurrency: "USD",
+			RateDate:      "2026-10-05",
+			Rate:          model.Decimal(decimal.RequireFromString("-1.0")),
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+	})
+}
+
+func TestQueryResolver_CurrencyPairs(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully queries currency pairs", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			listCurrencyPairsFn: func(ctx context.Context, in *pb.ListCurrencyPairsRequest) (*pb.ListCurrencyPairsResponse, error) {
+				return &pb.ListCurrencyPairsResponse{
+					Pairs: []*pb.CurrencyPairItem{
+						{
+							BaseCurrency:    "EUR",
+							QuoteCurrency:   "USD",
+							LatestRate:      &commonpb.Decimal{Value: "1.0850"},
+							LatestDate:      "2026-10-05",
+							LatestSource:    "ECB",
+							PreviousRate:    &commonpb.Decimal{Value: "1.0800"},
+							Change_1DAmount: &commonpb.Decimal{Value: "0.0050"},
+							Change_1DPct:    &commonpb.Decimal{Value: "0.4630"},
+							TotalRecords:    250,
+							FirstDate:       "2025-10-01",
+							LastDate:        "2026-10-05",
+						},
+					},
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		pairs, err := qResolver.CurrencyPairs(ctx)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if len(pairs) != 1 {
+			t.Fatalf("expected 1 pair, got %d", len(pairs))
+		}
+		p := pairs[0]
+		if p.Pair != "EUR/USD" || p.BaseCurrency != "EUR" || p.QuoteCurrency != "USD" {
+			t.Errorf("unexpected pair identifier: %s", p.Pair)
+		}
+		if p.LatestRate.String() != "1.085" {
+			t.Errorf("unexpected latest rate: %s", p.LatestRate.String())
+		}
+		if p.Change1dAmount == nil || p.Change1dAmount.String() != "0.005" {
+			t.Errorf("unexpected change 1d amount: %v", p.Change1dAmount)
+		}
+		if p.TotalRecords != 250 {
+			t.Errorf("unexpected total records: %d", p.TotalRecords)
+		}
+	})
+
+	t.Run("handles error from portfolio service", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			listCurrencyPairsFn: func(ctx context.Context, in *pb.ListCurrencyPairsRequest) (*pb.ListCurrencyPairsResponse, error) {
+				return nil, errors.New("db connection failure")
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		_, err := qResolver.CurrencyPairs(ctx)
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+	})
+}
+
+func TestQueryResolver_CurrencyPairHistory(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully queries currency pair history", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			getCurrencyPairHistoryFn: func(ctx context.Context, in *pb.GetCurrencyPairHistoryRequest) (*pb.GetCurrencyPairHistoryResponse, error) {
+				if in.BaseCurrency != "EUR" || in.QuoteCurrency != "USD" {
+					t.Errorf("unexpected currencies: %s/%s", in.BaseCurrency, in.QuoteCurrency)
+				}
+				if in.Timeframe != pb.HistoryTimeframe_HISTORY_TIMEFRAME_1M {
+					t.Errorf("unexpected timeframe: %v", in.Timeframe)
+				}
+				return &pb.GetCurrencyPairHistoryResponse{
+					BaseCurrency:  in.BaseCurrency,
+					QuoteCurrency: in.QuoteCurrency,
+					Points: []*pb.FXHistoryPoint{
+						{
+							Date:         "2026-09-05",
+							Rate:         &commonpb.Decimal{Value: "1.0700"},
+							InvertedRate: &commonpb.Decimal{Value: "0.934579"},
+							Source:       "ECB",
+						},
+						{
+							Date:         "2026-10-05",
+							Rate:         &commonpb.Decimal{Value: "1.0850"},
+							InvertedRate: &commonpb.Decimal{Value: "0.921659"},
+							Source:       "ECB",
+						},
+					},
+					StartRate:       &commonpb.Decimal{Value: "1.0700"},
+					EndRate:         &commonpb.Decimal{Value: "1.0850"},
+					PeriodChange:    &commonpb.Decimal{Value: "0.0150"},
+					PeriodChangePct: &commonpb.Decimal{Value: "1.4019"},
+					PeriodHigh:      &commonpb.Decimal{Value: "1.0850"},
+					PeriodLow:       &commonpb.Decimal{Value: "1.0700"},
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		hist, err := qResolver.CurrencyPairHistory(ctx, "EUR", "USD", model.HistoryTimeframeTimeframe1m)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if hist.Pair != "EUR/USD" {
+			t.Errorf("expected pair EUR/USD, got %s", hist.Pair)
+		}
+		if len(hist.Points) != 2 {
+			t.Fatalf("expected 2 points, got %d", len(hist.Points))
+		}
+		if hist.StartRate.String() != "1.07" || hist.EndRate.String() != "1.085" {
+			t.Errorf("unexpected start/end rates: %s / %s", hist.StartRate.String(), hist.EndRate.String())
+		}
+		if hist.PeriodChange.String() != "0.015" {
+			t.Errorf("unexpected period change: %s", hist.PeriodChange.String())
+		}
+	})
+
+	t.Run("handles error from portfolio service", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			getCurrencyPairHistoryFn: func(ctx context.Context, in *pb.GetCurrencyPairHistoryRequest) (*pb.GetCurrencyPairHistoryResponse, error) {
+				return nil, errors.New("currency pair not found")
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		_, err := qResolver.CurrencyPairHistory(ctx, "XYZ", "USD", model.HistoryTimeframeTimeframe1m)
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+	})
+}
+
+func TestQueryResolver_FxRates(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully queries fx rates with filters", func(t *testing.T) {
+		baseCurr := "EUR"
+		quoteCurr := "USD"
+		fromDate := "2026-10-01"
+		toDate := "2026-10-05"
+		limit := 10
+		offset := 0
+
+		fakeClient := &fakePortfolioClient{
+			listFXRatesFn: func(ctx context.Context, in *pb.ListFXRatesRequest) (*pb.ListFXRatesResponse, error) {
+				if in.GetBaseCurrency() != baseCurr || in.GetQuoteCurrency() != quoteCurr {
+					t.Errorf("unexpected pair filters: %s/%s", in.GetBaseCurrency(), in.GetQuoteCurrency())
+				}
+				if in.GetFromDate() != fromDate || in.GetToDate() != toDate {
+					t.Errorf("unexpected date range: %s to %s", in.GetFromDate(), in.GetToDate())
+				}
+				if in.Limit != int32(limit) || in.Offset != int32(offset) {
+					t.Errorf("unexpected pagination: limit=%d, offset=%d", in.Limit, in.Offset)
+				}
+				return &pb.ListFXRatesResponse{
+					Rates: []*pb.FXRateItem{
+						{
+							BaseCurrency:  "EUR",
+							QuoteCurrency: "USD",
+							RateDate:      "2026-10-05",
+							Rate:          &commonpb.Decimal{Value: "1.0850"},
+							InvertedRate:  &commonpb.Decimal{Value: "0.921659"},
+							Source:        "ECB",
+						},
+					},
+					TotalCount: 1,
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		res, err := qResolver.FxRates(ctx, &baseCurr, &quoteCurr, &fromDate, &toDate, &limit, &offset)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if res.TotalCount != 1 {
+			t.Fatalf("expected totalCount 1, got %d", res.TotalCount)
+		}
+		if len(res.Items) != 1 {
+			t.Fatalf("expected 1 item, got %d", len(res.Items))
+		}
+		item := res.Items[0]
+		if item.Pair != "EUR/USD" || item.Rate.String() != "1.085" {
+			t.Errorf("unexpected rate item: %+v", item)
+		}
+	})
+
+	t.Run("handles error from portfolio service", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			listFXRatesFn: func(ctx context.Context, in *pb.ListFXRatesRequest) (*pb.ListFXRatesResponse, error) {
+				return nil, errors.New("query failed")
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		_, err := qResolver.FxRates(ctx, nil, nil, nil, nil, nil, nil)
 		if err == nil {
 			t.Fatalf("expected error, got nil")
 		}

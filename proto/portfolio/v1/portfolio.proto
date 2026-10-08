@@ -28,6 +28,12 @@ service PortfolioService {
   rpc GetIngestionStatus(GetIngestionStatusRequest) returns (GetIngestionStatusResponse) {}
   rpc TriggerMarketSync(TriggerMarketSyncRequest) returns (TriggerMarketSyncResponse) {}
 
+  // Admin: FX Rates & Currency Pair Inspection
+  rpc ListCurrencyPairs(ListCurrencyPairsRequest) returns (ListCurrencyPairsResponse) {}
+  rpc ListFXRates(ListFXRatesRequest) returns (ListFXRatesResponse) {}
+  rpc GetCurrencyPairHistory(GetCurrencyPairHistoryRequest) returns (GetCurrencyPairHistoryResponse) {}
+  rpc RecordFXRateOverride(RecordFXRateOverrideRequest) returns (RecordFXRateOverrideResponse) {}
+
   // Historical Valuation Engine & Replay
   rpc RebuildValuations(RebuildValuationsRequest) returns (RebuildValuationsResponse) {}
 }
@@ -312,5 +318,91 @@ message TriggerMarketSyncResponse {
   int32  prices_synced   = 2;
   int32  fx_rates_synced = 3;
   string message         = 4;
+}
+
+// ------------------------------------------------------------------
+// Admin: Foreign Exchange (FX) & Currency Pair Messages
+// ------------------------------------------------------------------
+
+message CurrencyPairItem {
+  string            base_currency    = 1;
+  string            quote_currency   = 2;
+  common.v1.Decimal latest_rate      = 3;
+  string            latest_date      = 4; // YYYY-MM-DD
+  string            latest_source    = 5;
+  common.v1.Decimal previous_rate    = 6; // nullable
+  common.v1.Decimal change_1d_amount = 7; // nullable
+  common.v1.Decimal change_1d_pct    = 8; // nullable
+  int32             total_records    = 9;
+  string            first_date       = 10;
+  string            last_date        = 11;
+}
+
+message ListCurrencyPairsRequest {}
+
+message ListCurrencyPairsResponse {
+  repeated CurrencyPairItem pairs = 1;
+}
+
+message FXRateItem {
+  string            base_currency  = 1;
+  string            quote_currency = 2;
+  string            rate_date      = 3; // YYYY-MM-DD
+  common.v1.Decimal rate           = 4;
+  common.v1.Decimal inverted_rate  = 5; // 1 / rate (exact 10 decimals)
+  string            source         = 6;
+}
+
+message ListFXRatesRequest {
+  optional string base_currency  = 1;
+  optional string quote_currency = 2;
+  optional string from_date      = 3; // YYYY-MM-DD
+  optional string to_date        = 4; // YYYY-MM-DD
+  int32           limit          = 5; // Default 50, max 200
+  int32           offset         = 6;
+}
+
+message ListFXRatesResponse {
+  repeated FXRateItem rates       = 1;
+  int32               total_count = 2;
+}
+
+message FXHistoryPoint {
+  string            date          = 1; // YYYY-MM-DD
+  common.v1.Decimal rate          = 2;
+  common.v1.Decimal inverted_rate = 3;
+  string            source        = 4;
+}
+
+message GetCurrencyPairHistoryRequest {
+  string           base_currency  = 1;
+  string           quote_currency = 2;
+  HistoryTimeframe timeframe      = 3; // 1D, 1W, 1M, 1Y, ALL
+}
+
+message GetCurrencyPairHistoryResponse {
+  string                  base_currency     = 1;
+  string                  quote_currency    = 2;
+  repeated FXHistoryPoint points            = 3;
+  common.v1.Decimal       start_rate        = 4;
+  common.v1.Decimal       end_rate          = 5;
+  common.v1.Decimal       period_change     = 6;
+  common.v1.Decimal       period_change_pct = 7;
+  common.v1.Decimal       period_high       = 8;
+  common.v1.Decimal       period_low        = 9;
+}
+
+message RecordFXRateOverrideRequest {
+  string            base_currency        = 1;
+  string            quote_currency       = 2;
+  string            rate_date            = 3; // YYYY-MM-DD
+  common.v1.Decimal rate                 = 4; // Greater than zero
+  optional string   reason               = 5; // Audit note
+  bool              recompute_valuations = 6;
+}
+
+message RecordFXRateOverrideResponse {
+  FXRateItem rate                  = 1;
+  bool       valuations_recomputed = 2;
 }
 

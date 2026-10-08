@@ -14,6 +14,7 @@ A modern portfolio tracker built for serious investors. GraphFolio accurately me
 - **Transaction-Ledger Architecture**: Immutable transaction ledger acts as the authoritative source of truth, deterministically projecting holdings, cash balances, and valuations.
 - **Flexible Cost Basis Accounting**: Native support for both **Average Cost** (`AVERAGE_COST`, default) and **FIFO** (`FIFO`) tax lot relief strategies.
 - **Daily Portfolio Valuation Engine & Historical Backfill**: Automated daily End-of-Day (EOD) portfolio valuation engine and scheduled background worker (`make run-valuation-job`). Evaluates daily market values, net cash flows, sub-period returns, and cumulative Time-Weighted Return (TWR) indexes with zero float drift. Features GIPS-compliant annualized returns, multi-day historical price/FX matrix replay with Last Observation Carried Forward (LOCF), and automated backfill triggers on past-dated trade logging and deletions.
+- **Foreign Exchange (FX) & Currency Pair Management**: Dedicated operations view in the Admin Portal (`:5174`). Inspect tracked currency pairs (`EUR/USD`, `USD/GBP`, `USD/AUD`, `USD/JPY`, `EUR/GBP`, `USD/CAD`), toggle direct and reciprocal quotes (`Base ⇄ Quote`) with exact 10-decimal precision, explore interactive SVG historical trend curves across timeframes (`1W`, `1M`, `1Y`, `ALL`) with glowing area fills and hover crosshairs, browse the authoritative rates ledger, and apply audit-justified manual exchange rate overrides.
 - **User Preferences & Dynamic Multi-Currency Re-anchoring**: Manage investor profile display name, UI theme (`DARK`, `LIGHT`, `SYSTEM`), and base display currency (`USD`, `EUR`, `GBP`, `AUD`, `CAD`, `JPY`, `CHF`). Changing preferred currency automatically triggers atomic base currency re-anchoring on `portfolio-api`, re-scaling valuations and holdings cost bases via live FX triangulation without data drift.
 - **Clean Microservice Monorepo**: Contract-first gRPC services with a Go GraphQL Backend-for-Frontend (BFF) and strongly-typed frontend queries.
 - **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, Vite, modal transaction entry, investor preferences dialog, and instant reactive state refresh.
@@ -205,10 +206,10 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   ├── graph/                    # Schema, resolvers, helpers, model
 │   └── cmd/server/               # BFF entrypoint
 ├── web/                          # Frontend Workspace Monorepo
-│   ├── apps/
 │   │   ├── main-app/             # Primary Investor React App (:5173)
 │   │   │   └── src/components/   # Dashboard, PerformanceChart, TransactionLedger, UserPreferencesModal
 │   │   └── admin-app/            # Internal Operations Portal (:5174)
+│   │       └── src/components/   # AssetManagement, PriceManagement, FXManagement, FXTrendChart, FXOverrideModal, IngestionPipeline
 │   └── packages/
 │       ├── ui/                   # Shared Design System (@graphfolio/ui)
 │       └── api-client/           # Shared GraphQL Client (@graphfolio/api-client)

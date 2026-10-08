@@ -231,6 +231,9 @@ func TestPostgresRepositoryQueries(t *testing.T) {
 	}
 
 	// 10. GetHistoricalPriceMatrix with LOCF across weekend
+	if _, err := repo.UpsertInstrumentPrice(ctx, aaplInst.ID, vDate2, decimal.RequireFromString("228.00"), "test"); err != nil {
+		t.Fatalf("UpsertInstrumentPrice for vDate2 failed: %v", err)
+	}
 	priceMatrix, err := repo.GetHistoricalPriceMatrix(ctx, []uuid.UUID{aaplInst.ID}, vDate2, vDate2.AddDate(0, 0, 3))
 	if err != nil {
 		t.Fatalf("GetHistoricalPriceMatrix failed: %v", err)
@@ -266,5 +269,102 @@ func TestPostgresRepositoryQueries(t *testing.T) {
 	}
 	if afterDelete != nil && afterDelete.ValuationDate.Equal(vDate2) {
 		t.Errorf("valuation for %v should have been deleted", vDate2)
+	}
+
+	// 13. UpsertFXRate
+	fxDate1 := time.Date(2026, 10, 6, 0, 0, 0, 0, time.UTC)
+	fxDate2 := time.Date(2026, 10, 7, 0, 0, 0, 0, time.UTC)
+	rate1 := decimal.RequireFromString("1.7500000000")
+	rate2 := decimal.RequireFromString("1.7600000000")
+	upserted1, err := repo.UpsertFXRate(ctx, "GBP", "CAD", fxDate1, rate1, "ECB")
+	if err != nil {
+		t.Fatalf("UpsertFXRate failed: %v", err)
+	}
+	if upserted1.BaseCurrency != "GBP" || upserted1.QuoteCurrency != "CAD" || !upserted1.Rate.Equal(rate1) {
+		t.Errorf("unexpected upserted fx rate: %+v", upserted1)
+	}
+
+	upserted2, err := repo.UpsertFXRate(ctx, "GBP", "CAD", fxDate2, rate2, "ECB")
+	if err != nil {
+		t.Fatalf("UpsertFXRate day 2 failed: %v", err)
+	}
+	if !upserted2.Rate.Equal(rate2) {
+		t.Errorf("got rate %s, want %s", upserted2.Rate, rate2)
+	}
+
+	// Conflict update
+	rate2Updated := decimal.RequireFromString("1.7650000000")
+	upserted2Updated, err := repo.UpsertFXRate(ctx, "GBP", "CAD", fxDate2, rate2Updated, "manual")
+	if err != nil {
+		t.Fatalf("UpsertFXRate update failed: %v", err)
+	}
+	if !upserted2Updated.Rate.Equal(rate2Updated) || upserted2Updated.Source != "manual" {
+		t.Errorf("expected updated rate %s and source manual, got %+v", rate2Updated, upserted2Updated)
+	}
+
+	// 14. ListCurrencyPairs
+	pairs, err := repo.ListCurrencyPairs(ctx)
+	if err != nil {
+		t.Fatalf("ListCurrencyPairs failed: %v", err)
+	}
+	if len(pairs) == 0 {
+		t.Errorf("expected currency pairs, got 0")
+	}
+	foundGBPCAD := false
+	for _, pair := range pairs {
+		if pair.BaseCurrency == "GBP" && pair.QuoteCurrency == "CAD" {
+			foundGBPCAD = true
+			if !pair.LatestRate.Equal(rate2Updated) {
+				t.Errorf("got latest rate %s, want %s", pair.LatestRate, rate2Updated)
+			}
+			if pair.PreviousRate == nil || !pair.PreviousRate.Equal(rate1) {
+				t.Errorf("got previous rate %v, want %s", pair.PreviousRate, rate1)
+			}
+			if pair.Change1DAmount == nil || !pair.Change1DAmount.Equal(rate2Updated.Sub(rate1)) {
+				t.Errorf("got change 1d %v, want %s", pair.Change1DAmount, rate2Updated.Sub(rate1))
+			}
+			if pair.TotalRecords < 2 {
+				t.Errorf("expected at least 2 records for GBP/CAD, got %d", pair.TotalRecords)
+			}
+		}
+	}
+	if !foundGBPCAD {
+		t.Errorf("GBP/CAD pair not found in ListCurrencyPairs")
+	}
+
+	// 15. ListFXRates
+	baseGBP := "GBP"
+	quoteCAD := "CAD"
+	fxRatesList, totalCount, err := repo.ListFXRates(ctx, domain.FXRateFilter{
+		BaseCurrency:  &baseGBP,
+		QuoteCurrency: &quoteCAD,
+		Limit:         10,
+		Offset:        0,
+	})
+	if err != nil {
+		t.Fatalf("ListFXRates failed: %v", err)
+	}
+	if totalCount < 2 || len(fxRatesList) < 2 {
+		t.Errorf("expected at least 2 fx rates for GBP/CAD, got count=%d len=%d", totalCount, len(fxRatesList))
+	}
+	// Verify descending order
+	if fxRatesList[0].RateDate.Before(fxRatesList[1].RateDate) {
+		t.Errorf("expected descending rate date order in ListFXRates")
+	}
+
+	// 16. GetHistoricalFXRates
+	historyPoints, err := repo.GetHistoricalFXRates(ctx, "GBP", "CAD", &fxDate1, &fxDate2)
+	if err != nil {
+		t.Fatalf("GetHistoricalFXRates failed: %v", err)
+	}
+	if len(historyPoints) != 2 {
+		t.Fatalf("expected 2 historical rate points, got %d", len(historyPoints))
+	}
+	// Verify ascending order
+	if historyPoints[0].RateDate.After(historyPoints[1].RateDate) {
+		t.Errorf("expected ascending rate date order in GetHistoricalFXRates")
+	}
+	if !historyPoints[0].Rate.Equal(rate1) || !historyPoints[1].Rate.Equal(rate2Updated) {
+		t.Errorf("unexpected historical points: %+v", historyPoints)
 	}
 }

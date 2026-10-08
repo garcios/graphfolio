@@ -2,7 +2,7 @@ import React from 'react';
 import { Badge } from '@graphfolio/ui';
 import './AdminLayout.css';
 
-export type AdminTab = 'assets' | 'prices' | 'ingestion';
+export type AdminTab = 'assets' | 'prices' | 'fx' | 'ingestion';
 
 interface AdminLayoutProps {
   currentTab: AdminTab;
@@ -46,6 +46,15 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
           <button
             type="button"
+            className={`admin-nav-item ${currentTab === 'fx' ? 'admin-nav-item--active' : ''}`}
+            onClick={() => onTabChange('fx')}
+          >
+            <span>💱</span>
+            <span>Currency Pairs (FX)</span>
+          </button>
+
+          <button
+            type="button"
             className={`admin-nav-item ${currentTab === 'ingestion' ? 'admin-nav-item--active' : ''}`}
             onClick={() => onTabChange('ingestion')}
           >
@@ -71,6 +80,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           <h2 className="admin-topbar__title">
             {currentTab === 'assets' && 'Tradable Asset & Instrument Directory'}
             {currentTab === 'prices' && 'Market Data, Closing Prices & Overrides'}
+            {currentTab === 'fx' && 'Foreign Exchange (FX) & Currency Pair History'}
             {currentTab === 'ingestion' && 'Market Ingestion Pipeline & FX Monitor'}
           </h2>
           <div className="admin-topbar__actions">

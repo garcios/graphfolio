@@ -36,6 +36,12 @@ type PortfolioService interface {
 	// Admin: Ingestion Pipeline & Diagnostics
 	GetIngestionStatus(ctx context.Context) (*domain.IngestionStatus, error)
 	TriggerMarketSync(ctx context.Context, symbols []string, syncFX bool) (*domain.MarketSyncResult, error)
+
+	// Admin: FX Rates & Currency Pair Inspection
+	ListCurrencyPairs(ctx context.Context) ([]domain.CurrencyPairSummary, error)
+	ListFXRates(ctx context.Context, filter domain.FXRateFilter) ([]domain.FXRate, int, error)
+	GetCurrencyPairHistory(ctx context.Context, baseCurrency, quoteCurrency string, timeframe domain.HistoryTimeframe) (*domain.CurrencyPairHistory, error)
+	RecordFXRateOverride(ctx context.Context, input domain.FXRateOverrideInput) (*domain.FXRate, bool, error)
 }
 
 type ServiceOption func(*portfolioService)

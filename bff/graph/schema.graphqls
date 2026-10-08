@@ -73,6 +73,22 @@ type Query {
   # User Preferences Queries
   userPreferences: UserPreferences!
   supportedCurrencies: [Currency!]!
+
+  # FX & Currency Pair Queries
+  currencyPairs: [CurrencyPair!]!
+  currencyPairHistory(
+    baseCurrency: String!
+    quoteCurrency: String!
+    timeframe: HistoryTimeframe!
+  ): CurrencyPairHistory!
+  fxRates(
+    baseCurrency: String
+    quoteCurrency: String
+    fromDate: String
+    toDate: String
+    limit: Int = 50
+    offset: Int = 0
+  ): FXRatesConnection!
 }
 
 enum HistoryTimeframe {
@@ -138,6 +154,9 @@ type Mutation {
 
   # User Preferences Mutations
   updateUserPreferences(input: UpdateUserPreferencesInput!): UpdateUserPreferencesPayload!
+
+  # FX & Currency Pair Mutations
+  recordFXRateOverride(input: RecordFXRateOverrideInput!): RecordFXRateOverridePayload!
 }
 
 type InstrumentPrice {
@@ -257,5 +276,69 @@ input UpdateUserPreferencesInput {
 type UpdateUserPreferencesPayload {
   preferences: UserPreferences!
   portfolio: Portfolio
+}
+
+type CurrencyPair {
+  baseCurrency: String!
+  quoteCurrency: String!
+  pair: String! # e.g. "EUR/USD"
+  latestRate: Decimal!
+  latestDate: String!
+  latestSource: String!
+  previousRate: Decimal
+  change1dAmount: Decimal
+  change1dPct: Decimal
+  totalRecords: Int!
+  firstDate: String!
+  lastDate: String!
+}
+
+type FXRate {
+  baseCurrency: String!
+  quoteCurrency: String!
+  pair: String!
+  rateDate: String!
+  rate: Decimal!
+  invertedRate: Decimal!
+  source: String!
+}
+
+type FXRatesConnection {
+  items: [FXRate!]!
+  totalCount: Int!
+}
+
+type FXHistoryPoint {
+  date: String!
+  rate: Decimal!
+  invertedRate: Decimal!
+  source: String!
+}
+
+type CurrencyPairHistory {
+  baseCurrency: String!
+  quoteCurrency: String!
+  pair: String!
+  points: [FXHistoryPoint!]!
+  startRate: Decimal!
+  endRate: Decimal!
+  periodChange: Decimal!
+  periodChangePct: Decimal!
+  periodHigh: Decimal!
+  periodLow: Decimal!
+}
+
+input RecordFXRateOverrideInput {
+  baseCurrency: String!
+  quoteCurrency: String!
+  rateDate: String! # YYYY-MM-DD
+  rate: Decimal!
+  reason: String
+  recomputeValuations: Boolean
+}
+
+type RecordFXRateOverridePayload {
+  rate: FXRate!
+  valuationsRecomputed: Boolean!
 }
 

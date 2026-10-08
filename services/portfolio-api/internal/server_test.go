@@ -1422,3 +1422,435 @@ func TestPortfolioServer_RebuildValuations(t *testing.T) {
 	})
 }
 
+func TestPortfolioServer_ListCurrencyPairs(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success returns currency pairs", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		prevRate := decimal.RequireFromString("1.0800000000")
+		changeAmt := decimal.RequireFromString("0.0050000000")
+		changePct := decimal.RequireFromString("0.462963")
+
+		mockPairs := []domain.CurrencyPairSummary{
+			{
+				BaseCurrency:   "EUR",
+				QuoteCurrency:  "USD",
+				LatestRate:     decimal.RequireFromString("1.0850000000"),
+				LatestDate:     time.Date(2026, 10, 7, 0, 0, 0, 0, time.UTC),
+				LatestSource:   "ECB",
+				PreviousRate:   &prevRate,
+				Change1DAmount: &changeAmt,
+				Change1DPct:    &changePct,
+				TotalRecords:   100,
+				FirstDate:      time.Date(2025, 10, 1, 0, 0, 0, 0, time.UTC),
+				LastDate:       time.Date(2026, 10, 7, 0, 0, 0, 0, time.UTC),
+			},
+		}
+
+		mockSvc.EXPECT().ListCurrencyPairs(ctx).Return(mockPairs, nil)
+
+		res, err := server.ListCurrencyPairs(ctx, &pb.ListCurrencyPairsRequest{})
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if len(res.Pairs) != 1 {
+			t.Fatalf("expected 1 pair, got: %d", len(res.Pairs))
+		}
+		if res.Pairs[0].BaseCurrency != "EUR" || res.Pairs[0].QuoteCurrency != "USD" {
+			t.Errorf("expected EUR/USD, got: %s/%s", res.Pairs[0].BaseCurrency, res.Pairs[0].QuoteCurrency)
+		}
+		if res.Pairs[0].TotalRecords != 100 {
+			t.Errorf("expected 100 total records, got: %d", res.Pairs[0].TotalRecords)
+		}
+		if res.Pairs[0].PreviousRate == nil || res.Pairs[0].Change_1DAmount == nil || res.Pairs[0].Change_1DPct == nil {
+			t.Errorf("expected non-nil optional rate fields")
+		}
+	})
+
+	t.Run("service unavailable when svc is nil", func(t *testing.T) {
+		server := NewPortfolioServer(nil)
+		_, err := server.ListCurrencyPairs(ctx, &pb.ListCurrencyPairsRequest{})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.Unavailable {
+			t.Errorf("expected Unavailable, got %v", err)
+		}
+	})
+
+	t.Run("internal error on service failure", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().ListCurrencyPairs(ctx).Return(nil, errors.New("query failed"))
+
+		_, err := server.ListCurrencyPairs(ctx, &pb.ListCurrencyPairsRequest{})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.Internal {
+			t.Errorf("expected Internal, got %v", err)
+		}
+	})
+}
+
+func TestPortfolioServer_ListFXRates(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success with filters and pagination", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockRates := []domain.FXRate{
+			{
+				BaseCurrency:  "EUR",
+				QuoteCurrency: "USD",
+				RateDate:      time.Date(2026, 10, 7, 0, 0, 0, 0, time.UTC),
+				Rate:          decimal.RequireFromString("1.0850000000"),
+				Source:        "ECB",
+			},
+		}
+
+		mockSvc.EXPECT().
+			ListFXRates(ctx, gomock.Any()).
+			Return(mockRates, 42, nil)
+
+		base := "EUR"
+		quote := "USD"
+		fromDate := "2026-10-01"
+		toDate := "2026-10-07"
+		res, err := server.ListFXRates(ctx, &pb.ListFXRatesRequest{
+			BaseCurrency:  &base,
+			QuoteCurrency: &quote,
+			FromDate:      &fromDate,
+			ToDate:        &toDate,
+			Limit:         25,
+			Offset:        0,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if res.TotalCount != 42 {
+			t.Errorf("expected total count 42, got %d", res.TotalCount)
+		}
+		if len(res.Rates) != 1 {
+			t.Fatalf("expected 1 rate, got %d", len(res.Rates))
+		}
+		if res.Rates[0].BaseCurrency != "EUR" || res.Rates[0].QuoteCurrency != "USD" {
+			t.Errorf("expected EUR/USD, got: %s/%s", res.Rates[0].BaseCurrency, res.Rates[0].QuoteCurrency)
+		}
+		if res.Rates[0].InvertedRate == nil {
+			t.Errorf("expected inverted rate populated")
+		}
+	})
+
+	t.Run("invalid from_date format returns InvalidArgument", func(t *testing.T) {
+		server := NewPortfolioServer(mocks.NewMockPortfolioService(gomock.NewController(t)))
+		invalidDate := "01-10-2026"
+		_, err := server.ListFXRates(ctx, &pb.ListFXRatesRequest{FromDate: &invalidDate})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", err)
+		}
+	})
+
+	t.Run("invalid to_date format returns InvalidArgument", func(t *testing.T) {
+		server := NewPortfolioServer(mocks.NewMockPortfolioService(gomock.NewController(t)))
+		invalidDate := "07-10-2026"
+		_, err := server.ListFXRates(ctx, &pb.ListFXRatesRequest{ToDate: &invalidDate})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", err)
+		}
+	})
+
+	t.Run("service validation error returns InvalidArgument", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().
+			ListFXRates(ctx, gomock.Any()).
+			Return(nil, 0, service.ErrInvalidCurrency)
+
+		invalidBase := "EUROPE"
+		_, err := server.ListFXRates(ctx, &pb.ListFXRatesRequest{BaseCurrency: &invalidBase})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", err)
+		}
+	})
+
+	t.Run("service unavailable when svc is nil", func(t *testing.T) {
+		server := NewPortfolioServer(nil)
+		_, err := server.ListFXRates(ctx, &pb.ListFXRatesRequest{})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.Unavailable {
+			t.Errorf("expected Unavailable, got %v", err)
+		}
+	})
+}
+
+func TestPortfolioServer_GetCurrencyPairHistory(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success returns history points and statistics", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockHist := &domain.CurrencyPairHistory{
+			BaseCurrency:  "EUR",
+			QuoteCurrency: "USD",
+			Points: []domain.FXRatePoint{
+				{
+					Date:         time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC),
+					Rate:         decimal.RequireFromString("1.0800000000"),
+					InvertedRate: decimal.RequireFromString("0.9259259259"),
+					Source:       "ECB",
+				},
+				{
+					Date:         time.Date(2026, 10, 7, 0, 0, 0, 0, time.UTC),
+					Rate:         decimal.RequireFromString("1.0900000000"),
+					InvertedRate: decimal.RequireFromString("0.9174311927"),
+					Source:       "ECB",
+				},
+			},
+			StartRate:       decimal.RequireFromString("1.0800000000"),
+			EndRate:         decimal.RequireFromString("1.0900000000"),
+			PeriodChange:    decimal.RequireFromString("0.0100000000"),
+			PeriodChangePct: decimal.RequireFromString("0.925926"),
+			PeriodHigh:      decimal.RequireFromString("1.0900000000"),
+			PeriodLow:       decimal.RequireFromString("1.0800000000"),
+		}
+
+		mockSvc.EXPECT().
+			GetCurrencyPairHistory(ctx, "EUR", "USD", domain.Timeframe1M).
+			Return(mockHist, nil)
+
+		res, err := server.GetCurrencyPairHistory(ctx, &pb.GetCurrencyPairHistoryRequest{
+			BaseCurrency:  "EUR",
+			QuoteCurrency: "USD",
+			Timeframe:     pb.HistoryTimeframe_HISTORY_TIMEFRAME_1M,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if res.BaseCurrency != "EUR" || res.QuoteCurrency != "USD" {
+			t.Errorf("expected EUR/USD, got %s/%s", res.BaseCurrency, res.QuoteCurrency)
+		}
+		if len(res.Points) != 2 {
+			t.Fatalf("expected 2 points, got %d", len(res.Points))
+		}
+		if res.StartRate == nil || res.EndRate == nil || res.PeriodChange == nil || res.PeriodChangePct == nil {
+			t.Errorf("expected summary statistics populated")
+		}
+	})
+
+	t.Run("missing base currency returns InvalidArgument", func(t *testing.T) {
+		server := NewPortfolioServer(mocks.NewMockPortfolioService(gomock.NewController(t)))
+		_, err := server.GetCurrencyPairHistory(ctx, &pb.GetCurrencyPairHistoryRequest{
+			BaseCurrency:  "",
+			QuoteCurrency: "USD",
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", err)
+		}
+	})
+
+	t.Run("missing quote currency returns InvalidArgument", func(t *testing.T) {
+		server := NewPortfolioServer(mocks.NewMockPortfolioService(gomock.NewController(t)))
+		_, err := server.GetCurrencyPairHistory(ctx, &pb.GetCurrencyPairHistoryRequest{
+			BaseCurrency:  "EUR",
+			QuoteCurrency: "",
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", err)
+		}
+	})
+
+	t.Run("invalid timeframe returns InvalidArgument", func(t *testing.T) {
+		server := NewPortfolioServer(mocks.NewMockPortfolioService(gomock.NewController(t)))
+		_, err := server.GetCurrencyPairHistory(ctx, &pb.GetCurrencyPairHistoryRequest{
+			BaseCurrency:  "EUR",
+			QuoteCurrency: "USD",
+			Timeframe:     pb.HistoryTimeframe(999),
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", err)
+		}
+	})
+
+	t.Run("service unavailable when svc is nil", func(t *testing.T) {
+		server := NewPortfolioServer(nil)
+		_, err := server.GetCurrencyPairHistory(ctx, &pb.GetCurrencyPairHistoryRequest{
+			BaseCurrency:  "EUR",
+			QuoteCurrency: "USD",
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.Unavailable {
+			t.Errorf("expected Unavailable, got %v", err)
+		}
+	})
+}
+
+func TestPortfolioServer_RecordFXRateOverride(t *testing.T) {
+	ctx := context.Background()
+	rateDate := time.Date(2026, 10, 5, 0, 0, 0, 0, time.UTC)
+	overrideRate := decimal.RequireFromString("1.0950000000")
+
+	t.Run("success returns overridden fx rate item", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().
+			RecordFXRateOverride(ctx, gomock.Any()).
+			Return(&domain.FXRate{
+				BaseCurrency:  "EUR",
+				QuoteCurrency: "USD",
+				RateDate:      rateDate,
+				Rate:          overrideRate,
+				Source:        "manual: fix holiday gap",
+			}, true, nil)
+
+		reason := "fix holiday gap"
+		res, err := server.RecordFXRateOverride(ctx, &pb.RecordFXRateOverrideRequest{
+			BaseCurrency:        "EUR",
+			QuoteCurrency:       "USD",
+			RateDate:            "2026-10-05",
+			Rate:                dec("1.0950000000"),
+			Reason:              &reason,
+			RecomputeValuations: true,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if !res.ValuationsRecomputed {
+			t.Errorf("expected ValuationsRecomputed true")
+		}
+		if res.Rate.BaseCurrency != "EUR" || res.Rate.QuoteCurrency != "USD" {
+			t.Errorf("expected EUR/USD, got: %s/%s", res.Rate.BaseCurrency, res.Rate.QuoteCurrency)
+		}
+		if res.Rate.Source != "manual: fix holiday gap" {
+			t.Errorf("expected source manual: fix holiday gap, got: %s", res.Rate.Source)
+		}
+	})
+
+	t.Run("missing required fields returns InvalidArgument", func(t *testing.T) {
+		server := NewPortfolioServer(mocks.NewMockPortfolioService(gomock.NewController(t)))
+
+		// missing base
+		_, err := server.RecordFXRateOverride(ctx, &pb.RecordFXRateOverrideRequest{QuoteCurrency: "USD", RateDate: "2026-10-05", Rate: dec("1.0")})
+		if err == nil {
+			t.Errorf("expected error for missing base")
+		}
+		// missing quote
+		_, err = server.RecordFXRateOverride(ctx, &pb.RecordFXRateOverrideRequest{BaseCurrency: "EUR", RateDate: "2026-10-05", Rate: dec("1.0")})
+		if err == nil {
+			t.Errorf("expected error for missing quote")
+		}
+		// missing rate_date
+		_, err = server.RecordFXRateOverride(ctx, &pb.RecordFXRateOverrideRequest{BaseCurrency: "EUR", QuoteCurrency: "USD", Rate: dec("1.0")})
+		if err == nil {
+			t.Errorf("expected error for missing rate_date")
+		}
+		// missing rate
+		_, err = server.RecordFXRateOverride(ctx, &pb.RecordFXRateOverrideRequest{BaseCurrency: "EUR", QuoteCurrency: "USD", RateDate: "2026-10-05"})
+		if err == nil {
+			t.Errorf("expected error for missing rate")
+		}
+	})
+
+	t.Run("invalid rate_date format returns InvalidArgument", func(t *testing.T) {
+		server := NewPortfolioServer(mocks.NewMockPortfolioService(gomock.NewController(t)))
+		_, err := server.RecordFXRateOverride(ctx, &pb.RecordFXRateOverrideRequest{
+			BaseCurrency:  "EUR",
+			QuoteCurrency: "USD",
+			RateDate:      "05-10-2026",
+			Rate:          dec("1.0"),
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", err)
+		}
+	})
+
+	t.Run("service validation error returns InvalidArgument", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().
+			RecordFXRateOverride(ctx, gomock.Any()).
+			Return(nil, false, service.ErrInvalidRate)
+
+		_, err := server.RecordFXRateOverride(ctx, &pb.RecordFXRateOverrideRequest{
+			BaseCurrency:  "EUR",
+			QuoteCurrency: "USD",
+			RateDate:      "2026-10-05",
+			Rate:          dec("0.0"),
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", err)
+		}
+	})
+
+	t.Run("service unavailable when svc is nil", func(t *testing.T) {
+		server := NewPortfolioServer(nil)
+		_, err := server.RecordFXRateOverride(ctx, &pb.RecordFXRateOverrideRequest{
+			BaseCurrency:  "EUR",
+			QuoteCurrency: "USD",
+			RateDate:      "2026-10-05",
+			Rate:          dec("1.0"),
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.Unavailable {
+			t.Errorf("expected Unavailable, got %v", err)
+		}
+	})
+}

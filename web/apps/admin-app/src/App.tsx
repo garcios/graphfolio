@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AdminLayout, type AdminTab } from './components/AdminLayout';
 import { AssetManagement } from './components/AssetManagement';
 import { PriceManagement } from './components/PriceManagement';
+import { FXManagement } from './components/FXManagement';
 import { IngestionPipeline } from './components/IngestionPipeline';
 import './App.css';
 
@@ -21,6 +22,7 @@ export default function App() {
       <AdminLayout currentTab={currentTab} onTabChange={setCurrentTab}>
         {currentTab === 'assets' && <AssetManagement onNotify={notify} />}
         {currentTab === 'prices' && <PriceManagement onNotify={notify} />}
+        {currentTab === 'fx' && <FXManagement onNotify={notify} />}
         {currentTab === 'ingestion' && <IngestionPipeline onNotify={notify} />}
       </AdminLayout>
 

@@ -190,6 +190,33 @@ func (r *mutationResolver) UpdateUserPreferences(ctx context.Context, input mode
 	}, nil
 }
 
+// RecordFXRateOverride is the resolver for the recordFXRateOverride field.
+func (r *mutationResolver) RecordFXRateOverride(ctx context.Context, input model.RecordFXRateOverrideInput) (*model.RecordFXRateOverridePayload, error) {
+	recompute := false
+	if input.RecomputeValuations != nil {
+		recompute = *input.RecomputeValuations
+	}
+
+	req := &pb.RecordFXRateOverrideRequest{
+		BaseCurrency:        input.BaseCurrency,
+		QuoteCurrency:       input.QuoteCurrency,
+		RateDate:            input.RateDate,
+		Rate:                toProtoDecimal(&input.Rate),
+		Reason:              input.Reason,
+		RecomputeValuations: recompute,
+	}
+
+	resp, err := r.PortfolioClient.RecordFXRateOverride(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.RecordFXRateOverridePayload{
+		Rate:                 toModelFXRate(resp.Rate),
+		ValuationsRecomputed: resp.ValuationsRecomputed,
+	}, nil
+}
+
 // Portfolio is the resolver for the portfolio field.
 func (r *queryResolver) Portfolio(ctx context.Context) (*model.Portfolio, error) {
 	var portResp *pb.GetPortfolioResponse
@@ -356,6 +383,56 @@ func (r *queryResolver) SupportedCurrencies(ctx context.Context) ([]*model.Curre
 	}
 
 	return currencies, nil
+}
+
+// CurrencyPairs is the resolver for the currencyPairs field.
+func (r *queryResolver) CurrencyPairs(ctx context.Context) ([]*model.CurrencyPair, error) {
+	resp, err := r.PortfolioClient.ListCurrencyPairs(ctx, &pb.ListCurrencyPairsRequest{})
+	if err != nil {
+		return nil, err
+	}
+	pairs := make([]*model.CurrencyPair, len(resp.Pairs))
+	for i, p := range resp.Pairs {
+		pairs[i] = toModelCurrencyPair(p)
+	}
+	return pairs, nil
+}
+
+// CurrencyPairHistory is the resolver for the currencyPairHistory field.
+func (r *queryResolver) CurrencyPairHistory(ctx context.Context, baseCurrency string, quoteCurrency string, timeframe model.HistoryTimeframe) (*model.CurrencyPairHistory, error) {
+	req := &pb.GetCurrencyPairHistoryRequest{
+		BaseCurrency:  baseCurrency,
+		QuoteCurrency: quoteCurrency,
+		Timeframe:     toProtoHistoryTimeframe(timeframe),
+	}
+
+	resp, err := r.PortfolioClient.GetCurrencyPairHistory(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return toModelCurrencyPairHistory(resp), nil
+}
+
+// FxRates is the resolver for the fxRates field.
+func (r *queryResolver) FxRates(ctx context.Context, baseCurrency *string, quoteCurrency *string, fromDate *string, toDate *string, limit *int, offset *int) (*model.FXRatesConnection, error) {
+	req := &pb.ListFXRatesRequest{
+		BaseCurrency:  baseCurrency,
+		QuoteCurrency: quoteCurrency,
+		FromDate:      fromDate,
+		ToDate:        toDate,
+	}
+	if limit != nil {
+		req.Limit = int32(*limit)
+	}
+	if offset != nil {
+		req.Offset = int32(*offset)
+	}
+
+	resp, err := r.PortfolioClient.ListFXRates(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return toModelFXRatesConnection(resp), nil
 }
 
 // Mutation returns MutationResolver implementation.

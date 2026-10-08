@@ -236,6 +236,21 @@ func (mr *MockRepositoryMockRecorder) GetHistoricalFXMatrix(ctx, currencies, bas
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHistoricalFXMatrix", reflect.TypeOf((*MockRepository)(nil).GetHistoricalFXMatrix), ctx, currencies, baseCurrency, fromDate, toDate)
 }
 
+// GetHistoricalFXRates mocks base method.
+func (m *MockRepository) GetHistoricalFXRates(ctx context.Context, baseCurrency, quoteCurrency string, fromDate, toDate *time.Time) ([]domain.FXRate, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetHistoricalFXRates", ctx, baseCurrency, quoteCurrency, fromDate, toDate)
+	ret0, _ := ret[0].([]domain.FXRate)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetHistoricalFXRates indicates an expected call of GetHistoricalFXRates.
+func (mr *MockRepositoryMockRecorder) GetHistoricalFXRates(ctx, baseCurrency, quoteCurrency, fromDate, toDate any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHistoricalFXRates", reflect.TypeOf((*MockRepository)(nil).GetHistoricalFXRates), ctx, baseCurrency, quoteCurrency, fromDate, toDate)
+}
+
 // GetHistoricalPriceMatrix mocks base method.
 func (m *MockRepository) GetHistoricalPriceMatrix(ctx context.Context, instrumentIDs []uuid.UUID, fromDate, toDate time.Time) (map[uuid.UUID]map[string]decimal.Decimal, error) {
 	m.ctrl.T.Helper()
@@ -431,6 +446,37 @@ func (mr *MockRepositoryMockRecorder) ListAllInstruments(ctx, isActive, search a
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllInstruments", reflect.TypeOf((*MockRepository)(nil).ListAllInstruments), ctx, isActive, search)
 }
 
+// ListCurrencyPairs mocks base method.
+func (m *MockRepository) ListCurrencyPairs(ctx context.Context) ([]domain.CurrencyPairSummary, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListCurrencyPairs", ctx)
+	ret0, _ := ret[0].([]domain.CurrencyPairSummary)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListCurrencyPairs indicates an expected call of ListCurrencyPairs.
+func (mr *MockRepositoryMockRecorder) ListCurrencyPairs(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListCurrencyPairs", reflect.TypeOf((*MockRepository)(nil).ListCurrencyPairs), ctx)
+}
+
+// ListFXRates mocks base method.
+func (m *MockRepository) ListFXRates(ctx context.Context, filter domain.FXRateFilter) ([]domain.FXRate, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListFXRates", ctx, filter)
+	ret0, _ := ret[0].([]domain.FXRate)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ListFXRates indicates an expected call of ListFXRates.
+func (mr *MockRepositoryMockRecorder) ListFXRates(ctx, filter any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListFXRates", reflect.TypeOf((*MockRepository)(nil).ListFXRates), ctx, filter)
+}
+
 // ListInstrumentPrices mocks base method.
 func (m *MockRepository) ListInstrumentPrices(ctx context.Context, filter domain.PriceFilter) ([]domain.InstrumentPrice, int, error) {
 	m.ctrl.T.Helper()
@@ -504,6 +550,21 @@ func (m *MockRepository) UpdatePortfolioBaseCurrency(ctx context.Context, portfo
 func (mr *MockRepositoryMockRecorder) UpdatePortfolioBaseCurrency(ctx, portfolioID, baseCurrency, fxRate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePortfolioBaseCurrency", reflect.TypeOf((*MockRepository)(nil).UpdatePortfolioBaseCurrency), ctx, portfolioID, baseCurrency, fxRate)
+}
+
+// UpsertFXRate mocks base method.
+func (m *MockRepository) UpsertFXRate(ctx context.Context, baseCurrency, quoteCurrency string, rateDate time.Time, rate decimal.Decimal, source string) (*domain.FXRate, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertFXRate", ctx, baseCurrency, quoteCurrency, rateDate, rate, source)
+	ret0, _ := ret[0].(*domain.FXRate)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpsertFXRate indicates an expected call of UpsertFXRate.
+func (mr *MockRepositoryMockRecorder) UpsertFXRate(ctx, baseCurrency, quoteCurrency, rateDate, rate, source any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertFXRate", reflect.TypeOf((*MockRepository)(nil).UpsertFXRate), ctx, baseCurrency, quoteCurrency, rateDate, rate, source)
 }
 
 // UpsertInstrumentPrice mocks base method.
