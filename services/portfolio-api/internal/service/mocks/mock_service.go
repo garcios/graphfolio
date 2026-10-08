@@ -301,6 +301,21 @@ func (mr *MockPortfolioServiceMockRecorder) RecordPriceOverride(ctx, input any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecordPriceOverride", reflect.TypeOf((*MockPortfolioService)(nil).RecordPriceOverride), ctx, input)
 }
 
+// TriggerBackfill mocks base method.
+func (m *MockPortfolioService) TriggerBackfill(ctx context.Context, input domain.BackfillInput) (*domain.BackfillResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TriggerBackfill", ctx, input)
+	ret0, _ := ret[0].(*domain.BackfillResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TriggerBackfill indicates an expected call of TriggerBackfill.
+func (mr *MockPortfolioServiceMockRecorder) TriggerBackfill(ctx, input any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TriggerBackfill", reflect.TypeOf((*MockPortfolioService)(nil).TriggerBackfill), ctx, input)
+}
+
 // TriggerMarketSync mocks base method.
 func (m *MockPortfolioService) TriggerMarketSync(ctx context.Context, symbols []string, syncFX bool) (*domain.MarketSyncResult, error) {
 	m.ctrl.T.Helper()

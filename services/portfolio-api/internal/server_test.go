@@ -1854,3 +1854,191 @@ func TestPortfolioServer_RecordFXRateOverride(t *testing.T) {
 		}
 	})
 }
+
+func TestPortfolioServer_TriggerBackfill(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successful backfill execution", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().
+			TriggerBackfill(ctx, gomock.Any()).
+			DoAndReturn(func(_ context.Context, in domain.BackfillInput) (*domain.BackfillResult, error) {
+				if in.FromDate.Format("2006-01-02") != "2025-01-01" {
+					t.Errorf("expected from_date 2025-01-01, got %s", in.FromDate.Format("2006-01-02"))
+				}
+				if in.ToDate.Format("2006-01-02") != "2025-01-31" {
+					t.Errorf("expected to_date 2025-01-31, got %s", in.ToDate.Format("2006-01-02"))
+				}
+				if len(in.Symbols) != 1 || in.Symbols[0] != "AAPL" {
+					t.Errorf("expected symbols [AAPL], got %v", in.Symbols)
+				}
+				if !in.BackfillAssets || in.BackfillFX || !in.RecomputeValuations {
+					t.Errorf("unexpected scope flags: %+v", in)
+				}
+				return &domain.BackfillResult{
+					Success:       true,
+					PricesSynced:  22,
+					FXRatesSynced: 0,
+					Message:       "Historical backfill completed: 22 asset prices stored",
+					Warnings:      []string{},
+				}, nil
+			})
+
+		resp, err := server.TriggerBackfill(ctx, &pb.TriggerBackfillRequest{
+			FromDate:            "2025-01-01",
+			ToDate:              "2025-01-31",
+			Symbols:             []string{"AAPL"},
+			BackfillAssets:      true,
+			BackfillFx:          false,
+			RecomputeValuations: true,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !resp.GetSuccess() {
+			t.Errorf("expected success to be true")
+		}
+		if resp.GetPricesSynced() != 22 {
+			t.Errorf("expected 22 prices synced, got %d", resp.GetPricesSynced())
+		}
+		if resp.GetFxRatesSynced() != 0 {
+			t.Errorf("expected 0 fx rates synced, got %d", resp.GetFxRatesSynced())
+		}
+	})
+
+	t.Run("defaults to_date to now when empty", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().
+			TriggerBackfill(ctx, gomock.Any()).
+			DoAndReturn(func(_ context.Context, in domain.BackfillInput) (*domain.BackfillResult, error) {
+				if in.ToDate.IsZero() {
+					t.Errorf("expected to_date to be set, got zero time")
+				}
+				return &domain.BackfillResult{
+					Success:      true,
+					PricesSynced: 10,
+				}, nil
+			})
+
+		resp, err := server.TriggerBackfill(ctx, &pb.TriggerBackfillRequest{
+			FromDate:       "2025-01-01",
+			ToDate:         "",
+			BackfillAssets: true,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !resp.GetSuccess() {
+			t.Errorf("expected success to be true")
+		}
+	})
+
+	t.Run("missing from_date returns InvalidArgument", func(t *testing.T) {
+		server := NewPortfolioServer(mocks.NewMockPortfolioService(gomock.NewController(t)))
+		_, err := server.TriggerBackfill(ctx, &pb.TriggerBackfillRequest{
+			FromDate: "",
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", err)
+		}
+	})
+
+	t.Run("invalid from_date format returns InvalidArgument", func(t *testing.T) {
+		server := NewPortfolioServer(mocks.NewMockPortfolioService(gomock.NewController(t)))
+		_, err := server.TriggerBackfill(ctx, &pb.TriggerBackfillRequest{
+			FromDate: "01/01/2025",
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", err)
+		}
+	})
+
+	t.Run("invalid to_date format returns InvalidArgument", func(t *testing.T) {
+		server := NewPortfolioServer(mocks.NewMockPortfolioService(gomock.NewController(t)))
+		_, err := server.TriggerBackfill(ctx, &pb.TriggerBackfillRequest{
+			FromDate: "2025-01-01",
+			ToDate:   "invalid",
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", err)
+		}
+	})
+
+	t.Run("service validation error returns InvalidArgument", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().
+			TriggerBackfill(ctx, gomock.Any()).
+			Return(nil, service.ErrInvalidDateRange)
+
+		_, err := server.TriggerBackfill(ctx, &pb.TriggerBackfillRequest{
+			FromDate:       "2025-02-01",
+			ToDate:         "2025-01-01",
+			BackfillAssets: true,
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", err)
+		}
+	})
+
+	t.Run("service internal error returns Internal", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().
+			TriggerBackfill(ctx, gomock.Any()).
+			Return(nil, errors.New("db connection failure"))
+
+		_, err := server.TriggerBackfill(ctx, &pb.TriggerBackfillRequest{
+			FromDate:       "2025-01-01",
+			ToDate:         "2025-01-31",
+			BackfillAssets: true,
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.Internal {
+			t.Errorf("expected Internal, got %v", err)
+		}
+	})
+
+	t.Run("service unavailable when svc is nil", func(t *testing.T) {
+		server := NewPortfolioServer(nil)
+		_, err := server.TriggerBackfill(ctx, &pb.TriggerBackfillRequest{
+			FromDate: "2025-01-01",
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.Unavailable {
+			t.Errorf("expected Unavailable, got %v", err)
+		}
+	})
+}

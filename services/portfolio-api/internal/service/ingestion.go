@@ -16,6 +16,8 @@ import (
 
 // IngestionService coordinates fetching external market closing prices and FX fixing rates,
 // validating the data, and persisting records into the repository.
+//
+//go:generate go run go.uber.org/mock/mockgen -destination=mocks/mock_ingestion_service.go -package=mocks portfolio-api/internal/service IngestionService
 type IngestionService interface {
 	// IngestDailyMarketData coordinates daily price and FX updates for a specific trade date.
 	IngestDailyMarketData(ctx context.Context, asOfDate time.Time) (*domain.MarketSyncResult, error)

@@ -16,6 +16,7 @@ import {
 } from '@graphfolio/ui';
 import { FXTrendChart, type FXTimeframeKey } from './FXTrendChart';
 import { FXOverrideModal, type FXOverrideData } from './FXOverrideModal';
+import { BackfillModal, type BackfillSubmitData, type BackfillModalResult } from './BackfillModal';
 import './FXManagement.css';
 
 interface CurrencyPairSummary {
@@ -68,6 +69,7 @@ export const FXManagement: React.FC<FXManagementProps> = ({ onNotify }) => {
   // Sync & Modal state
   const [isSyncing, setIsSyncing] = useState(false);
   const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
+  const [isBackfillModalOpen, setIsBackfillModalOpen] = useState(false);
   const [modalPrefill, setModalPrefill] = useState<{
     base: string;
     quote: string;
@@ -268,6 +270,52 @@ export const FXManagement: React.FC<FXManagementProps> = ({ onNotify }) => {
     }
   };
 
+  const handleExecuteBackfill = async (submitData: BackfillSubmitData): Promise<BackfillModalResult> => {
+    try {
+      const res = await client.mutation({
+        triggerBackfill: {
+          __args: {
+            input: {
+              fromDate: submitData.fromDate,
+              toDate: submitData.toDate,
+              symbols: submitData.symbols,
+              currencyPairs: submitData.currencyPairs,
+              backfillAssets: submitData.backfillAssets,
+              backfillFx: submitData.backfillFx,
+              recomputeValuations: submitData.recomputeValuations,
+            },
+          },
+          success: true,
+          pricesSynced: true,
+          fxRatesSynced: true,
+          message: true,
+          warnings: true,
+        },
+      });
+
+      const payload = res.triggerBackfill;
+      if (payload.success) {
+        onNotify(payload.message || 'FX fixing rates backfilled successfully.');
+        fetchPairs();
+        fetchRates();
+      } else {
+        onNotify(`Backfill warning: ${payload.message}`);
+      }
+
+      return {
+        success: payload.success,
+        pricesSynced: payload.pricesSynced,
+        fxRatesSynced: payload.fxRatesSynced,
+        message: payload.message,
+        warnings: payload.warnings,
+      };
+    } catch (err: any) {
+      console.error('Backfill FX rates failed:', err);
+      onNotify(`Backfill failed: ${err?.message || 'Server error'}`);
+      throw err;
+    }
+  };
+
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   return (
@@ -308,6 +356,10 @@ export const FXManagement: React.FC<FXManagementProps> = ({ onNotify }) => {
         <div className="fx-mgmt__actions">
           <Button variant="ghost" onClick={handleInvert}>
             <span>⇄ Invert ({isInverted ? 'Quote ⇄ Base' : 'Base ⇄ Quote'})</span>
+          </Button>
+
+          <Button variant="secondary" onClick={() => setIsBackfillModalOpen(true)}>
+            <span>⚡ Backfill FX Rates</span>
           </Button>
 
           <Button variant="secondary" onClick={handleSyncFx} isLoading={isSyncing}>
@@ -517,6 +569,21 @@ export const FXManagement: React.FC<FXManagementProps> = ({ onNotify }) => {
         defaultRateDate={modalPrefill.date}
         defaultRate={modalPrefill.rate}
         onSubmit={handleOverrideSubmit}
+      />
+
+      {/* Historical Range Backfill Modal */}
+      <BackfillModal
+        isOpen={isBackfillModalOpen}
+        onClose={() => setIsBackfillModalOpen(false)}
+        initialCurrencyPairs={[`${selectedBase}/${selectedQuote}`]}
+        initialBackfillAssets={false}
+        initialBackfillFx={true}
+        initialRecomputeValuations={true}
+        onSubmit={handleExecuteBackfill}
+        onSuccess={() => {
+          fetchPairs();
+          fetchRates();
+        }}
       />
     </div>
   );

@@ -10,6 +10,7 @@ import (
 	"portfolio-api/internal/repository"
 	"portfolio-api/internal/repository/mocks"
 	"portfolio-api/internal/service"
+	servicemocks "portfolio-api/internal/service/mocks"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
@@ -433,4 +434,359 @@ func TestPortfolioService_TriggerMarketSync(t *testing.T) {
 			t.Errorf("expected 7 fx rates synced, got %d", res.FXRatesSynced)
 		}
 	})
+}
+
+func TestPortfolioService_TriggerBackfill_Validation(t *testing.T) {
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := mocks.NewMockRepository(ctrl)
+	now := time.Date(2025, 10, 1, 12, 0, 0, 0, time.UTC)
+	svc := service.NewPortfolioService(mockRepo, service.WithNowFunc(func() time.Time { return now }))
+
+	validFrom := time.Date(2025, 9, 1, 0, 0, 0, 0, time.UTC)
+	validTo := time.Date(2025, 9, 30, 0, 0, 0, 0, time.UTC)
+
+	t.Run("rejects toDate before fromDate", func(t *testing.T) {
+		_, err := svc.TriggerBackfill(ctx, domain.BackfillInput{
+			FromDate:       validTo,
+			ToDate:         validFrom,
+			BackfillAssets: true,
+		})
+		if !errors.Is(err, service.ErrInvalidDateRange) {
+			t.Errorf("expected ErrInvalidDateRange, got %v", err)
+		}
+	})
+
+	t.Run("rejects fromDate in future", func(t *testing.T) {
+		future := now.Add(24 * time.Hour)
+		_, err := svc.TriggerBackfill(ctx, domain.BackfillInput{
+			FromDate:       future,
+			ToDate:         future.Add(24 * time.Hour),
+			BackfillAssets: true,
+		})
+		if !errors.Is(err, service.ErrFutureDate) {
+			t.Errorf("expected ErrFutureDate, got %v", err)
+		}
+	})
+
+	t.Run("rejects toDate in future", func(t *testing.T) {
+		future := now.Add(48 * time.Hour)
+		_, err := svc.TriggerBackfill(ctx, domain.BackfillInput{
+			FromDate:       validFrom,
+			ToDate:         future,
+			BackfillAssets: true,
+		})
+		if !errors.Is(err, service.ErrFutureDate) {
+			t.Errorf("expected ErrFutureDate, got %v", err)
+		}
+	})
+
+	t.Run("rejects zero dates", func(t *testing.T) {
+		_, err := svc.TriggerBackfill(ctx, domain.BackfillInput{
+			BackfillAssets: true,
+		})
+		if !errors.Is(err, service.ErrDateRequired) {
+			t.Errorf("expected ErrDateRequired, got %v", err)
+		}
+	})
+
+	t.Run("rejects empty targets", func(t *testing.T) {
+		_, err := svc.TriggerBackfill(ctx, domain.BackfillInput{
+			FromDate:       validFrom,
+			ToDate:         validTo,
+			BackfillAssets: false,
+			BackfillFX:     false,
+		})
+		if !errors.Is(err, service.ErrNoBackfillTarget) {
+			t.Errorf("expected ErrNoBackfillTarget, got %v", err)
+		}
+	})
+
+	t.Run("rejects range over 5 years", func(t *testing.T) {
+		tooOld := now.Add(-6 * 365 * 24 * time.Hour)
+		_, err := svc.TriggerBackfill(ctx, domain.BackfillInput{
+			FromDate:       tooOld,
+			ToDate:         now,
+			BackfillAssets: true,
+		})
+		if !errors.Is(err, service.ErrBackfillRangeTooLarge) {
+			t.Errorf("expected ErrBackfillRangeTooLarge, got %v", err)
+		}
+	})
+}
+
+func TestPortfolioService_TriggerBackfill_SingleSymbol(t *testing.T) {
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := mocks.NewMockRepository(ctrl)
+	mockIngestion := servicemocks.NewMockIngestionService(ctrl)
+	now := time.Date(2025, 10, 1, 12, 0, 0, 0, time.UTC)
+	svc := service.NewPortfolioService(mockRepo,
+		service.WithIngestionService(mockIngestion),
+		service.WithNowFunc(func() time.Time { return now }),
+	)
+
+	fromDate := time.Date(2025, 9, 1, 0, 0, 0, 0, time.UTC)
+	toDate := time.Date(2025, 9, 30, 0, 0, 0, 0, time.UTC)
+	instID := uuid.MustParse("018f0000-0001-7000-8000-000000000001")
+
+	mockRepo.EXPECT().
+		FindInstrumentBySymbol(ctx, "AAPL").
+		Return(&domain.Instrument{
+			ID:           instID,
+			Symbol:       "AAPL",
+			ExchangeCode: "XNAS",
+		}, nil)
+
+	mockIngestion.EXPECT().
+		BackfillInstrumentPrices(ctx, instID, "AAPL", "XNAS", fromDate, toDate).
+		Return(22, nil)
+
+	res, err := svc.TriggerBackfill(ctx, domain.BackfillInput{
+		FromDate:       fromDate,
+		ToDate:         toDate,
+		Symbols:        []string{"AAPL"},
+		BackfillAssets: true,
+	})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !res.Success {
+		t.Errorf("expected success to be true")
+	}
+	if res.PricesSynced != 22 {
+		t.Errorf("expected 22 prices synced, got %d", res.PricesSynced)
+	}
+	if res.FXRatesSynced != 0 {
+		t.Errorf("expected 0 fx rates synced, got %d", res.FXRatesSynced)
+	}
+	if len(res.Warnings) != 0 {
+		t.Errorf("expected 0 warnings, got %d", len(res.Warnings))
+	}
+}
+
+func TestPortfolioService_TriggerBackfill_AllActiveAssets(t *testing.T) {
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := mocks.NewMockRepository(ctrl)
+	mockIngestion := servicemocks.NewMockIngestionService(ctrl)
+	now := time.Date(2025, 10, 1, 12, 0, 0, 0, time.UTC)
+	svc := service.NewPortfolioService(mockRepo,
+		service.WithIngestionService(mockIngestion),
+		service.WithNowFunc(func() time.Time { return now }),
+	)
+
+	fromDate := time.Date(2025, 9, 1, 0, 0, 0, 0, time.UTC)
+	toDate := time.Date(2025, 9, 30, 0, 0, 0, 0, time.UTC)
+	id1 := uuid.New()
+	id2 := uuid.New()
+
+	mockRepo.EXPECT().
+		ListActiveInstruments(ctx).
+		Return([]domain.Instrument{
+			{ID: id1, Symbol: "AAPL", ExchangeCode: "XNAS"},
+			{ID: id2, Symbol: "MSFT", ExchangeCode: "XNAS"},
+		}, nil)
+
+	mockIngestion.EXPECT().
+		BackfillInstrumentPrices(ctx, id1, "AAPL", "XNAS", fromDate, toDate).
+		Return(20, nil)
+
+	mockIngestion.EXPECT().
+		BackfillInstrumentPrices(ctx, id2, "MSFT", "XNAS", fromDate, toDate).
+		Return(20, nil)
+
+	res, err := svc.TriggerBackfill(ctx, domain.BackfillInput{
+		FromDate:       fromDate,
+		ToDate:         toDate,
+		BackfillAssets: true,
+	})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !res.Success {
+		t.Errorf("expected success to be true")
+	}
+	if res.PricesSynced != 40 {
+		t.Errorf("expected 40 prices synced, got %d", res.PricesSynced)
+	}
+}
+
+func TestPortfolioService_TriggerBackfill_FXPairs(t *testing.T) {
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := mocks.NewMockRepository(ctrl)
+	mockIngestion := servicemocks.NewMockIngestionService(ctrl)
+	now := time.Date(2025, 10, 1, 12, 0, 0, 0, time.UTC)
+	svc := service.NewPortfolioService(mockRepo,
+		service.WithIngestionService(mockIngestion),
+		service.WithNowFunc(func() time.Time { return now }),
+	)
+
+	fromDate := time.Date(2025, 9, 1, 0, 0, 0, 0, time.UTC)
+	toDate := time.Date(2025, 9, 30, 0, 0, 0, 0, time.UTC)
+
+	t.Run("specific currency pairs", func(t *testing.T) {
+		mockIngestion.EXPECT().
+			BackfillCurrencyPair(ctx, "EUR", "USD", fromDate, toDate).
+			Return(21, nil)
+
+		res, err := svc.TriggerBackfill(ctx, domain.BackfillInput{
+			FromDate:      fromDate,
+			ToDate:        toDate,
+			CurrencyPairs: []string{"EUR/USD"},
+			BackfillFX:    true,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if res.FXRatesSynced != 21 {
+			t.Errorf("expected 21 fx rates synced, got %d", res.FXRatesSynced)
+		}
+	})
+
+	t.Run("all active currencies", func(t *testing.T) {
+		mockRepo.EXPECT().
+			ListActiveCurrencies(ctx).
+			Return([]string{"EUR", "USD"}, nil)
+
+		// Anchor EUR and USD: EUR/USD and USD/EUR
+		mockIngestion.EXPECT().
+			BackfillCurrencyPair(ctx, "USD", "EUR", fromDate, toDate).
+			Return(21, nil)
+		mockIngestion.EXPECT().
+			BackfillCurrencyPair(ctx, "EUR", "USD", fromDate, toDate).
+			Return(21, nil)
+
+		res, err := svc.TriggerBackfill(ctx, domain.BackfillInput{
+			FromDate:   fromDate,
+			ToDate:     toDate,
+			BackfillFX: true,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if res.FXRatesSynced != 42 {
+			t.Errorf("expected 42 fx rates synced, got %d", res.FXRatesSynced)
+		}
+	})
+}
+
+func TestPortfolioService_TriggerBackfill_PartialFailure(t *testing.T) {
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := mocks.NewMockRepository(ctrl)
+	mockIngestion := servicemocks.NewMockIngestionService(ctrl)
+	now := time.Date(2025, 10, 1, 12, 0, 0, 0, time.UTC)
+	svc := service.NewPortfolioService(mockRepo,
+		service.WithIngestionService(mockIngestion),
+		service.WithNowFunc(func() time.Time { return now }),
+	)
+
+	fromDate := time.Date(2025, 9, 1, 0, 0, 0, 0, time.UTC)
+	toDate := time.Date(2025, 9, 30, 0, 0, 0, 0, time.UTC)
+	id1 := uuid.New()
+	id2 := uuid.New()
+
+	mockRepo.EXPECT().
+		FindInstrumentBySymbol(ctx, "AAPL").
+		Return(&domain.Instrument{ID: id1, Symbol: "AAPL", ExchangeCode: "XNAS"}, nil)
+
+	mockRepo.EXPECT().
+		FindInstrumentBySymbol(ctx, "MSFT").
+		Return(&domain.Instrument{ID: id2, Symbol: "MSFT", ExchangeCode: "XNAS"}, nil)
+
+	mockIngestion.EXPECT().
+		BackfillInstrumentPrices(ctx, id1, "AAPL", "XNAS", fromDate, toDate).
+		Return(20, nil)
+
+	mockIngestion.EXPECT().
+		BackfillInstrumentPrices(ctx, id2, "MSFT", "XNAS", fromDate, toDate).
+		Return(0, errors.New("provider rate limit exceeded"))
+
+	res, err := svc.TriggerBackfill(ctx, domain.BackfillInput{
+		FromDate:       fromDate,
+		ToDate:         toDate,
+		Symbols:        []string{"AAPL", "MSFT"},
+		BackfillAssets: true,
+	})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !res.Success {
+		t.Errorf("expected success to be true")
+	}
+	if res.PricesSynced != 20 {
+		t.Errorf("expected 20 prices synced, got %d", res.PricesSynced)
+	}
+	if len(res.Warnings) != 1 {
+		t.Fatalf("expected 1 warning, got %d", len(res.Warnings))
+	}
+}
+
+func TestPortfolioService_TriggerBackfill_RecomputeValuations(t *testing.T) {
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := mocks.NewMockRepository(ctrl)
+	mockIngestion := servicemocks.NewMockIngestionService(ctrl)
+	mockValuations := servicemocks.NewMockValuationService(ctrl)
+	now := time.Date(2025, 10, 1, 12, 0, 0, 0, time.UTC)
+	svc := service.NewPortfolioService(mockRepo,
+		service.WithIngestionService(mockIngestion),
+		service.WithValuationService(mockValuations),
+		service.WithNowFunc(func() time.Time { return now }),
+	)
+
+	fromDate := time.Date(2025, 9, 1, 0, 0, 0, 0, time.UTC)
+	toDate := time.Date(2025, 9, 30, 0, 0, 0, 0, time.UTC)
+	instID := uuid.New()
+	portfolioID := uuid.New()
+
+	mockRepo.EXPECT().
+		FindInstrumentBySymbol(ctx, "AAPL").
+		Return(&domain.Instrument{ID: instID, Symbol: "AAPL", ExchangeCode: "XNAS"}, nil)
+
+	mockIngestion.EXPECT().
+		BackfillInstrumentPrices(ctx, instID, "AAPL", "XNAS", fromDate, toDate).
+		Return(20, nil)
+
+	mockRepo.EXPECT().
+		FindPortfoliosHoldingInstrument(ctx, instID).
+		Return([]uuid.UUID{portfolioID}, nil)
+
+	mockValuations.EXPECT().
+		BackfillPortfolioValuations(ctx, portfolioID, fromDate).
+		Return(nil)
+
+	res, err := svc.TriggerBackfill(ctx, domain.BackfillInput{
+		FromDate:            fromDate,
+		ToDate:              toDate,
+		Symbols:             []string{"AAPL"},
+		BackfillAssets:      true,
+		RecomputeValuations: true,
+	})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+	if !res.Success {
+		t.Errorf("expected success to be true")
+	}
+	if res.PricesSynced != 20 {
+		t.Errorf("expected 20 prices synced, got %d", res.PricesSynced)
+	}
+	if len(res.Warnings) != 0 {
+		t.Errorf("expected 0 warnings, got %d", len(res.Warnings))
+	}
 }

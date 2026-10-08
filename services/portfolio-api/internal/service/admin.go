@@ -26,15 +26,18 @@ var (
 		"CASH_EQUIVALENT": true,
 	}
 
-	ErrInvalidSymbol     = errors.New("symbol cannot be empty")
-	ErrInvalidExchange   = errors.New("exchange code cannot be empty")
-	ErrInvalidName       = errors.New("instrument name cannot be empty")
-	ErrInvalidAssetClass = errors.New("invalid asset class")
-	ErrInvalidCurrency   = errors.New("currency code must be 3 characters")
-	ErrInvalidISIN       = errors.New("isin must be 12 alphanumeric characters (e.g. US67066G1040)")
-	ErrInvalidPrice      = errors.New("price must be greater than zero")
-	ErrFutureDate        = errors.New("price date cannot be in the future")
-	ErrInvalidDateRange  = errors.New("from_date cannot be after to_date")
+	ErrInvalidSymbol         = errors.New("symbol cannot be empty")
+	ErrInvalidExchange       = errors.New("exchange code cannot be empty")
+	ErrInvalidName           = errors.New("instrument name cannot be empty")
+	ErrInvalidAssetClass     = errors.New("invalid asset class")
+	ErrInvalidCurrency       = errors.New("currency code must be 3 characters")
+	ErrInvalidISIN           = errors.New("isin must be 12 alphanumeric characters (e.g. US67066G1040)")
+	ErrInvalidPrice          = errors.New("price must be greater than zero")
+	ErrFutureDate            = errors.New("price date cannot be in the future")
+	ErrInvalidDateRange      = errors.New("from_date cannot be after to_date")
+	ErrDateRequired          = errors.New("from_date and to_date are required")
+	ErrNoBackfillTarget      = errors.New("at least one backfill target must be enabled (assets or fx)")
+	ErrBackfillRangeTooLarge = errors.New("backfill date range cannot exceed 5 years")
 )
 
 func (s *portfolioService) ListAllInstruments(ctx context.Context, isActive *bool, search *string) ([]domain.Instrument, error) {
@@ -219,4 +222,173 @@ func (s *portfolioService) TriggerMarketSync(ctx context.Context, symbols []stri
 		FXRatesSynced: fxCount,
 		Message:       fmt.Sprintf("Market sync completed: %d asset prices and %d FX fixing rates refreshed", pricesCount, fxCount),
 	}, nil
+}
+
+func (s *portfolioService) TriggerBackfill(ctx context.Context, input domain.BackfillInput) (*domain.BackfillResult, error) {
+	if input.FromDate.IsZero() || input.ToDate.IsZero() {
+		return nil, ErrDateRequired
+	}
+
+	fromDate := input.FromDate.UTC().Truncate(24 * time.Hour)
+	toDate := input.ToDate.UTC().Truncate(24 * time.Hour)
+
+	if toDate.Before(fromDate) {
+		return nil, ErrInvalidDateRange
+	}
+
+	now := s.nowFunc().UTC()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 23, 59, 59, 0, time.UTC)
+	if fromDate.After(today) || toDate.After(today) {
+		return nil, ErrFutureDate
+	}
+
+	const maxBackfillDays = 1826 // ~5 years
+	if toDate.Sub(fromDate) > maxBackfillDays*24*time.Hour {
+		return nil, ErrBackfillRangeTooLarge
+	}
+
+	if !input.BackfillAssets && !input.BackfillFX {
+		return nil, ErrNoBackfillTarget
+	}
+
+	var warnings []string
+	pricesSynced := 0
+	fxRatesSynced := 0
+	var instrumentsToBackfill []domain.Instrument
+
+	// 1. Backfill Asset Prices
+	if input.BackfillAssets {
+		if len(input.Symbols) > 0 {
+			for _, sym := range input.Symbols {
+				sym = strings.ToUpper(strings.TrimSpace(sym))
+				if sym == "" {
+					continue
+				}
+				inst, err := s.repo.FindInstrumentBySymbol(ctx, sym)
+				if err != nil {
+					warnings = append(warnings, fmt.Sprintf("instrument not found: %s", sym))
+					continue
+				}
+				instrumentsToBackfill = append(instrumentsToBackfill, *inst)
+			}
+			if len(instrumentsToBackfill) == 0 && !input.BackfillFX {
+				return &domain.BackfillResult{
+					Success:  false,
+					Message:  "No valid instruments found for specified symbols",
+					Warnings: warnings,
+				}, nil
+			}
+		} else {
+			activeInsts, err := s.repo.ListActiveInstruments(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("failed to list active instruments: %w", err)
+			}
+			instrumentsToBackfill = activeInsts
+		}
+
+		for _, inst := range instrumentsToBackfill {
+			if s.ingestion != nil {
+				count, err := s.ingestion.BackfillInstrumentPrices(ctx, inst.ID, inst.Symbol, inst.ExchangeCode, fromDate, toDate)
+				if err != nil {
+					warnings = append(warnings, fmt.Sprintf("failed to backfill prices for %s: %v", inst.Symbol, err))
+				} else {
+					pricesSynced += count
+				}
+			}
+		}
+	}
+
+	// 2. Backfill Foreign Exchange Rates
+	if input.BackfillFX {
+		if len(input.CurrencyPairs) > 0 {
+			for _, pairStr := range input.CurrencyPairs {
+				base, quote, err := parseCurrencyPair(pairStr)
+				if err != nil {
+					warnings = append(warnings, err.Error())
+					continue
+				}
+				if s.ingestion != nil {
+					count, err := s.ingestion.BackfillCurrencyPair(ctx, base, quote, fromDate, toDate)
+					if err != nil {
+						warnings = append(warnings, fmt.Sprintf("failed to backfill fx %s/%s: %v", base, quote, err))
+					} else {
+						fxRatesSynced += count
+					}
+				}
+			}
+		} else {
+			currencies, err := s.repo.ListActiveCurrencies(ctx)
+			if err != nil {
+				warnings = append(warnings, fmt.Sprintf("failed to list active currencies: %v", err))
+			} else {
+				pairs := generateCurrencyPairs(currencies)
+				for _, pair := range pairs {
+					if s.ingestion != nil {
+						count, err := s.ingestion.BackfillCurrencyPair(ctx, pair.Base, pair.Quote, fromDate, toDate)
+						if err != nil {
+							warnings = append(warnings, fmt.Sprintf("failed to backfill fx %s/%s: %v", pair.Base, pair.Quote, err))
+						} else {
+							fxRatesSynced += count
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// 3. Recompute Historical Valuations (Optional)
+	if input.RecomputeValuations && s.valuations != nil {
+		affectedPortfolios := make(map[uuid.UUID]bool)
+		if len(instrumentsToBackfill) > 0 {
+			for _, inst := range instrumentsToBackfill {
+				pids, err := s.repo.FindPortfoliosHoldingInstrument(ctx, inst.ID)
+				if err == nil {
+					for _, pid := range pids {
+						affectedPortfolios[pid] = true
+					}
+				}
+			}
+		} else if fxRatesSynced > 0 {
+			pids, err := s.repo.ListActivePortfolios(ctx)
+			if err == nil {
+				for _, pid := range pids {
+					affectedPortfolios[pid] = true
+				}
+			}
+		}
+		for pid := range affectedPortfolios {
+			if err := s.valuations.BackfillPortfolioValuations(ctx, pid, fromDate); err != nil {
+				warnings = append(warnings, fmt.Sprintf("failed to recompute valuations for portfolio %s: %v", pid, err))
+			}
+		}
+	}
+
+	if warnings == nil {
+		warnings = []string{}
+	}
+
+	message := fmt.Sprintf("Historical backfill completed: %d asset prices and %d FX fixing rates stored between %s and %s",
+		pricesSynced, fxRatesSynced, fromDate.Format("2006-01-02"), toDate.Format("2006-01-02"))
+
+	return &domain.BackfillResult{
+		Success:       true,
+		PricesSynced:  pricesSynced,
+		FXRatesSynced: fxRatesSynced,
+		Message:       message,
+		Warnings:      warnings,
+	}, nil
+}
+
+func parseCurrencyPair(raw string) (string, string, error) {
+	clean := strings.ToUpper(strings.TrimSpace(raw))
+	clean = strings.ReplaceAll(clean, "/", " ")
+	clean = strings.ReplaceAll(clean, "-", " ")
+	parts := strings.Fields(clean)
+	if len(parts) == 2 && len(parts[0]) == 3 && len(parts[1]) == 3 {
+		return parts[0], parts[1], nil
+	}
+	if len(clean) == 6 && !strings.Contains(clean, " ") {
+		return clean[:3], clean[3:], nil
+	}
+	return "", "", fmt.Errorf("invalid currency pair format %q (expected 'BASE/QUOTE')", raw)
 }

@@ -8,6 +8,7 @@ package graph
 import (
 	"bff/graph/model"
 	"context"
+	"fmt"
 	pb "graphfolio/proto/portfolio/v1"
 	userpb "graphfolio/proto/user/v1"
 )
@@ -147,6 +148,50 @@ func (r *mutationResolver) TriggerMarketSync(ctx context.Context, symbols []stri
 		PricesSynced:  int(resp.PricesSynced),
 		FxRatesSynced: int(resp.FxRatesSynced),
 		Message:       resp.Message,
+	}, nil
+}
+
+// TriggerBackfill is the resolver for the triggerBackfill field.
+func (r *mutationResolver) TriggerBackfill(ctx context.Context, input model.TriggerBackfillInput) (*model.BackfillPayload, error) {
+	backfillAssets := true
+	if input.BackfillAssets != nil {
+		backfillAssets = *input.BackfillAssets
+	}
+	backfillFX := true
+	if input.BackfillFx != nil {
+		backfillFX = *input.BackfillFx
+	}
+	recomputeValuations := false
+	if input.RecomputeValuations != nil {
+		recomputeValuations = *input.RecomputeValuations
+	}
+
+	req := &pb.TriggerBackfillRequest{
+		FromDate:            input.FromDate,
+		ToDate:              input.ToDate,
+		Symbols:             input.Symbols,
+		CurrencyPairs:       input.CurrencyPairs,
+		BackfillAssets:      backfillAssets,
+		BackfillFx:          backfillFX,
+		RecomputeValuations: recomputeValuations,
+	}
+
+	resp, err := r.PortfolioClient.TriggerBackfill(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to trigger backfill: %w", err)
+	}
+
+	warnings := resp.GetWarnings()
+	if warnings == nil {
+		warnings = []string{}
+	}
+
+	return &model.BackfillPayload{
+		Success:       resp.GetSuccess(),
+		PricesSynced:  int(resp.GetPricesSynced()),
+		FxRatesSynced: int(resp.GetFxRatesSynced()),
+		Message:       resp.GetMessage(),
+		Warnings:      warnings,
 	}, nil
 }
 

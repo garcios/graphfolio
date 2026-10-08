@@ -59,6 +59,7 @@ type fakePortfolioClient struct {
 	recordPriceOverrideFn         func(ctx context.Context, in *pb.RecordPriceOverrideRequest) (*pb.RecordPriceOverrideResponse, error)
 	getIngestionStatusFn          func(ctx context.Context, in *pb.GetIngestionStatusRequest) (*pb.GetIngestionStatusResponse, error)
 	triggerMarketSyncFn           func(ctx context.Context, in *pb.TriggerMarketSyncRequest) (*pb.TriggerMarketSyncResponse, error)
+	triggerBackfillFn             func(ctx context.Context, in *pb.TriggerBackfillRequest) (*pb.TriggerBackfillResponse, error)
 	listCurrencyPairsFn           func(ctx context.Context, in *pb.ListCurrencyPairsRequest) (*pb.ListCurrencyPairsResponse, error)
 	listFXRatesFn                 func(ctx context.Context, in *pb.ListFXRatesRequest) (*pb.ListFXRatesResponse, error)
 	getCurrencyPairHistoryFn      func(ctx context.Context, in *pb.GetCurrencyPairHistoryRequest) (*pb.GetCurrencyPairHistoryResponse, error)
@@ -159,6 +160,13 @@ func (f *fakePortfolioClient) GetIngestionStatus(ctx context.Context, in *pb.Get
 func (f *fakePortfolioClient) TriggerMarketSync(ctx context.Context, in *pb.TriggerMarketSyncRequest, opts ...grpc.CallOption) (*pb.TriggerMarketSyncResponse, error) {
 	if f.triggerMarketSyncFn != nil {
 		return f.triggerMarketSyncFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakePortfolioClient) TriggerBackfill(ctx context.Context, in *pb.TriggerBackfillRequest, opts ...grpc.CallOption) (*pb.TriggerBackfillResponse, error) {
+	if f.triggerBackfillFn != nil {
+		return f.triggerBackfillFn(ctx, in)
 	}
 	return nil, nil
 }
@@ -917,6 +925,125 @@ func TestMutationResolver_TriggerMarketSync(t *testing.T) {
 		}
 		if !payload.Success || payload.PricesSynced != 2 || payload.FxRatesSynced != 7 {
 			t.Errorf("unexpected sync payload: %+v", payload)
+		}
+	})
+}
+
+func TestMutationResolver_TriggerBackfill(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully triggers backfill with all options", func(t *testing.T) {
+		backfillAssets := true
+		backfillFx := true
+		recompute := true
+
+		fakeClient := &fakePortfolioClient{
+			triggerBackfillFn: func(ctx context.Context, in *pb.TriggerBackfillRequest) (*pb.TriggerBackfillResponse, error) {
+				if in.FromDate != "2025-01-01" || in.ToDate != "2025-01-31" {
+					t.Errorf("unexpected date range: %s to %s", in.FromDate, in.ToDate)
+				}
+				if len(in.Symbols) != 1 || in.Symbols[0] != "AAPL" {
+					t.Errorf("unexpected symbols: %v", in.Symbols)
+				}
+				if len(in.CurrencyPairs) != 1 || in.CurrencyPairs[0] != "EUR/USD" {
+					t.Errorf("unexpected currency pairs: %v", in.CurrencyPairs)
+				}
+				if !in.BackfillAssets || !in.BackfillFx || !in.RecomputeValuations {
+					t.Errorf("unexpected flags: assets=%v, fx=%v, recompute=%v", in.BackfillAssets, in.BackfillFx, in.RecomputeValuations)
+				}
+
+				return &pb.TriggerBackfillResponse{
+					Success:       true,
+					PricesSynced:  42,
+					FxRatesSynced: 14,
+					Message:       "Backfill completed successfully",
+					Warnings:      []string{"Minor warning"},
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		mResolver := resolver.Mutation()
+
+		payload, err := mResolver.TriggerBackfill(ctx, model.TriggerBackfillInput{
+			FromDate:            "2025-01-01",
+			ToDate:              "2025-01-31",
+			Symbols:             []string{"AAPL"},
+			CurrencyPairs:       []string{"EUR/USD"},
+			BackfillAssets:      &backfillAssets,
+			BackfillFx:          &backfillFx,
+			RecomputeValuations: &recompute,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if !payload.Success {
+			t.Errorf("expected success to be true")
+		}
+		if payload.PricesSynced != 42 {
+			t.Errorf("expected 42 prices synced, got %d", payload.PricesSynced)
+		}
+		if payload.FxRatesSynced != 14 {
+			t.Errorf("expected 14 fx rates synced, got %d", payload.FxRatesSynced)
+		}
+		if payload.Message != "Backfill completed successfully" {
+			t.Errorf("unexpected message: %s", payload.Message)
+		}
+		if len(payload.Warnings) != 1 || payload.Warnings[0] != "Minor warning" {
+			t.Errorf("unexpected warnings: %v", payload.Warnings)
+		}
+	})
+
+	t.Run("defaults boolean flags when nil", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			triggerBackfillFn: func(ctx context.Context, in *pb.TriggerBackfillRequest) (*pb.TriggerBackfillResponse, error) {
+				if !in.BackfillAssets {
+					t.Errorf("expected backfillAssets to default to true")
+				}
+				if !in.BackfillFx {
+					t.Errorf("expected backfillFx to default to true")
+				}
+				if in.RecomputeValuations {
+					t.Errorf("expected recomputeValuations to default to false")
+				}
+				return &pb.TriggerBackfillResponse{
+					Success:      true,
+					PricesSynced: 10,
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		mResolver := resolver.Mutation()
+
+		payload, err := mResolver.TriggerBackfill(ctx, model.TriggerBackfillInput{
+			FromDate: "2025-01-01",
+			ToDate:   "2025-01-10",
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if !payload.Success {
+			t.Errorf("expected success to be true")
+		}
+	})
+
+	t.Run("returns error when gRPC call fails", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			triggerBackfillFn: func(ctx context.Context, in *pb.TriggerBackfillRequest) (*pb.TriggerBackfillResponse, error) {
+				return nil, errors.New("gRPC connection failure")
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		mResolver := resolver.Mutation()
+
+		_, err := mResolver.TriggerBackfill(ctx, model.TriggerBackfillInput{
+			FromDate: "2025-01-01",
+			ToDate:   "2025-01-10",
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
 		}
 	})
 }

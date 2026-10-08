@@ -121,6 +121,7 @@ type Mutation {
   updateInstrument(input: UpdateInstrumentInput!): Instrument!
   recordPriceOverride(input: RecordPriceOverrideInput!): RecordPriceOverridePayload!
   triggerMarketSync(symbols: [String!], syncFx: Boolean): MarketSyncPayload!
+  triggerBackfill(input: TriggerBackfillInput!): BackfillPayload!
   updateUserPreferences(input: UpdateUserPreferencesInput!): UpdateUserPreferencesPayload!
   recordFXRateOverride(input: RecordFXRateOverrideInput!): RecordFXRateOverridePayload!
 }
@@ -193,6 +194,24 @@ type MarketSyncPayload {
   pricesSynced: Int!
   fxRatesSynced: Int!
   message: String!
+}
+
+input TriggerBackfillInput {
+  fromDate: String!
+  toDate: String!
+  symbols: [String!]
+  currencyPairs: [String!]
+  backfillAssets: Boolean
+  backfillFx: Boolean
+  recomputeValuations: Boolean
+}
+
+type BackfillPayload {
+  success: Boolean!
+  pricesSynced: Int!
+  fxRatesSynced: Int!
+  message: String!
+  warnings: [String!]!
 }
 
 type Portfolio {

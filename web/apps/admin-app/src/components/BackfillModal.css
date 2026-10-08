@@ -1,0 +1,265 @@
+.backfill-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  color: var(--text-primary, #ffffff);
+}
+
+.backfill-modal__description {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #a1a1aa);
+  line-height: 1.5;
+  margin: 0;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+}
+
+/* Sections */
+.backfill-modal__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.backfill-modal__section-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #71717a);
+  margin: 0;
+}
+
+/* Date Range Rows & Presets */
+.backfill-modal__date-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.backfill-modal__date-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.backfill-modal__date-field label {
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #a1a1aa);
+  font-weight: 500;
+}
+
+.backfill-modal__presets {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.backfill-modal__presets-label {
+  font-size: 0.75rem;
+  color: var(--text-muted, #71717a);
+  margin-right: 0.25rem;
+}
+
+.backfill-modal__preset-chip {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+  color: var(--text-secondary, #a1a1aa);
+  border-radius: var(--radius-full, 9999px);
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+}
+
+.backfill-modal__preset-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary, #ffffff);
+  border-color: var(--card-border-active, rgba(255, 255, 255, 0.15));
+}
+
+.backfill-modal__preset-chip--active {
+  background: var(--accent-blue-glow, rgba(59, 130, 246, 0.15));
+  border-color: var(--accent-blue, #3b82f6);
+  color: #93c5fd;
+  font-weight: 600;
+}
+
+/* Feed Scope Cards */
+.backfill-modal__feed-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-md, 10px);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  transition: border-color 0.2s ease;
+}
+
+.backfill-modal__feed-card--enabled {
+  border-color: rgba(59, 130, 246, 0.25);
+  background: rgba(59, 130, 246, 0.02);
+}
+
+.backfill-modal__checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+  cursor: pointer;
+  user-select: none;
+}
+
+.backfill-modal__checkbox-label input[type="checkbox"] {
+  width: 1.125rem;
+  height: 1.125rem;
+  accent-color: var(--accent-blue, #3b82f6);
+  cursor: pointer;
+}
+
+.backfill-modal__feed-suboptions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding-left: 1.75rem;
+}
+
+.backfill-modal__radio-group {
+  display: flex;
+  gap: 1.25rem;
+}
+
+.backfill-modal__radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #a1a1aa);
+  cursor: pointer;
+  user-select: none;
+}
+
+.backfill-modal__radio-label input[type="radio"] {
+  accent-color: var(--accent-blue, #3b82f6);
+  cursor: pointer;
+}
+
+/* Tag Picker */
+.backfill-modal__tag-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.backfill-modal__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.backfill-modal__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.2rem 0.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-xs, 4px);
+  font-size: 0.75rem;
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  color: var(--text-primary, #ffffff);
+}
+
+.backfill-modal__tag-remove {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #71717a);
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.backfill-modal__tag-remove:hover {
+  color: var(--accent-red, #ef4444);
+}
+
+.backfill-modal__tag-input-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.backfill-modal__tag-input-row .input-wrapper {
+  flex: 1;
+}
+
+/* Telemetry Box */
+.backfill-modal__telemetry {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #bfdbfe;
+}
+
+.backfill-modal__telemetry--warning {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #fde68a;
+}
+
+.backfill-modal__telemetry-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.backfill-modal__telemetry-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+/* Messages & Alerts */
+.backfill-modal__error {
+  padding: 0.75rem 1rem;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-sm, 6px);
+  color: #fca5a5;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.backfill-modal__success {
+  padding: 0.875rem 1rem;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: var(--radius-sm, 6px);
+  color: #6ee7b7;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.backfill-modal__warnings-list {
+  margin: 0.375rem 0 0 1.25rem;
+  padding: 0;
+  color: #fde68a;
+  font-size: 0.75rem;
+}

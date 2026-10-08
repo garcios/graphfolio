@@ -16,7 +16,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 - **`proto/` (The Contract)**:
   Protocol Buffers are the single source of truth for microservice RPCs and shared types. Stored at the root to eliminate schema drift between gRPC servers and the BFF client wrappers.
   - `proto/common/v1/decimal.proto`: High-precision fixed-point `Decimal` (value, scale) and `Money` (amount, currency_code) types.
-  - `proto/portfolio/v1/portfolio.proto`: Portfolio service (`GetPortfolio`, `UpdatePortfolioBaseCurrency`, `AddTransaction`, `ListInstruments`, `GetPortfolioHistory`, `ListTransactions`, `DeleteTransaction`, `ListAllInstruments`, `CreateInstrument`, `UpdateInstrument`, `ListInstrumentPrices`, `RecordPriceOverride`, `GetIngestionStatus`, `TriggerMarketSync`, `RebuildValuations`, `ListCurrencyPairs`, `ListFXRates`, `GetCurrencyPairHistory`, `RecordFXRateOverride`), investment summary, time-series valuation points, performance metrics, and administrative foreign exchange / pricing operations.
+  - `proto/portfolio/v1/portfolio.proto`: Portfolio service (`GetPortfolio`, `UpdatePortfolioBaseCurrency`, `AddTransaction`, `ListInstruments`, `GetPortfolioHistory`, `ListTransactions`, `DeleteTransaction`, `ListAllInstruments`, `CreateInstrument`, `UpdateInstrument`, `ListInstrumentPrices`, `RecordPriceOverride`, `GetIngestionStatus`, `TriggerMarketSync`, `TriggerBackfill`, `RebuildValuations`, `ListCurrencyPairs`, `ListFXRates`, `GetCurrencyPairHistory`, `RecordFXRateOverride`), investment summary, time-series valuation points, performance metrics, and administrative foreign exchange / pricing operations.
   - `proto/user/v1/user.proto`: User service (`GetUserPreferences`, `UpdateUserPreferences`, `ListSupportedCurrencies`), user profile preferences (`theme`, `display_currency`, `display_name`), and currency reference metadata.
 
 - **`pkg/` (Shared Infrastructure)**:
@@ -29,9 +29,9 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 - **`services/` (The Domain Microservices)**:
   Each microservice is an isolated Go module (`services/portfolio-api`, `services/user-api`):
   - **`services/portfolio-api` (:50051)**:
-    - Domain models and calculators live in `internal/domain/` (`portfolio`, `holding`, `transaction`, `instrument`, `price`, `ingestion`, `tax_lot`, `history`, `valuation`, `fx`).
-    - Persistence logic lives in `internal/repository/` with `pgxpool.Pool` queries and transactions (`InsertTransaction`, `ListTransactions`, `DeleteTransaction`, `UpdatePortfolioBaseCurrency`, `FindInstrumentBySymbol`, `SaveProjectionsTx`, `GetPortfolioValuations`, `ListAllInstruments`, `CreateInstrument`, `UpdateInstrument`, `ListInstrumentPrices`, `UpsertInstrumentPrice`, `GetIngestionMetrics`, `UpsertValuationsBatch`, `GetLatestValuationBefore`, `GetHistoricalPriceMatrix`, `GetHistoricalFXMatrix`, `DeleteValuationsFromDate`, `ListActivePortfolios`, `ListCurrencyPairs`, `GetCurrencyPairHistory`, `ListFXRates`, `UpsertFXRate`).
-    - Business logic, calculation services, transaction ingestion (`AddTransaction`), transaction deletion (`DeleteTransaction`), ledger replay projections (`RebuildProjections`), dynamic base currency re-anchoring (`UpdatePortfolioBaseCurrency`), paginated ledger queries (`ListTransactions`), administrative operations (`CreateInstrument`, `UpdateInstrument`, `RecordPriceOverride`, `GetIngestionStatus`, `TriggerMarketSync`), foreign exchange management & rate overrides (`ListCurrencyPairs`, `GetCurrencyPairHistory`, `ListFXRates`, `RecordFXRateOverride`), historical valuation time-series retrieval (`GetPortfolioHistory`), and daily valuation snapshots & multi-day historical backfill replay engine (`ValuationService`, `RebuildValuations`) live in `internal/service/`.
+    - Domain models and calculators live in `internal/domain/` (`portfolio`, `holding`, `transaction`, `instrument`, `price`, `ingestion`, `tax_lot`, `history`, `valuation`, `fx`, `backfill`).
+    - Persistence logic lives in `internal/repository/` with `pgxpool.Pool` queries and transactions (`InsertTransaction`, `ListTransactions`, `DeleteTransaction`, `UpdatePortfolioBaseCurrency`, `FindInstrumentBySymbol`, `SaveProjectionsTx`, `GetPortfolioValuations`, `ListAllInstruments`, `CreateInstrument`, `UpdateInstrument`, `ListInstrumentPrices`, `UpsertInstrumentPrice`, `GetIngestionMetrics`, `UpsertValuationsBatch`, `GetLatestValuationBefore`, `GetHistoricalPriceMatrix`, `GetHistoricalFXMatrix`, `DeleteValuationsFromDate`, `ListActivePortfolios`, `ListActiveInstruments`, `ListActiveCurrencies`, `FindPortfoliosHoldingInstrument`, `ListCurrencyPairs`, `GetCurrencyPairHistory`, `ListFXRates`, `UpsertFXRate`).
+    - Business logic, calculation services, transaction ingestion (`AddTransaction`), transaction deletion (`DeleteTransaction`), ledger replay projections (`RebuildProjections`), dynamic base currency re-anchoring (`UpdatePortfolioBaseCurrency`), paginated ledger queries (`ListTransactions`), administrative operations (`CreateInstrument`, `UpdateInstrument`, `RecordPriceOverride`, `GetIngestionStatus`, `TriggerMarketSync`, `TriggerBackfill`), foreign exchange management & rate overrides (`ListCurrencyPairs`, `GetCurrencyPairHistory`, `ListFXRates`, `RecordFXRateOverride`), historical valuation time-series retrieval (`GetPortfolioHistory`), and daily valuation snapshots & multi-day historical backfill replay engine (`ValuationService`, `RebuildValuations`) live in `internal/service/`.
     - Transport adapters (gRPC servers) live in `internal/` (`server.go`), `cmd/server/main.go`, and scheduled CLI / background valuation worker in `cmd/worker/main.go`.
   - **`services/user-api` (:50052)**:
     - Domain models live in `internal/domain/` (`User`, `CurrencyInfo`, `SupportedCurrencies`).
@@ -41,12 +41,12 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
   - Microservices only interact with their dedicated database schemas and other gRPC APIs. They have zero awareness of GraphQL.
 
 - **`bff/` (The Orchestrator)**:
-  The Backend-for-Frontend is a Go service using `gqlgen` (GraphQL). It translates GraphQL queries (`portfolio`, `instruments`, `portfolioHistory`, `transactions`, `allInstruments`, `instrumentPrices`, `ingestionStatus`, `userPreferences`, `supportedCurrencies`, `currencyPairs`, `currencyPairHistory`, `fxRates`) and mutations (`addTransaction`, `deleteTransaction`, `createInstrument`, `updateInstrument`, `recordPriceOverride`, `recordFXRateOverride`, `triggerMarketSync`, `updateUserPreferences`) into gRPC calls across domain microservices, maps exact decimal scalars, orchestrates dynamic currency re-anchoring between `user-api` and `portfolio-api`, and shields the frontend from microservice topology.
+  The Backend-for-Frontend is a Go service using `gqlgen` (GraphQL). It translates GraphQL queries (`portfolio`, `instruments`, `portfolioHistory`, `transactions`, `allInstruments`, `instrumentPrices`, `ingestionStatus`, `userPreferences`, `supportedCurrencies`, `currencyPairs`, `currencyPairHistory`, `fxRates`) and mutations (`addTransaction`, `deleteTransaction`, `createInstrument`, `updateInstrument`, `recordPriceOverride`, `recordFXRateOverride`, `triggerMarketSync`, `triggerBackfill`, `updateUserPreferences`) into gRPC calls across domain microservices, maps exact decimal scalars, orchestrates dynamic currency re-anchoring between `user-api` and `portfolio-api`, and shields the frontend from microservice topology.
 
 - **`web/` (The Consumer)**:
   Workspace monorepo containing multiple frontend applications and shared libraries:
   - `apps/main-app`: Primary investor-facing application (Port 5173). Interactive portfolio dashboard, performance chart, transaction ledger, trade ingestion modal, and investor profile preferences modal (`UserPreferencesModal`).
-  - `apps/admin-app`: Internal administrative portal (Port 5174). Master instrument directory, closing price ledger, foreign exchange currency pairs management (`FXManagement`, `FXTrendChart`, `FXOverrideModal`), and market ingestion monitoring.
+  - `apps/admin-app`: Internal administrative portal (Port 5174). Master instrument directory, closing price ledger, foreign exchange currency pairs management (`FXManagement`, `FXTrendChart`, `FXOverrideModal`), market ingestion monitoring, and historical market data range backfills (`BackfillModal`).
   - `packages/ui`: Shared design system (`@graphfolio/ui`) with dark glassmorphic design tokens, atomic components (`Button`, `Modal`, `Card`, `Badge`, `Table`, `Input`, `Select`), and precision financial formatters.
   - `packages/api-client`: Shared auto-generated typed GraphQL client (`@graphfolio/api-client`) communicating with the BFF.
 
@@ -59,7 +59,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   ├── common/v1/
 │   │   └── decimal.proto         # Decimal and Money contracts
 │   ├── portfolio/v1/
-│   │   └── portfolio.proto       # Portfolio gRPC service (GetPortfolio, UpdatePortfolioBaseCurrency, AddTransaction, ListInstruments, GetPortfolioHistory, ListTransactions, DeleteTransaction)
+│   │   └── portfolio.proto       # Portfolio gRPC service (GetPortfolio, UpdatePortfolioBaseCurrency, AddTransaction, ListInstruments, GetPortfolioHistory, ListTransactions, DeleteTransaction, admin, FX & TriggerBackfill RPCs)
 │   └── user/v1/
 │       └── user.proto            # User gRPC service definition (GetUserPreferences, UpdateUserPreferences, ListSupportedCurrencies)
 │
@@ -81,8 +81,9 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   │   ├── cmd/server/           # Service entrypoint (gRPC on :50051)
 │   │   ├── cmd/worker/           # Scheduled EOD & on-demand valuation worker (runnable via make run-valuation-job)
 │   │   ├── internal/
-│   │   │   ├── domain/           # Domain entities (Portfolio, Holding, Transaction, Instrument, Price, Ingestion, TaxLot, Money, History, Valuation, FX)
+│   │   │   ├── domain/           # Domain entities (Portfolio, Holding, Transaction, Instrument, Price, Ingestion, TaxLot, Money, History, Valuation, FX, Backfill)
 │   │   │   │   ├── transaction.go# Transaction, TransactionFilter, TransactionPage
+│   │   │   │   ├── backfill.go   # BackfillInput, BackfillResult (historical market data backfill jobs)
 │   │   │   │   ├── valuation.go  # PortfolioValuationSnapshot, sub-period return, TWR linking, GIPS CAGR
 │   │   │   │   ├── price.go      # InstrumentPrice, PriceFilter, PriceOverrideInput
 │   │   │   │   ├── fx.go         # CurrencyPair, FXRate, FXHistoryPoint, CurrencyPairHistory
@@ -98,13 +99,14 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   │   │   │   ├── valuation_test.go # Multi-day historical backfill replay and daily job unit tests
 │   │   │   │   ├── fx.go         # Foreign exchange service (ListCurrencyPairs, GetCurrencyPairHistory, ListFXRates, RecordFXRateOverride)
 │   │   │   │   ├── fx_test.go    # FX unit tests for period bounds, 10-decimal reciprocal math, and overrides
-│   │   │   │   ├── admin.go      # CreateInstrument, UpdateInstrument, RecordPriceOverride, GetIngestionStatus, TriggerMarketSync
-│   │   │   │   ├── admin_test.go # Table-driven unit tests for admin operations
+│   │   │   │   ├── admin.go      # CreateInstrument, UpdateInstrument, RecordPriceOverride, GetIngestionStatus, TriggerMarketSync, TriggerBackfill
+│   │   │   │   ├── admin_test.go # Table-driven unit tests for admin operations (incl. backfill validation, scope resolution, partial failures)
+│   │   │   │   ├── ingestion.go  # IngestionService (IngestDailyMarketData, BackfillInstrumentPrices, BackfillCurrencyPair)
 │   │   │   │   ├── transaction_test.go # Unit tests for transaction ingestion, filtering, deletion, and valuation hooks
 │   │   │   │   ├── history.go    # GetPortfolioHistory and timeframe boundary logic
 │   │   │   │   ├── history_test.go# Unit tests for history filtering and period return math
-│   │   │   │   └── mocks/        # Uber-go mock service (MockPortfolioService, MockValuationService)
-│   │   │   ├── server.go         # gRPC PortfolioServiceServer implementation (ListTransactions, RecordPriceOverride, RebuildValuations, ListCurrencyPairs, etc.)
+│   │   │   │   └── mocks/        # Uber-go mocks (MockPortfolioService, MockValuationService, MockIngestionService)
+│   │   │   ├── server.go         # gRPC PortfolioServiceServer implementation (ListTransactions, RecordPriceOverride, RebuildValuations, ListCurrencyPairs, TriggerBackfill, etc.)
 │   │   │   └── server_test.go    # gRPC server unit tests with MockPortfolioService
 │   │   ├── migrations/           # Schema migrations (000001 to 000006)
 │   │   ├── seeds/                # Development seed data (dev_seed.sql with 365-day history)
@@ -124,7 +126,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 ├── bff/                          # 5. GraphQL Backend-for-Frontend
 │   ├── cmd/server/               # BFF entrypoint (GraphQL server on :8080)
 │   ├── graph/
-│   │   ├── schema.graphqls       # GraphQL schema (Queries: portfolio, transactions, userPreferences; Mutations: addTransaction, deleteTransaction, updateUserPreferences)
+│   │   ├── schema.graphqls       # GraphQL schema (Queries: portfolio, transactions, userPreferences; Mutations: addTransaction, deleteTransaction, triggerBackfill, updateUserPreferences)
 │   │   ├── schema.resolvers.go   # Resolver implementations calling gRPC (portfolio, portfolioHistory, transactions, deleteTransaction, userPreferences, updateUserPreferences)
 │   │   ├── schema.resolvers_test.go # Unit tests for resolvers
 │   │   ├── helpers.go            # Domain-to-GraphQL conversion helpers (history, transactions, timeframe, preferences)
@@ -146,7 +148,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   │   │   └── package.json      # @graphfolio/main-app
 │   │   └── admin-app/            # Internal Operations Portal (:5174)
 │   │       ├── src/
-│   │       │   ├── components/   # AdminLayout, AssetManagement, PriceManagement, FXManagement, FXTrendChart, FXOverrideModal, IngestionPipeline
+│   │       │   ├── components/   # AdminLayout, AssetManagement, PriceManagement, FXManagement, FXTrendChart, FXOverrideModal, BackfillModal, IngestionPipeline
 │   │       │   ├── App.tsx
 │   │       │   └── main.tsx
 │   │       ├── vite.config.ts    # Port 5174 with package aliases
@@ -220,6 +222,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 - **Mock Generation**: Generated with `go.uber.org/mock` (`mockgen`).
   - Repository mock: `services/portfolio-api/internal/repository/mocks/mock_repository.go`
   - Service mock: `services/portfolio-api/internal/service/mocks/mock_service.go`
+  - Ingestion service mock: `services/portfolio-api/internal/service/mocks/mock_ingestion_service.go` (`MockIngestionService`)
   - Generated via `make generate` or `go generate ./...`.
 - **Zero 3rd-Party Assertions**: Use standard library `testing` package exclusively (`t.Run`, `t.Errorf`, `t.Fatalf`). Do **NOT** use `testify` (`assert`/`require`).
 - **Decimal Assertions**: Compare decimals using `.Equal()`, `.IsZero()`, or `.IsPositive()`; never compare structs with `==`.
@@ -273,6 +276,15 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 - **Timeframe Boundary Resolution & High/Low**: `GetCurrencyPairHistory` calculates date boundaries in UTC (`time.Now().UTC()`) for `1W` (7 days), `1M` (30 days), `1Y` (365 days), and `ALL`. Computes start/end rates, absolute period change, percentage change, and scans period high and low extremes with exact decimal comparison (`.GreaterThan()`, `.LessThan()`).
 - **Manual Rate Overrides & Audit Trail**: Manual rate overrides via gRPC `RecordFXRateOverride` and GraphQL `recordFXRateOverride` enforce positive rates (`rate.IsPositive()`), reject future dates (`rateDate > today`), record mandatory audit justification notes with source prefix `'manual: '`, and optionally trigger retroactive recalibrations of all affected portfolio valuations (`recompute_valuations = true`).
 - **Admin Portal UI Integration**: The internal operations portal (`apps/admin-app` on `:5174`) provides a dedicated `FXManagement` view featuring interactive SVG trend curves (`FXTrendChart`) with direct/reciprocal inversion toggles (`Base ⇄ Quote`), real-time spot rate and 1D delta KPI cards, date range filtering, and modal dialogs (`FXOverrideModal`) for audit-trail rate overrides.
+
+### 4.12 Admin Historical Market Data Backfill (Asset Prices & FX Rates)
+- **End-to-End Contract**: gRPC `TriggerBackfill(TriggerBackfillRequest)` → GraphQL `triggerBackfill(input: TriggerBackfillInput!): BackfillPayload!`. Dates travel as ISO `YYYY-MM-DD` strings and are parsed into `domain.BackfillInput` (`internal/domain/backfill.go`); results map from `domain.BackfillResult` (`success`, `pricesSynced`, `fxRatesSynced`, `message`, `warnings`).
+- **Validation Invariants** (`PortfolioService.TriggerBackfill` in `internal/service/admin.go`): both dates required (`ErrDateRequired`), normalized to UTC midnight; `toDate` must not precede `fromDate` (`ErrInvalidDateRange`); no future dates (`ErrFutureDate`); maximum window of 1826 days / ~5 years (`ErrBackfillRangeTooLarge`); at least one target enabled (`ErrNoBackfillTarget`). The gRPC layer defaults an empty `to_date` to today (UTC), maps these to `codes.InvalidArgument`, and all other failures to `codes.Internal`.
+- **Scope Resolution**: Assets — explicit `symbols` (trimmed, uppercased, resolved via `FindInstrumentBySymbol`) or all active instruments (`ListActiveInstruments`). FX — explicit `currencyPairs` (`"EUR/USD"` parsed by `parseCurrencyPair`) or pairs generated from `ListActiveCurrencies` via `generateCurrencyPairs`.
+- **Partial-Failure Semantics**: Unknown symbols, malformed pairs, and per-instrument / per-pair provider errors are collected as non-fatal `warnings`; the batch continues. Only repository failures listing active instruments abort the job.
+- **Valuation Reconciliation**: When `recomputeValuations = true`, `BackfillPortfolioValuations(fromDate)` runs only for portfolios holding the backfilled instruments (`FindPortfoliosHoldingInstrument`); FX-only backfills that synced rates recompute all active portfolios (`ListActivePortfolios`).
+- **BFF Defaults**: `backfillAssets` and `backfillFx` default to `true`, `recomputeValuations` defaults to `false`; `warnings` is always a non-null list.
+- **Admin Portal UI**: `BackfillModal` (`apps/admin-app`) provides date presets (`30D`, `90D`, `YTD`, `1Y`, `ALL`), All-Active vs Specific scope selection with symbol/pair chips, API token budget impact projection from `ingestionStatus`, and an optional recompute toggle. Integrated in `IngestionPipeline` (Backfill Console), `PriceManagement` ("Backfill Asset Prices", pre-filled with the active symbol), and `FXManagement` ("Backfill FX Rates", pre-filled with the active pair); each view refreshes its data on completion.
 
 ---
 

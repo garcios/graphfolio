@@ -42,6 +42,9 @@ type PortfolioService interface {
 	ListFXRates(ctx context.Context, filter domain.FXRateFilter) ([]domain.FXRate, int, error)
 	GetCurrencyPairHistory(ctx context.Context, baseCurrency, quoteCurrency string, timeframe domain.HistoryTimeframe) (*domain.CurrencyPairHistory, error)
 	RecordFXRateOverride(ctx context.Context, input domain.FXRateOverrideInput) (*domain.FXRate, bool, error)
+
+	// Admin: Historical Market Data Backfill
+	TriggerBackfill(ctx context.Context, input domain.BackfillInput) (*domain.BackfillResult, error)
 }
 
 type ServiceOption func(*portfolioService)

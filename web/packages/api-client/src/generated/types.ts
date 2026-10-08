@@ -60,7 +60,7 @@ export default {
                 2
             ],
             "portfolio": [
-                27
+                29
             ],
             "__typename": [
                 2
@@ -99,7 +99,7 @@ export default {
         "Boolean": {},
         "Query": {
             "portfolio": [
-                27
+                29
             ],
             "instruments": [
                 6
@@ -165,16 +165,16 @@ export default {
                 25
             ],
             "userPreferences": [
-                29
+                31
             ],
             "supportedCurrencies": [
-                30
+                32
             ],
             "currencyPairs": [
-                33
+                35
             ],
             "currencyPairHistory": [
-                37,
+                39,
                 {
                     "baseCurrency": [
                         2,
@@ -191,7 +191,7 @@ export default {
                 }
             ],
             "fxRates": [
-                35,
+                37,
                 {
                     "baseCurrency": [
                         2
@@ -322,7 +322,7 @@ export default {
                 8
             ],
             "portfolio": [
-                27
+                29
             ],
             "__typename": [
                 2
@@ -386,20 +386,29 @@ export default {
                     ]
                 }
             ],
-            "updateUserPreferences": [
-                32,
+            "triggerBackfill": [
+                28,
                 {
                     "input": [
-                        31,
+                        27,
+                        "TriggerBackfillInput!"
+                    ]
+                }
+            ],
+            "updateUserPreferences": [
+                34,
+                {
+                    "input": [
+                        33,
                         "UpdateUserPreferencesInput!"
                     ]
                 }
             ],
             "recordFXRateOverride": [
-                39,
+                41,
                 {
                     "input": [
-                        38,
+                        40,
                         "RecordFXRateOverrideInput!"
                     ]
                 }
@@ -582,6 +591,52 @@ export default {
                 2
             ]
         },
+        "TriggerBackfillInput": {
+            "fromDate": [
+                2
+            ],
+            "toDate": [
+                2
+            ],
+            "symbols": [
+                2
+            ],
+            "currencyPairs": [
+                2
+            ],
+            "backfillAssets": [
+                8
+            ],
+            "backfillFx": [
+                8
+            ],
+            "recomputeValuations": [
+                8
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "BackfillPayload": {
+            "success": [
+                8
+            ],
+            "pricesSynced": [
+                10
+            ],
+            "fxRatesSynced": [
+                10
+            ],
+            "message": [
+                2
+            ],
+            "warnings": [
+                2
+            ],
+            "__typename": [
+                2
+            ]
+        },
         "Portfolio": {
             "totalValue": [
                 1
@@ -599,7 +654,7 @@ export default {
                 1
             ],
             "investments": [
-                28
+                30
             ],
             "__typename": [
                 2
@@ -696,10 +751,10 @@ export default {
         },
         "UpdateUserPreferencesPayload": {
             "preferences": [
-                29
+                31
             ],
             "portfolio": [
-                27
+                29
             ],
             "__typename": [
                 2
@@ -774,7 +829,7 @@ export default {
         },
         "FXRatesConnection": {
             "items": [
-                34
+                36
             ],
             "totalCount": [
                 10
@@ -811,7 +866,7 @@ export default {
                 2
             ],
             "points": [
-                36
+                38
             ],
             "startRate": [
                 0
@@ -860,7 +915,7 @@ export default {
         },
         "RecordFXRateOverridePayload": {
             "rate": [
-                34
+                36
             ],
             "valuationsRecomputed": [
                 8

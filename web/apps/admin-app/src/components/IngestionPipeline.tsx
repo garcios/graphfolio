@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { client } from '@graphfolio/api-client';
 import { Card, Badge, Button, formatDate } from '@graphfolio/ui';
+import { BackfillModal, type BackfillSubmitData, type BackfillModalResult } from './BackfillModal';
 import './IngestionPipeline.css';
 
 interface FeedStatus {
@@ -32,6 +33,7 @@ export const IngestionPipeline: React.FC<IngestionPipelineProps> = ({ onNotify }
   const [loading, setLoading] = useState(true);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncingFeed, setSyncingFeed] = useState<string | null>(null);
+  const [isBackfillModalOpen, setIsBackfillModalOpen] = useState(false);
 
   const fetchStatus = useCallback(() => {
     setLoading(true);
@@ -107,6 +109,51 @@ export const IngestionPipeline: React.FC<IngestionPipelineProps> = ({ onNotify }
     }
   };
 
+  const handleExecuteBackfill = async (submitData: BackfillSubmitData): Promise<BackfillModalResult> => {
+    try {
+      const res = await client.mutation({
+        triggerBackfill: {
+          __args: {
+            input: {
+              fromDate: submitData.fromDate,
+              toDate: submitData.toDate,
+              symbols: submitData.symbols,
+              currencyPairs: submitData.currencyPairs,
+              backfillAssets: submitData.backfillAssets,
+              backfillFx: submitData.backfillFx,
+              recomputeValuations: submitData.recomputeValuations,
+            },
+          },
+          success: true,
+          pricesSynced: true,
+          fxRatesSynced: true,
+          message: true,
+          warnings: true,
+        },
+      });
+
+      const payload = res.triggerBackfill;
+      if (payload.success) {
+        onNotify(payload.message || 'Historical backfill completed successfully.');
+        fetchStatus();
+      } else {
+        onNotify(`Backfill warning: ${payload.message}`);
+      }
+
+      return {
+        success: payload.success,
+        pricesSynced: payload.pricesSynced,
+        fxRatesSynced: payload.fxRatesSynced,
+        message: payload.message,
+        warnings: payload.warnings,
+      };
+    } catch (err: any) {
+      console.error('Backfill failed:', err);
+      onNotify(`Backfill failed: ${err?.message || 'Server error'}`);
+      throw err;
+    }
+  };
+
   const getBadgeVariant = (status: string) => {
     switch (status.toUpperCase()) {
       case 'ACTIVE':
@@ -142,6 +189,14 @@ export const IngestionPipeline: React.FC<IngestionPipelineProps> = ({ onNotify }
             disabled={loading || isSyncing}
           >
             ↻ Refresh Metrics
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setIsBackfillModalOpen(true)}
+            disabled={loading || isSyncing}
+          >
+            ⚡ Launch Range Backfill
           </Button>
           <Button
             size="sm"
@@ -272,9 +327,56 @@ export const IngestionPipeline: React.FC<IngestionPipelineProps> = ({ onNotify }
                 </Card>
               );
             })}
+
+            {/* Historical Range Backfill Console Card */}
+            <Card className="pipeline-card" glow="blue">
+              <div className="pipeline-card__header">
+                <span className="pipeline-card__title">Historical Range Backfill Console</span>
+                <Badge variant="info">On-Demand</Badge>
+              </div>
+              <div className="pipeline-metric">
+                <span>Scope</span>
+                <span>Custom Date Windows (Assets & FX)</span>
+              </div>
+              <div className="pipeline-metric">
+                <span>Providers</span>
+                <span>Twelve Data / Yahoo Finance / ECB</span>
+              </div>
+              <div className="pipeline-metric">
+                <span>Active Quota</span>
+                <span>
+                  {data.rateLimitRemaining} / {data.rateLimitBudget} requests
+                </span>
+              </div>
+              <div className="pipeline-metric">
+                <span>Diagnostics</span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  Ingest missing daily closes & fixings across customizable date horizons with rate-limit protection.
+                </span>
+              </div>
+              <div style={{ marginTop: '0.5rem' }}>
+                <Button
+                  size="sm"
+                  variant="primary"
+                  style={{ width: '100%' }}
+                  onClick={() => setIsBackfillModalOpen(true)}
+                >
+                  ⚡ Launch Range Backfill
+                </Button>
+              </div>
+            </Card>
           </div>
         </>
       ) : null}
+
+      <BackfillModal
+        isOpen={isBackfillModalOpen}
+        onClose={() => setIsBackfillModalOpen(false)}
+        rateLimitRemaining={data?.rateLimitRemaining}
+        rateLimitBudget={data?.rateLimitBudget}
+        onSubmit={handleExecuteBackfill}
+        onSuccess={() => fetchStatus()}
+      />
     </div>
   );
 };
