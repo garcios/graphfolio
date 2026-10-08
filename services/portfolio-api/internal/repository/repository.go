@@ -60,4 +60,10 @@ type Repository interface {
 	GetHistoricalPriceMatrix(ctx context.Context, instrumentIDs []uuid.UUID, fromDate, toDate time.Time) (map[uuid.UUID]map[string]decimal.Decimal, error)
 	GetHistoricalFXMatrix(ctx context.Context, currencies []string, baseCurrency string, fromDate, toDate time.Time) (map[string]map[string]decimal.Decimal, error)
 	DeleteValuationsFromDate(ctx context.Context, portfolioID uuid.UUID, fromDate time.Time) error
+
+	// Admin: FX Rates & Currency Pair Inspection
+	ListCurrencyPairs(ctx context.Context) ([]domain.CurrencyPairSummary, error)
+	ListFXRates(ctx context.Context, filter domain.FXRateFilter) ([]domain.FXRate, int, error)
+	GetHistoricalFXRates(ctx context.Context, baseCurrency, quoteCurrency string, fromDate, toDate *time.Time) ([]domain.FXRate, error)
+	UpsertFXRate(ctx context.Context, baseCurrency, quoteCurrency string, rateDate time.Time, rate decimal.Decimal, source string) (*domain.FXRate, error)
 }

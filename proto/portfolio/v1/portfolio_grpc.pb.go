@@ -33,6 +33,10 @@ const (
 	PortfolioService_RecordPriceOverride_FullMethodName         = "/portfolio.v1.PortfolioService/RecordPriceOverride"
 	PortfolioService_GetIngestionStatus_FullMethodName          = "/portfolio.v1.PortfolioService/GetIngestionStatus"
 	PortfolioService_TriggerMarketSync_FullMethodName           = "/portfolio.v1.PortfolioService/TriggerMarketSync"
+	PortfolioService_ListCurrencyPairs_FullMethodName           = "/portfolio.v1.PortfolioService/ListCurrencyPairs"
+	PortfolioService_ListFXRates_FullMethodName                 = "/portfolio.v1.PortfolioService/ListFXRates"
+	PortfolioService_GetCurrencyPairHistory_FullMethodName      = "/portfolio.v1.PortfolioService/GetCurrencyPairHistory"
+	PortfolioService_RecordFXRateOverride_FullMethodName        = "/portfolio.v1.PortfolioService/RecordFXRateOverride"
 	PortfolioService_RebuildValuations_FullMethodName           = "/portfolio.v1.PortfolioService/RebuildValuations"
 )
 
@@ -57,6 +61,11 @@ type PortfolioServiceClient interface {
 	// Admin: Ingestion Pipeline & Diagnostics
 	GetIngestionStatus(ctx context.Context, in *GetIngestionStatusRequest, opts ...grpc.CallOption) (*GetIngestionStatusResponse, error)
 	TriggerMarketSync(ctx context.Context, in *TriggerMarketSyncRequest, opts ...grpc.CallOption) (*TriggerMarketSyncResponse, error)
+	// Admin: FX Rates & Currency Pair Inspection
+	ListCurrencyPairs(ctx context.Context, in *ListCurrencyPairsRequest, opts ...grpc.CallOption) (*ListCurrencyPairsResponse, error)
+	ListFXRates(ctx context.Context, in *ListFXRatesRequest, opts ...grpc.CallOption) (*ListFXRatesResponse, error)
+	GetCurrencyPairHistory(ctx context.Context, in *GetCurrencyPairHistoryRequest, opts ...grpc.CallOption) (*GetCurrencyPairHistoryResponse, error)
+	RecordFXRateOverride(ctx context.Context, in *RecordFXRateOverrideRequest, opts ...grpc.CallOption) (*RecordFXRateOverrideResponse, error)
 	// Historical Valuation Engine & Replay
 	RebuildValuations(ctx context.Context, in *RebuildValuationsRequest, opts ...grpc.CallOption) (*RebuildValuationsResponse, error)
 }
@@ -195,6 +204,42 @@ func (c *portfolioServiceClient) TriggerMarketSync(ctx context.Context, in *Trig
 	return out, nil
 }
 
+func (c *portfolioServiceClient) ListCurrencyPairs(ctx context.Context, in *ListCurrencyPairsRequest, opts ...grpc.CallOption) (*ListCurrencyPairsResponse, error) {
+	out := new(ListCurrencyPairsResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_ListCurrencyPairs_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portfolioServiceClient) ListFXRates(ctx context.Context, in *ListFXRatesRequest, opts ...grpc.CallOption) (*ListFXRatesResponse, error) {
+	out := new(ListFXRatesResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_ListFXRates_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portfolioServiceClient) GetCurrencyPairHistory(ctx context.Context, in *GetCurrencyPairHistoryRequest, opts ...grpc.CallOption) (*GetCurrencyPairHistoryResponse, error) {
+	out := new(GetCurrencyPairHistoryResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_GetCurrencyPairHistory_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portfolioServiceClient) RecordFXRateOverride(ctx context.Context, in *RecordFXRateOverrideRequest, opts ...grpc.CallOption) (*RecordFXRateOverrideResponse, error) {
+	out := new(RecordFXRateOverrideResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_RecordFXRateOverride_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *portfolioServiceClient) RebuildValuations(ctx context.Context, in *RebuildValuationsRequest, opts ...grpc.CallOption) (*RebuildValuationsResponse, error) {
 	out := new(RebuildValuationsResponse)
 	err := c.cc.Invoke(ctx, PortfolioService_RebuildValuations_FullMethodName, in, out, opts...)
@@ -225,6 +270,11 @@ type PortfolioServiceServer interface {
 	// Admin: Ingestion Pipeline & Diagnostics
 	GetIngestionStatus(context.Context, *GetIngestionStatusRequest) (*GetIngestionStatusResponse, error)
 	TriggerMarketSync(context.Context, *TriggerMarketSyncRequest) (*TriggerMarketSyncResponse, error)
+	// Admin: FX Rates & Currency Pair Inspection
+	ListCurrencyPairs(context.Context, *ListCurrencyPairsRequest) (*ListCurrencyPairsResponse, error)
+	ListFXRates(context.Context, *ListFXRatesRequest) (*ListFXRatesResponse, error)
+	GetCurrencyPairHistory(context.Context, *GetCurrencyPairHistoryRequest) (*GetCurrencyPairHistoryResponse, error)
+	RecordFXRateOverride(context.Context, *RecordFXRateOverrideRequest) (*RecordFXRateOverrideResponse, error)
 	// Historical Valuation Engine & Replay
 	RebuildValuations(context.Context, *RebuildValuationsRequest) (*RebuildValuationsResponse, error)
 	mustEmbedUnimplementedPortfolioServiceServer()
@@ -275,6 +325,18 @@ func (UnimplementedPortfolioServiceServer) GetIngestionStatus(context.Context, *
 }
 func (UnimplementedPortfolioServiceServer) TriggerMarketSync(context.Context, *TriggerMarketSyncRequest) (*TriggerMarketSyncResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TriggerMarketSync not implemented")
+}
+func (UnimplementedPortfolioServiceServer) ListCurrencyPairs(context.Context, *ListCurrencyPairsRequest) (*ListCurrencyPairsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListCurrencyPairs not implemented")
+}
+func (UnimplementedPortfolioServiceServer) ListFXRates(context.Context, *ListFXRatesRequest) (*ListFXRatesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListFXRates not implemented")
+}
+func (UnimplementedPortfolioServiceServer) GetCurrencyPairHistory(context.Context, *GetCurrencyPairHistoryRequest) (*GetCurrencyPairHistoryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCurrencyPairHistory not implemented")
+}
+func (UnimplementedPortfolioServiceServer) RecordFXRateOverride(context.Context, *RecordFXRateOverrideRequest) (*RecordFXRateOverrideResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RecordFXRateOverride not implemented")
 }
 func (UnimplementedPortfolioServiceServer) RebuildValuations(context.Context, *RebuildValuationsRequest) (*RebuildValuationsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RebuildValuations not implemented")
@@ -544,6 +606,78 @@ func _PortfolioService_TriggerMarketSync_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortfolioService_ListCurrencyPairs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListCurrencyPairsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).ListCurrencyPairs(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_ListCurrencyPairs_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).ListCurrencyPairs(ctx, req.(*ListCurrencyPairsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortfolioService_ListFXRates_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListFXRatesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).ListFXRates(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_ListFXRates_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).ListFXRates(ctx, req.(*ListFXRatesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortfolioService_GetCurrencyPairHistory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCurrencyPairHistoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).GetCurrencyPairHistory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_GetCurrencyPairHistory_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).GetCurrencyPairHistory(ctx, req.(*GetCurrencyPairHistoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortfolioService_RecordFXRateOverride_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RecordFXRateOverrideRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).RecordFXRateOverride(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_RecordFXRateOverride_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).RecordFXRateOverride(ctx, req.(*RecordFXRateOverrideRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _PortfolioService_RebuildValuations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RebuildValuationsRequest)
 	if err := dec(in); err != nil {
@@ -624,6 +758,22 @@ var PortfolioService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TriggerMarketSync",
 			Handler:    _PortfolioService_TriggerMarketSync_Handler,
+		},
+		{
+			MethodName: "ListCurrencyPairs",
+			Handler:    _PortfolioService_ListCurrencyPairs_Handler,
+		},
+		{
+			MethodName: "ListFXRates",
+			Handler:    _PortfolioService_ListFXRates_Handler,
+		},
+		{
+			MethodName: "GetCurrencyPairHistory",
+			Handler:    _PortfolioService_GetCurrencyPairHistory_Handler,
+		},
+		{
+			MethodName: "RecordFXRateOverride",
+			Handler:    _PortfolioService_RecordFXRateOverride_Handler,
 		},
 		{
 			MethodName: "RebuildValuations",

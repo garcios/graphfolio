@@ -41,9 +41,59 @@ type Currency struct {
 	Symbol string `json:"symbol"`
 }
 
+type CurrencyPair struct {
+	BaseCurrency   string   `json:"baseCurrency"`
+	QuoteCurrency  string   `json:"quoteCurrency"`
+	Pair           string   `json:"pair"`
+	LatestRate     Decimal  `json:"latestRate"`
+	LatestDate     string   `json:"latestDate"`
+	LatestSource   string   `json:"latestSource"`
+	PreviousRate   *Decimal `json:"previousRate,omitempty"`
+	Change1dAmount *Decimal `json:"change1dAmount,omitempty"`
+	Change1dPct    *Decimal `json:"change1dPct,omitempty"`
+	TotalRecords   int      `json:"totalRecords"`
+	FirstDate      string   `json:"firstDate"`
+	LastDate       string   `json:"lastDate"`
+}
+
+type CurrencyPairHistory struct {
+	BaseCurrency    string            `json:"baseCurrency"`
+	QuoteCurrency   string            `json:"quoteCurrency"`
+	Pair            string            `json:"pair"`
+	Points          []*FXHistoryPoint `json:"points"`
+	StartRate       Decimal           `json:"startRate"`
+	EndRate         Decimal           `json:"endRate"`
+	PeriodChange    Decimal           `json:"periodChange"`
+	PeriodChangePct Decimal           `json:"periodChangePct"`
+	PeriodHigh      Decimal           `json:"periodHigh"`
+	PeriodLow       Decimal           `json:"periodLow"`
+}
+
 type DeleteTransactionPayload struct {
 	Success   bool       `json:"success"`
 	Portfolio *Portfolio `json:"portfolio"`
+}
+
+type FXHistoryPoint struct {
+	Date         string  `json:"date"`
+	Rate         Decimal `json:"rate"`
+	InvertedRate Decimal `json:"invertedRate"`
+	Source       string  `json:"source"`
+}
+
+type FXRate struct {
+	BaseCurrency  string  `json:"baseCurrency"`
+	QuoteCurrency string  `json:"quoteCurrency"`
+	Pair          string  `json:"pair"`
+	RateDate      string  `json:"rateDate"`
+	Rate          Decimal `json:"rate"`
+	InvertedRate  Decimal `json:"invertedRate"`
+	Source        string  `json:"source"`
+}
+
+type FXRatesConnection struct {
+	Items      []*FXRate `json:"items"`
+	TotalCount int       `json:"totalCount"`
 }
 
 type FeedHealthStatus struct {
@@ -137,6 +187,20 @@ type PortfolioHistory struct {
 }
 
 type Query struct {
+}
+
+type RecordFXRateOverrideInput struct {
+	BaseCurrency        string  `json:"baseCurrency"`
+	QuoteCurrency       string  `json:"quoteCurrency"`
+	RateDate            string  `json:"rateDate"`
+	Rate                Decimal `json:"rate"`
+	Reason              *string `json:"reason,omitempty"`
+	RecomputeValuations *bool   `json:"recomputeValuations,omitempty"`
+}
+
+type RecordFXRateOverridePayload struct {
+	Rate                 *FXRate `json:"rate"`
+	ValuationsRecomputed bool    `json:"valuationsRecomputed"`
 }
 
 type RecordPriceOverrideInput struct {

@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"portfolio-api/internal/domain"
@@ -730,6 +731,225 @@ func (s *PortfolioServer) RebuildValuations(ctx context.Context, req *pb.Rebuild
 		Success: true,
 		Message: "Valuations recomputed successfully",
 	}, nil
+}
+
+func (s *PortfolioServer) ListCurrencyPairs(ctx context.Context, req *pb.ListCurrencyPairsRequest) (*pb.ListCurrencyPairsResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	pairs, err := s.svc.ListCurrencyPairs(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to list currency pairs: %v", err)
+	}
+
+	protoPairs := make([]*pb.CurrencyPairItem, len(pairs))
+	for i, p := range pairs {
+		item := &pb.CurrencyPairItem{
+			BaseCurrency:  p.BaseCurrency,
+			QuoteCurrency: p.QuoteCurrency,
+			LatestRate:    decimalpb.ToProto(p.LatestRate),
+			LatestDate:    p.LatestDate.Format("2006-01-02"),
+			LatestSource:  p.LatestSource,
+			TotalRecords:  int32(p.TotalRecords),
+			FirstDate:     p.FirstDate.Format("2006-01-02"),
+			LastDate:      p.LastDate.Format("2006-01-02"),
+		}
+		if p.PreviousRate != nil {
+			item.PreviousRate = decimalpb.ToProto(*p.PreviousRate)
+		}
+		if p.Change1DAmount != nil {
+			item.Change_1DAmount = decimalpb.ToProto(*p.Change1DAmount)
+		}
+		if p.Change1DPct != nil {
+			item.Change_1DPct = decimalpb.ToProto(*p.Change1DPct)
+		}
+		protoPairs[i] = item
+	}
+
+	return &pb.ListCurrencyPairsResponse{
+		Pairs: protoPairs,
+	}, nil
+}
+
+func (s *PortfolioServer) ListFXRates(ctx context.Context, req *pb.ListFXRatesRequest) (*pb.ListFXRatesResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	var fromDate, toDate *time.Time
+	if req.FromDate != nil && *req.FromDate != "" {
+		fd, err := time.Parse("2006-01-02", *req.FromDate)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid from_date format: %v", err)
+		}
+		fromDate = &fd
+	}
+	if req.ToDate != nil && *req.ToDate != "" {
+		td, err := time.Parse("2006-01-02", *req.ToDate)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid to_date format: %v", err)
+		}
+		toDate = &td
+	}
+
+	rates, total, err := s.svc.ListFXRates(ctx, domain.FXRateFilter{
+		BaseCurrency:  req.BaseCurrency,
+		QuoteCurrency: req.QuoteCurrency,
+		FromDate:      fromDate,
+		ToDate:        toDate,
+		Limit:         int(req.GetLimit()),
+		Offset:        int(req.GetOffset()),
+	})
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidCurrency) || errors.Is(err, service.ErrEqualCurrencies) || errors.Is(err, service.ErrInvalidDateRange) {
+			return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to list fx rates: %v", err)
+	}
+
+	protoRates := make([]*pb.FXRateItem, len(rates))
+	for i, r := range rates {
+		protoRates[i] = mapFXRateToProto(r)
+	}
+
+	return &pb.ListFXRatesResponse{
+		Rates:      protoRates,
+		TotalCount: int32(total),
+	}, nil
+}
+
+func (s *PortfolioServer) GetCurrencyPairHistory(ctx context.Context, req *pb.GetCurrencyPairHistoryRequest) (*pb.GetCurrencyPairHistoryResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	if req.GetBaseCurrency() == "" {
+		return nil, status.Error(codes.InvalidArgument, "base_currency is required")
+	}
+	if req.GetQuoteCurrency() == "" {
+		return nil, status.Error(codes.InvalidArgument, "quote_currency is required")
+	}
+
+	var timeframe domain.HistoryTimeframe
+	switch req.GetTimeframe() {
+	case pb.HistoryTimeframe_HISTORY_TIMEFRAME_1D:
+		timeframe = domain.Timeframe1D
+	case pb.HistoryTimeframe_HISTORY_TIMEFRAME_1W:
+		timeframe = domain.Timeframe1W
+	case pb.HistoryTimeframe_HISTORY_TIMEFRAME_1M:
+		timeframe = domain.Timeframe1M
+	case pb.HistoryTimeframe_HISTORY_TIMEFRAME_1Y:
+		timeframe = domain.Timeframe1Y
+	case pb.HistoryTimeframe_HISTORY_TIMEFRAME_ALL, pb.HistoryTimeframe_HISTORY_TIMEFRAME_UNSPECIFIED:
+		timeframe = domain.TimeframeAll
+	default:
+		return nil, status.Errorf(codes.InvalidArgument, "invalid timeframe: %v", req.GetTimeframe())
+	}
+
+	hist, err := s.svc.GetCurrencyPairHistory(ctx, req.GetBaseCurrency(), req.GetQuoteCurrency(), timeframe)
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidCurrency) || errors.Is(err, service.ErrEqualCurrencies) {
+			return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get currency pair history: %v", err)
+	}
+
+	protoPoints := make([]*pb.FXHistoryPoint, len(hist.Points))
+	for i, pt := range hist.Points {
+		protoPoints[i] = &pb.FXHistoryPoint{
+			Date:         pt.Date.Format("2006-01-02"),
+			Rate:         decimalpb.ToProto(pt.Rate),
+			InvertedRate: decimalpb.ToProto(pt.InvertedRate),
+			Source:       pt.Source,
+		}
+	}
+
+	return &pb.GetCurrencyPairHistoryResponse{
+		BaseCurrency:    hist.BaseCurrency,
+		QuoteCurrency:   hist.QuoteCurrency,
+		Points:          protoPoints,
+		StartRate:       decimalpb.ToProto(hist.StartRate),
+		EndRate:         decimalpb.ToProto(hist.EndRate),
+		PeriodChange:    decimalpb.ToProto(hist.PeriodChange),
+		PeriodChangePct: decimalpb.ToProto(hist.PeriodChangePct),
+		PeriodHigh:      decimalpb.ToProto(hist.PeriodHigh),
+		PeriodLow:       decimalpb.ToProto(hist.PeriodLow),
+	}, nil
+}
+
+func (s *PortfolioServer) RecordFXRateOverride(ctx context.Context, req *pb.RecordFXRateOverrideRequest) (*pb.RecordFXRateOverrideResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	if req.GetBaseCurrency() == "" {
+		return nil, status.Error(codes.InvalidArgument, "base_currency is required")
+	}
+	if req.GetQuoteCurrency() == "" {
+		return nil, status.Error(codes.InvalidArgument, "quote_currency is required")
+	}
+	if req.GetRateDate() == "" {
+		return nil, status.Error(codes.InvalidArgument, "rate_date is required")
+	}
+
+	rateDate, err := time.Parse("2006-01-02", req.GetRateDate())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid rate_date format (must be YYYY-MM-DD): %v", err)
+	}
+
+	if req.GetRate() == nil {
+		return nil, status.Error(codes.InvalidArgument, "rate is required")
+	}
+
+	rateDec, err := decimalpb.FromProto(req.GetRate())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid rate format: %v", err)
+	}
+
+	var reason *string
+	if req.Reason != nil && strings.TrimSpace(*req.Reason) != "" {
+		reason = req.Reason
+	}
+
+	fxRate, recomputed, err := s.svc.RecordFXRateOverride(ctx, domain.FXRateOverrideInput{
+		BaseCurrency:        req.GetBaseCurrency(),
+		QuoteCurrency:       req.GetQuoteCurrency(),
+		RateDate:            rateDate,
+		Rate:                rateDec,
+		Reason:              reason,
+		RecomputeValuations: req.GetRecomputeValuations(),
+	})
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidCurrency) ||
+			errors.Is(err, service.ErrEqualCurrencies) ||
+			errors.Is(err, service.ErrRateDateRequired) ||
+			errors.Is(err, service.ErrFutureDate) ||
+			errors.Is(err, service.ErrInvalidRate) {
+			return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to record fx rate override: %v", err)
+	}
+
+	return &pb.RecordFXRateOverrideResponse{
+		Rate:                 mapFXRateToProto(*fxRate),
+		ValuationsRecomputed: recomputed,
+	}, nil
+}
+
+func mapFXRateToProto(r domain.FXRate) *pb.FXRateItem {
+	var inverted decimal.Decimal
+	if r.Rate.IsPositive() {
+		inverted = decimal.NewFromInt(1).DivRound(r.Rate, 10)
+	}
+	return &pb.FXRateItem{
+		BaseCurrency:  r.BaseCurrency,
+		QuoteCurrency: r.QuoteCurrency,
+		RateDate:      r.RateDate.Format("2006-01-02"),
+		Rate:          decimalpb.ToProto(r.Rate),
+		InvertedRate:  decimalpb.ToProto(inverted),
+		Source:        r.Source,
+	}
 }
 
 func mapInstrumentToProto(inst domain.Instrument) *pb.Instrument {

@@ -7,6 +7,8 @@ import (
 	pb "graphfolio/proto/portfolio/v1"
 	userpb "graphfolio/proto/user/v1"
 
+	"fmt"
+
 	"github.com/shopspring/decimal"
 )
 
@@ -378,5 +380,105 @@ func toModelCurrency(c *userpb.CurrencyInfo) *model.Currency {
 		Code:   c.Code,
 		Name:   c.Name,
 		Symbol: c.Symbol,
+	}
+}
+
+func toModelCurrencyPair(p *pb.CurrencyPairItem) *model.CurrencyPair {
+	if p == nil {
+		return nil
+	}
+	var previousRate, change1dAmount, change1dPct *model.Decimal
+	if p.PreviousRate != nil {
+		pr := toModelDecimal(p.PreviousRate)
+		previousRate = &pr
+	}
+	if p.Change_1DAmount != nil {
+		ca := toModelDecimal(p.Change_1DAmount)
+		change1dAmount = &ca
+	}
+	if p.Change_1DPct != nil {
+		cp := toModelDecimal(p.Change_1DPct)
+		change1dPct = &cp
+	}
+
+	return &model.CurrencyPair{
+		BaseCurrency:   p.BaseCurrency,
+		QuoteCurrency:  p.QuoteCurrency,
+		Pair:           fmt.Sprintf("%s/%s", p.BaseCurrency, p.QuoteCurrency),
+		LatestRate:     toModelDecimal(p.LatestRate),
+		LatestDate:     p.LatestDate,
+		LatestSource:   p.LatestSource,
+		PreviousRate:   previousRate,
+		Change1dAmount: change1dAmount,
+		Change1dPct:    change1dPct,
+		TotalRecords:   int(p.TotalRecords),
+		FirstDate:      p.FirstDate,
+		LastDate:       p.LastDate,
+	}
+}
+
+func toModelFXRate(r *pb.FXRateItem) *model.FXRate {
+	if r == nil {
+		return nil
+	}
+	return &model.FXRate{
+		BaseCurrency:  r.BaseCurrency,
+		QuoteCurrency: r.QuoteCurrency,
+		Pair:          fmt.Sprintf("%s/%s", r.BaseCurrency, r.QuoteCurrency),
+		RateDate:      r.RateDate,
+		Rate:          toModelDecimal(r.Rate),
+		InvertedRate:  toModelDecimal(r.InvertedRate),
+		Source:        r.Source,
+	}
+}
+
+func toModelFXRatesConnection(resp *pb.ListFXRatesResponse) *model.FXRatesConnection {
+	if resp == nil {
+		return &model.FXRatesConnection{
+			Items:      []*model.FXRate{},
+			TotalCount: 0,
+		}
+	}
+	items := make([]*model.FXRate, len(resp.Rates))
+	for i, r := range resp.Rates {
+		items[i] = toModelFXRate(r)
+	}
+	return &model.FXRatesConnection{
+		Items:      items,
+		TotalCount: int(resp.TotalCount),
+	}
+}
+
+func toModelFXHistoryPoint(pt *pb.FXHistoryPoint) *model.FXHistoryPoint {
+	if pt == nil {
+		return nil
+	}
+	return &model.FXHistoryPoint{
+		Date:         pt.Date,
+		Rate:         toModelDecimal(pt.Rate),
+		InvertedRate: toModelDecimal(pt.InvertedRate),
+		Source:       pt.Source,
+	}
+}
+
+func toModelCurrencyPairHistory(resp *pb.GetCurrencyPairHistoryResponse) *model.CurrencyPairHistory {
+	if resp == nil {
+		return nil
+	}
+	points := make([]*model.FXHistoryPoint, len(resp.Points))
+	for i, pt := range resp.Points {
+		points[i] = toModelFXHistoryPoint(pt)
+	}
+	return &model.CurrencyPairHistory{
+		BaseCurrency:    resp.BaseCurrency,
+		QuoteCurrency:   resp.QuoteCurrency,
+		Pair:            fmt.Sprintf("%s/%s", resp.BaseCurrency, resp.QuoteCurrency),
+		Points:          points,
+		StartRate:       toModelDecimal(resp.StartRate),
+		EndRate:         toModelDecimal(resp.EndRate),
+		PeriodChange:    toModelDecimal(resp.PeriodChange),
+		PeriodChangePct: toModelDecimal(resp.PeriodChangePct),
+		PeriodHigh:      toModelDecimal(resp.PeriodHigh),
+		PeriodLow:       toModelDecimal(resp.PeriodLow),
 	}
 }

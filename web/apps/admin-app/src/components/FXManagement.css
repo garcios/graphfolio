@@ -1,0 +1,133 @@
+.fx-mgmt {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.fx-mgmt__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.fx-mgmt__pair-pills {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.fx-pill {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm, 6px);
+  background: var(--card-bg, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+  color: var(--text-secondary, #a1a1aa);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fx-pill:hover {
+  color: #ffffff;
+  background: var(--card-bg-hover, rgba(255, 255, 255, 0.06));
+}
+
+.fx-pill--active {
+  color: #ffffff;
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.4);
+}
+
+.fx-mgmt__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.fx-mgmt__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.fx-stat-card {
+  padding: 1rem 1.25rem;
+}
+
+.fx-stat-card .stat-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #a1a1aa);
+  margin-bottom: 0.25rem;
+}
+
+.fx-stat-card .stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.fx-stat-card .stat-sub {
+  font-size: 0.8rem;
+  color: var(--text-muted, #71717a);
+  font-weight: 500;
+}
+
+.fx-ledger-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.fx-ledger-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.fx-ledger-card__title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.fx-ledger-card__filters {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.fx-ledger-card__date-input {
+  width: 150px;
+}
+
+.fx-ledger-card__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1rem;
+  border-top: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+}
+
+.fx-pagination__info {
+  font-size: 0.8rem;
+  color: var(--text-muted, #71717a);
+}
+
+.fx-pagination__controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

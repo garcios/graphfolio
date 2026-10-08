@@ -21,9 +21,9 @@ This document catalogs all implemented features, in-progress components, and pla
 | **11** | **Dynamic Cost Basis Method Switching (Average Cost ↔ FIFO)** | **PLANNED** | Proto, Svc, BFF, Web | [cost-basis-switching-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/cost-basis-switching-implementation-plan.md) |
 | **12** | **User Preferences & Display Currency** | **DONE** | Proto, User API, BFF, Web | [user-preferences-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/user-preferences-implementation-plan.md) |
 | **13** | **Portfolio Valuation Engine & Historical Backfill** | **DONE** | Database, Proto, Svc, Worker | [portfolio-valuation-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/portfolio-valuation-engine-implementation-plan.md) |
-| **14** | **Market Data Ingestion (Asset Prices & FX Rates)** | **PLANNED** | Database, Svc, Worker | [market-data-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/market-data-ingestion-implementation-plan.md) |
+| **14** | **Market Data Ingestion (Asset Prices & FX Rates)** | **DONE** | Database, Svc, Worker | [market-data-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/market-data-ingestion-implementation-plan.md) |
 | **15** | **Look-Through Fundamental & Cash Flow Quality Engine** | **PLANNED** | Database, Proto, Svc, BFF, Web | [fundamental-cash-flow-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/fundamental-cash-flow-engine-implementation-plan.md) |
-| **16** | **Currency Pair Historical Prices (Admin Portal)** | **PLANNED** | Proto, Svc, BFF, Web | [currency-pair-historical-prices-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/currency-pair-historical-prices-implementation-plan.md) |
+| **16** | **Currency Pair Historical Prices (Admin Portal)** | **DONE** | Proto, Svc, BFF, Web | [currency-pair-historical-prices-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/currency-pair-historical-prices-implementation-plan.md) |
 | **17** | **Admin UI Historical Market Data Backfill (Asset Prices & FX Rates)** | **PLANNED** | Proto, Svc, BFF, Web | [admin-historical-backfill-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-historical-backfill-implementation-plan.md) |
 | **18** | **Ingestion Job History View (Admin Portal)** | **PLANNED** | Database, Proto, Svc, BFF, Web | [ingestion-job-history-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/ingestion-job-history-implementation-plan.md) |
 | **19** | **Tax Lot Inspector & Capital Gains Reports** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
@@ -194,6 +194,27 @@ This document catalogs all implemented features, in-progress components, and pla
   - [main.go (Worker)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/cmd/worker/main.go)
   - [Makefile](file:///Users/oscargarcia/workspace/graphfolio/Makefile)
 
+### 2.12 Currency Pair Historical Prices (Admin Portal)
+- **Status**: **DONE**
+- **Plan Reference**: [currency-pair-historical-prices-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/currency-pair-historical-prices-implementation-plan.md)
+- **Description**: Foreign Exchange (FX) currency pair inspection, reciprocal rate triangulation, historical time-series analytics, and manual pricing override system. Features a dedicated "Currency Pairs (FX)" portal view in the internal Admin Portal (`:5174`), interactive SVG historical trend curves with glowing area fills across `1W`, `1M`, `1Y`, and `ALL` timeframes, instant direct/reciprocal inversion toggle (`Base ⇄ Quote`), real-time operational telemetry (Spot Rate, 1D delta/percentage, and benchmark provider badges), paginated authoritative ledger (`portfolio.fx_rates`), and modal dialogs for audit-justified manual rate overrides. End-to-end gRPC RPCs, GraphQL BFF resolvers, and typed GenQL client integration strictly adhering to the zero floating-point arithmetic policy.
+- **Key Files**:
+  - [portfolio.proto](file:///Users/oscargarcia/workspace/graphfolio/proto/portfolio/v1/portfolio.proto)
+  - [fx.go (Domain)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/domain/fx.go)
+  - [queries.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/repository/queries.go)
+  - [postgres.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/repository/postgres.go)
+  - [fx.go (Service)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/fx.go)
+  - [fx_test.go (Service)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/fx_test.go)
+  - [server.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server.go)
+  - [server_test.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server_test.go)
+  - [schema.graphqls](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls)
+  - [schema.resolvers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers.go)
+  - [helpers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/helpers.go)
+  - [FXManagement.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/FXManagement.tsx)
+  - [FXTrendChart.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/FXTrendChart.tsx)
+  - [FXOverrideModal.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/FXOverrideModal.tsx)
+  - [AdminLayout.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/AdminLayout.tsx)
+
 ---
 
 ## 3. Planned Features (`PLANNED`)
@@ -208,18 +229,7 @@ This document catalogs all implemented features, in-progress components, and pla
   - Replays historical transaction ledger to instantly update realized capital gains, holding cost basis, and total return percentages.
   - Info tooltip explaining tax optimization differences (pooling vs selling oldest shares).
 
-### 3.2 Market Data Ingestion (Asset Prices & FX Rates)
-- **Status**: **PLANNED**
-- **Plan Reference**: [market-data-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/market-data-ingestion-implementation-plan.md)
-- **Scope**: `services/portfolio-api` (`internal/marketdata/`, `cmd/market-ingest/`)
-- **Highlights**:
-  - Automated End-of-Day (EOD) closing price and official FX fixing rate ingestion pipeline.
-  - Multi-provider adapter architecture (Twelve Data, Yahoo Finance, European Central Bank SDMX/XML, Open Exchange Rates).
-  - High-throughput batch upsert queries with idempotent conflict handling for `portfolio.instrument_prices` and `portfolio.fx_rates`.
-  - Token-bucket rate limiting (`golang.org/x/time/rate`), exponential backoff retry policies, and price spike anomaly detection.
-  - Automatic historical price and FX backfill triggered upon transaction ingestion for unpriced assets.
-
-### 3.3 Look-Through Fundamental & Cash Flow Quality Engine
+### 3.2 Look-Through Fundamental & Cash Flow Quality Engine
 - **Status**: **PLANNED**
 - **Plan Reference**: [fundamental-cash-flow-engine-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/fundamental-cash-flow-engine-implementation-plan.md)
 - **Scope**: `proto/`, `services/portfolio-api`, `bff/`, `web/`
@@ -230,19 +240,7 @@ This document catalogs all implemented features, in-progress components, and pla
   - Earnings quality detection via the Sloan Accrual Ratio to highlight divergence between reported Net Income and cash realization.
   - "Business Owner" dashboard view contrasting Market Value growth against Business Intrinsic Value growth.
 
-### 3.4 Currency Pair Historical Prices (Admin Portal)
-- **Status**: **PLANNED**
-- **Plan Reference**: [currency-pair-historical-prices-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/currency-pair-historical-prices-implementation-plan.md)
-- **Scope**: `proto/portfolio/v1/`, `services/portfolio-api`, `bff/`, `web/apps/admin-app`
-- **Highlights**:
-  - Dedicated "Currency Pairs (FX)" management view in the internal Admin Portal (`:5174`).
-  - Interactive SVG historical exchange rate trend chart with timeframe filtering (`1W`, `1M`, `3M`, `1Y`, `ALL`) and hover crosshairs.
-  - Dynamic currency pair selector with reciprocal rate inversion toggle (`Base ⇄ Quote`, e.g. `EUR/USD` ↔ `USD/EUR`) computed with exact 10-decimal fixed-point precision.
-  - Real-time operational KPI telemetry: Spot Rate, 24h/1D change (% and delta), Period High/Low, Total Historical Fixings, and Data Source benchmark (`ECB`, `Twelve Data`).
-  - Filterable, paginated authoritative rates ledger (`portfolio.fx_rates`) with date pickers, direct & inverted rates, and manual rate override modal dialog.
-  - End-to-end gRPC, GraphQL BFF resolvers, and typed GenQL client integration strictly adhering to the zero floating-point arithmetic policy.
-
-### 3.5 Admin UI Historical Market Data Backfill (Asset Prices & FX Rates)
+### 3.3 Admin UI Historical Market Data Backfill (Asset Prices & FX Rates)
 - **Status**: **PLANNED**
 - **Plan Reference**: [admin-historical-backfill-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-historical-backfill-implementation-plan.md)
 - **Scope**: `proto/portfolio/v1/`, `services/portfolio-api`, `bff/`, `web/apps/admin-app`
@@ -255,7 +253,7 @@ This document catalogs all implemented features, in-progress components, and pla
   - Screen integrations across `IngestionPipeline` (Backfill Console), `PriceManagement` ("Backfill Prices" toolbar action), and `FXManagement` ("Backfill FX Rates" toolbar action).
   - End-to-end gRPC `TriggerBackfill` RPC, GraphQL `triggerBackfill` mutation, and typed GenQL client integration strictly adhering to the zero floating-point arithmetic policy.
 
-### 3.6 Ingestion Job History View (Admin Portal)
+### 3.4 Ingestion Job History View (Admin Portal)
 - **Status**: **PLANNED**
 - **Plan Reference**: [ingestion-job-history-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/ingestion-job-history-implementation-plan.md)
 - **Scope**: Database (`portfolio.ingestion_jobs`), `proto/portfolio/v1/`, `services/portfolio-api`, `bff/`, `web/apps/admin-app`

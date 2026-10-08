@@ -48,9 +48,59 @@ type ComplexityRoot struct {
 		Symbol func(childComplexity int) int
 	}
 
+	CurrencyPair struct {
+		BaseCurrency   func(childComplexity int) int
+		Change1dAmount func(childComplexity int) int
+		Change1dPct    func(childComplexity int) int
+		FirstDate      func(childComplexity int) int
+		LastDate       func(childComplexity int) int
+		LatestDate     func(childComplexity int) int
+		LatestRate     func(childComplexity int) int
+		LatestSource   func(childComplexity int) int
+		Pair           func(childComplexity int) int
+		PreviousRate   func(childComplexity int) int
+		QuoteCurrency  func(childComplexity int) int
+		TotalRecords   func(childComplexity int) int
+	}
+
+	CurrencyPairHistory struct {
+		BaseCurrency    func(childComplexity int) int
+		EndRate         func(childComplexity int) int
+		Pair            func(childComplexity int) int
+		PeriodChange    func(childComplexity int) int
+		PeriodChangePct func(childComplexity int) int
+		PeriodHigh      func(childComplexity int) int
+		PeriodLow       func(childComplexity int) int
+		Points          func(childComplexity int) int
+		QuoteCurrency   func(childComplexity int) int
+		StartRate       func(childComplexity int) int
+	}
+
 	DeleteTransactionPayload struct {
 		Portfolio func(childComplexity int) int
 		Success   func(childComplexity int) int
+	}
+
+	FXHistoryPoint struct {
+		Date         func(childComplexity int) int
+		InvertedRate func(childComplexity int) int
+		Rate         func(childComplexity int) int
+		Source       func(childComplexity int) int
+	}
+
+	FXRate struct {
+		BaseCurrency  func(childComplexity int) int
+		InvertedRate  func(childComplexity int) int
+		Pair          func(childComplexity int) int
+		QuoteCurrency func(childComplexity int) int
+		Rate          func(childComplexity int) int
+		RateDate      func(childComplexity int) int
+		Source        func(childComplexity int) int
+	}
+
+	FXRatesConnection struct {
+		Items      func(childComplexity int) int
+		TotalCount func(childComplexity int) int
 	}
 
 	FeedHealthStatus struct {
@@ -127,6 +177,7 @@ type ComplexityRoot struct {
 		AddTransaction        func(childComplexity int, input model.AddTransactionInput) int
 		CreateInstrument      func(childComplexity int, input model.CreateInstrumentInput) int
 		DeleteTransaction     func(childComplexity int, id string) int
+		RecordFXRateOverride  func(childComplexity int, input model.RecordFXRateOverrideInput) int
 		RecordPriceOverride   func(childComplexity int, input model.RecordPriceOverrideInput) int
 		TriggerMarketSync     func(childComplexity int, symbols []string, syncFx *bool) int
 		UpdateInstrument      func(childComplexity int, input model.UpdateInstrumentInput) int
@@ -152,6 +203,9 @@ type ComplexityRoot struct {
 
 	Query struct {
 		AllInstruments      func(childComplexity int, isActive *bool, search *string) int
+		CurrencyPairHistory func(childComplexity int, baseCurrency string, quoteCurrency string, timeframe model.HistoryTimeframe) int
+		CurrencyPairs       func(childComplexity int) int
+		FxRates             func(childComplexity int, baseCurrency *string, quoteCurrency *string, fromDate *string, toDate *string, limit *int, offset *int) int
 		IngestionStatus     func(childComplexity int) int
 		InstrumentPrices    func(childComplexity int, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) int
 		Instruments         func(childComplexity int) int
@@ -160,6 +214,11 @@ type ComplexityRoot struct {
 		SupportedCurrencies func(childComplexity int) int
 		Transactions        func(childComplexity int, typeArg *model.TransactionType, symbol *string, page *int, pageSize *int) int
 		UserPreferences     func(childComplexity int) int
+	}
+
+	RecordFXRateOverridePayload struct {
+		Rate                 func(childComplexity int) int
+		ValuationsRecomputed func(childComplexity int) int
 	}
 
 	RecordPriceOverridePayload struct {
@@ -225,6 +284,7 @@ type MutationResolver interface {
 	RecordPriceOverride(ctx context.Context, input model.RecordPriceOverrideInput) (*model.RecordPriceOverridePayload, error)
 	TriggerMarketSync(ctx context.Context, symbols []string, syncFx *bool) (*model.MarketSyncPayload, error)
 	UpdateUserPreferences(ctx context.Context, input model.UpdateUserPreferencesInput) (*model.UpdateUserPreferencesPayload, error)
+	RecordFXRateOverride(ctx context.Context, input model.RecordFXRateOverrideInput) (*model.RecordFXRateOverridePayload, error)
 }
 type QueryResolver interface {
 	Portfolio(ctx context.Context) (*model.Portfolio, error)
@@ -236,6 +296,9 @@ type QueryResolver interface {
 	IngestionStatus(ctx context.Context) (*model.IngestionStatus, error)
 	UserPreferences(ctx context.Context) (*model.UserPreferences, error)
 	SupportedCurrencies(ctx context.Context) ([]*model.Currency, error)
+	CurrencyPairs(ctx context.Context) ([]*model.CurrencyPair, error)
+	CurrencyPairHistory(ctx context.Context, baseCurrency string, quoteCurrency string, timeframe model.HistoryTimeframe) (*model.CurrencyPairHistory, error)
+	FxRates(ctx context.Context, baseCurrency *string, quoteCurrency *string, fromDate *string, toDate *string, limit *int, offset *int) (*model.FXRatesConnection, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -288,6 +351,140 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.Currency.Symbol(childComplexity), true
 
+	case "CurrencyPair.baseCurrency":
+		if e.ComplexityRoot.CurrencyPair.BaseCurrency == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPair.BaseCurrency(childComplexity), true
+	case "CurrencyPair.change1dAmount":
+		if e.ComplexityRoot.CurrencyPair.Change1dAmount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPair.Change1dAmount(childComplexity), true
+	case "CurrencyPair.change1dPct":
+		if e.ComplexityRoot.CurrencyPair.Change1dPct == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPair.Change1dPct(childComplexity), true
+	case "CurrencyPair.firstDate":
+		if e.ComplexityRoot.CurrencyPair.FirstDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPair.FirstDate(childComplexity), true
+	case "CurrencyPair.lastDate":
+		if e.ComplexityRoot.CurrencyPair.LastDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPair.LastDate(childComplexity), true
+	case "CurrencyPair.latestDate":
+		if e.ComplexityRoot.CurrencyPair.LatestDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPair.LatestDate(childComplexity), true
+	case "CurrencyPair.latestRate":
+		if e.ComplexityRoot.CurrencyPair.LatestRate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPair.LatestRate(childComplexity), true
+	case "CurrencyPair.latestSource":
+		if e.ComplexityRoot.CurrencyPair.LatestSource == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPair.LatestSource(childComplexity), true
+	case "CurrencyPair.pair":
+		if e.ComplexityRoot.CurrencyPair.Pair == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPair.Pair(childComplexity), true
+	case "CurrencyPair.previousRate":
+		if e.ComplexityRoot.CurrencyPair.PreviousRate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPair.PreviousRate(childComplexity), true
+	case "CurrencyPair.quoteCurrency":
+		if e.ComplexityRoot.CurrencyPair.QuoteCurrency == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPair.QuoteCurrency(childComplexity), true
+	case "CurrencyPair.totalRecords":
+		if e.ComplexityRoot.CurrencyPair.TotalRecords == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPair.TotalRecords(childComplexity), true
+
+	case "CurrencyPairHistory.baseCurrency":
+		if e.ComplexityRoot.CurrencyPairHistory.BaseCurrency == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPairHistory.BaseCurrency(childComplexity), true
+	case "CurrencyPairHistory.endRate":
+		if e.ComplexityRoot.CurrencyPairHistory.EndRate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPairHistory.EndRate(childComplexity), true
+	case "CurrencyPairHistory.pair":
+		if e.ComplexityRoot.CurrencyPairHistory.Pair == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPairHistory.Pair(childComplexity), true
+	case "CurrencyPairHistory.periodChange":
+		if e.ComplexityRoot.CurrencyPairHistory.PeriodChange == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPairHistory.PeriodChange(childComplexity), true
+	case "CurrencyPairHistory.periodChangePct":
+		if e.ComplexityRoot.CurrencyPairHistory.PeriodChangePct == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPairHistory.PeriodChangePct(childComplexity), true
+	case "CurrencyPairHistory.periodHigh":
+		if e.ComplexityRoot.CurrencyPairHistory.PeriodHigh == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPairHistory.PeriodHigh(childComplexity), true
+	case "CurrencyPairHistory.periodLow":
+		if e.ComplexityRoot.CurrencyPairHistory.PeriodLow == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPairHistory.PeriodLow(childComplexity), true
+	case "CurrencyPairHistory.points":
+		if e.ComplexityRoot.CurrencyPairHistory.Points == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPairHistory.Points(childComplexity), true
+	case "CurrencyPairHistory.quoteCurrency":
+		if e.ComplexityRoot.CurrencyPairHistory.QuoteCurrency == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPairHistory.QuoteCurrency(childComplexity), true
+	case "CurrencyPairHistory.startRate":
+		if e.ComplexityRoot.CurrencyPairHistory.StartRate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CurrencyPairHistory.StartRate(childComplexity), true
+
 	case "DeleteTransactionPayload.portfolio":
 		if e.ComplexityRoot.DeleteTransactionPayload.Portfolio == nil {
 			break
@@ -300,6 +497,87 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.DeleteTransactionPayload.Success(childComplexity), true
+
+	case "FXHistoryPoint.date":
+		if e.ComplexityRoot.FXHistoryPoint.Date == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FXHistoryPoint.Date(childComplexity), true
+	case "FXHistoryPoint.invertedRate":
+		if e.ComplexityRoot.FXHistoryPoint.InvertedRate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FXHistoryPoint.InvertedRate(childComplexity), true
+	case "FXHistoryPoint.rate":
+		if e.ComplexityRoot.FXHistoryPoint.Rate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FXHistoryPoint.Rate(childComplexity), true
+	case "FXHistoryPoint.source":
+		if e.ComplexityRoot.FXHistoryPoint.Source == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FXHistoryPoint.Source(childComplexity), true
+
+	case "FXRate.baseCurrency":
+		if e.ComplexityRoot.FXRate.BaseCurrency == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FXRate.BaseCurrency(childComplexity), true
+	case "FXRate.invertedRate":
+		if e.ComplexityRoot.FXRate.InvertedRate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FXRate.InvertedRate(childComplexity), true
+	case "FXRate.pair":
+		if e.ComplexityRoot.FXRate.Pair == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FXRate.Pair(childComplexity), true
+	case "FXRate.quoteCurrency":
+		if e.ComplexityRoot.FXRate.QuoteCurrency == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FXRate.QuoteCurrency(childComplexity), true
+	case "FXRate.rate":
+		if e.ComplexityRoot.FXRate.Rate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FXRate.Rate(childComplexity), true
+	case "FXRate.rateDate":
+		if e.ComplexityRoot.FXRate.RateDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FXRate.RateDate(childComplexity), true
+	case "FXRate.source":
+		if e.ComplexityRoot.FXRate.Source == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FXRate.Source(childComplexity), true
+
+	case "FXRatesConnection.items":
+		if e.ComplexityRoot.FXRatesConnection.Items == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FXRatesConnection.Items(childComplexity), true
+	case "FXRatesConnection.totalCount":
+		if e.ComplexityRoot.FXRatesConnection.TotalCount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.FXRatesConnection.TotalCount(childComplexity), true
 
 	case "FeedHealthStatus.details":
 		if e.ComplexityRoot.FeedHealthStatus.Details == nil {
@@ -618,6 +896,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.DeleteTransaction(childComplexity, args["id"].(string)), true
+	case "Mutation.recordFXRateOverride":
+		if e.ComplexityRoot.Mutation.RecordFXRateOverride == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_recordFXRateOverride_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.RecordFXRateOverride(childComplexity, args["input"].(model.RecordFXRateOverrideInput)), true
 	case "Mutation.recordPriceOverride":
 		if e.ComplexityRoot.Mutation.RecordPriceOverride == nil {
 			break
@@ -742,6 +1031,34 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.AllInstruments(childComplexity, args["isActive"].(*bool), args["search"].(*string)), true
+	case "Query.currencyPairHistory":
+		if e.ComplexityRoot.Query.CurrencyPairHistory == nil {
+			break
+		}
+
+		args, err := ec.field_Query_currencyPairHistory_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.CurrencyPairHistory(childComplexity, args["baseCurrency"].(string), args["quoteCurrency"].(string), args["timeframe"].(model.HistoryTimeframe)), true
+	case "Query.currencyPairs":
+		if e.ComplexityRoot.Query.CurrencyPairs == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Query.CurrencyPairs(childComplexity), true
+	case "Query.fxRates":
+		if e.ComplexityRoot.Query.FxRates == nil {
+			break
+		}
+
+		args, err := ec.field_Query_fxRates_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.FxRates(childComplexity, args["baseCurrency"].(*string), args["quoteCurrency"].(*string), args["fromDate"].(*string), args["toDate"].(*string), args["limit"].(*int), args["offset"].(*int)), true
 	case "Query.ingestionStatus":
 		if e.ComplexityRoot.Query.IngestionStatus == nil {
 			break
@@ -806,6 +1123,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.UserPreferences(childComplexity), true
+
+	case "RecordFXRateOverridePayload.rate":
+		if e.ComplexityRoot.RecordFXRateOverridePayload.Rate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RecordFXRateOverridePayload.Rate(childComplexity), true
+	case "RecordFXRateOverridePayload.valuationsRecomputed":
+		if e.ComplexityRoot.RecordFXRateOverridePayload.ValuationsRecomputed == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RecordFXRateOverridePayload.ValuationsRecomputed(childComplexity), true
 
 	case "RecordPriceOverridePayload.price":
 		if e.ComplexityRoot.RecordPriceOverridePayload.Price == nil {
@@ -1015,6 +1345,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputAddTransactionInput,
 		ec.unmarshalInputCreateInstrumentInput,
+		ec.unmarshalInputRecordFXRateOverrideInput,
 		ec.unmarshalInputRecordPriceOverrideInput,
 		ec.unmarshalInputUpdateInstrumentInput,
 		ec.unmarshalInputUpdateUserPreferencesInput,
@@ -1134,6 +1465,62 @@ func (ec *executionContext) childFields_Currency(ctx context.Context, field grap
 	return nil, fmt.Errorf("no field named %q was found under type Currency", field.Name)
 }
 
+func (ec *executionContext) childFields_CurrencyPair(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "baseCurrency":
+		return ec.fieldContext_CurrencyPair_baseCurrency(ctx, field)
+	case "quoteCurrency":
+		return ec.fieldContext_CurrencyPair_quoteCurrency(ctx, field)
+	case "pair":
+		return ec.fieldContext_CurrencyPair_pair(ctx, field)
+	case "latestRate":
+		return ec.fieldContext_CurrencyPair_latestRate(ctx, field)
+	case "latestDate":
+		return ec.fieldContext_CurrencyPair_latestDate(ctx, field)
+	case "latestSource":
+		return ec.fieldContext_CurrencyPair_latestSource(ctx, field)
+	case "previousRate":
+		return ec.fieldContext_CurrencyPair_previousRate(ctx, field)
+	case "change1dAmount":
+		return ec.fieldContext_CurrencyPair_change1dAmount(ctx, field)
+	case "change1dPct":
+		return ec.fieldContext_CurrencyPair_change1dPct(ctx, field)
+	case "totalRecords":
+		return ec.fieldContext_CurrencyPair_totalRecords(ctx, field)
+	case "firstDate":
+		return ec.fieldContext_CurrencyPair_firstDate(ctx, field)
+	case "lastDate":
+		return ec.fieldContext_CurrencyPair_lastDate(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type CurrencyPair", field.Name)
+}
+
+func (ec *executionContext) childFields_CurrencyPairHistory(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "baseCurrency":
+		return ec.fieldContext_CurrencyPairHistory_baseCurrency(ctx, field)
+	case "quoteCurrency":
+		return ec.fieldContext_CurrencyPairHistory_quoteCurrency(ctx, field)
+	case "pair":
+		return ec.fieldContext_CurrencyPairHistory_pair(ctx, field)
+	case "points":
+		return ec.fieldContext_CurrencyPairHistory_points(ctx, field)
+	case "startRate":
+		return ec.fieldContext_CurrencyPairHistory_startRate(ctx, field)
+	case "endRate":
+		return ec.fieldContext_CurrencyPairHistory_endRate(ctx, field)
+	case "periodChange":
+		return ec.fieldContext_CurrencyPairHistory_periodChange(ctx, field)
+	case "periodChangePct":
+		return ec.fieldContext_CurrencyPairHistory_periodChangePct(ctx, field)
+	case "periodHigh":
+		return ec.fieldContext_CurrencyPairHistory_periodHigh(ctx, field)
+	case "periodLow":
+		return ec.fieldContext_CurrencyPairHistory_periodLow(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type CurrencyPairHistory", field.Name)
+}
+
 func (ec *executionContext) childFields_DeleteTransactionPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "success":
@@ -1142,6 +1529,50 @@ func (ec *executionContext) childFields_DeleteTransactionPayload(ctx context.Con
 		return ec.fieldContext_DeleteTransactionPayload_portfolio(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type DeleteTransactionPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_FXHistoryPoint(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "date":
+		return ec.fieldContext_FXHistoryPoint_date(ctx, field)
+	case "rate":
+		return ec.fieldContext_FXHistoryPoint_rate(ctx, field)
+	case "invertedRate":
+		return ec.fieldContext_FXHistoryPoint_invertedRate(ctx, field)
+	case "source":
+		return ec.fieldContext_FXHistoryPoint_source(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type FXHistoryPoint", field.Name)
+}
+
+func (ec *executionContext) childFields_FXRate(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "baseCurrency":
+		return ec.fieldContext_FXRate_baseCurrency(ctx, field)
+	case "quoteCurrency":
+		return ec.fieldContext_FXRate_quoteCurrency(ctx, field)
+	case "pair":
+		return ec.fieldContext_FXRate_pair(ctx, field)
+	case "rateDate":
+		return ec.fieldContext_FXRate_rateDate(ctx, field)
+	case "rate":
+		return ec.fieldContext_FXRate_rate(ctx, field)
+	case "invertedRate":
+		return ec.fieldContext_FXRate_invertedRate(ctx, field)
+	case "source":
+		return ec.fieldContext_FXRate_source(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type FXRate", field.Name)
+}
+
+func (ec *executionContext) childFields_FXRatesConnection(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "items":
+		return ec.fieldContext_FXRatesConnection_items(ctx, field)
+	case "totalCount":
+		return ec.fieldContext_FXRatesConnection_totalCount(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type FXRatesConnection", field.Name)
 }
 
 func (ec *executionContext) childFields_FeedHealthStatus(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -1316,6 +1747,16 @@ func (ec *executionContext) childFields_PortfolioHistory(ctx context.Context, fi
 		return ec.fieldContext_PortfolioHistory_returnPercent(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type PortfolioHistory", field.Name)
+}
+
+func (ec *executionContext) childFields_RecordFXRateOverridePayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "rate":
+		return ec.fieldContext_RecordFXRateOverridePayload_rate(ctx, field)
+	case "valuationsRecomputed":
+		return ec.fieldContext_RecordFXRateOverridePayload_valuationsRecomputed(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type RecordFXRateOverridePayload", field.Name)
 }
 
 func (ec *executionContext) childFields_RecordPriceOverridePayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -1576,6 +2017,20 @@ func (ec *executionContext) field_Mutation_deleteTransaction_args(ctx context.Co
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_recordFXRateOverride_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.RecordFXRateOverrideInput, error) {
+			return ec.unmarshalNRecordFXRateOverrideInput2bffᚋgraphᚋmodelᚐRecordFXRateOverrideInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_recordPriceOverride_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -1673,6 +2128,90 @@ func (ec *executionContext) field_Query_allInstruments_args(ctx context.Context,
 		return nil, err
 	}
 	args["search"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_currencyPairHistory_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "baseCurrency",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["baseCurrency"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "quoteCurrency",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["quoteCurrency"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "timeframe",
+		func(ctx context.Context, v any) (model.HistoryTimeframe, error) {
+			return ec.unmarshalNHistoryTimeframe2bffᚋgraphᚋmodelᚐHistoryTimeframe(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["timeframe"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_fxRates_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "baseCurrency",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["baseCurrency"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "quoteCurrency",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["quoteCurrency"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "fromDate",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["fromDate"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "toDate",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["toDate"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "limit",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "offset",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["offset"] = arg5
 	return args, nil
 }
 
@@ -1958,6 +2497,521 @@ func (ec *executionContext) fieldContext_Currency_symbol(_ context.Context, fiel
 	return graphql.NewScalarFieldContext("Currency", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
+func (ec *executionContext) _CurrencyPair_baseCurrency(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPair) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPair_baseCurrency(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.BaseCurrency, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPair_baseCurrency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CurrencyPair", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _CurrencyPair_quoteCurrency(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPair) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPair_quoteCurrency(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.QuoteCurrency, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPair_quoteCurrency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CurrencyPair", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _CurrencyPair_pair(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPair) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPair_pair(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Pair, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPair_pair(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CurrencyPair", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _CurrencyPair_latestRate(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPair) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPair_latestRate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LatestRate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPair_latestRate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CurrencyPair", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _CurrencyPair_latestDate(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPair) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPair_latestDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LatestDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPair_latestDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CurrencyPair", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _CurrencyPair_latestSource(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPair) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPair_latestSource(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LatestSource, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPair_latestSource(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CurrencyPair", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _CurrencyPair_previousRate(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPair) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPair_previousRate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PreviousRate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Decimal) graphql.Marshaler {
+			return ec.marshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPair_previousRate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CurrencyPair", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _CurrencyPair_change1dAmount(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPair) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPair_change1dAmount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Change1dAmount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Decimal) graphql.Marshaler {
+			return ec.marshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPair_change1dAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CurrencyPair", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _CurrencyPair_change1dPct(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPair) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPair_change1dPct(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Change1dPct, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Decimal) graphql.Marshaler {
+			return ec.marshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPair_change1dPct(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CurrencyPair", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _CurrencyPair_totalRecords(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPair) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPair_totalRecords(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TotalRecords, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPair_totalRecords(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CurrencyPair", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _CurrencyPair_firstDate(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPair) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPair_firstDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FirstDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPair_firstDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CurrencyPair", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _CurrencyPair_lastDate(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPair) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPair_lastDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LastDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPair_lastDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CurrencyPair", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _CurrencyPairHistory_baseCurrency(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPairHistory) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPairHistory_baseCurrency(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.BaseCurrency, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPairHistory_baseCurrency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CurrencyPairHistory", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _CurrencyPairHistory_quoteCurrency(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPairHistory) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPairHistory_quoteCurrency(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.QuoteCurrency, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPairHistory_quoteCurrency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CurrencyPairHistory", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _CurrencyPairHistory_pair(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPairHistory) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPairHistory_pair(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Pair, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPairHistory_pair(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CurrencyPairHistory", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _CurrencyPairHistory_points(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPairHistory) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPairHistory_points(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Points, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.FXHistoryPoint) graphql.Marshaler {
+			return ec.marshalNFXHistoryPoint2ᚕᚖbffᚋgraphᚋmodelᚐFXHistoryPointᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPairHistory_points(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CurrencyPairHistory",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_FXHistoryPoint(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CurrencyPairHistory_startRate(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPairHistory) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPairHistory_startRate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.StartRate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPairHistory_startRate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CurrencyPairHistory", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _CurrencyPairHistory_endRate(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPairHistory) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPairHistory_endRate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.EndRate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPairHistory_endRate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CurrencyPairHistory", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _CurrencyPairHistory_periodChange(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPairHistory) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPairHistory_periodChange(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PeriodChange, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPairHistory_periodChange(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CurrencyPairHistory", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _CurrencyPairHistory_periodChangePct(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPairHistory) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPairHistory_periodChangePct(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PeriodChangePct, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPairHistory_periodChangePct(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CurrencyPairHistory", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _CurrencyPairHistory_periodHigh(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPairHistory) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPairHistory_periodHigh(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PeriodHigh, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPairHistory_periodHigh(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CurrencyPairHistory", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _CurrencyPairHistory_periodLow(ctx context.Context, field graphql.CollectedField, obj *model.CurrencyPairHistory) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CurrencyPairHistory_periodLow(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PeriodLow, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CurrencyPairHistory_periodLow(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CurrencyPairHistory", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
 func (ec *executionContext) _DeleteTransactionPayload_success(ctx context.Context, field graphql.CollectedField, obj *model.DeleteTransactionPayload) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -2011,6 +3065,314 @@ func (ec *executionContext) fieldContext_DeleteTransactionPayload_portfolio(_ co
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _FXHistoryPoint_date(ctx context.Context, field graphql.CollectedField, obj *model.FXHistoryPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FXHistoryPoint_date(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Date, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FXHistoryPoint_date(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FXHistoryPoint", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _FXHistoryPoint_rate(ctx context.Context, field graphql.CollectedField, obj *model.FXHistoryPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FXHistoryPoint_rate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Rate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FXHistoryPoint_rate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FXHistoryPoint", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _FXHistoryPoint_invertedRate(ctx context.Context, field graphql.CollectedField, obj *model.FXHistoryPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FXHistoryPoint_invertedRate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.InvertedRate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FXHistoryPoint_invertedRate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FXHistoryPoint", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _FXHistoryPoint_source(ctx context.Context, field graphql.CollectedField, obj *model.FXHistoryPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FXHistoryPoint_source(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Source, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FXHistoryPoint_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FXHistoryPoint", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _FXRate_baseCurrency(ctx context.Context, field graphql.CollectedField, obj *model.FXRate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FXRate_baseCurrency(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.BaseCurrency, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FXRate_baseCurrency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FXRate", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _FXRate_quoteCurrency(ctx context.Context, field graphql.CollectedField, obj *model.FXRate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FXRate_quoteCurrency(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.QuoteCurrency, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FXRate_quoteCurrency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FXRate", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _FXRate_pair(ctx context.Context, field graphql.CollectedField, obj *model.FXRate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FXRate_pair(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Pair, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FXRate_pair(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FXRate", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _FXRate_rateDate(ctx context.Context, field graphql.CollectedField, obj *model.FXRate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FXRate_rateDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.RateDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FXRate_rateDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FXRate", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _FXRate_rate(ctx context.Context, field graphql.CollectedField, obj *model.FXRate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FXRate_rate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Rate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FXRate_rate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FXRate", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _FXRate_invertedRate(ctx context.Context, field graphql.CollectedField, obj *model.FXRate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FXRate_invertedRate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.InvertedRate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FXRate_invertedRate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FXRate", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _FXRate_source(ctx context.Context, field graphql.CollectedField, obj *model.FXRate) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FXRate_source(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Source, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FXRate_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FXRate", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _FXRatesConnection_items(ctx context.Context, field graphql.CollectedField, obj *model.FXRatesConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FXRatesConnection_items(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Items, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.FXRate) graphql.Marshaler {
+			return ec.marshalNFXRate2ᚕᚖbffᚋgraphᚋmodelᚐFXRateᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FXRatesConnection_items(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FXRatesConnection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_FXRate(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FXRatesConnection_totalCount(ctx context.Context, field graphql.CollectedField, obj *model.FXRatesConnection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_FXRatesConnection_totalCount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TotalCount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_FXRatesConnection_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("FXRatesConnection", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _FeedHealthStatus_name(ctx context.Context, field graphql.CollectedField, obj *model.FeedHealthStatus) (ret graphql.Marshaler) {
@@ -3442,6 +4804,50 @@ func (ec *executionContext) fieldContext_Mutation_updateUserPreferences(ctx cont
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_recordFXRateOverride(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_recordFXRateOverride(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().RecordFXRateOverride(ctx, fc.Args["input"].(model.RecordFXRateOverrideInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.RecordFXRateOverridePayload) graphql.Marshaler {
+			return ec.marshalNRecordFXRateOverridePayload2ᚖbffᚋgraphᚋmodelᚐRecordFXRateOverridePayload(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_recordFXRateOverride(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_RecordFXRateOverridePayload(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_recordFXRateOverride_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Portfolio_totalValue(ctx context.Context, field graphql.CollectedField, obj *model.Portfolio) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -4103,6 +5509,126 @@ func (ec *executionContext) fieldContext_Query_supportedCurrencies(_ context.Con
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_currencyPairs(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_currencyPairs(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Query().CurrencyPairs(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.CurrencyPair) graphql.Marshaler {
+			return ec.marshalNCurrencyPair2ᚕᚖbffᚋgraphᚋmodelᚐCurrencyPairᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_currencyPairs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_CurrencyPair(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_currencyPairHistory(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_currencyPairHistory(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().CurrencyPairHistory(ctx, fc.Args["baseCurrency"].(string), fc.Args["quoteCurrency"].(string), fc.Args["timeframe"].(model.HistoryTimeframe))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.CurrencyPairHistory) graphql.Marshaler {
+			return ec.marshalNCurrencyPairHistory2ᚖbffᚋgraphᚋmodelᚐCurrencyPairHistory(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_currencyPairHistory(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_CurrencyPairHistory(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_currencyPairHistory_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_fxRates(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_fxRates(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().FxRates(ctx, fc.Args["baseCurrency"].(*string), fc.Args["quoteCurrency"].(*string), fc.Args["fromDate"].(*string), fc.Args["toDate"].(*string), fc.Args["limit"].(*int), fc.Args["offset"].(*int))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.FXRatesConnection) graphql.Marshaler {
+			return ec.marshalNFXRatesConnection2ᚖbffᚋgraphᚋmodelᚐFXRatesConnection(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_fxRates(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_FXRatesConnection(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_fxRates_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -4177,6 +5703,61 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _RecordFXRateOverridePayload_rate(ctx context.Context, field graphql.CollectedField, obj *model.RecordFXRateOverridePayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RecordFXRateOverridePayload_rate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Rate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.FXRate) graphql.Marshaler {
+			return ec.marshalNFXRate2ᚖbffᚋgraphᚋmodelᚐFXRate(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RecordFXRateOverridePayload_rate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RecordFXRateOverridePayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_FXRate(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RecordFXRateOverridePayload_valuationsRecomputed(ctx context.Context, field graphql.CollectedField, obj *model.RecordFXRateOverridePayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RecordFXRateOverridePayload_valuationsRecomputed(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ValuationsRecomputed, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RecordFXRateOverridePayload_valuationsRecomputed(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("RecordFXRateOverridePayload", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _RecordPriceOverridePayload_price(ctx context.Context, field graphql.CollectedField, obj *model.RecordPriceOverridePayload) (ret graphql.Marshaler) {
@@ -6215,6 +7796,71 @@ func (ec *executionContext) unmarshalInputCreateInstrumentInput(ctx context.Cont
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputRecordFXRateOverrideInput(ctx context.Context, obj any) (model.RecordFXRateOverrideInput, error) {
+	var it model.RecordFXRateOverrideInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"baseCurrency", "quoteCurrency", "rateDate", "rate", "reason", "recomputeValuations"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "baseCurrency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("baseCurrency"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.BaseCurrency = data
+		case "quoteCurrency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quoteCurrency"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.QuoteCurrency = data
+		case "rateDate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rateDate"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RateDate = data
+		case "rate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("rate"))
+			data, err := ec.unmarshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Rate = data
+		case "reason":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("reason"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Reason = data
+		case "recomputeValuations":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("recomputeValuations"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RecomputeValuations = data
+		}
+	}
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputRecordPriceOverrideInput(ctx context.Context, obj any) (model.RecordPriceOverrideInput, error) {
 	var it model.RecordPriceOverrideInput
 	if obj == nil {
@@ -6467,6 +8113,182 @@ func (ec *executionContext) _Currency(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var currencyPairImplementors = []string{"CurrencyPair"}
+
+func (ec *executionContext) _CurrencyPair(ctx context.Context, sel ast.SelectionSet, obj *model.CurrencyPair) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, currencyPairImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CurrencyPair")
+		case "baseCurrency":
+			out.Values[i] = ec._CurrencyPair_baseCurrency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "quoteCurrency":
+			out.Values[i] = ec._CurrencyPair_quoteCurrency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pair":
+			out.Values[i] = ec._CurrencyPair_pair(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "latestRate":
+			out.Values[i] = ec._CurrencyPair_latestRate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "latestDate":
+			out.Values[i] = ec._CurrencyPair_latestDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "latestSource":
+			out.Values[i] = ec._CurrencyPair_latestSource(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "previousRate":
+			out.Values[i] = ec._CurrencyPair_previousRate(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "change1dAmount":
+			out.Values[i] = ec._CurrencyPair_change1dAmount(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "change1dPct":
+			out.Values[i] = ec._CurrencyPair_change1dPct(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "totalRecords":
+			out.Values[i] = ec._CurrencyPair_totalRecords(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "firstDate":
+			out.Values[i] = ec._CurrencyPair_firstDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "lastDate":
+			out.Values[i] = ec._CurrencyPair_lastDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var currencyPairHistoryImplementors = []string{"CurrencyPairHistory"}
+
+func (ec *executionContext) _CurrencyPairHistory(ctx context.Context, sel ast.SelectionSet, obj *model.CurrencyPairHistory) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, currencyPairHistoryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CurrencyPairHistory")
+		case "baseCurrency":
+			out.Values[i] = ec._CurrencyPairHistory_baseCurrency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "quoteCurrency":
+			out.Values[i] = ec._CurrencyPairHistory_quoteCurrency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pair":
+			out.Values[i] = ec._CurrencyPairHistory_pair(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "points":
+			out.Values[i] = ec._CurrencyPairHistory_points(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "startRate":
+			out.Values[i] = ec._CurrencyPairHistory_startRate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "endRate":
+			out.Values[i] = ec._CurrencyPairHistory_endRate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "periodChange":
+			out.Values[i] = ec._CurrencyPairHistory_periodChange(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "periodChangePct":
+			out.Values[i] = ec._CurrencyPairHistory_periodChangePct(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "periodHigh":
+			out.Values[i] = ec._CurrencyPairHistory_periodHigh(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "periodLow":
+			out.Values[i] = ec._CurrencyPairHistory_periodLow(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
 var deleteTransactionPayloadImplementors = []string{"DeleteTransactionPayload"}
 
 func (ec *executionContext) _DeleteTransactionPayload(ctx context.Context, sel ast.SelectionSet, obj *model.DeleteTransactionPayload) graphql.Marshaler {
@@ -6486,6 +8308,170 @@ func (ec *executionContext) _DeleteTransactionPayload(ctx context.Context, sel a
 			}
 		case "portfolio":
 			out.Values[i] = ec._DeleteTransactionPayload_portfolio(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var fXHistoryPointImplementors = []string{"FXHistoryPoint"}
+
+func (ec *executionContext) _FXHistoryPoint(ctx context.Context, sel ast.SelectionSet, obj *model.FXHistoryPoint) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, fXHistoryPointImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FXHistoryPoint")
+		case "date":
+			out.Values[i] = ec._FXHistoryPoint_date(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rate":
+			out.Values[i] = ec._FXHistoryPoint_rate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "invertedRate":
+			out.Values[i] = ec._FXHistoryPoint_invertedRate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "source":
+			out.Values[i] = ec._FXHistoryPoint_source(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var fXRateImplementors = []string{"FXRate"}
+
+func (ec *executionContext) _FXRate(ctx context.Context, sel ast.SelectionSet, obj *model.FXRate) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, fXRateImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FXRate")
+		case "baseCurrency":
+			out.Values[i] = ec._FXRate_baseCurrency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "quoteCurrency":
+			out.Values[i] = ec._FXRate_quoteCurrency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "pair":
+			out.Values[i] = ec._FXRate_pair(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rateDate":
+			out.Values[i] = ec._FXRate_rateDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "rate":
+			out.Values[i] = ec._FXRate_rate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "invertedRate":
+			out.Values[i] = ec._FXRate_invertedRate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "source":
+			out.Values[i] = ec._FXRate_source(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var fXRatesConnectionImplementors = []string{"FXRatesConnection"}
+
+func (ec *executionContext) _FXRatesConnection(ctx context.Context, sel ast.SelectionSet, obj *model.FXRatesConnection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, fXRatesConnectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("FXRatesConnection")
+		case "items":
+			out.Values[i] = ec._FXRatesConnection_items(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCount":
+			out.Values[i] = ec._FXRatesConnection_totalCount(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -7073,6 +9059,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "recordFXRateOverride":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_recordFXRateOverride(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -7433,6 +9426,72 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "currencyPairs":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_currencyPairs(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "currencyPairHistory":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_currencyPairHistory(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "fxRates":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_fxRates(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -7446,6 +9505,49 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			})
 			if out.Values[i] == graphql.RequiredNull {
 				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var recordFXRateOverridePayloadImplementors = []string{"RecordFXRateOverridePayload"}
+
+func (ec *executionContext) _RecordFXRateOverridePayload(ctx context.Context, sel ast.SelectionSet, obj *model.RecordFXRateOverridePayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, recordFXRateOverridePayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RecordFXRateOverridePayload")
+		case "rate":
+			out.Values[i] = ec._RecordFXRateOverridePayload_rate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "valuationsRecomputed":
+			out.Values[i] = ec._RecordFXRateOverridePayload_valuationsRecomputed(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -8280,6 +10382,42 @@ func (ec *executionContext) marshalNCurrency2ᚖbffᚋgraphᚋmodelᚐCurrency(c
 	return ec._Currency(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNCurrencyPair2ᚕᚖbffᚋgraphᚋmodelᚐCurrencyPairᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CurrencyPair) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNCurrencyPair2ᚖbffᚋgraphᚋmodelᚐCurrencyPair(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNCurrencyPair2ᚖbffᚋgraphᚋmodelᚐCurrencyPair(ctx context.Context, sel ast.SelectionSet, v *model.CurrencyPair) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CurrencyPair(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCurrencyPairHistory2ᚖbffᚋgraphᚋmodelᚐCurrencyPairHistory(ctx context.Context, sel ast.SelectionSet, v *model.CurrencyPairHistory) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CurrencyPairHistory(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx context.Context, v any) (model.Decimal, error) {
 	var res model.Decimal
 	err := res.UnmarshalGQL(v)
@@ -8298,6 +10436,68 @@ func (ec *executionContext) marshalNDeleteTransactionPayload2ᚖbffᚋgraphᚋmo
 		return graphql.Null
 	}
 	return ec._DeleteTransactionPayload(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNFXHistoryPoint2ᚕᚖbffᚋgraphᚋmodelᚐFXHistoryPointᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FXHistoryPoint) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNFXHistoryPoint2ᚖbffᚋgraphᚋmodelᚐFXHistoryPoint(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNFXHistoryPoint2ᚖbffᚋgraphᚋmodelᚐFXHistoryPoint(ctx context.Context, sel ast.SelectionSet, v *model.FXHistoryPoint) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._FXHistoryPoint(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNFXRate2ᚕᚖbffᚋgraphᚋmodelᚐFXRateᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FXRate) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNFXRate2ᚖbffᚋgraphᚋmodelᚐFXRate(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNFXRate2ᚖbffᚋgraphᚋmodelᚐFXRate(ctx context.Context, sel ast.SelectionSet, v *model.FXRate) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._FXRate(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNFXRatesConnection2ᚖbffᚋgraphᚋmodelᚐFXRatesConnection(ctx context.Context, sel ast.SelectionSet, v *model.FXRatesConnection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._FXRatesConnection(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNFeedHealthStatus2ᚕᚖbffᚋgraphᚋmodelᚐFeedHealthStatusᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FeedHealthStatus) graphql.Marshaler {
@@ -8504,6 +10704,21 @@ func (ec *executionContext) marshalNPortfolioHistory2ᚖbffᚋgraphᚋmodelᚐPo
 		return graphql.Null
 	}
 	return ec._PortfolioHistory(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNRecordFXRateOverrideInput2bffᚋgraphᚋmodelᚐRecordFXRateOverrideInput(ctx context.Context, v any) (model.RecordFXRateOverrideInput, error) {
+	res, err := ec.unmarshalInputRecordFXRateOverrideInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNRecordFXRateOverridePayload2ᚖbffᚋgraphᚋmodelᚐRecordFXRateOverridePayload(ctx context.Context, sel ast.SelectionSet, v *model.RecordFXRateOverridePayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._RecordFXRateOverridePayload(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNRecordPriceOverrideInput2bffᚋgraphᚋmodelᚐRecordPriceOverrideInput(ctx context.Context, v any) (model.RecordPriceOverrideInput, error) {

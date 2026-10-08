@@ -361,4 +361,86 @@ ORDER BY rate_date ASC;`
 	deleteValuationsFromDateSQL = `
 DELETE FROM portfolio.portfolio_valuations
 WHERE portfolio_id = $1 AND valuation_date >= $2;`
+
+	listCurrencyPairsSQL = `
+WITH ranked_rates AS (
+    SELECT 
+        base_currency,
+        quote_currency,
+        rate_date,
+        rate,
+        source,
+        ROW_NUMBER() OVER (
+            PARTITION BY base_currency, quote_currency 
+            ORDER BY rate_date DESC
+        ) as rn
+    FROM portfolio.fx_rates
+),
+pair_stats AS (
+    SELECT 
+        base_currency,
+        quote_currency,
+        COUNT(*) as total_records,
+        MIN(rate_date) as first_date,
+        MAX(rate_date) as last_date
+    FROM portfolio.fx_rates
+    GROUP BY base_currency, quote_currency
+)
+SELECT 
+    r1.base_currency,
+    r1.quote_currency,
+    r1.rate as latest_rate,
+    r1.rate_date as latest_date,
+    r1.source as latest_source,
+    r2.rate as previous_rate,
+    ps.total_records,
+    ps.first_date,
+    ps.last_date
+FROM ranked_rates r1
+LEFT JOIN ranked_rates r2 
+    ON r1.base_currency = r2.base_currency 
+   AND r1.quote_currency = r2.quote_currency 
+   AND r2.rn = 2
+JOIN pair_stats ps 
+    ON r1.base_currency = ps.base_currency 
+   AND r1.quote_currency = ps.quote_currency
+WHERE r1.rn = 1
+ORDER BY r1.base_currency ASC, r1.quote_currency ASC;`
+
+	listFXRatesSQL = `
+SELECT 
+    base_currency,
+    quote_currency,
+    rate_date,
+    rate,
+    source,
+    COUNT(*) OVER() AS total_count
+FROM portfolio.fx_rates
+WHERE ($1::text IS NULL OR UPPER(base_currency) = UPPER($1))
+  AND ($2::text IS NULL OR UPPER(quote_currency) = UPPER($2))
+  AND ($3::date IS NULL OR rate_date >= $3)
+  AND ($4::date IS NULL OR rate_date <= $4)
+ORDER BY rate_date DESC, base_currency ASC, quote_currency ASC
+LIMIT $5 OFFSET $6;`
+
+	getHistoricalFXRatesSQL = `
+SELECT 
+    base_currency,
+    quote_currency,
+    rate_date,
+    rate,
+    source
+FROM portfolio.fx_rates
+WHERE UPPER(base_currency) = UPPER($1) 
+  AND UPPER(quote_currency) = UPPER($2)
+  AND ($3::date IS NULL OR rate_date >= $3)
+  AND ($4::date IS NULL OR rate_date <= $4)
+ORDER BY rate_date ASC;`
+
+	upsertFXRateSQL = `
+INSERT INTO portfolio.fx_rates (base_currency, quote_currency, rate_date, rate, source)
+VALUES ($1, $2, $3, $4, $5)
+ON CONFLICT (base_currency, quote_currency, rate_date)
+DO UPDATE SET rate = EXCLUDED.rate, source = EXCLUDED.source
+RETURNING base_currency, quote_currency, rate_date, rate, source;`
 )

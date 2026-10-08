@@ -1,0 +1,205 @@
+.fx-chart {
+  display: flex;
+  flex-direction: column;
+  background: var(--card-bg, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-md, 8px);
+  padding: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.fx-chart__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.fx-chart__title-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fx-chart__pair-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.fx-chart__rate-display {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+
+.fx-chart__current-rate {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.fx-chart__change-badge {
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm, 6px);
+  font-variant-numeric: tabular-nums;
+}
+
+.fx-chart__change-badge--positive {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--accent-green, #10b981);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.fx-chart__change-badge--negative {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--accent-red, #ef4444);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.fx-chart__timeframes {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 0.25rem;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+}
+
+.fx-chart__tf-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #71717a);
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm, 4px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fx-chart__tf-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.fx-chart__tf-btn--active {
+  color: #ffffff;
+  background: var(--accent-blue, #3b82f6);
+}
+
+.fx-chart__canvas-container {
+  width: 100%;
+  position: relative;
+  min-height: 280px;
+}
+
+.fx-chart__svg {
+  display: block;
+  overflow: visible;
+  touch-action: none;
+}
+
+.fx-chart__grid-line {
+  stroke: rgba(255, 255, 255, 0.05);
+  stroke-dasharray: 4 4;
+}
+
+.fx-chart__avg-line {
+  stroke: rgba(59, 130, 246, 0.35);
+  stroke-dasharray: 3 3;
+}
+
+.fx-chart__grid-text {
+  fill: var(--text-muted, #71717a);
+  font-size: 11px;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.fx-chart__axis-text {
+  fill: var(--text-muted, #71717a);
+  font-size: 11px;
+  font-family: inherit;
+}
+
+.fx-chart__crosshair-line {
+  stroke: rgba(255, 255, 255, 0.3);
+  stroke-dasharray: 3 3;
+}
+
+.fx-chart__tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(18, 20, 29, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-sm, 6px);
+  padding: 0.6rem 0.8rem;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+  transform: translate(-50%, -100%);
+  margin-top: -12px;
+  min-width: 160px;
+}
+
+.fx-chart__tooltip-date {
+  font-size: 0.75rem;
+  color: var(--text-muted, #71717a);
+  margin-bottom: 0.25rem;
+}
+
+.fx-chart__tooltip-rate {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+.fx-chart__tooltip-reciprocal {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #a1a1aa);
+  margin-top: 0.15rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.fx-chart__tooltip-source {
+  font-size: 0.7rem;
+  color: var(--accent-blue, #3b82f6);
+  margin-top: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.fx-chart__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 280px;
+  color: var(--text-muted, #71717a);
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.fx-chart__loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 280px;
+  color: var(--text-secondary, #a1a1aa);
+  font-size: 0.875rem;
+}

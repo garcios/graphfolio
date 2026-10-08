@@ -170,6 +170,49 @@ export default {
             "supportedCurrencies": [
                 30
             ],
+            "currencyPairs": [
+                33
+            ],
+            "currencyPairHistory": [
+                37,
+                {
+                    "baseCurrency": [
+                        2,
+                        "String!"
+                    ],
+                    "quoteCurrency": [
+                        2,
+                        "String!"
+                    ],
+                    "timeframe": [
+                        11,
+                        "HistoryTimeframe!"
+                    ]
+                }
+            ],
+            "fxRates": [
+                35,
+                {
+                    "baseCurrency": [
+                        2
+                    ],
+                    "quoteCurrency": [
+                        2
+                    ],
+                    "fromDate": [
+                        2
+                    ],
+                    "toDate": [
+                        2
+                    ],
+                    "limit": [
+                        10
+                    ],
+                    "offset": [
+                        10
+                    ]
+                }
+            ],
             "__typename": [
                 2
             ]
@@ -349,6 +392,15 @@ export default {
                     "input": [
                         31,
                         "UpdateUserPreferencesInput!"
+                    ]
+                }
+            ],
+            "recordFXRateOverride": [
+                39,
+                {
+                    "input": [
+                        38,
+                        "RecordFXRateOverrideInput!"
                     ]
                 }
             ],
@@ -648,6 +700,170 @@ export default {
             ],
             "portfolio": [
                 27
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "CurrencyPair": {
+            "baseCurrency": [
+                2
+            ],
+            "quoteCurrency": [
+                2
+            ],
+            "pair": [
+                2
+            ],
+            "latestRate": [
+                0
+            ],
+            "latestDate": [
+                2
+            ],
+            "latestSource": [
+                2
+            ],
+            "previousRate": [
+                0
+            ],
+            "change1dAmount": [
+                0
+            ],
+            "change1dPct": [
+                0
+            ],
+            "totalRecords": [
+                10
+            ],
+            "firstDate": [
+                2
+            ],
+            "lastDate": [
+                2
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "FXRate": {
+            "baseCurrency": [
+                2
+            ],
+            "quoteCurrency": [
+                2
+            ],
+            "pair": [
+                2
+            ],
+            "rateDate": [
+                2
+            ],
+            "rate": [
+                0
+            ],
+            "invertedRate": [
+                0
+            ],
+            "source": [
+                2
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "FXRatesConnection": {
+            "items": [
+                34
+            ],
+            "totalCount": [
+                10
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "FXHistoryPoint": {
+            "date": [
+                2
+            ],
+            "rate": [
+                0
+            ],
+            "invertedRate": [
+                0
+            ],
+            "source": [
+                2
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "CurrencyPairHistory": {
+            "baseCurrency": [
+                2
+            ],
+            "quoteCurrency": [
+                2
+            ],
+            "pair": [
+                2
+            ],
+            "points": [
+                36
+            ],
+            "startRate": [
+                0
+            ],
+            "endRate": [
+                0
+            ],
+            "periodChange": [
+                0
+            ],
+            "periodChangePct": [
+                0
+            ],
+            "periodHigh": [
+                0
+            ],
+            "periodLow": [
+                0
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "RecordFXRateOverrideInput": {
+            "baseCurrency": [
+                2
+            ],
+            "quoteCurrency": [
+                2
+            ],
+            "rateDate": [
+                2
+            ],
+            "rate": [
+                0
+            ],
+            "reason": [
+                2
+            ],
+            "recomputeValuations": [
+                8
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "RecordFXRateOverridePayload": {
+            "rate": [
+                34
+            ],
+            "valuationsRecomputed": [
+                8
             ],
             "__typename": [
                 2

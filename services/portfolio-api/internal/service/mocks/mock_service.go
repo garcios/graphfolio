@@ -88,6 +88,21 @@ func (mr *MockPortfolioServiceMockRecorder) DeleteTransaction(ctx, userID, trans
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTransaction", reflect.TypeOf((*MockPortfolioService)(nil).DeleteTransaction), ctx, userID, transactionID)
 }
 
+// GetCurrencyPairHistory mocks base method.
+func (m *MockPortfolioService) GetCurrencyPairHistory(ctx context.Context, baseCurrency, quoteCurrency string, timeframe domain.HistoryTimeframe) (*domain.CurrencyPairHistory, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCurrencyPairHistory", ctx, baseCurrency, quoteCurrency, timeframe)
+	ret0, _ := ret[0].(*domain.CurrencyPairHistory)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCurrencyPairHistory indicates an expected call of GetCurrencyPairHistory.
+func (mr *MockPortfolioServiceMockRecorder) GetCurrencyPairHistory(ctx, baseCurrency, quoteCurrency, timeframe any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrencyPairHistory", reflect.TypeOf((*MockPortfolioService)(nil).GetCurrencyPairHistory), ctx, baseCurrency, quoteCurrency, timeframe)
+}
+
 // GetIngestionStatus mocks base method.
 func (m *MockPortfolioService) GetIngestionStatus(ctx context.Context) (*domain.IngestionStatus, error) {
 	m.ctrl.T.Helper()
@@ -146,6 +161,37 @@ func (m *MockPortfolioService) ListAllInstruments(ctx context.Context, isActive 
 func (mr *MockPortfolioServiceMockRecorder) ListAllInstruments(ctx, isActive, search any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllInstruments", reflect.TypeOf((*MockPortfolioService)(nil).ListAllInstruments), ctx, isActive, search)
+}
+
+// ListCurrencyPairs mocks base method.
+func (m *MockPortfolioService) ListCurrencyPairs(ctx context.Context) ([]domain.CurrencyPairSummary, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListCurrencyPairs", ctx)
+	ret0, _ := ret[0].([]domain.CurrencyPairSummary)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListCurrencyPairs indicates an expected call of ListCurrencyPairs.
+func (mr *MockPortfolioServiceMockRecorder) ListCurrencyPairs(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListCurrencyPairs", reflect.TypeOf((*MockPortfolioService)(nil).ListCurrencyPairs), ctx)
+}
+
+// ListFXRates mocks base method.
+func (m *MockPortfolioService) ListFXRates(ctx context.Context, filter domain.FXRateFilter) ([]domain.FXRate, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListFXRates", ctx, filter)
+	ret0, _ := ret[0].([]domain.FXRate)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// ListFXRates indicates an expected call of ListFXRates.
+func (mr *MockPortfolioServiceMockRecorder) ListFXRates(ctx, filter any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListFXRates", reflect.TypeOf((*MockPortfolioService)(nil).ListFXRates), ctx, filter)
 }
 
 // ListInstrumentPrices mocks base method.
@@ -221,6 +267,22 @@ func (m *MockPortfolioService) RebuildValuations(ctx context.Context, userID str
 func (mr *MockPortfolioServiceMockRecorder) RebuildValuations(ctx, userID, fromDate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RebuildValuations", reflect.TypeOf((*MockPortfolioService)(nil).RebuildValuations), ctx, userID, fromDate)
+}
+
+// RecordFXRateOverride mocks base method.
+func (m *MockPortfolioService) RecordFXRateOverride(ctx context.Context, input domain.FXRateOverrideInput) (*domain.FXRate, bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RecordFXRateOverride", ctx, input)
+	ret0, _ := ret[0].(*domain.FXRate)
+	ret1, _ := ret[1].(bool)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// RecordFXRateOverride indicates an expected call of RecordFXRateOverride.
+func (mr *MockPortfolioServiceMockRecorder) RecordFXRateOverride(ctx, input any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecordFXRateOverride", reflect.TypeOf((*MockPortfolioService)(nil).RecordFXRateOverride), ctx, input)
 }
 
 // RecordPriceOverride mocks base method.

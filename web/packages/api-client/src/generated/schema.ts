@@ -47,6 +47,9 @@ export interface Query {
     ingestionStatus: IngestionStatus
     userPreferences: UserPreferences
     supportedCurrencies: Currency[]
+    currencyPairs: CurrencyPair[]
+    currencyPairHistory: CurrencyPairHistory
+    fxRates: FXRatesConnection
     __typename: 'Query'
 }
 
@@ -108,6 +111,7 @@ export interface Mutation {
     recordPriceOverride: RecordPriceOverridePayload
     triggerMarketSync: MarketSyncPayload
     updateUserPreferences: UpdateUserPreferencesPayload
+    recordFXRateOverride: RecordFXRateOverridePayload
     __typename: 'Mutation'
 }
 
@@ -211,6 +215,67 @@ export interface UpdateUserPreferencesPayload {
     __typename: 'UpdateUserPreferencesPayload'
 }
 
+export interface CurrencyPair {
+    baseCurrency: Scalars['String']
+    quoteCurrency: Scalars['String']
+    pair: Scalars['String']
+    latestRate: Scalars['Decimal']
+    latestDate: Scalars['String']
+    latestSource: Scalars['String']
+    previousRate: (Scalars['Decimal'] | null)
+    change1dAmount: (Scalars['Decimal'] | null)
+    change1dPct: (Scalars['Decimal'] | null)
+    totalRecords: Scalars['Int']
+    firstDate: Scalars['String']
+    lastDate: Scalars['String']
+    __typename: 'CurrencyPair'
+}
+
+export interface FXRate {
+    baseCurrency: Scalars['String']
+    quoteCurrency: Scalars['String']
+    pair: Scalars['String']
+    rateDate: Scalars['String']
+    rate: Scalars['Decimal']
+    invertedRate: Scalars['Decimal']
+    source: Scalars['String']
+    __typename: 'FXRate'
+}
+
+export interface FXRatesConnection {
+    items: FXRate[]
+    totalCount: Scalars['Int']
+    __typename: 'FXRatesConnection'
+}
+
+export interface FXHistoryPoint {
+    date: Scalars['String']
+    rate: Scalars['Decimal']
+    invertedRate: Scalars['Decimal']
+    source: Scalars['String']
+    __typename: 'FXHistoryPoint'
+}
+
+export interface CurrencyPairHistory {
+    baseCurrency: Scalars['String']
+    quoteCurrency: Scalars['String']
+    pair: Scalars['String']
+    points: FXHistoryPoint[]
+    startRate: Scalars['Decimal']
+    endRate: Scalars['Decimal']
+    periodChange: Scalars['Decimal']
+    periodChangePct: Scalars['Decimal']
+    periodHigh: Scalars['Decimal']
+    periodLow: Scalars['Decimal']
+    __typename: 'CurrencyPairHistory'
+}
+
+export interface RecordFXRateOverridePayload {
+    rate: FXRate
+    valuationsRecomputed: Scalars['Boolean']
+    __typename: 'RecordFXRateOverridePayload'
+}
+
 export interface MoneyGenqlSelection{
     amount?: boolean | number
     currencyCode?: boolean | number
@@ -250,6 +315,9 @@ export interface QueryGenqlSelection{
     ingestionStatus?: IngestionStatusGenqlSelection
     userPreferences?: UserPreferencesGenqlSelection
     supportedCurrencies?: CurrencyGenqlSelection
+    currencyPairs?: CurrencyPairGenqlSelection
+    currencyPairHistory?: (CurrencyPairHistoryGenqlSelection & { __args: {baseCurrency: Scalars['String'], quoteCurrency: Scalars['String'], timeframe: HistoryTimeframe} })
+    fxRates?: (FXRatesConnectionGenqlSelection & { __args?: {baseCurrency?: (Scalars['String'] | null), quoteCurrency?: (Scalars['String'] | null), fromDate?: (Scalars['String'] | null), toDate?: (Scalars['String'] | null), limit?: (Scalars['Int'] | null), offset?: (Scalars['Int'] | null)} })
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -315,6 +383,7 @@ export interface MutationGenqlSelection{
     recordPriceOverride?: (RecordPriceOverridePayloadGenqlSelection & { __args: {input: RecordPriceOverrideInput} })
     triggerMarketSync?: (MarketSyncPayloadGenqlSelection & { __args?: {symbols?: (Scalars['String'][] | null), syncFx?: (Scalars['Boolean'] | null)} })
     updateUserPreferences?: (UpdateUserPreferencesPayloadGenqlSelection & { __args: {input: UpdateUserPreferencesInput} })
+    recordFXRateOverride?: (RecordFXRateOverridePayloadGenqlSelection & { __args: {input: RecordFXRateOverrideInput} })
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -434,6 +503,75 @@ export interface UpdateUserPreferencesInput {displayName?: (Scalars['String'] | 
 export interface UpdateUserPreferencesPayloadGenqlSelection{
     preferences?: UserPreferencesGenqlSelection
     portfolio?: PortfolioGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface CurrencyPairGenqlSelection{
+    baseCurrency?: boolean | number
+    quoteCurrency?: boolean | number
+    pair?: boolean | number
+    latestRate?: boolean | number
+    latestDate?: boolean | number
+    latestSource?: boolean | number
+    previousRate?: boolean | number
+    change1dAmount?: boolean | number
+    change1dPct?: boolean | number
+    totalRecords?: boolean | number
+    firstDate?: boolean | number
+    lastDate?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface FXRateGenqlSelection{
+    baseCurrency?: boolean | number
+    quoteCurrency?: boolean | number
+    pair?: boolean | number
+    rateDate?: boolean | number
+    rate?: boolean | number
+    invertedRate?: boolean | number
+    source?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface FXRatesConnectionGenqlSelection{
+    items?: FXRateGenqlSelection
+    totalCount?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface FXHistoryPointGenqlSelection{
+    date?: boolean | number
+    rate?: boolean | number
+    invertedRate?: boolean | number
+    source?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface CurrencyPairHistoryGenqlSelection{
+    baseCurrency?: boolean | number
+    quoteCurrency?: boolean | number
+    pair?: boolean | number
+    points?: FXHistoryPointGenqlSelection
+    startRate?: boolean | number
+    endRate?: boolean | number
+    periodChange?: boolean | number
+    periodChangePct?: boolean | number
+    periodHigh?: boolean | number
+    periodLow?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface RecordFXRateOverrideInput {baseCurrency: Scalars['String'],quoteCurrency: Scalars['String'],rateDate: Scalars['String'],rate: Scalars['Decimal'],reason?: (Scalars['String'] | null),recomputeValuations?: (Scalars['Boolean'] | null)}
+
+export interface RecordFXRateOverridePayloadGenqlSelection{
+    rate?: FXRateGenqlSelection
+    valuationsRecomputed?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -603,6 +741,54 @@ export interface UpdateUserPreferencesPayloadGenqlSelection{
     export const isUpdateUserPreferencesPayload = (obj?: { __typename?: any } | null): obj is UpdateUserPreferencesPayload => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isUpdateUserPreferencesPayload"')
       return UpdateUserPreferencesPayload_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const CurrencyPair_possibleTypes: string[] = ['CurrencyPair']
+    export const isCurrencyPair = (obj?: { __typename?: any } | null): obj is CurrencyPair => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isCurrencyPair"')
+      return CurrencyPair_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const FXRate_possibleTypes: string[] = ['FXRate']
+    export const isFXRate = (obj?: { __typename?: any } | null): obj is FXRate => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isFXRate"')
+      return FXRate_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const FXRatesConnection_possibleTypes: string[] = ['FXRatesConnection']
+    export const isFXRatesConnection = (obj?: { __typename?: any } | null): obj is FXRatesConnection => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isFXRatesConnection"')
+      return FXRatesConnection_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const FXHistoryPoint_possibleTypes: string[] = ['FXHistoryPoint']
+    export const isFXHistoryPoint = (obj?: { __typename?: any } | null): obj is FXHistoryPoint => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isFXHistoryPoint"')
+      return FXHistoryPoint_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const CurrencyPairHistory_possibleTypes: string[] = ['CurrencyPairHistory']
+    export const isCurrencyPairHistory = (obj?: { __typename?: any } | null): obj is CurrencyPairHistory => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isCurrencyPairHistory"')
+      return CurrencyPairHistory_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const RecordFXRateOverridePayload_possibleTypes: string[] = ['RecordFXRateOverridePayload']
+    export const isRecordFXRateOverridePayload = (obj?: { __typename?: any } | null): obj is RecordFXRateOverridePayload => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isRecordFXRateOverridePayload"')
+      return RecordFXRateOverridePayload_possibleTypes.includes(obj.__typename)
     }
     
 
