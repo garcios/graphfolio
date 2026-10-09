@@ -371,6 +371,158 @@ func TestPortfolioService_ListInstrumentPrices(t *testing.T) {
 		}
 	})
 
+	t.Run("success with distinct date range", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		sym := "AAPL"
+		from := time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC)
+		to := time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)
+		filter := domain.PriceFilter{
+			Symbol:   &sym,
+			FromDate: &from,
+			ToDate:   &to,
+			Limit:    50,
+			Offset:   0,
+		}
+
+		mockRepo.EXPECT().
+			ListInstrumentPrices(ctx, gomock.Any()).
+			DoAndReturn(func(_ context.Context, f domain.PriceFilter) ([]domain.InstrumentPrice, int, error) {
+				if f.FromDate == nil || !f.FromDate.Equal(from) {
+					t.Errorf("expected FromDate %v, got %v", from, f.FromDate)
+				}
+				if f.ToDate == nil || !f.ToDate.Equal(to) {
+					t.Errorf("expected ToDate %v, got %v", to, f.ToDate)
+				}
+				return []domain.InstrumentPrice{
+					{
+						Symbol:    "AAPL",
+						PriceDate: to,
+						Close:     decimal.NewFromFloat(228.45),
+						Source:    "twelve_data",
+					},
+				}, 1, nil
+			})
+
+		prices, total, err := svc.ListInstrumentPrices(ctx, filter)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if total != 1 || len(prices) != 1 {
+			t.Errorf("expected 1 price record, got %d (total %d)", len(prices), total)
+		}
+	})
+
+	t.Run("success with half-open range from_date only", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		from := time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC)
+		filter := domain.PriceFilter{
+			FromDate: &from,
+		}
+
+		mockRepo.EXPECT().
+			ListInstrumentPrices(ctx, gomock.Any()).
+			DoAndReturn(func(_ context.Context, f domain.PriceFilter) ([]domain.InstrumentPrice, int, error) {
+				if f.FromDate == nil || !f.FromDate.Equal(from) {
+					t.Errorf("expected FromDate %v, got %v", from, f.FromDate)
+				}
+				if f.ToDate != nil {
+					t.Errorf("expected nil ToDate, got %v", f.ToDate)
+				}
+				return []domain.InstrumentPrice{}, 0, nil
+			})
+
+		_, _, err := svc.ListInstrumentPrices(ctx, filter)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+	})
+
+	t.Run("success with half-open range to_date only", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		to := time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)
+		filter := domain.PriceFilter{
+			ToDate: &to,
+		}
+
+		mockRepo.EXPECT().
+			ListInstrumentPrices(ctx, gomock.Any()).
+			DoAndReturn(func(_ context.Context, f domain.PriceFilter) ([]domain.InstrumentPrice, int, error) {
+				if f.ToDate == nil || !f.ToDate.Equal(to) {
+					t.Errorf("expected ToDate %v, got %v", to, f.ToDate)
+				}
+				if f.FromDate != nil {
+					t.Errorf("expected nil FromDate, got %v", f.FromDate)
+				}
+				return []domain.InstrumentPrice{}, 0, nil
+			})
+
+		_, _, err := svc.ListInstrumentPrices(ctx, filter)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+	})
+
+	t.Run("clamping limit and offset bounds", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		// Limit > 200 clamped to 200, Offset < 0 clamped to 0
+		mockRepo.EXPECT().
+			ListInstrumentPrices(ctx, gomock.Any()).
+			DoAndReturn(func(_ context.Context, f domain.PriceFilter) ([]domain.InstrumentPrice, int, error) {
+				if f.Limit != 200 {
+					t.Errorf("expected Limit clamped to 200, got %d", f.Limit)
+				}
+				if f.Offset != 0 {
+					t.Errorf("expected Offset clamped to 0, got %d", f.Offset)
+				}
+				return []domain.InstrumentPrice{}, 0, nil
+			})
+
+		_, _, err := svc.ListInstrumentPrices(ctx, domain.PriceFilter{
+			Limit:  500,
+			Offset: -10,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		// Limit <= 0 clamped to default 50
+		mockRepo.EXPECT().
+			ListInstrumentPrices(ctx, gomock.Any()).
+			DoAndReturn(func(_ context.Context, f domain.PriceFilter) ([]domain.InstrumentPrice, int, error) {
+				if f.Limit != 50 {
+					t.Errorf("expected Limit default 50, got %d", f.Limit)
+				}
+				return []domain.InstrumentPrice{}, 0, nil
+			})
+
+		_, _, err = svc.ListInstrumentPrices(ctx, domain.PriceFilter{
+			Limit: 0,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+	})
+
 	t.Run("error on inverted date range", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()

@@ -381,26 +381,26 @@ Consistent with [`FXManagement.tsx`](file:///Users/oscargarcia/workspace/graphfo
 
 ## 6. Implementation Checklist
 
-- [ ] **Step 1: Backend & BFF Test Enhancements**
-  - [ ] Add date range and pagination tests in `services/portfolio-api/internal/service/admin_test.go`
-  - [ ] Add gRPC mapping tests in `services/portfolio-api/internal/server_test.go`
-  - [ ] Add GraphQL resolver tests in `bff/graph/schema.resolvers_test.go`
-- [ ] **Step 2: Admin App UI State & Logic (`PriceManagement.tsx`)**
-  - [ ] Replace `dateFilter` with `fromDate` and `toDate` state variables
-  - [ ] Add `activePreset` state and `calculatePresetDates` helper
-  - [ ] Add `page` and `pageSize` pagination state variables
-  - [ ] Update `fetchPrices` to pass `fromDate`, `toDate`, `limit: pageSize`, and `offset: (page - 1) * pageSize`
-  - [ ] Add client-side validation for `fromDate > toDate`
-- [ ] **Step 3: Admin App UI Components & Toolbar**
-  - [ ] Render dual date inputs with placeholders/labels
-  - [ ] Render preset buttons (`7D`, `30D`, `90D`, `YTD`, `1Y`)
-  - [ ] Render "Clear Filters" action button
-  - [ ] Render pagination bar at the bottom of the table
-- [ ] **Step 4: Admin App Styling (`PriceManagement.css`)**
-  - [ ] Style date input groups and preset pill buttons
-  - [ ] Style pagination bar, page indicator, and controls
-  - [ ] Ensure mobile and desktop responsive layout
-- [ ] **Step 5: Verification & Quality Assurance**
-  - [ ] Run `make test`
-  - [ ] Verify build via TypeScript compiler / dev server
-  - [ ] Validate UI interactions and edge cases
+- [x] **Step 1: Backend & BFF Test Enhancements**
+  - [x] Add date range and pagination tests in `services/portfolio-api/internal/service/admin_test.go`
+  - [x] Add gRPC mapping tests in `services/portfolio-api/internal/server_test.go`
+  - [x] Add GraphQL resolver tests in `bff/graph/schema.resolvers_test.go`
+- [x] **Step 2: Admin App UI State & Logic (`PriceManagement.tsx`)**
+  - [x] Replace `dateFilter` with `fromDate` and `toDate` state variables
+  - [x] Add `activePreset` state and `calculatePresetDates` helper
+  - [x] Add `page` and `pageSize` pagination state variables
+  - [x] Update `fetchPrices` to pass `fromDate`, `toDate`, `limit: pageSize`, and `offset: (page - 1) * pageSize`
+  - [x] Add client-side validation for `fromDate > toDate`
+- [x] **Step 3: Admin App UI Components & Toolbar**
+  - [x] Render dual date inputs with placeholders/labels
+  - [x] Render preset buttons (`7D`, `30D`, `90D`, `YTD`, `1Y`)
+  - [x] Render "Clear Filters" action button
+  - [x] Render pagination bar at the bottom of the table
+- [x] **Step 4: Admin App Styling (`PriceManagement.css`)**
+  - [x] Style date input groups and preset pill buttons
+  - [x] Style pagination bar, page indicator, and controls
+  - [x] Ensure mobile and desktop responsive layout
+- [x] **Step 5: Verification & Quality Assurance**
+  - [x] Run `make test`
+  - [x] Verify build via TypeScript compiler / dev server
+  - [x] Validate UI interactions and edge cases

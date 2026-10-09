@@ -27,7 +27,7 @@ This document catalogs all implemented features, in-progress components, and pla
 | **17** | **Admin UI Historical Market Data Backfill (Asset Prices & FX Rates)** | **DONE** | Proto, Svc, BFF, Web | [admin-historical-backfill-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-historical-backfill-implementation-plan.md) |
 | **18** | **Delete Asset & Price Cascade (Admin Portal)** | **DONE** | Database, Proto, Svc, BFF, Web | [delete-asset-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/delete-asset-implementation-plan.md) |
 | **19** | **Ingestion Job History View (Admin Portal)** | **PLANNED** | Database, Proto, Svc, BFF, Web | [ingestion-job-history-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/ingestion-job-history-implementation-plan.md) |
-| **20** | **Asset Prices Date Range Filter & Pagination (Admin Portal)** | **PLANNED** | Web, BFF, Svc | [asset-prices-date-range-filter-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/asset-prices-date-range-filter-implementation-plan.md) |
+| **20** | **Asset Prices Date Range Filter & Pagination (Admin Portal)** | **DONE** | Web, BFF, Svc | [asset-prices-date-range-filter-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/asset-prices-date-range-filter-implementation-plan.md) |
 | **21** | **Multi-Broker CSV Ingestion (CommSec & nabtrade)** | **PLANNED** | Proto, Svc, BFF, Web | [multi-broker-csv-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/multi-broker-csv-ingestion-implementation-plan.md) |
 | **22** | **Tax Lot Inspector & Capital Gains Reports** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
 | **23** | **Dividend Calendar & Yield Analytics** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
@@ -258,6 +258,20 @@ This document catalogs all implemented features, in-progress components, and pla
   - [DeleteAssetModal.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/DeleteAssetModal.css)
   - [AssetManagement.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/AssetManagement.tsx)
 
+### 2.16 Asset Prices Date Range Filter & Pagination (Admin Portal)
+- **Status**: **DONE**
+- **Plan Reference**: [asset-prices-date-range-filter-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/asset-prices-date-range-filter-implementation-plan.md)
+- **Scope**: `web/apps/admin-app`, `bff/`, `services/portfolio-api`
+- **Description**: Upgrades the Closing Prices Ledger (`PriceManagement`) in the Admin Portal with dual date range filtering (`fromDate` and `toDate`), quick range preset pill buttons (`7D`, `30D`, `90D`, `YTD`, `1Y`), client-side date range validation guard (`fromDate > toDate`), and full multi-page pagination controls (`page`, `pageSize = 50`, `totalPages`, Prev/Next navigation, slice record counter). Includes integration with `BackfillModal` passing active date range bounds, and unit test suites across `portfolio-api` (service clamping/bounds, gRPC parsing) and BFF GraphQL resolvers verifying bounded, half-open, and paginated price queries.
+- **Key Files**:
+  - [PriceManagement.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/PriceManagement.tsx)
+  - [PriceManagement.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/PriceManagement.css)
+  - [admin.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/admin.go)
+  - [admin_test.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/admin_test.go)
+  - [server.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server.go)
+  - [server_test.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server_test.go)
+  - [schema.resolvers_test.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers_test.go)
+
 ---
 
 ## 3. Planned Features (`PLANNED`)
@@ -296,19 +310,7 @@ This document catalogs all implemented features, in-progress components, and pla
   - Server-side sorting by start date (newest first by default) with single-pass `COUNT(*) OVER()` pagination.
   - Interactive drawer/modal to inspect error diagnostics, stack traces, and execution parameters for failed imports.
 
-### 3.4 Asset Prices Date Range Filter & Pagination (Admin Portal)
-- **Status**: **PLANNED**
-- **Plan Reference**: [asset-prices-date-range-filter-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/asset-prices-date-range-filter-implementation-plan.md)
-- **Scope**: `web/apps/admin-app`, `bff/`, `services/portfolio-api`
-- **Highlights**:
-  - Dual date range filters (`fromDate` and `toDate`) replacing single-day constraint in `PriceManagement.tsx`.
-  - One-click range preset chips (`Today`, `7D`, `30D`, `90D`, `YTD`, `1Y`, `ALL`) for rapid interval selection.
-  - Client-side date range validation guarding against inverted date inputs (`fromDate > toDate`).
-  - Full multi-page pagination controls (`page`, `pageSize = 50`, `totalPages`, Prev/Next navigation, record counter).
-  - Reset / "Clear Filters" action resetting symbols, dates, presets, and pagination.
-  - Unit test additions across `portfolio-api` and BFF resolvers verifying bounded and open-ended range querying.
-
-### 3.5 Multi-Broker CSV Ingestion (CommSec & nabtrade)
+### 3.4 Multi-Broker CSV Ingestion (CommSec & nabtrade)
 - **Status**: **PLANNED**
 - **Plan Reference**: [multi-broker-csv-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/multi-broker-csv-ingestion-implementation-plan.md)
 - **Scope**: `proto/portfolio/v1/`, `services/portfolio-api`, `bff/`, `web/apps/main-app`

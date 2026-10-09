@@ -32,18 +32,66 @@ interface PriceManagementProps {
   onNotify: (msg: string) => void;
 }
 
+type PresetKey = '7D' | '30D' | '90D' | 'YTD' | '1Y';
+
+const PAGE_SIZE = 50;
+
+function formatISODate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function calculatePresetDates(preset: PresetKey): { from: string; to: string } {
+  const now = new Date();
+  const todayISO = formatISODate(now);
+  switch (preset) {
+    case '7D': {
+      const d = new Date(now);
+      d.setDate(d.getDate() - 7);
+      return { from: formatISODate(d), to: todayISO };
+    }
+    case '30D': {
+      const d = new Date(now);
+      d.setDate(d.getDate() - 30);
+      return { from: formatISODate(d), to: todayISO };
+    }
+    case '90D': {
+      const d = new Date(now);
+      d.setDate(d.getDate() - 90);
+      return { from: formatISODate(d), to: todayISO };
+    }
+    case 'YTD': {
+      const d = new Date(now.getFullYear(), 0, 1);
+      return { from: formatISODate(d), to: todayISO };
+    }
+    case '1Y': {
+      const d = new Date(now);
+      d.setDate(d.getDate() - 365);
+      return { from: formatISODate(d), to: todayISO };
+    }
+  }
+}
+
 export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) => {
   const [prices, setPrices] = useState<PriceRecord[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [symbolFilter, setSymbolFilter] = useState('ALL');
-  const [dateFilter, setDateFilter] = useState('');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [activePreset, setActivePreset] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
   const [isSyncing, setIsSyncing] = useState(false);
   const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
   const [isBackfillModalOpen, setIsBackfillModalOpen] = useState(false);
   const [selectedSymbolForOverride, setSelectedSymbolForOverride] = useState('AAPL');
   const [availableSymbols, setAvailableSymbols] = useState<string[]>([]);
   const [latestPriceDate, setLatestPriceDate] = useState<string>('—');
+
+  const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+  const isDateRangeInvalid = Boolean(fromDate && toDate && fromDate > toDate);
 
   // Load available instruments from BFF for the dropdown filter
   const fetchInstruments = useCallback(() => {
@@ -67,16 +115,20 @@ export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) =>
   }, [selectedSymbolForOverride]);
 
   const fetchPrices = useCallback(() => {
+    if (fromDate && toDate && fromDate > toDate) {
+      return; // Don't query invalid ranges
+    }
+
     setLoading(true);
     client
       .query({
         instrumentPrices: {
           __args: {
             symbol: symbolFilter === 'ALL' ? undefined : symbolFilter,
-            fromDate: dateFilter || undefined,
-            toDate: dateFilter || undefined,
-            limit: 50,
-            offset: 0,
+            fromDate: fromDate || undefined,
+            toDate: toDate || undefined,
+            limit: PAGE_SIZE,
+            offset: (page - 1) * PAGE_SIZE,
           },
           items: {
             id: true,
@@ -96,7 +148,7 @@ export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) =>
         if (res.instrumentPrices) {
           setPrices(res.instrumentPrices.items);
           setTotalCount(res.instrumentPrices.totalCount);
-          if (res.instrumentPrices.items.length > 0) {
+          if (res.instrumentPrices.items.length > 0 && page === 1) {
             setLatestPriceDate(res.instrumentPrices.items[0].priceDate);
           }
         }
@@ -107,7 +159,7 @@ export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) =>
         onNotify(`Error loading prices: ${err?.message || 'Server error'}`);
         setLoading(false);
       });
-  }, [symbolFilter, dateFilter, onNotify]);
+  }, [symbolFilter, fromDate, toDate, page, onNotify]);
 
   useEffect(() => {
     fetchInstruments();
@@ -116,6 +168,22 @@ export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) =>
   useEffect(() => {
     fetchPrices();
   }, [fetchPrices]);
+
+  const handleApplyPreset = (preset: PresetKey) => {
+    const dates = calculatePresetDates(preset);
+    setFromDate(dates.from);
+    setToDate(dates.to);
+    setActivePreset(preset);
+    setPage(1);
+  };
+
+  const handleClearFilters = () => {
+    setSymbolFilter('ALL');
+    setFromDate('');
+    setToDate('');
+    setActivePreset(null);
+    setPage(1);
+  };
 
   const handleTriggerSync = async () => {
     setIsSyncing(true);
@@ -256,29 +324,73 @@ export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) =>
           <Select
             className="price-mgmt__symbol-filter"
             value={symbolFilter}
-            onChange={(e) => setSymbolFilter(e.target.value)}
+            onChange={(e) => {
+              setSymbolFilter(e.target.value);
+              setPage(1);
+            }}
             options={[
               { label: 'All Symbols', value: 'ALL' },
               ...availableSymbols.map((s) => ({ label: s, value: s })),
             ]}
           />
-          <Input
-            className="price-mgmt__date-filter"
-            type="date"
-            value={dateFilter}
-            onChange={(e) => setDateFilter(e.target.value)}
-          />
-          {(symbolFilter !== 'ALL' || dateFilter) && (
+
+          <div className="price-mgmt__date-input-group">
+            <Input
+              className="price-mgmt__date-input"
+              type="date"
+              placeholder="From Date"
+              value={fromDate}
+              onChange={(e) => {
+                setFromDate(e.target.value);
+                setActivePreset(null);
+                setPage(1);
+              }}
+              error={isDateRangeInvalid ? 'Invalid range' : undefined}
+            />
+          </div>
+
+          <div className="price-mgmt__date-input-group">
+            <Input
+              className="price-mgmt__date-input"
+              type="date"
+              placeholder="To Date"
+              value={toDate}
+              onChange={(e) => {
+                setToDate(e.target.value);
+                setActivePreset(null);
+                setPage(1);
+              }}
+              error={isDateRangeInvalid ? 'Must be ≥ From' : undefined}
+            />
+          </div>
+
+          <div className="price-mgmt__presets">
+            {(['7D', '30D', '90D', 'YTD', '1Y'] as const).map((preset) => (
+              <Button
+                key={preset}
+                size="sm"
+                variant={activePreset === preset ? 'primary' : 'ghost'}
+                onClick={() => handleApplyPreset(preset)}
+              >
+                {preset}
+              </Button>
+            ))}
+          </div>
+
+          {(symbolFilter !== 'ALL' || fromDate || toDate) && (
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => {
-                setSymbolFilter('ALL');
-                setDateFilter('');
-              }}
+              onClick={handleClearFilters}
             >
               Clear Filters
             </Button>
+          )}
+
+          {isDateRangeInvalid && (
+            <span className="price-mgmt__date-error">
+              Start date cannot be after end date
+            </span>
           )}
         </div>
 
@@ -315,71 +427,101 @@ export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) =>
           Loading authoritative closing prices...
         </div>
       ) : (
-        <Table hoverable striped>
-          <TableHead>
-            <TableRow>
-              <TableHeaderCell>Date</TableHeaderCell>
-              <TableHeaderCell>Symbol</TableHeaderCell>
-              <TableHeaderCell>Closing Price</TableHeaderCell>
-              <TableHeaderCell>Currency</TableHeaderCell>
-              <TableHeaderCell>Data Source</TableHeaderCell>
-              <TableHeaderCell>Last Updated</TableHeaderCell>
-              <TableHeaderCell align="right">Actions</TableHeaderCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {prices.length === 0 ? (
+        <>
+          <Table hoverable striped>
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={7} align="center">
-                  No closing price records found for this filter.
-                </TableCell>
+                <TableHeaderCell>Date</TableHeaderCell>
+                <TableHeaderCell>Symbol</TableHeaderCell>
+                <TableHeaderCell>Closing Price</TableHeaderCell>
+                <TableHeaderCell>Currency</TableHeaderCell>
+                <TableHeaderCell>Data Source</TableHeaderCell>
+                <TableHeaderCell>Last Updated</TableHeaderCell>
+                <TableHeaderCell align="right">Actions</TableHeaderCell>
               </TableRow>
-            ) : (
-              prices.map((rec) => (
-                <TableRow key={rec.id}>
-                  <TableCell>{formatDate(rec.priceDate)}</TableCell>
-                  <TableCell>
-                    <strong style={{ fontFamily: 'var(--font-mono, monospace)' }}>
-                      {rec.symbol}
-                    </strong>
-                  </TableCell>
-                  <TableCell>
-                    <strong>{formatMoney(rec.price)}</strong>
-                  </TableCell>
-                  <TableCell>{rec.price.currencyCode}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        rec.source === 'manual' || rec.source === 'MANUAL_OVERRIDE'
-                          ? 'warning'
-                          : rec.source === 'twelve_data' || rec.source === 'TWELVE_DATA'
-                          ? 'info'
-                          : 'neutral'
-                      }
-                    >
-                      {rec.source}
-                    </Badge>
-                  </TableCell>
-                  <TableCell style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    {new Date(rec.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </TableCell>
-                  <TableCell align="right">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => {
-                        setSelectedSymbolForOverride(rec.symbol);
-                        setIsOverrideModalOpen(true);
-                      }}
-                    >
-                      Override
-                    </Button>
+            </TableHead>
+            <TableBody>
+              {prices.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} align="center">
+                    No closing price records found for this filter.
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                prices.map((rec) => (
+                  <TableRow key={rec.id}>
+                    <TableCell>{formatDate(rec.priceDate)}</TableCell>
+                    <TableCell>
+                      <strong style={{ fontFamily: 'var(--font-mono, monospace)' }}>
+                        {rec.symbol}
+                      </strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>{formatMoney(rec.price)}</strong>
+                    </TableCell>
+                    <TableCell>{rec.price.currencyCode}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          rec.source === 'manual' || rec.source === 'MANUAL_OVERRIDE'
+                            ? 'warning'
+                            : rec.source === 'twelve_data' || rec.source === 'TWELVE_DATA'
+                            ? 'info'
+                            : 'neutral'
+                        }
+                      >
+                        {rec.source}
+                      </Badge>
+                    </TableCell>
+                    <TableCell style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                      {new Date(rec.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </TableCell>
+                    <TableCell align="right">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setSelectedSymbolForOverride(rec.symbol);
+                          setIsOverrideModalOpen(true);
+                        }}
+                      >
+                        Override
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+
+          <div className="price-mgmt__pagination">
+            <div className="price-mgmt__pagination-info">
+              Showing {prices.length > 0 ? (page - 1) * PAGE_SIZE + 1 : 0} to{' '}
+              {Math.min(page * PAGE_SIZE, totalCount)} of {totalCount} records
+            </div>
+            <div className="price-mgmt__pagination-controls">
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={page <= 1 || loading}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                Previous
+              </Button>
+              <span className="price-mgmt__page-indicator">
+                Page {page} of {totalPages}
+              </span>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={page >= totalPages || loading}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        </>
       )}
 
       <PriceOverrideModal
@@ -393,6 +535,8 @@ export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) =>
         isOpen={isBackfillModalOpen}
         onClose={() => setIsBackfillModalOpen(false)}
         initialSymbols={symbolFilter !== 'ALL' ? [symbolFilter] : []}
+        initialFromDate={fromDate || undefined}
+        initialToDate={toDate || undefined}
         initialBackfillAssets={true}
         initialBackfillFx={false}
         initialRecomputeValuations={true}
@@ -402,3 +546,4 @@ export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) =>
     </div>
   );
 };
+

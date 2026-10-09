@@ -46,7 +46,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 - **`web/` (The Consumer)**:
   Workspace monorepo containing multiple frontend applications and shared libraries:
   - `apps/main-app`: Primary investor-facing application (Port 5173). Interactive portfolio dashboard, performance chart, transaction ledger, trade ingestion modal, and investor profile preferences modal (`UserPreferencesModal`).
-  - `apps/admin-app`: Internal administrative portal (Port 5174). Master instrument directory, closing price ledger, foreign exchange currency pairs management (`FXManagement`, `FXTrendChart`, `FXOverrideModal`), market ingestion monitoring, and historical market data range backfills (`BackfillModal`).
+  - `apps/admin-app`: Internal administrative portal (Port 5174). Master instrument directory, closing price ledger with dual date range filtering, presets, and pagination (`PriceManagement`), foreign exchange currency pairs management (`FXManagement`, `FXTrendChart`, `FXOverrideModal`), market ingestion monitoring, and historical market data range backfills (`BackfillModal`).
   - `packages/ui`: Shared design system (`@graphfolio/ui`) with dark glassmorphic design tokens, atomic components (`Button`, `Modal`, `Card`, `Badge`, `Table`, `Input`, `Select`), and precision financial formatters.
   - `packages/api-client`: Shared auto-generated typed GraphQL client (`@graphfolio/api-client`) communicating with the BFF.
 
@@ -180,6 +180,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   │   ├── fundamental-cash-flow-engine-implementation-plan.md
 │   │   ├── currency-pair-historical-prices-implementation-plan.md
 │   │   ├── admin-historical-backfill-implementation-plan.md
+│   │   ├── asset-prices-date-range-filter-implementation-plan.md
 │   │   ├── ingestion-job-history-implementation-plan.md
 │   │   └── web-workspace-refactoring-plan.md
 │   ├── user-stories/             # Agile user stories & acceptance criteria
@@ -245,6 +246,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 - **Asset Directory Management**: `portfolio.instruments` stores authoritative reference data. Adding an instrument requires validating non-empty uppercase symbol and exchange code, valid ISO 4217 3-letter currency code, allowed asset class (`EQUITY`, `ETF`, `FUND`, `BOND`, `CRYPTO`, `CASH_EQUIVALENT`), and optional 12-character ISO 6166 ISIN format (`^[A-Z]{2}[A-Z0-9]{9}[0-9]$`).
 - **Authoritative Price Ledger & Overrides**: `portfolio.instrument_prices` tracks daily closing marks and vendor sources. Manual price overrides (`RecordPriceOverride`) enforce positive decimal prices (`price.IsPositive()`), record mandatory audit justification notes with source `'manual'`, and optionally trigger retroactive recalibrations of portfolio valuations (`recompute_valuations = true`).
 - **Ingestion Telemetry & On-Demand Synchronization**: gRPC `GetIngestionStatus` aggregates active instrument counts, tracked currency pairs, latest pricing dates, and token-bucket budget metrics alongside feed status metadata (`Twelve Data`, `Yahoo Finance`, `ECB`). On-demand market synchronization (`TriggerMarketSync`) enables immediate batch pricing updates and FX triangulation checks.
+- **Date Range Filtering & Ledger Pagination**: `portfolio.instrument_prices` queries in `ListInstrumentPrices` support bounded and half-open date ranges (`FromDate`, `ToDate`) and clamped pagination (`Limit` [1, 200] defaulting to 50, `Offset` >= 0). `PriceManagement` in `apps/admin-app` enforces client-side date ordering guards (`fromDate <= toDate`), provides quick range preset buttons (`7D`, `30D`, `90D`, `YTD`, `1Y`), passes active bounds into `BackfillModal`, and renders glassmorphic pagination controls with tabular page indicators and Prev/Next navigation.
 - **Admin Portal UI**: The internal operations portal (`apps/admin-app` on `:5174`) directly integrates with the BFF via live GenQL queries and mutations across `AssetManagement`, `PriceManagement`, and `IngestionPipeline` views.
 
 ### 4.8 Market Data Ingestion Pipeline & FX Triangulation Standards
