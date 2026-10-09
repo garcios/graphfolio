@@ -27,9 +27,11 @@ This document catalogs all implemented features, in-progress components, and pla
 | **17** | **Admin UI Historical Market Data Backfill (Asset Prices & FX Rates)** | **DONE** | Proto, Svc, BFF, Web | [admin-historical-backfill-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-historical-backfill-implementation-plan.md) |
 | **18** | **Delete Asset & Price Cascade (Admin Portal)** | **DONE** | Database, Proto, Svc, BFF, Web | [delete-asset-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/delete-asset-implementation-plan.md) |
 | **19** | **Ingestion Job History View (Admin Portal)** | **PLANNED** | Database, Proto, Svc, BFF, Web | [ingestion-job-history-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/ingestion-job-history-implementation-plan.md) |
-| **20** | **Tax Lot Inspector & Capital Gains Reports** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
-| **21** | **Dividend Calendar & Yield Analytics** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
-| **22** | **Real-Time Market Data & WebSocket Price Ticker** | **ROADMAP** | Market Data, Svc, Web | *(Future Plan)* |
+| **20** | **Asset Prices Date Range Filter & Pagination (Admin Portal)** | **PLANNED** | Web, BFF, Svc | [asset-prices-date-range-filter-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/asset-prices-date-range-filter-implementation-plan.md) |
+| **21** | **Multi-Broker CSV Ingestion (CommSec & nabtrade)** | **PLANNED** | Proto, Svc, BFF, Web | [multi-broker-csv-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/multi-broker-csv-ingestion-implementation-plan.md) |
+| **22** | **Tax Lot Inspector & Capital Gains Reports** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
+| **23** | **Dividend Calendar & Yield Analytics** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
+| **24** | **Real-Time Market Data & WebSocket Price Ticker** | **ROADMAP** | Market Data, Svc, Web | *(Future Plan)* |
 
 ---
 
@@ -293,6 +295,30 @@ This document catalogs all implemented features, in-progress components, and pla
   - Granular record split metrics displaying successful vs failed rows (`420 ok / 12 fail`).
   - Server-side sorting by start date (newest first by default) with single-pass `COUNT(*) OVER()` pagination.
   - Interactive drawer/modal to inspect error diagnostics, stack traces, and execution parameters for failed imports.
+
+### 3.4 Asset Prices Date Range Filter & Pagination (Admin Portal)
+- **Status**: **PLANNED**
+- **Plan Reference**: [asset-prices-date-range-filter-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/asset-prices-date-range-filter-implementation-plan.md)
+- **Scope**: `web/apps/admin-app`, `bff/`, `services/portfolio-api`
+- **Highlights**:
+  - Dual date range filters (`fromDate` and `toDate`) replacing single-day constraint in `PriceManagement.tsx`.
+  - One-click range preset chips (`Today`, `7D`, `30D`, `90D`, `YTD`, `1Y`, `ALL`) for rapid interval selection.
+  - Client-side date range validation guarding against inverted date inputs (`fromDate > toDate`).
+  - Full multi-page pagination controls (`page`, `pageSize = 50`, `totalPages`, Prev/Next navigation, record counter).
+  - Reset / "Clear Filters" action resetting symbols, dates, presets, and pagination.
+  - Unit test additions across `portfolio-api` and BFF resolvers verifying bounded and open-ended range querying.
+
+### 3.5 Multi-Broker CSV Ingestion (CommSec & nabtrade)
+- **Status**: **PLANNED**
+- **Plan Reference**: [multi-broker-csv-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/multi-broker-csv-ingestion-implementation-plan.md)
+- **Scope**: `proto/portfolio/v1/`, `services/portfolio-api`, `bff/`, `web/apps/main-app`
+- **Highlights**:
+  - Client-side broker format auto-detector sniffing header signatures between CommSec and nabtrade CSVs with manual selector override.
+  - Broker-specific normalization adapters handling Australian date formatting (`DD/MM/YYYY`), currency cleansing (`$`, thousand commas, accounting negative parentheses), and nabtrade metadata header/footer stripping.
+  - Deterministic idempotent hash generation (`SHA-256`) and native nabtrade confirmation number mapping into `portfolio.transactions.external_ref`.
+  - Live pre-flight duplicate checking against existing portfolio records via GraphQL query.
+  - Interactive multi-step preview modal (`ImportTransactionsModal.tsx`) showing valid rows, duplicate skip toggles, and malformed row error diagnostics with exact row numbers.
+  - Bulk batch persistence API (`BatchImportTransactions`) executing atomic multi-row insertion (`ON CONFLICT DO NOTHING`), single-pass ledger projection replay, and automatic retroactive portfolio valuation backfills.
 
 ---
 
