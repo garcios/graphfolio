@@ -880,6 +880,63 @@ func TestQueryResolver_InstrumentPrices(t *testing.T) {
 			t.Errorf("expected price 228.45, got %s", res.Items[0].Price.Amount.String())
 		}
 	})
+
+	t.Run("successfully queries instrument prices with date range and pagination", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			listInstrumentPricesFn: func(ctx context.Context, in *pb.ListInstrumentPricesRequest) (*pb.ListInstrumentPricesResponse, error) {
+				if in.Symbol == nil || *in.Symbol != "AAPL" {
+					t.Errorf("expected symbol AAPL, got %v", in.Symbol)
+				}
+				if in.FromDate == nil || *in.FromDate != "2026-09-01" {
+					t.Errorf("expected fromDate 2026-09-01, got %v", in.FromDate)
+				}
+				if in.ToDate == nil || *in.ToDate != "2026-10-01" {
+					t.Errorf("expected toDate 2026-10-01, got %v", in.ToDate)
+				}
+				if in.Limit != 25 {
+					t.Errorf("expected limit 25, got %d", in.Limit)
+				}
+				if in.Offset != 50 {
+					t.Errorf("expected offset 50, got %d", in.Offset)
+				}
+				return &pb.ListInstrumentPricesResponse{
+					Prices: []*pb.InstrumentPriceItem{
+						{
+							InstrumentId: "inst-1",
+							Symbol:       "AAPL",
+							PriceDate:    "2026-10-01",
+							Price: &commonpb.Money{
+								Amount:       &commonpb.Decimal{Value: "230.25"},
+								CurrencyCode: "USD",
+							},
+							Source:    "twelve_data",
+							UpdatedAt: "2026-10-01T21:00:00Z",
+						},
+					},
+					TotalCount: 88,
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		sym := "AAPL"
+		from := "2026-09-01"
+		to := "2026-10-01"
+		limit := 25
+		offset := 50
+		res, err := qResolver.InstrumentPrices(ctx, &sym, &from, &to, &limit, &offset)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if res.TotalCount != 88 || len(res.Items) != 1 {
+			t.Fatalf("expected total count 88 and 1 price, got total %d, items %d", res.TotalCount, len(res.Items))
+		}
+		if res.Items[0].Price.Amount.String() != "230.25" {
+			t.Errorf("expected price 230.25, got %s", res.Items[0].Price.Amount.String())
+		}
+	})
 }
 
 func TestMutationResolver_RecordPriceOverride(t *testing.T) {

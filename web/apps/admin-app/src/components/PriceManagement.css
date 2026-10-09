@@ -23,14 +23,58 @@
   width: 160px;
 }
 
-.price-mgmt__date-filter {
-  width: 170px;
+.price-mgmt__date-input-group {
+  min-width: 150px;
+}
+
+.price-mgmt__date-input {
+  width: 155px;
+}
+
+.price-mgmt__presets {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.price-mgmt__date-error {
+  font-size: 0.8rem;
+  color: var(--danger, #ef4444);
+  font-weight: 500;
 }
 
 .price-mgmt__actions {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+.price-mgmt__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1rem;
+  border-top: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.price-mgmt__pagination-info {
+  font-size: 0.85rem;
+  color: var(--text-muted, #71717a);
+}
+
+.price-mgmt__pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.price-mgmt__page-indicator {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #a1a1aa);
+  font-variant-numeric: tabular-nums;
 }
 
 .price-mgmt__stats {

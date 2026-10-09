@@ -1329,6 +1329,86 @@ func TestPortfolioServer_ListInstrumentPrices(t *testing.T) {
 			t.Errorf("expected InvalidArgument, got: %v", st.Code())
 		}
 	})
+
+	t.Run("success with distinct date range and pagination", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		fromDateStr := "2026-09-01"
+		toDateStr := "2026-10-01"
+		sym := "AAPL"
+		expectedFrom := time.Date(2026, 9, 1, 0, 0, 0, 0, time.UTC)
+		expectedTo := time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC)
+
+		mockSvc.EXPECT().
+			ListInstrumentPrices(ctx, gomock.Any()).
+			DoAndReturn(func(_ context.Context, f domain.PriceFilter) ([]domain.InstrumentPrice, int, error) {
+				if f.Symbol == nil || *f.Symbol != "AAPL" {
+					t.Errorf("expected symbol AAPL, got %v", f.Symbol)
+				}
+				if f.FromDate == nil || !f.FromDate.Equal(expectedFrom) {
+					t.Errorf("expected FromDate %v, got %v", expectedFrom, f.FromDate)
+				}
+				if f.ToDate == nil || !f.ToDate.Equal(expectedTo) {
+					t.Errorf("expected ToDate %v, got %v", expectedTo, f.ToDate)
+				}
+				if f.Limit != 25 {
+					t.Errorf("expected limit 25, got %d", f.Limit)
+				}
+				if f.Offset != 50 {
+					t.Errorf("expected offset 50, got %d", f.Offset)
+				}
+				return []domain.InstrumentPrice{
+					{
+						InstrumentID: uuid.New(),
+						Symbol:       "AAPL",
+						PriceDate:    expectedTo,
+						Close:        decimal.NewFromFloat(230.00),
+						CurrencyCode: "USD",
+						Source:       "twelve_data",
+					},
+				}, 100, nil
+			})
+
+		res, err := server.ListInstrumentPrices(ctx, &pb.ListInstrumentPricesRequest{
+			Symbol:   &sym,
+			FromDate: &fromDateStr,
+			ToDate:   &toDateStr,
+			Limit:    25,
+			Offset:   50,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if res.TotalCount != 100 || len(res.Prices) != 1 {
+			t.Errorf("expected 100 total count and 1 price, got: %d, %d", res.TotalCount, len(res.Prices))
+		}
+	})
+
+	t.Run("inverted date range returns InvalidArgument", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().
+			ListInstrumentPrices(ctx, gomock.Any()).
+			Return(nil, 0, service.ErrInvalidDateRange)
+
+		fromDateStr := "2026-10-05"
+		toDateStr := "2026-10-01"
+		_, err := server.ListInstrumentPrices(ctx, &pb.ListInstrumentPricesRequest{
+			FromDate: &fromDateStr,
+			ToDate:   &toDateStr,
+		})
+		if err == nil {
+			t.Fatalf("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got: %v", st.Code())
+		}
+	})
 }
 
 func TestPortfolioServer_RecordPriceOverride(t *testing.T) {
