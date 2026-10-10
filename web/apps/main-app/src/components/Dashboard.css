@@ -392,3 +392,96 @@
   }
 }
 
+/* Investments Table Footer Breakdown */
+.investments-table tfoot {
+  border-top: 1px solid var(--card-border);
+}
+
+.table-footer-subtotal td {
+  padding: 1.1rem 0.5rem 0.75rem 0.5rem;
+  border-top: 1px solid var(--card-border);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.015);
+}
+
+.table-footer-cash td {
+  padding: 0.75rem 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.table-footer-total td {
+  padding: 1rem 0.5rem 1.1rem 0.5rem;
+  border-top: 2px solid rgba(255, 255, 255, 0.15);
+  background: rgba(59, 130, 246, 0.04);
+}
+
+.footer-title-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.footer-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.footer-title-total {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #ffffff;
+}
+
+.footer-count {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.15rem 0.55rem;
+  border-radius: 9999px;
+  font-weight: 500;
+}
+
+.cash-pill {
+  font-size: 0.7rem;
+  color: var(--accent-green);
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  padding: 0.12rem 0.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.footer-formula {
+  font-size: 0.7rem;
+  color: var(--accent-blue);
+  background: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  padding: 0.12rem 0.5rem;
+  border-radius: 9999px;
+  font-weight: 500;
+}
+
+.footer-amount {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+}
+
+.footer-amount-total {
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #ffffff;
+  font-family: var(--font-mono);
+}
+
+.footer-muted {
+  color: var(--text-secondary);
+  opacity: 0.5;
+  font-size: 0.9rem;
+}
+

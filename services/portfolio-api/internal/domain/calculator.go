@@ -14,7 +14,7 @@ var (
 func CalculateInvestment(h HoldingWithPrice, baseCurrency string) InvestmentSummary {
 	totalValueInst := h.Quantity.Mul(h.LatestPrice)
 	fxRate := h.FXRateToBase
-	if fxRate.IsZero() {
+	if !fxRate.IsPositive() {
 		fxRate = one
 	}
 
@@ -23,6 +23,7 @@ func CalculateInvestment(h HoldingWithPrice, baseCurrency string) InvestmentSumm
 	// Today's price movement in instrument currency
 	priceDelta := h.LatestPrice.Sub(h.PrevPrice)
 	todayReturnAmountInst := h.Quantity.Mul(priceDelta)
+	todayReturnAmountBase := todayReturnAmountInst.Mul(fxRate)
 
 	// Today's return percentage
 	var todayReturnPercent decimal.Decimal
@@ -44,8 +45,8 @@ func CalculateInvestment(h HoldingWithPrice, baseCurrency string) InvestmentSumm
 		Name:               h.Name,
 		Price:              NewMoney(h.LatestPrice.Round(2), h.InstrumentCurrency),
 		Quantity:           h.Quantity,
-		TotalValue:         NewMoney(totalValueInst.Round(2), h.InstrumentCurrency),
-		TodayReturnAmount:  NewMoney(todayReturnAmountInst.Round(2), h.InstrumentCurrency),
+		TotalValue:         NewMoney(totalValueBase.Round(2), baseCurrency),
+		TodayReturnAmount:  NewMoney(todayReturnAmountBase.Round(2), baseCurrency),
 		TodayReturnPercent: todayReturnPercent,
 		TotalReturnAmount:  NewMoney(totalReturnAmountBase.Round(2), baseCurrency),
 		TotalReturnPercent: totalReturnPercent,
@@ -71,7 +72,7 @@ func CalculatePortfolioSummary(
 		investments[i] = inv
 
 		fxRate := h.FXRateToBase
-		if fxRate.IsZero() {
+		if !fxRate.IsPositive() {
 			fxRate = one
 		}
 

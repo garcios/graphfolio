@@ -52,6 +52,7 @@ SELECT
     COALESCE(
         direct_fx.rate,
         CASE WHEN inverse_fx.rate > 0 THEN 1.0 / inverse_fx.rate ELSE NULL END,
+        triangulated_fx.rate,
         1.0
     ) AS fx_rate_to_base
 FROM portfolio.holdings h
@@ -88,6 +89,21 @@ LEFT JOIN LATERAL (
       AND quote_currency = i.currency_code 
     ORDER BY rate_date DESC LIMIT 1
 ) inverse_fx ON (i.currency_code <> p.base_currency)
+-- FX triangulated rate via USD
+LEFT JOIN LATERAL (
+    SELECT (usd_base.rate / usd_inst.rate) AS rate
+    FROM (
+        SELECT rate FROM portfolio.fx_rates 
+        WHERE base_currency = 'USD' AND quote_currency = p.base_currency 
+        ORDER BY rate_date DESC LIMIT 1
+    ) usd_base
+    CROSS JOIN (
+        SELECT rate FROM portfolio.fx_rates 
+        WHERE base_currency = 'USD' AND quote_currency = i.currency_code 
+        ORDER BY rate_date DESC LIMIT 1
+    ) usd_inst
+    WHERE usd_inst.rate > 0
+) triangulated_fx ON (i.currency_code <> p.base_currency AND direct_fx.rate IS NULL AND inverse_fx.rate IS NULL)
 WHERE h.portfolio_id = $1 AND h.quantity > 0
 ORDER BY (h.quantity * COALESCE(curr_p.close, 0)) DESC;`
 

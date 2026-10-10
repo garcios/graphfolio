@@ -113,6 +113,25 @@ export const Dashboard = () => {
   const todayReturnPositive = isPositive(data.todayReturnAmount);
   const annualizedPositive = isPositive(data.annualizedReturnPercent);
 
+  const investments = data.investments || [];
+  const currencyCode = data.totalValue?.currencyCode || userPrefs?.displayCurrency || 'USD';
+
+  const investedAssetsTotal = investments.reduce(
+    (sum: number, inv: any) => sum + (parseFloat(inv.totalValue?.amount) || 0),
+    0
+  );
+  const subtotalTodayReturn = investments.reduce(
+    (sum: number, inv: any) => sum + (parseFloat(inv.todayReturnAmount?.amount) || 0),
+    0
+  );
+  const subtotalTotalReturn = investments.reduce(
+    (sum: number, inv: any) => sum + (parseFloat(inv.totalReturnAmount?.amount) || 0),
+    0
+  );
+
+  const subtotalTodayPos = subtotalTodayReturn >= 0;
+  const subtotalTotalPos = subtotalTotalReturn >= 0;
+
   return (
     <div className="dashboard">
       <header className="dashboard-header">
@@ -184,14 +203,20 @@ export const Dashboard = () => {
         </div>
         <div className="metric-secondary">
           <div className="metric-card">
-            <span className="label">Annualized Return (TWR)</span>
-            <span className={`value ${annualizedPositive ? 'positive' : 'negative'}`}>
-              {formatPercent(data.annualizedReturnPercent, 1)}
+            <span className="label">Invested Assets</span>
+            <span className="value neutral">
+              {formatMoney({ amount: investedAssetsTotal.toFixed(2), currencyCode })}
             </span>
           </div>
           <div className="metric-card">
             <span className="label">Cash Balance</span>
             <span className="value neutral">{formatMoney(data.cashBalance)}</span>
+          </div>
+          <div className="metric-card">
+            <span className="label">Annualized Return (TWR)</span>
+            <span className={`value ${annualizedPositive ? 'positive' : 'negative'}`}>
+              {formatPercent(data.annualizedReturnPercent, 1)}
+            </span>
           </div>
         </div>
       </section>
@@ -216,7 +241,7 @@ export const Dashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.investments.map((inv: any) => {
+                    {investments.map((inv: any) => {
                       const todayPos = isPositive(inv.todayReturnAmount);
                       const totalPos = isPositive(inv.totalReturnAmount);
 
@@ -247,6 +272,66 @@ export const Dashboard = () => {
                       );
                     })}
                   </tbody>
+                  <tfoot>
+                    <tr className="table-footer-subtotal">
+                      <td colSpan={3}>
+                        <div className="footer-title-cell">
+                          <span className="footer-title">Invested Assets Subtotal</span>
+                          <span className="footer-count">{investments.length} {investments.length === 1 ? 'asset' : 'assets'}</span>
+                        </div>
+                      </td>
+                      <td className="footer-amount">
+                        {formatMoney({ amount: investedAssetsTotal.toFixed(2), currencyCode })}
+                      </td>
+                      <td>
+                        <div className={`return-info ${subtotalTodayPos ? 'positive' : 'negative'}`}>
+                          <span className="amount">
+                            {subtotalTodayPos ? '+' : ''}{formatMoney({ amount: subtotalTodayReturn.toFixed(2), currencyCode })}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className={`return-info ${subtotalTotalPos ? 'positive' : 'negative'}`}>
+                          <span className="amount">
+                            {subtotalTotalPos ? '+' : ''}{formatMoney({ amount: subtotalTotalReturn.toFixed(2), currencyCode })}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                    <tr className="table-footer-cash">
+                      <td colSpan={3}>
+                        <div className="footer-title-cell">
+                          <span className="footer-title">Cash Balance</span>
+                          <span className="cash-pill">Liquid</span>
+                        </div>
+                      </td>
+                      <td className="footer-amount">
+                        {formatMoney(data.cashBalance)}
+                      </td>
+                      <td className="footer-muted">—</td>
+                      <td className="footer-muted">—</td>
+                    </tr>
+                    <tr className="table-footer-total">
+                      <td colSpan={3}>
+                        <div className="footer-title-cell">
+                          <span className="footer-title-total">Total Portfolio Value</span>
+                          <span className="footer-formula">Assets + Cash</span>
+                        </div>
+                      </td>
+                      <td className="footer-amount-total">
+                        {formatMoney(data.totalValue)}
+                      </td>
+                      <td>
+                        <div className={`return-info ${todayReturnPositive ? 'positive' : 'negative'}`}>
+                          <span className="amount">
+                            {todayReturnPositive ? '+' : ''}{formatMoney(data.todayReturnAmount)}
+                          </span>
+                          <span className="percent">{formatPercent(data.todayReturnPercent, 2)}</span>
+                        </div>
+                      </td>
+                      <td className="footer-muted">—</td>
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
             </div>

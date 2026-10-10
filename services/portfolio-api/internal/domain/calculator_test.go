@@ -11,46 +11,120 @@ import (
 )
 
 func TestCalculateInvestment(t *testing.T) {
-	// AAPL mock scenario:
-	// Q = 142.5, Latest = 185.92, Prev = 182.02 (delta = 3.90)
-	// Cost basis = 22263.50, Value = 142.5 * 185.92 = 26493.60
-	// Total return = 26493.60 - 22263.50 = 4230.10
-	h := domain.HoldingWithPrice{
-		PortfolioID:        uuid.New(),
-		InstrumentID:       uuid.New(),
-		Ticker:             "AAPL",
-		Name:               "Apple Inc.",
-		InstrumentCurrency: "USD",
-		Quantity:           decimal.RequireFromString("142.5"),
-		CostBasis:          decimal.RequireFromString("22263.50"),
-		CostBasisBase:      decimal.RequireFromString("22263.50"),
-		RealizedPnLBase:    decimal.Zero,
-		DividendsBase:      decimal.Zero,
-		LatestPrice:        decimal.RequireFromString("185.92"),
-		PrevPrice:          decimal.RequireFromString("182.02"),
-		FXRateToBase:       decimal.NewFromInt(1),
-	}
+	t.Run("same currency conversion (USD holding in USD portfolio)", func(t *testing.T) {
+		// AAPL mock scenario:
+		// Q = 142.5, Latest = 185.92, Prev = 182.02 (delta = 3.90)
+		// Cost basis = 22263.50, Value = 142.5 * 185.92 = 26493.60
+		// Total return = 26493.60 - 22263.50 = 4230.10
+		h := domain.HoldingWithPrice{
+			PortfolioID:        uuid.New(),
+			InstrumentID:       uuid.New(),
+			Ticker:             "AAPL",
+			Name:               "Apple Inc.",
+			InstrumentCurrency: "USD",
+			Quantity:           decimal.RequireFromString("142.5"),
+			CostBasis:          decimal.RequireFromString("22263.50"),
+			CostBasisBase:      decimal.RequireFromString("22263.50"),
+			RealizedPnLBase:    decimal.Zero,
+			DividendsBase:      decimal.Zero,
+			LatestPrice:        decimal.RequireFromString("185.92"),
+			PrevPrice:          decimal.RequireFromString("182.02"),
+			FXRateToBase:       decimal.NewFromInt(1),
+		}
 
-	inv := domain.CalculateInvestment(h, "USD")
+		inv := domain.CalculateInvestment(h, "USD")
 
-	if inv.TotalValue.Amount.String() != "26493.6" {
-		t.Errorf("got TotalValue %s, want 26493.6", inv.TotalValue.Amount)
-	}
+		if inv.Price.CurrencyCode != "USD" {
+			t.Errorf("got Price currency %s, want USD", inv.Price.CurrencyCode)
+		}
+		if inv.TotalValue.Amount.String() != "26493.6" {
+			t.Errorf("got TotalValue %s, want 26493.6", inv.TotalValue.Amount)
+		}
+		if inv.TotalValue.CurrencyCode != "USD" {
+			t.Errorf("got TotalValue currency %s, want USD", inv.TotalValue.CurrencyCode)
+		}
 
-	// 142.5 * 3.90 = 555.75
-	if inv.TodayReturnAmount.Amount.String() != "555.75" {
-		t.Errorf("got TodayReturnAmount %s, want 555.75", inv.TodayReturnAmount.Amount)
-	}
+		// 142.5 * 3.90 = 555.75
+		if inv.TodayReturnAmount.Amount.String() != "555.75" {
+			t.Errorf("got TodayReturnAmount %s, want 555.75", inv.TodayReturnAmount.Amount)
+		}
+		if inv.TodayReturnAmount.CurrencyCode != "USD" {
+			t.Errorf("got TodayReturnAmount currency %s, want USD", inv.TodayReturnAmount.CurrencyCode)
+		}
 
-	// Total Return = 4230.10
-	if inv.TotalReturnAmount.Amount.String() != "4230.1" {
-		t.Errorf("got TotalReturnAmount %s, want 4230.1", inv.TotalReturnAmount.Amount)
-	}
+		// Total Return = 4230.10
+		if inv.TotalReturnAmount.Amount.String() != "4230.1" {
+			t.Errorf("got TotalReturnAmount %s, want 4230.1", inv.TotalReturnAmount.Amount)
+		}
+		if inv.TotalReturnAmount.CurrencyCode != "USD" {
+			t.Errorf("got TotalReturnAmount currency %s, want USD", inv.TotalReturnAmount.CurrencyCode)
+		}
 
-	// 4230.10 / 22263.50 = 19.0%
-	if inv.TotalReturnPercent.String() != "19" {
-		t.Errorf("got TotalReturnPercent %s, want 19", inv.TotalReturnPercent)
-	}
+		// 4230.10 / 22263.50 = 19.0%
+		if inv.TotalReturnPercent.String() != "19" {
+			t.Errorf("got TotalReturnPercent %s, want 19", inv.TotalReturnPercent)
+		}
+	})
+
+	t.Run("foreign currency conversion (USD holding in AUD portfolio)", func(t *testing.T) {
+		// AAPL mock scenario with FXRate to AUD = 1.5230:
+		// Q = 142.5, Latest = 185.92 USD, Prev = 182.02 USD (delta = 3.90 USD)
+		// TotalValue USD = 26493.60 -> TotalValue AUD = 26493.60 * 1.5230 = 40349.75 AUD
+		// TodayReturn USD = 555.75 -> TodayReturn AUD = 555.75 * 1.5230 = 846.41 AUD
+		// CostBasisBase AUD = 33907.31 -> TotalReturn AUD = 40349.75 - 33907.31 = 6442.44 AUD
+		h := domain.HoldingWithPrice{
+			PortfolioID:        uuid.New(),
+			InstrumentID:       uuid.New(),
+			Ticker:             "AAPL",
+			Name:               "Apple Inc.",
+			InstrumentCurrency: "USD",
+			Quantity:           decimal.RequireFromString("142.5"),
+			CostBasis:          decimal.RequireFromString("22263.50"),
+			CostBasisBase:      decimal.RequireFromString("33907.31"),
+			RealizedPnLBase:    decimal.Zero,
+			DividendsBase:      decimal.Zero,
+			LatestPrice:        decimal.RequireFromString("185.92"),
+			PrevPrice:          decimal.RequireFromString("182.02"),
+			FXRateToBase:       decimal.RequireFromString("1.5230"),
+		}
+
+		inv := domain.CalculateInvestment(h, "AUD")
+
+		// Traded price stays in instrument currency
+		if inv.Price.CurrencyCode != "USD" {
+			t.Errorf("got Price currency %s, want USD", inv.Price.CurrencyCode)
+		}
+		if inv.Price.Amount.String() != "185.92" {
+			t.Errorf("got Price amount %s, want 185.92", inv.Price.Amount)
+		}
+
+		// TotalValue converted to base currency (AUD)
+		expectedTotalValue := decimal.RequireFromString("40349.75")
+		if !inv.TotalValue.Amount.Equal(expectedTotalValue) {
+			t.Errorf("got TotalValue %s, want %s", inv.TotalValue.Amount, expectedTotalValue)
+		}
+		if inv.TotalValue.CurrencyCode != "AUD" {
+			t.Errorf("got TotalValue currency %s, want AUD", inv.TotalValue.CurrencyCode)
+		}
+
+		// TodayReturnAmount converted to base currency (AUD)
+		expectedTodayReturn := decimal.RequireFromString("846.41")
+		if !inv.TodayReturnAmount.Amount.Equal(expectedTodayReturn) {
+			t.Errorf("got TodayReturnAmount %s, want %s", inv.TodayReturnAmount.Amount, expectedTodayReturn)
+		}
+		if inv.TodayReturnAmount.CurrencyCode != "AUD" {
+			t.Errorf("got TodayReturnAmount currency %s, want AUD", inv.TodayReturnAmount.CurrencyCode)
+		}
+
+		// TotalReturnAmount in base currency (AUD)
+		expectedTotalReturn := decimal.RequireFromString("6442.44")
+		if !inv.TotalReturnAmount.Amount.Equal(expectedTotalReturn) {
+			t.Errorf("got TotalReturnAmount %s, want %s", inv.TotalReturnAmount.Amount, expectedTotalReturn)
+		}
+		if inv.TotalReturnAmount.CurrencyCode != "AUD" {
+			t.Errorf("got TotalReturnAmount currency %s, want AUD", inv.TotalReturnAmount.CurrencyCode)
+		}
+	})
 }
 
 func TestCalculatePortfolioSummary(t *testing.T) {
