@@ -20,6 +20,11 @@ func (r *mutationResolver) AddTransaction(ctx context.Context, input model.AddTr
 		currency = *input.CurrencyCode
 	}
 
+	feeCurrency := currency
+	if input.FeeCurrencyCode != nil && *input.FeeCurrencyCode != "" {
+		feeCurrency = *input.FeeCurrencyCode
+	}
+
 	req := &pb.AddTransactionRequest{
 		UserId:    "1", // Default user ID for single-user/demo session
 		Type:      toProtoTransactionType(input.Type),
@@ -27,7 +32,7 @@ func (r *mutationResolver) AddTransaction(ctx context.Context, input model.AddTr
 		Quantity:  toProtoDecimal(input.Quantity),
 		Price:     toProtoMoney(input.Price, currency),
 		Amount:    toProtoMoney(input.Amount, currency),
-		Fee:       toProtoMoney(input.Fee, currency),
+		Fee:       toProtoMoney(input.Fee, feeCurrency),
 	}
 
 	if input.Symbol != nil {
@@ -288,10 +293,15 @@ func (r *mutationResolver) ImportTransactions(ctx context.Context, input model.B
 			currency = *item.CurrencyCode
 		}
 
+		feeCurrency := currency
+		if item.FeeCurrencyCode != nil && *item.FeeCurrencyCode != "" {
+			feeCurrency = *item.FeeCurrencyCode
+		}
+
 		qty := toProtoDecimal(&item.Quantity)
 		price := toProtoMoney(&item.Price, currency)
 		amount := toProtoMoney(&item.Amount, currency)
-		fee := toProtoMoney(&item.Fee, currency)
+		fee := toProtoMoney(&item.Fee, feeCurrency)
 
 		var settleDate string
 		if item.SettleDate != nil {

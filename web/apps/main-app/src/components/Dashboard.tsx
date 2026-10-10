@@ -352,6 +352,8 @@ export const Dashboard = () => {
       <AddTransactionModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        preferredCurrency={userPrefs?.displayCurrency}
+        supportedCurrencies={supportedCurrencies}
         onSuccess={(updatedPortfolio) => {
           setData(updatedPortfolio);
           setLedgerRefreshKey((k) => k + 1);

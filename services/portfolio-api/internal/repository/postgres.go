@@ -256,6 +256,7 @@ func (r *PostgresRepository) GetTransactions(ctx context.Context, portfolioID uu
 			&tx.FXRateToBase,
 			&tx.ExternalRef,
 			&tx.Notes,
+			&tx.FeeCurrencyCode,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("repository: scan transaction failed: %w", err)
@@ -410,6 +411,7 @@ func (r *PostgresRepository) InsertTransaction(ctx context.Context, tx domain.Tr
 		tx.FXRateToBase,
 		tx.ExternalRef,
 		tx.Notes,
+		tx.FeeCurrencyCode,
 	)
 
 	var id uuid.UUID
@@ -467,6 +469,7 @@ func (r *PostgresRepository) BatchInsertTransactions(ctx context.Context, txs []
 			tx.FXRateToBase,
 			tx.ExternalRef,
 			tx.Notes,
+			tx.FeeCurrencyCode,
 		)
 	}
 
@@ -540,6 +543,7 @@ func (r *PostgresRepository) ListTransactions(ctx context.Context, portfolioID u
 			&item.CreatedAt,
 			&item.Symbol,
 			&item.InstrumentName,
+			&item.FeeCurrencyCode,
 			&count,
 		)
 		if err != nil {

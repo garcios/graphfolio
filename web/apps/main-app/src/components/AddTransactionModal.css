@@ -26,7 +26,7 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 20px;
   width: 100%;
-  max-width: 520px;
+  max-width: 580px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px rgba(16, 185, 129, 0.1);
   overflow: hidden;
   animation: modalZoomIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -329,4 +329,24 @@
   line-height: 1.45;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
+
+.fee-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.fee-input-row .fee-amount-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.fee-input-row .fee-currency-select {
+  width: 95px;
+  flex-shrink: 0;
+  text-align: center;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 

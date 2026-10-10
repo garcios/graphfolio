@@ -108,7 +108,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   │   │   │   └── mocks/        # Uber-go mocks (MockPortfolioService, MockValuationService, MockIngestionService)
 │   │   │   ├── server.go         # gRPC PortfolioServiceServer implementation (ListTransactions, RecordPriceOverride, RebuildValuations, ListCurrencyPairs, TriggerBackfill, etc.)
 │   │   │   └── server_test.go    # gRPC server unit tests with MockPortfolioService
-│   │   ├── migrations/           # Schema migrations (000001 to 000008)
+│   │   ├── migrations/           # Schema migrations (000001 to 000009)
 │   │   ├── seeds/                # Development seed data (dev_seed.sql with 365-day history)
 │   │   └── go.mod
 │   └── user-api/

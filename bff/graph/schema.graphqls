@@ -30,6 +30,7 @@ input AddTransactionInput {
   amount: Decimal
   currencyCode: String
   fee: Decimal
+  feeCurrencyCode: String
   notes: String
 }
 
@@ -192,6 +193,7 @@ input ImportTransactionInput {
   price: Decimal!
   amount: Decimal!
   fee: Decimal!
+  feeCurrencyCode: String
   currencyCode: String # Default "AUD"
   notes: String
 }

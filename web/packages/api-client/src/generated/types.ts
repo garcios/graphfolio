@@ -48,6 +48,9 @@ export default {
             "fee": [
                 0
             ],
+            "feeCurrencyCode": [
+                2
+            ],
             "notes": [
                 2
             ],
@@ -502,6 +505,9 @@ export default {
             ],
             "fee": [
                 0
+            ],
+            "feeCurrencyCode": [
+                2
             ],
             "currencyCode": [
                 2

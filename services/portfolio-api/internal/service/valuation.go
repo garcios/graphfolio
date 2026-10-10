@@ -118,6 +118,10 @@ func (s *valuationService) SnapshotValuation(ctx context.Context, portfolioID uu
 			seenCurrs[tx.CurrencyCode] = true
 			currencies = append(currencies, tx.CurrencyCode)
 		}
+		if tx.FeeCurrencyCode != nil && *tx.FeeCurrencyCode != "" && !seenCurrs[*tx.FeeCurrencyCode] {
+			seenCurrs[*tx.FeeCurrencyCode] = true
+			currencies = append(currencies, *tx.FeeCurrencyCode)
+		}
 	}
 
 	cas, err := s.repo.GetCorporateActions(ctx, instIDs)
@@ -307,6 +311,10 @@ func (s *valuationService) BackfillPortfolioValuations(ctx context.Context, port
 		if tx.CurrencyCode != "" && !seenCurrs[tx.CurrencyCode] {
 			seenCurrs[tx.CurrencyCode] = true
 			currencies = append(currencies, tx.CurrencyCode)
+		}
+		if tx.FeeCurrencyCode != nil && *tx.FeeCurrencyCode != "" && !seenCurrs[*tx.FeeCurrencyCode] {
+			seenCurrs[*tx.FeeCurrencyCode] = true
+			currencies = append(currencies, *tx.FeeCurrencyCode)
 		}
 	}
 

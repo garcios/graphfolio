@@ -361,6 +361,68 @@ func TestMutationResolver_AddTransaction(t *testing.T) {
 	}
 }
 
+func TestMutationResolver_AddTransaction_FeeCurrencyCode(t *testing.T) {
+	ctx := context.Background()
+
+	var receivedFee *commonpb.Money
+	fakeClient := &fakePortfolioClient{
+		addTransactionFn: func(ctx context.Context, in *pb.AddTransactionRequest) (*pb.AddTransactionResponse, error) {
+			receivedFee = in.GetFee()
+			return &pb.AddTransactionResponse{
+				TransactionId: "tx-fee-123",
+				Portfolio: &pb.Portfolio{
+					TotalValue: &commonpb.Money{
+						Amount:       &commonpb.Decimal{Value: "1000.00"},
+						CurrencyCode: "USD",
+					},
+					CashBalance: &commonpb.Money{
+						Amount:       &commonpb.Decimal{Value: "500.00"},
+						CurrencyCode: "USD",
+					},
+				},
+			}, nil
+		},
+	}
+
+	resolver := &Resolver{PortfolioClient: fakeClient}
+	mResolver := resolver.Mutation()
+
+	sym := "AAPL"
+	qty := model.Decimal(decimal.NewFromInt(10))
+	price := model.Decimal(decimal.RequireFromString("150.00"))
+	fee := model.Decimal(decimal.RequireFromString("5.00"))
+	currencyUSD := "USD"
+	feeCurrencyAUD := "AUD"
+
+	payload, err := mResolver.AddTransaction(ctx, model.AddTransactionInput{
+		Type:            model.TransactionTypeBuy,
+		Symbol:          &sym,
+		TradeDate:       "2025-01-05",
+		Quantity:        &qty,
+		Price:           &price,
+		CurrencyCode:    &currencyUSD,
+		Fee:             &fee,
+		FeeCurrencyCode: &feeCurrencyAUD,
+	})
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if payload == nil {
+		t.Fatalf("expected payload, got nil")
+	}
+	if receivedFee == nil {
+		t.Fatalf("expected receivedFee, got nil")
+	}
+	if receivedFee.GetCurrencyCode() != "AUD" {
+		t.Errorf("expected fee currency AUD, got %s", receivedFee.GetCurrencyCode())
+	}
+	if receivedFee.GetAmount().GetValue() != "5.00" && receivedFee.GetAmount().GetValue() != "5" {
+		t.Errorf("expected fee amount 5, got %s", receivedFee.GetAmount().GetValue())
+	}
+}
+
+
 func TestMutationResolver_AddTransaction_Split(t *testing.T) {
 	ctx := context.Background()
 
