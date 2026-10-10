@@ -361,6 +361,60 @@ func TestMutationResolver_AddTransaction(t *testing.T) {
 	}
 }
 
+func TestMutationResolver_AddTransaction_Split(t *testing.T) {
+	ctx := context.Background()
+
+	fakeClient := &fakePortfolioClient{
+		addTransactionFn: func(ctx context.Context, in *pb.AddTransactionRequest) (*pb.AddTransactionResponse, error) {
+			if in.GetType() != pb.TransactionType_TRANSACTION_TYPE_SPLIT {
+				t.Errorf("expected SPLIT transaction, got %v", in.GetType())
+			}
+			if in.GetSymbol() != "AAPL" {
+				t.Errorf("expected AAPL, got %s", in.GetSymbol())
+			}
+			if in.GetQuantity().GetValue() != "2" {
+				t.Errorf("expected quantity 2, got %s", in.GetQuantity().GetValue())
+			}
+			return &pb.AddTransactionResponse{
+				TransactionId: "tx-split-123",
+				Portfolio: &pb.Portfolio{
+					TotalValue: &commonpb.Money{
+						Amount:       &commonpb.Decimal{Value: "160000.00"},
+						CurrencyCode: "USD",
+					},
+					CashBalance: &commonpb.Money{
+						Amount:       &commonpb.Decimal{Value: "3500.00"},
+						CurrencyCode: "USD",
+					},
+				},
+			}, nil
+		},
+	}
+
+	resolver := &Resolver{PortfolioClient: fakeClient}
+	mResolver := resolver.Mutation()
+
+	sym := "AAPL"
+	qty := model.Decimal(decimal.NewFromInt(2))
+
+	payload, err := mResolver.AddTransaction(ctx, model.AddTransactionInput{
+		Type:      model.TransactionTypeSplit,
+		Symbol:    &sym,
+		TradeDate: "2025-06-01",
+		Quantity:  &qty,
+	})
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if payload == nil {
+		t.Fatalf("expected payload, got nil")
+	}
+	if payload.TransactionID != "tx-split-123" {
+		t.Errorf("expected tx ID tx-split-123, got %s", payload.TransactionID)
+	}
+}
+
 func TestQueryResolver_PortfolioHistory(t *testing.T) {
 	ctx := context.Background()
 

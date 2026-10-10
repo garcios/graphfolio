@@ -117,6 +117,13 @@
   box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
 }
 
+.type-tab.active.split {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: #fff;
+  border-color: #8b5cf6;
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.45);
+}
+
 .modal-form {
   padding: 1rem 1.75rem 1.75rem;
   display: flex;
@@ -237,3 +244,89 @@
   cursor: not-allowed;
   transform: none;
 }
+
+/* Stock Split specific styling */
+.split-ratio-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.split-input-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.2s;
+}
+
+.split-input-wrapper:focus-within {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.3);
+}
+
+.split-input-prefix {
+  padding: 0.6rem 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+  border-right: 1px solid var(--card-border);
+  user-select: none;
+}
+
+.split-input-wrapper .form-input {
+  border: none;
+  background: transparent;
+  width: 100%;
+}
+
+.split-colon {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #8b5cf6;
+}
+
+.split-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+}
+
+.split-preset-btn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.split-preset-btn:hover {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: rgba(139, 92, 246, 0.4);
+  color: #c4b5fd;
+  transform: translateY(-1px);
+}
+
+.split-info-banner {
+  margin-top: 0.4rem;
+  padding: 0.65rem 0.9rem;
+  background: rgba(139, 92, 246, 0.07);
+  border: 1px solid rgba(139, 92, 246, 0.22);
+  border-radius: 10px;
+  font-size: 0.8rem;
+  color: #ddd6fe;
+  line-height: 1.45;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+

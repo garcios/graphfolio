@@ -17,7 +17,7 @@ export interface Money {
     __typename: 'Money'
 }
 
-export type TransactionType = 'BUY' | 'SELL' | 'DIVIDEND' | 'DEPOSIT' | 'WITHDRAWAL' | 'INTEREST' | 'FEE' | 'TAX' | 'TRANSFER_IN' | 'TRANSFER_OUT' | 'FX_CONVERSION'
+export type TransactionType = 'BUY' | 'SELL' | 'DIVIDEND' | 'DEPOSIT' | 'WITHDRAWAL' | 'INTEREST' | 'FEE' | 'TAX' | 'TRANSFER_IN' | 'TRANSFER_OUT' | 'FX_CONVERSION' | 'SPLIT'
 
 export interface AddTransactionPayload {
     transactionId: Scalars['String']
@@ -923,7 +923,8 @@ export const enumTransactionType = {
    TAX: 'TAX' as const,
    TRANSFER_IN: 'TRANSFER_IN' as const,
    TRANSFER_OUT: 'TRANSFER_OUT' as const,
-   FX_CONVERSION: 'FX_CONVERSION' as const
+   FX_CONVERSION: 'FX_CONVERSION' as const,
+   SPLIT: 'SPLIT' as const
 }
 
 export const enumHistoryTimeframe = {

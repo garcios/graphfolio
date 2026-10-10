@@ -10,7 +10,7 @@ interface Money {
 
 export interface TransactionItem {
   id: string;
-  type: 'BUY' | 'SELL' | 'DIVIDEND' | 'DEPOSIT' | 'WITHDRAWAL' | 'INTEREST' | 'FEE' | 'TAX' | 'TRANSFER_IN' | 'TRANSFER_OUT' | 'FX_CONVERSION';
+  type: 'BUY' | 'SELL' | 'DIVIDEND' | 'DEPOSIT' | 'WITHDRAWAL' | 'INTEREST' | 'FEE' | 'TAX' | 'TRANSFER_IN' | 'TRANSFER_OUT' | 'FX_CONVERSION' | 'SPLIT';
   symbol?: string | null;
   instrumentName?: string | null;
   tradeDate: string;
@@ -33,6 +33,7 @@ const filterTypes: Array<{ label: string; value: string | null }> = [
   { label: 'Buy', value: 'BUY' },
   { label: 'Sell', value: 'SELL' },
   { label: 'Dividend', value: 'DIVIDEND' },
+  { label: 'Split', value: 'SPLIT' },
   { label: 'Deposit', value: 'DEPOSIT' },
   { label: 'Withdrawal', value: 'WITHDRAWAL' },
 ];
@@ -198,6 +199,8 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
         return 'badge-type sell';
       case 'DIVIDEND':
         return 'badge-type dividend';
+      case 'SPLIT':
+        return 'badge-type split';
       case 'DEPOSIT':
         return 'badge-type deposit';
       case 'WITHDRAWAL':
@@ -310,9 +313,9 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
                           )}
                         </div>
                       </td>
-                      <td>{formatQuantity(tx.quantity)}</td>
-                      <td>{tx.price ? formatMoney(tx.price) : '-'}</td>
-                      <td className="cell-amount">{formatMoney(tx.amount)}</td>
+                      <td>{tx.type === 'SPLIT' && tx.quantity ? `${formatQuantity(tx.quantity)}x` : formatQuantity(tx.quantity)}</td>
+                      <td>{tx.price && tx.type !== 'SPLIT' ? formatMoney(tx.price) : '-'}</td>
+                      <td className="cell-amount">{tx.type === 'SPLIT' ? '-' : formatMoney(tx.amount)}</td>
                       <td>{hasFee ? formatMoney(tx.fee) : '-'}</td>
                       <td>
                         <span className="cell-notes" title={tx.notes || ''}>

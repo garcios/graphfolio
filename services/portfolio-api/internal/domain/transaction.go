@@ -21,6 +21,7 @@ const (
 	TxTypeTransferIn   TransactionType = "TRANSFER_IN"
 	TxTypeTransferOut  TransactionType = "TRANSFER_OUT"
 	TxTypeFXConversion TransactionType = "FX_CONVERSION"
+	TxTypeSplit        TransactionType = "SPLIT"
 )
 
 type Transaction struct {

@@ -231,6 +231,26 @@ func ProcessLedger(
 					}
 				}
 			}
+
+		case domain.TxTypeSplit:
+			if tx.InstrumentID == nil || tx.Quantity == nil || !tx.Quantity.IsPositive() {
+				continue
+			}
+
+			splitRatio := *tx.Quantity
+			if tx.Price != nil && tx.Price.IsPositive() {
+				splitRatio = splitRatio.Div(*tx.Price)
+			}
+			if !splitRatio.IsPositive() {
+				continue
+			}
+
+			instID := *tx.InstrumentID
+			instLots := openLots[instID]
+			for _, lot := range instLots {
+				lot.OriginalQuantity = lot.OriginalQuantity.Mul(splitRatio).Round(10)
+				lot.RemainingQuantity = lot.RemainingQuantity.Mul(splitRatio).Round(10)
+			}
 		}
 	}
 

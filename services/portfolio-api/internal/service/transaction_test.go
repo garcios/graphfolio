@@ -250,6 +250,94 @@ func TestPortfolioService_AddTransaction(t *testing.T) {
 		}
 	})
 
+	t.Run("successful SPLIT transaction", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		mockVal := serviceMocks.NewMockValuationService(ctrl)
+		fixedNow := time.Date(2025, 6, 1, 0, 0, 0, 0, time.UTC)
+		svc := service.NewPortfolioService(mockRepo, service.WithValuationService(mockVal), service.WithNowFunc(func() time.Time { return fixedNow }))
+
+		symbol := "AAPL"
+		splitRatio := decimal.NewFromInt(2)
+		tradeDate := fixedNow
+
+		input := domain.AddTransactionInput{
+			UserID:    userID,
+			Type:      domain.TxTypeSplit,
+			Symbol:    &symbol,
+			TradeDate: tradeDate,
+			Quantity:  &splitRatio,
+		}
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().FindInstrumentBySymbol(ctx, "AAPL").Return(mockInstrument, nil)
+		mockRepo.EXPECT().InsertTransaction(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, tx domain.Transaction) (*domain.Transaction, error) {
+			if tx.Type != domain.TxTypeSplit {
+				t.Fatalf("expected type SPLIT, got %s", tx.Type)
+			}
+			if !tx.Quantity.Equal(splitRatio) {
+				t.Fatalf("expected quantity 2, got %s", tx.Quantity)
+			}
+			if !tx.Amount.IsZero() {
+				t.Fatalf("expected zero amount for split, got %s", tx.Amount)
+			}
+			tx.ID = uuid.New()
+			return &tx, nil
+		})
+
+		// RebuildProjections expectations
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetTransactions(ctx, portfolioID).Return([]domain.Transaction{}, nil)
+		mockRepo.EXPECT().GetCorporateActions(ctx, gomock.Any()).Return([]domain.CorporateAction{}, nil)
+		mockRepo.EXPECT().SaveProjectionsTx(ctx, portfolioID, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+		mockVal.EXPECT().SnapshotValuation(ctx, portfolioID, fixedNow).Return(nil, nil)
+
+		// GetPortfolioSummary expectations
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetHoldingsWithMarketData(ctx, portfolioID).Return([]domain.HoldingWithPrice{}, nil)
+		mockRepo.EXPECT().GetCashBalances(ctx, portfolioID).Return([]domain.CashBalance{}, nil)
+		mockRepo.EXPECT().GetLatestValuation(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetCashFXRates(ctx, "USD").Return(map[string]decimal.Decimal{"USD": decimal.NewFromInt(1)}, nil)
+
+		savedTx, summary, err := svc.AddTransaction(ctx, input)
+		if err != nil {
+			t.Fatalf("unexpected error adding SPLIT transaction: %v", err)
+		}
+		if savedTx == nil || summary == nil {
+			t.Fatalf("expected non-nil savedTx and summary")
+		}
+	})
+
+	t.Run("SPLIT transaction validation errors", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil).Times(2)
+
+		// 1. Missing symbol
+		_, _, err := svc.AddTransaction(ctx, domain.AddTransactionInput{
+			UserID: userID,
+			Type:   domain.TxTypeSplit,
+		})
+		if err == nil {
+			t.Fatalf("expected error for SPLIT without symbol")
+		}
+
+		// 2. Missing or non-positive quantity
+		symbol := "AAPL"
+		zeroQty := decimal.Zero
+		_, _, err = svc.AddTransaction(ctx, domain.AddTransactionInput{
+			UserID:   userID,
+			Type:     domain.TxTypeSplit,
+			Symbol:   &symbol,
+			Quantity: &zeroQty,
+		})
+		if err == nil {
+			t.Fatalf("expected error for SPLIT with zero quantity")
+		}
+	})
+
 	t.Run("error when portfolio not found", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mockRepo := repoMocks.NewMockRepository(ctrl)

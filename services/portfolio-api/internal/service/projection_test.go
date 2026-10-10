@@ -127,3 +127,180 @@ func TestProcessLedgerAverageCostVsFIFO(t *testing.T) {
 	_ = lotsAvg
 	_ = lotsFIFO
 }
+
+func TestProcessLedgerStockSplit(t *testing.T) {
+	portfolioID := uuid.New()
+	instrumentID := uuid.New()
+	t1 := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	t2 := time.Date(2025, 1, 2, 0, 0, 0, 0, time.UTC)
+	t3 := time.Date(2025, 1, 3, 0, 0, 0, 0, time.UTC)
+
+	qty10 := decimal.NewFromInt(10)
+	price100 := decimal.NewFromInt(100)
+	amt1000 := decimal.NewFromInt(1000)
+
+	// Buy 10 units @ 100 on t1
+	buyTx := domain.Transaction{
+		ID:           uuid.New(),
+		PortfolioID:  portfolioID,
+		InstrumentID: &instrumentID,
+		Type:         domain.TxTypeBuy,
+		TradeDate:    t1,
+		Quantity:     &qty10,
+		Price:        &price100,
+		Amount:       amt1000,
+		CurrencyCode: "USD",
+	}
+
+	t.Run("2:1 forward split doubles shares while preserving cost basis", func(t *testing.T) {
+		splitRatio2 := decimal.NewFromInt(2)
+		splitTx := domain.Transaction{
+			ID:           uuid.New(),
+			PortfolioID:  portfolioID,
+			InstrumentID: &instrumentID,
+			Type:         domain.TxTypeSplit,
+			TradeDate:    t2,
+			Quantity:     &splitRatio2,
+			Amount:       decimal.Zero,
+			CurrencyCode: "USD",
+		}
+
+		p := domain.Portfolio{
+			ID:              portfolioID,
+			BaseCurrency:    "USD",
+			CostBasisMethod: domain.CostBasisMethodFIFO,
+		}
+
+		lots, disposals, holdings, cash, err := service.ProcessLedger(p, []domain.Transaction{buyTx, splitTx}, nil)
+		if err != nil {
+			t.Fatalf("ProcessLedger failed: %v", err)
+		}
+
+		if len(holdings) != 1 {
+			t.Fatalf("expected 1 holding, got %d", len(holdings))
+		}
+		// Quantity doubled: 10 * 2 = 20
+		if !holdings[0].Quantity.Equal(decimal.NewFromInt(20)) {
+			t.Errorf("expected holding quantity 20, got %s", holdings[0].Quantity)
+		}
+		// Cost basis unchanged: 1000
+		if !holdings[0].CostBasis.Equal(amt1000) {
+			t.Errorf("expected cost basis 1000, got %s", holdings[0].CostBasis)
+		}
+		if len(lots) != 1 {
+			t.Fatalf("expected 1 lot, got %d", len(lots))
+		}
+		if !lots[0].RemainingQuantity.Equal(decimal.NewFromInt(20)) {
+			t.Errorf("expected lot remaining quantity 20, got %s", lots[0].RemainingQuantity)
+		}
+		if len(disposals) != 0 {
+			t.Errorf("expected 0 disposals, got %d", len(disposals))
+		}
+		if len(cash) != 1 || !cash[0].Balance.Equal(decimal.NewFromInt(-1000)) {
+			t.Errorf("expected 1 cash balance with -1000, got %v", cash)
+		}
+	})
+
+	t.Run("post-split sale relieves split-adjusted cost basis", func(t *testing.T) {
+		splitRatio2 := decimal.NewFromInt(2)
+		splitTx := domain.Transaction{
+			ID:           uuid.New(),
+			PortfolioID:  portfolioID,
+			InstrumentID: &instrumentID,
+			Type:         domain.TxTypeSplit,
+			TradeDate:    t2,
+			Quantity:     &splitRatio2,
+			Amount:       decimal.Zero,
+			CurrencyCode: "USD",
+		}
+
+		// Sell 10 shares @ $80 on t3 (out of 20 split shares with total cost basis $1000 -> $50/sh cost)
+		sellQty := decimal.NewFromInt(10)
+		sellPrice := decimal.NewFromInt(80)
+		sellAmt := decimal.NewFromInt(800)
+		sellTx := domain.Transaction{
+			ID:           uuid.New(),
+			PortfolioID:  portfolioID,
+			InstrumentID: &instrumentID,
+			Type:         domain.TxTypeSell,
+			TradeDate:    t3,
+			Quantity:     &sellQty,
+			Price:        &sellPrice,
+			Amount:       sellAmt,
+			CurrencyCode: "USD",
+		}
+
+		p := domain.Portfolio{
+			ID:              portfolioID,
+			BaseCurrency:    "USD",
+			CostBasisMethod: domain.CostBasisMethodFIFO,
+		}
+
+		_, disposals, holdings, _, err := service.ProcessLedger(p, []domain.Transaction{buyTx, splitTx, sellTx}, nil)
+		if err != nil {
+			t.Fatalf("ProcessLedger failed: %v", err)
+		}
+
+		if len(holdings) != 1 {
+			t.Fatalf("expected 1 holding, got %d", len(holdings))
+		}
+		// Remaining quantity: 20 - 10 = 10
+		if !holdings[0].Quantity.Equal(decimal.NewFromInt(10)) {
+			t.Errorf("expected remaining holding quantity 10, got %s", holdings[0].Quantity)
+		}
+		// Remaining cost basis: 1000 - 500 = 500
+		if !holdings[0].CostBasis.Equal(decimal.NewFromInt(500)) {
+			t.Errorf("expected remaining cost basis 500, got %s", holdings[0].CostBasis)
+		}
+
+		if len(disposals) != 1 {
+			t.Fatalf("expected 1 disposal, got %d", len(disposals))
+		}
+		// Relieved cost basis = 500
+		if !disposals[0].CostBasisReleasedBase.Equal(decimal.NewFromInt(500)) {
+			t.Errorf("expected released cost 500, got %s", disposals[0].CostBasisReleasedBase)
+		}
+		// Realized PnL = 800 - 500 = 300
+		if !disposals[0].RealizedPnLBase.Equal(decimal.NewFromInt(300)) {
+			t.Errorf("expected realized PnL 300, got %s", disposals[0].RealizedPnLBase)
+		}
+	})
+
+	t.Run("split ratio with price as ratio_from", func(t *testing.T) {
+		// 3:2 split: quantity=3, price=2 => splitRatio = 1.5
+		ratioTo := decimal.NewFromInt(3)
+		ratioFrom := decimal.NewFromInt(2)
+		splitTx := domain.Transaction{
+			ID:           uuid.New(),
+			PortfolioID:  portfolioID,
+			InstrumentID: &instrumentID,
+			Type:         domain.TxTypeSplit,
+			TradeDate:    t2,
+			Quantity:     &ratioTo,
+			Price:        &ratioFrom,
+			Amount:       decimal.Zero,
+			CurrencyCode: "USD",
+		}
+
+		p := domain.Portfolio{
+			ID:              portfolioID,
+			BaseCurrency:    "USD",
+			CostBasisMethod: domain.CostBasisMethodAverageCost,
+		}
+
+		_, _, holdings, _, err := service.ProcessLedger(p, []domain.Transaction{buyTx, splitTx}, nil)
+		if err != nil {
+			t.Fatalf("ProcessLedger failed: %v", err)
+		}
+
+		// 10 * 1.5 = 15
+		if !holdings[0].Quantity.Equal(decimal.RequireFromString("15")) {
+			t.Errorf("expected quantity 15, got %s", holdings[0].Quantity)
+		}
+		// Cost basis unchanged: 1000
+		if !holdings[0].CostBasis.Equal(amt1000) {
+			t.Errorf("expected cost basis 1000, got %s", holdings[0].CostBasis)
+		}
+	})
+}
+

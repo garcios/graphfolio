@@ -1,0 +1,2 @@
+-- 000008_add_split_transaction_type.down.sql
+-- Note: PostgreSQL does not support removing values from an enum type directly.

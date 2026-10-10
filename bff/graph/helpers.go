@@ -117,6 +117,8 @@ func toProtoTransactionType(t model.TransactionType) pb.TransactionType {
 		return pb.TransactionType_TRANSACTION_TYPE_TRANSFER_OUT
 	case model.TransactionTypeFxConversion:
 		return pb.TransactionType_TRANSACTION_TYPE_FX_CONVERSION
+	case model.TransactionTypeSplit:
+		return pb.TransactionType_TRANSACTION_TYPE_SPLIT
 	default:
 		return pb.TransactionType_TRANSACTION_TYPE_UNSPECIFIED
 	}
@@ -239,6 +241,8 @@ func toModelTransactionType(t pb.TransactionType) model.TransactionType {
 		return model.TransactionTypeTransferOut
 	case pb.TransactionType_TRANSACTION_TYPE_FX_CONVERSION:
 		return model.TransactionTypeFxConversion
+	case pb.TransactionType_TRANSACTION_TYPE_SPLIT:
+		return model.TransactionTypeSplit
 	default:
 		return model.TransactionTypeBuy
 	}

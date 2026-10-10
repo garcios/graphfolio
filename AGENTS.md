@@ -16,7 +16,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 - **`proto/` (The Contract)**:
   Protocol Buffers are the single source of truth for microservice RPCs and shared types. Stored at the root to eliminate schema drift between gRPC servers and the BFF client wrappers.
   - `proto/common/v1/decimal.proto`: High-precision fixed-point `Decimal` (value, scale) and `Money` (amount, currency_code) types.
-  - `proto/portfolio/v1/portfolio.proto`: Portfolio service (`GetPortfolio`, `UpdatePortfolioBaseCurrency`, `AddTransaction`, `ListInstruments`, `GetPortfolioHistory`, `ListTransactions`, `DeleteTransaction`, `ListAllInstruments`, `CreateInstrument`, `UpdateInstrument`, `DeleteInstrument`, `ListExchanges`, `ListInstrumentPrices`, `RecordPriceOverride`, `GetIngestionStatus`, `TriggerMarketSync`, `TriggerBackfill`, `RebuildValuations`, `ListCurrencyPairs`, `ListFXRates`, `GetCurrencyPairHistory`, `RecordFXRateOverride`, `CheckTransactionDuplicates`, `BatchImportTransactions`), investment summary, time-series valuation points, performance metrics, and administrative foreign exchange / pricing operations.
+  - `proto/portfolio/v1/portfolio.proto`: Portfolio service (`GetPortfolio`, `UpdatePortfolioBaseCurrency`, `AddTransaction`, `ListInstruments`, `GetPortfolioHistory`, `ListTransactions`, `DeleteTransaction`, `ListAllInstruments`, `CreateInstrument`, `UpdateInstrument`, `DeleteInstrument`, `ListExchanges`, `ListInstrumentPrices`, `RecordPriceOverride`, `GetIngestionStatus`, `TriggerMarketSync`, `TriggerBackfill`, `RebuildValuations`, `ListCurrencyPairs`, `ListFXRates`, `GetCurrencyPairHistory`, `RecordFXRateOverride`, `CheckTransactionDuplicates`, `BatchImportTransactions`), investment summary, time-series valuation points, performance metrics, corporate actions (`SPLIT`), and administrative foreign exchange / pricing operations.
   - `proto/user/v1/user.proto`: User service (`GetUserPreferences`, `UpdateUserPreferences`, `ListSupportedCurrencies`), user profile preferences (`theme`, `display_currency`, `display_name`), and currency reference metadata.
 
 - **`pkg/` (Shared Infrastructure)**:
@@ -45,7 +45,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 
 - **`web/` (The Consumer)**:
   Workspace monorepo containing multiple frontend applications and shared libraries:
-  - `apps/main-app`: Primary investor-facing application (Port 5173). Interactive portfolio dashboard, performance chart, transaction ledger, trade ingestion modal, multi-broker CSV statement import modal (`ImportTransactionsModal`), client-side CSV parsers (`src/services/csv/`), and investor profile preferences modal (`UserPreferencesModal`).
+  - `apps/main-app`: Primary investor-facing application (Port 5173). Interactive portfolio dashboard, performance chart, transaction ledger, trade ingestion modal (`AddTransactionModal` with Buy, Sell, Deposit, Withdrawal, Dividend, and Split support), multi-broker CSV statement import modal (`ImportTransactionsModal`), client-side CSV parsers (`src/services/csv/`), and investor profile preferences modal (`UserPreferencesModal`).
   - `apps/admin-app`: Internal administrative portal (Port 5174). Master instrument directory, closing price ledger with dual date range filtering, presets, and pagination (`PriceManagement`), foreign exchange currency pairs management (`FXManagement`, `FXTrendChart`, `FXOverrideModal`), market ingestion monitoring, and historical market data range backfills (`BackfillModal`).
   - `packages/ui`: Shared design system (`@graphfolio/ui`) with dark glassmorphic design tokens, atomic components (`Button`, `Modal`, `Card`, `Badge`, `Table`, `Input`, `Select`), and precision financial formatters.
   - `packages/api-client`: Shared auto-generated typed GraphQL client (`@graphfolio/api-client`) communicating with the BFF.
@@ -108,7 +108,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   │   │   │   └── mocks/        # Uber-go mocks (MockPortfolioService, MockValuationService, MockIngestionService)
 │   │   │   ├── server.go         # gRPC PortfolioServiceServer implementation (ListTransactions, RecordPriceOverride, RebuildValuations, ListCurrencyPairs, TriggerBackfill, etc.)
 │   │   │   └── server_test.go    # gRPC server unit tests with MockPortfolioService
-│   │   ├── migrations/           # Schema migrations (000001 to 000006)
+│   │   ├── migrations/           # Schema migrations (000001 to 000008)
 │   │   ├── seeds/                # Development seed data (dev_seed.sql with 365-day history)
 │   │   └── go.mod
 │   └── user-api/
@@ -214,10 +214,16 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 
 ### 4.3 Ledger Replay & Cost Basis Methods
 - The transaction ledger (`portfolio.transactions`) is the source of truth for portfolio history.
-- Adding transactions (`BUY`, `SELL`, `DEPOSIT`, `WITHDRAWAL`, `DIVIDEND`) or deleting existing transactions (`DeleteTransaction`) alters `portfolio.transactions` and immediately invokes `service.RebuildProjections`.
+- Adding transactions (`BUY`, `SELL`, `DEPOSIT`, `WITHDRAWAL`, `DIVIDEND`, `SPLIT`) or deleting existing transactions (`DeleteTransaction`) alters `portfolio.transactions` and immediately invokes `service.RebuildProjections`.
 - Holding balances, tax lots, lot disposals, and cash balances are deterministic projections built by `service.ProcessLedger`.
 - Projection rebuilds acquire a row lock (`SELECT ... FOR UPDATE` on `portfolio.portfolios`) to serialize concurrent updates and atomically save recomputed state.
 - Both `AVERAGE_COST` (default) and `FIFO` cost-basis relieve algorithms are supported in `internal/service/projection.go`.
+- **Corporate Action Stock Splits (`SPLIT`)**:
+  - Encoded with a ratio where `quantity` represents the new share factor and `price` represents the old share factor (e.g., a 2-for-1 split records `quantity = 2`, `price = 1`, yielding split multiplier $M = \frac{2}{1} = 2.0$; a 1-for-2 reverse split records `quantity = 1`, `price = 2`, yielding multiplier $M = 0.5$).
+  - Evaluated in `service.ProcessLedger` as a zero-cash transaction that scales the share quantities of all open tax lots acquired prior to the split date: $Q_{\text{lot, new}} = Q_{\text{lot, old}} \times M$. Both `OriginalQuantity` and `RemainingQuantity` are scaled.
+  - Total invested cost basis of each tax lot is invariant, which proportionally adjusts the effective unit cost basis ($C_{\text{unit, new}} = \frac{C_{\text{total}}}{Q_{\text{lot, new}}}$) and preserves cash balances with zero cash flow impact ($0.00$).
+  - Subsequent disposals (`SELL`) relieve split-adjusted tax lots at their newly calibrated unit cost basis under both `AVERAGE_COST` and `FIFO`.
+  - Deleting a split transaction restores pre-split lot quantities and unadjusted unit costs during the deterministic ledger replay.
 
 ### 4.4 Mocking & Unit Testing Standards
 - **Mock Generation**: Generated with `go.uber.org/mock` (`mockgen`).
@@ -240,7 +246,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 - Paginated transaction queries use the `TransactionFilter` domain model (`PortfolioID`, `InstrumentID`, `Type`, `Limit`, `Offset`).
 - Persistence layer uses PostgreSQL single-pass `COUNT(*) OVER() AS total_count` window function with dynamic SQL filters to retrieve transactions and exact total counts in a single round-trip.
 - Transaction deletion (`DeleteTransaction`) validates ownership, deletes the ledger record in `portfolio.transactions`, and immediately executes `RebuildProjections` under an exclusive portfolio lock to atomically clean up orphaned tax lots, holding projections, and recompute cash balances.
-- The web frontend renders historical records in `TransactionLedger` with type-specific color badges, date/amount formatting, pagination controls, and confirmation modals before triggering deletion.
+- The web frontend renders historical records in `TransactionLedger` with type-specific color badges (including glowing purple badge and split multiplier for `SPLIT` transactions), date/amount formatting, pagination controls, and confirmation modals before triggering deletion.
 
 ### 4.7 Master Instrument Directory, Pricing Overrides & Ingestion Diagnostics
 - **Asset Directory Management**: `portfolio.instruments` stores authoritative reference data. Adding an instrument requires validating non-empty uppercase symbol and exchange code, valid ISO 4217 3-letter currency code, allowed asset class (`EQUITY`, `ETF`, `FUND`, `BOND`, `CRYPTO`, `CASH_EQUIVALENT`), and optional 12-character ISO 6166 ISIN format (`^[A-Z]{2}[A-Z0-9]{9}[0-9]$`).
