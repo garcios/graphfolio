@@ -9,7 +9,8 @@ A modern portfolio tracker built for serious investors. GraphFolio accurately me
 - **Consolidated Dashboard**: View all your investments across multiple asset classes in a single, unified view.
 - **Exact Decimal Arithmetic**: Zero floating-point drift. All money, quantities, prices, and rates use fixed-point decimal arithmetic from database to browser.
 - **Interactive Performance Chart**: Timeframe-selectable SVG performance chart (1D, 1W, 1M, YTD, 1Y, ALL) rendering cubic Bezier curves, dynamic profit/loss color gradients, crosshair tracking, inspection tooltips, and exact period returns.
-- **Interactive Transaction Logging**: Record Buys, Sells, Cash Deposits, Withdrawals, and Dividends directly in the UI. Holding quantities, cost bases, cash balances, and returns re-project deterministically in real time.
+- **Interactive Transaction Logging**: Record Buys, Sells, Cash Deposits, Withdrawals, Dividends, and Stock Splits directly in the UI. Holding quantities, cost bases, cash balances, and returns re-project deterministically in real time.
+- **Corporate Action Stock Splits & Reverse Splits**: Native handling of forward and reverse stock splits (`SPLIT`). Features ratio presets (`2:1`, `3:1`, `4:1`, `10:1`, `1:2 Reverse`, `1:10 Reverse`) or custom ratios with live multiplier calculation. Preserves overall holding cost basis and cash balances while proportionally scaling share quantities across all open tax lots ($Q_{\text{new}} = Q_{\text{old}} \times \text{multiplier}$), conforming to US GAAP, IFRS, and GIPS standards.
 - **Transaction History & Ledger Management**: Paginated transaction history with type filtering, exact execution prices, fee tracking, and safe deletion with immediate atomic ledger replay.
 - **Transaction-Ledger Architecture**: Immutable transaction ledger acts as the authoritative source of truth, deterministically projecting holdings, cash balances, and valuations.
 - **Flexible Cost Basis Accounting**: Native support for both **Average Cost** (`AVERAGE_COST`, default) and **FIFO** (`FIFO`) tax lot relief strategies.
@@ -22,7 +23,7 @@ A modern portfolio tracker built for serious investors. GraphFolio accurately me
 - **Multi-Broker CSV Ingestion & Flexible Symbol Resolution**: Seamless batch statement ingestion supporting leading Australian retail brokers (CommSec and nabtrade). Features automated header signature detection with manual override, dialect parsing for Australian dates (`DD/MM/YYYY`) and currency formatting, domestic and international cash account trade matching with native brokerage fee derivation, idempotent deduplication via pre-flight external reference checking, and an interactive glassmorphic preview modal (`ImportTransactionsModal`) with validation diagnostics. Backend microservices support flexible ticker suffix matching (`IVV` ↔ `IVV.AX` ↔ `IVV.ASX`), unmapped instrument auto-provisioning, atomic batch persistence, single-pass projection rebuilds, and retroactive valuation backfills.
 - **User Preferences & Dynamic Multi-Currency Re-anchoring**: Manage investor profile display name, UI theme (`DARK`, `LIGHT`, `SYSTEM`), and base display currency (`USD`, `EUR`, `GBP`, `AUD`, `CAD`, `JPY`, `CHF`). Changing preferred currency automatically triggers atomic base currency re-anchoring on `portfolio-api`, re-scaling valuations and holdings cost bases via live FX triangulation without data drift.
 - **Clean Microservice Monorepo**: Contract-first gRPC services with a Go GraphQL Backend-for-Frontend (BFF) and strongly-typed frontend queries.
-- **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, Vite, modal transaction entry, investor preferences dialog, and instant reactive state refresh.
+- **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, Vite, modal transaction entry (`AddTransactionModal`), statement import (`ImportTransactionsModal`), investor preferences dialog (`UserPreferencesModal`), and instant reactive state refresh.
 
 > 📋 *For a comprehensive list of completed milestones, in-progress components, and planned roadmap items, see [`FEATURES.md`](file:///Users/oscargarcia/workspace/graphfolio/FEATURES.md).*
 
@@ -161,13 +162,14 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 
 ### Ledger Replay & Cost Basis Methods
 
-1. **Transaction Ledger**: All investment events (buys, sells, dividends, transfers, deposits, withdrawals) are appended to `portfolio.transactions`.
+1. **Transaction Ledger**: All investment events (buys, sells, dividends, transfers, deposits, withdrawals, stock splits) are appended to `portfolio.transactions`.
 2. **Deterministic Projections**: When transactions are added, deleted, or cost-basis methods switch, the replay engine in [`services/portfolio-api/internal/service/projection.go`](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/projection.go) re-evaluates all transactions to produce:
    - `tax_lots` and `lot_disposals`
    - `holding_projections` (quantity, cost basis, realized PnL, dividend income)
    - `cash_balances`
-3. **Atomic Replacement**: Rebuild runs under a row lock (`SELECT ... FOR UPDATE` on `portfolio.portfolios`) to serialize concurrent updates and atomically save recomputed projections in `SaveProjectionsTx`.
-4. **Accounting Methods**:
+3. **Stock Splits (`SPLIT`)**: Corporate action stock splits scale the share quantities of all open tax lots acquired prior to the split date ($Q_{\text{new}} = Q_{\text{old}} \times \text{multiplier}$) while keeping total cost basis and cash balance unchanged. Subsequent sales relieve split-adjusted lots.
+4. **Atomic Replacement**: Rebuild runs under a row lock (`SELECT ... FOR UPDATE` on `portfolio.portfolios`) to serialize concurrent updates and atomically save recomputed projections in `SaveProjectionsTx`.
+5. **Accounting Methods**:
    - `AVERAGE_COST`: Disposals proportionally relieve cost basis across all open tax lots.
    - `FIFO`: Disposals relieve the earliest acquired tax lots first.
 
@@ -200,7 +202,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── cmd/worker/           # Scheduled EOD & on-demand valuation worker (make run-valuation-job)
 │   │   ├── cmd/market-ingest/    # Market data ingestion & historical backfill CLI (make ingest-market-data)
 │   │   ├── internal/             # Domain entities, repository, service, and gRPC server
-│   │   ├── migrations/           # Versioned schema migrations (000001 - 000007)
+│   │   ├── migrations/           # Versioned schema migrations (000001 - 000008)
 │   │   └── seeds/                # Seed fixtures (dev_seed.sql with 365-day history)
 │   └── user-api/                 # User domain microservice (:50052)
 │       ├── cmd/server/           # Application entrypoint (:50052)
@@ -212,7 +214,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   └── cmd/server/               # BFF entrypoint
 ├── web/                          # Frontend Workspace Monorepo
 │   │   ├── main-app/             # Primary Investor React App (:5173)
-│   │   │   └── src/components/   # Dashboard, PerformanceChart, TransactionLedger, UserPreferencesModal
+│   │   │   └── src/components/   # Dashboard, PerformanceChart, TransactionLedger, AddTransactionModal, ImportTransactionsModal, UserPreferencesModal
 │   │   └── admin-app/            # Internal Operations Portal (:5174)
 │   │       └── src/components/   # AssetManagement, DeleteAssetModal, PriceManagement, FXManagement, FXTrendChart, FXOverrideModal, BackfillModal, IngestionPipeline
 │   └── packages/
@@ -234,7 +236,9 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── admin-historical-backfill-implementation-plan.md
 │   │   ├── asset-prices-date-range-filter-implementation-plan.md
 │   │   ├── delete-asset-implementation-plan.md
+│   │   ├── exchange-dropdown-implementation-plan.md
 │   │   ├── ingestion-job-history-implementation-plan.md
+│   │   ├── multi-broker-csv-ingestion-implementation-plan.md
 │   │   └── web-workspace-refactoring-plan.md
 │   ├── user-stories/             # Product specifications & acceptance criteria
 │   ├── competitive-analysis.md
@@ -318,6 +322,7 @@ make generate
 - **Asset Deletion Implementation Plan**: [`docs/plans/delete-asset-implementation-plan.md`](./docs/plans/delete-asset-implementation-plan.md)
 - **Exchange Code Dropdown Plan**: [`docs/plans/exchange-dropdown-implementation-plan.md`](./docs/plans/exchange-dropdown-implementation-plan.md)
 - **Ingestion Job History Plan**: [`docs/plans/ingestion-job-history-implementation-plan.md`](./docs/plans/ingestion-job-history-implementation-plan.md)
+- **Multi-Broker CSV Ingestion Plan**: [`docs/plans/multi-broker-csv-ingestion-implementation-plan.md`](./docs/plans/multi-broker-csv-ingestion-implementation-plan.md)
 - **Competitive Strategy Analysis**: [`docs/competitive-analysis.md`](./docs/competitive-analysis.md)
 - **Frontend GraphQL Setup**: [`docs/genql-usage.md`](./docs/genql-usage.md)
 

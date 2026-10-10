@@ -407,6 +407,7 @@ const (
 	TransactionTypeTransferIn   TransactionType = "TRANSFER_IN"
 	TransactionTypeTransferOut  TransactionType = "TRANSFER_OUT"
 	TransactionTypeFxConversion TransactionType = "FX_CONVERSION"
+	TransactionTypeSplit        TransactionType = "SPLIT"
 )
 
 var AllTransactionType = []TransactionType{
@@ -421,11 +422,12 @@ var AllTransactionType = []TransactionType{
 	TransactionTypeTransferIn,
 	TransactionTypeTransferOut,
 	TransactionTypeFxConversion,
+	TransactionTypeSplit,
 }
 
 func (e TransactionType) IsValid() bool {
 	switch e {
-	case TransactionTypeBuy, TransactionTypeSell, TransactionTypeDividend, TransactionTypeDeposit, TransactionTypeWithdrawal, TransactionTypeInterest, TransactionTypeFee, TransactionTypeTax, TransactionTypeTransferIn, TransactionTypeTransferOut, TransactionTypeFxConversion:
+	case TransactionTypeBuy, TransactionTypeSell, TransactionTypeDividend, TransactionTypeDeposit, TransactionTypeWithdrawal, TransactionTypeInterest, TransactionTypeFee, TransactionTypeTax, TransactionTypeTransferIn, TransactionTypeTransferOut, TransactionTypeFxConversion, TransactionTypeSplit:
 		return true
 	}
 	return false

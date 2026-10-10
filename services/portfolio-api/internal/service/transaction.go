@@ -199,6 +199,51 @@ func (s *portfolioService) AddTransaction(ctx context.Context, input domain.AddT
 
 		return savedTx, summary, nil
 
+	case domain.TxTypeSplit:
+		if input.Symbol == nil || *input.Symbol == "" {
+			return nil, nil, fmt.Errorf("service: symbol is required for SPLIT")
+		}
+		if input.Quantity == nil || !input.Quantity.IsPositive() {
+			return nil, nil, fmt.Errorf("service: positive split ratio/quantity is required for SPLIT")
+		}
+
+		inst, err := s.repo.FindInstrumentBySymbol(ctx, *input.Symbol)
+		if err != nil {
+			return nil, nil, fmt.Errorf("service: find instrument %s: %w", *input.Symbol, err)
+		}
+		instID = &inst.ID
+		currencyCode = inst.CurrencyCode
+
+		price := input.Price
+		if price != nil && price.IsNegative() {
+			return nil, nil, fmt.Errorf("service: price ratio cannot be negative for SPLIT")
+		}
+
+		tx := domain.Transaction{
+			PortfolioID:  portfolio.ID,
+			InstrumentID: instID,
+			Type:         input.Type,
+			TradeDate:    tradeDate,
+			Quantity:     input.Quantity,
+			Price:        price,
+			Amount:       decimal.Zero,
+			CurrencyCode: currencyCode,
+			Fee:          fee,
+			Notes:        input.Notes,
+		}
+
+		savedTx, err := s.repo.InsertTransaction(ctx, tx)
+		if err != nil {
+			return nil, nil, fmt.Errorf("service: insert transaction: %w", err)
+		}
+
+		summary, err := s.postTransactionUpdate(ctx, userID, portfolio.ID, tradeDate)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		return savedTx, summary, nil
+
 	default:
 		return nil, nil, fmt.Errorf("service: unsupported transaction type: %s", input.Type)
 	}

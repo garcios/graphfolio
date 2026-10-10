@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { client } from '@graphfolio/api-client';
 import './AddTransactionModal.css';
 
-type TransactionType = 'BUY' | 'SELL' | 'DEPOSIT' | 'WITHDRAWAL' | 'DIVIDEND';
+type TransactionType = 'BUY' | 'SELL' | 'DIVIDEND' | 'SPLIT' | 'DEPOSIT' | 'WITHDRAWAL';
 
 interface InstrumentOption {
   id: string;
@@ -28,6 +28,8 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   const [quantity, setQuantity] = useState('');
   const [price, setPrice] = useState('');
   const [amount, setAmount] = useState('');
+  const [splitRatioTo, setSplitRatioTo] = useState('2');
+  const [splitRatioFrom, setSplitRatioFrom] = useState('1');
   const [fee, setFee] = useState('0.00');
   const [currencyCode, setCurrencyCode] = useState('USD');
   const [notes, setNotes] = useState('');
@@ -108,6 +110,12 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
       } else if (type === 'DIVIDEND') {
         if (!symbol) throw new Error('Please select or specify a symbol for dividend.');
         if (!amount || parseFloat(amount) <= 0) throw new Error('Amount must be greater than zero.');
+      } else if (type === 'SPLIT') {
+        if (!symbol) throw new Error('Please select or specify an asset for the stock split.');
+        const to = parseFloat(splitRatioTo);
+        const from = parseFloat(splitRatioFrom);
+        if (isNaN(to) || to <= 0) throw new Error('New shares ratio must be greater than zero.');
+        if (isNaN(from) || from <= 0) throw new Error('Old shares ratio must be greater than zero.');
       }
 
       const input: any = {
@@ -128,6 +136,17 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
       } else if (type === 'DIVIDEND') {
         input.symbol = symbol;
         input.amount = amount;
+      } else if (type === 'SPLIT') {
+        const to = parseFloat(splitRatioTo);
+        const from = parseFloat(splitRatioFrom);
+        const ratioMultiplier = (to / from).toFixed(8).replace(/\.?0+$/, '');
+        input.symbol = symbol;
+        input.quantity = ratioMultiplier;
+        input.price = '0.00';
+        input.amount = '0.00';
+        if (!notes) {
+          input.notes = `${splitRatioTo}-for-${splitRatioFrom} Stock Split`;
+        }
       }
 
       const res = await client.mutation({
@@ -189,11 +208,11 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 
         {/* Transaction Type Segmented Control */}
         <div className="type-tabs">
-          {(['BUY', 'SELL', 'DEPOSIT', 'WITHDRAWAL', 'DIVIDEND'] as TransactionType[]).map((t) => (
+          {(['BUY', 'SELL', 'DIVIDEND', 'SPLIT', 'DEPOSIT', 'WITHDRAWAL'] as TransactionType[]).map((t) => (
             <button
               key={t}
               type="button"
-              className={`type-tab ${type === t ? 'active' : ''} ${type === 'SELL' ? 'sell' : ''}`}
+              className={`type-tab ${type === t ? 'active' : ''} ${type === 'SELL' ? 'sell' : ''} ${type === 'SPLIT' ? 'split' : ''}`}
               onClick={() => {
                 setType(t);
                 setError(null);
@@ -207,8 +226,8 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
         <form className="modal-form" onSubmit={handleSubmit}>
           {error && <div className="error-banner">{error}</div>}
 
-          {/* Instrument Selection for BUY/SELL/DIVIDEND */}
-          {(type === 'BUY' || type === 'SELL' || type === 'DIVIDEND') && (
+          {/* Instrument Selection for BUY/SELL/DIVIDEND/SPLIT */}
+          {(type === 'BUY' || type === 'SELL' || type === 'DIVIDEND' || type === 'SPLIT') && (
             <div className="form-group">
               <label>Asset / Ticker</label>
               <select
@@ -253,6 +272,63 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
             </div>
           </div>
 
+          {/* Stock Split specific: Ratio & Presets */}
+          {type === 'SPLIT' && (
+            <div className="form-group">
+              <label>Split Ratio (New Shares : Old Shares)</label>
+              <div className="split-ratio-row">
+                <div className="split-input-wrapper">
+                  <span className="split-input-prefix">New</span>
+                  <input
+                    type="number"
+                    step="any"
+                    placeholder="2"
+                    className="form-input"
+                    value={splitRatioTo}
+                    onChange={(e) => setSplitRatioTo(e.target.value)}
+                    required
+                  />
+                </div>
+                <span className="split-colon">:</span>
+                <div className="split-input-wrapper">
+                  <span className="split-input-prefix">Old</span>
+                  <input
+                    type="number"
+                    step="any"
+                    placeholder="1"
+                    className="form-input"
+                    value={splitRatioFrom}
+                    onChange={(e) => setSplitRatioFrom(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+              <div className="split-presets">
+                <button type="button" className="split-preset-btn" onClick={() => { setSplitRatioTo('2'); setSplitRatioFrom('1'); }}>2:1 Forward</button>
+                <button type="button" className="split-preset-btn" onClick={() => { setSplitRatioTo('3'); setSplitRatioFrom('1'); }}>3:1 Forward</button>
+                <button type="button" className="split-preset-btn" onClick={() => { setSplitRatioTo('4'); setSplitRatioFrom('1'); }}>4:1 Forward</button>
+                <button type="button" className="split-preset-btn" onClick={() => { setSplitRatioTo('10'); setSplitRatioFrom('1'); }}>10:1 Forward</button>
+                <button type="button" className="split-preset-btn" onClick={() => { setSplitRatioTo('1'); setSplitRatioFrom('2'); }}>1:2 Reverse</button>
+                <button type="button" className="split-preset-btn" onClick={() => { setSplitRatioTo('1'); setSplitRatioFrom('10'); }}>1:10 Reverse</button>
+              </div>
+              <div className="split-info-banner">
+                {(() => {
+                  const to = parseFloat(splitRatioTo);
+                  const from = parseFloat(splitRatioFrom);
+                  if (!isNaN(to) && !isNaN(from) && from > 0 && to > 0) {
+                    const mult = to / from;
+                    return (
+                      <span>
+                        Multiplier: <strong>{mult.toFixed(4).replace(/\.?0+$/, '')}x</strong> — Each old share becomes {mult.toFixed(4).replace(/\.?0+$/, '')} new shares. Total cost basis and portfolio cash are preserved.
+                      </span>
+                    );
+                  }
+                  return <span>Enter positive numbers for both New and Old shares.</span>;
+                })()}
+              </div>
+            </div>
+          )}
+
           {/* Trade specific: Quantity & Price */}
           {(type === 'BUY' || type === 'SELL') && (
             <div className="form-row">
@@ -284,40 +360,42 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
             </div>
           )}
 
-          {/* Total Amount & Brokerage Fee */}
-          <div className="form-row">
-            <div className="form-group">
-              <label>Total Amount</label>
-              <input
-                type="number"
-                step="any"
-                placeholder="0.00"
-                className="form-input"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                required
-              />
-              {(type === 'BUY' || type === 'SELL') && (
-                <span className="form-calculated-note">
-                  Auto-calculated from quantity &times; price
-                </span>
-              )}
-            </div>
-
-            {(type === 'BUY' || type === 'SELL') && (
+          {/* Total Amount & Brokerage Fee (BUY/SELL/DIVIDEND/DEPOSIT/WITHDRAWAL) */}
+          {type !== 'SPLIT' && (
+            <div className="form-row">
               <div className="form-group">
-                <label>Brokerage Fee</label>
+                <label>Total Amount</label>
                 <input
                   type="number"
                   step="any"
                   placeholder="0.00"
                   className="form-input"
-                  value={fee}
-                  onChange={(e) => setFee(e.target.value)}
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  required
                 />
+                {(type === 'BUY' || type === 'SELL') && (
+                  <span className="form-calculated-note">
+                    Auto-calculated from quantity &times; price
+                  </span>
+                )}
               </div>
-            )}
-          </div>
+
+              {(type === 'BUY' || type === 'SELL') && (
+                <div className="form-group">
+                  <label>Brokerage Fee</label>
+                  <input
+                    type="number"
+                    step="any"
+                    placeholder="0.00"
+                    className="form-input"
+                    value={fee}
+                    onChange={(e) => setFee(e.target.value)}
+                  />
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Notes */}
           <div className="form-group">

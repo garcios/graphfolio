@@ -220,6 +220,12 @@
   border: 1px solid rgba(59, 130, 246, 0.3);
 }
 
+.badge-type.split {
+  background: rgba(139, 92, 246, 0.16);
+  color: #c4b5fd;
+  border: 1px solid rgba(139, 92, 246, 0.35);
+}
+
 .badge-type.deposit {
   background: rgba(168, 85, 247, 0.14);
   color: #c084fc;

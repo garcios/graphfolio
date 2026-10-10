@@ -18,6 +18,7 @@ enum TransactionType {
   TRANSFER_IN
   TRANSFER_OUT
   FX_CONVERSION
+  SPLIT
 }
 
 input AddTransactionInput {

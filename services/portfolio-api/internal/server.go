@@ -114,6 +114,8 @@ func (s *PortfolioServer) AddTransaction(ctx context.Context, req *pb.AddTransac
 		txType = domain.TxTypeTransferOut
 	case pb.TransactionType_TRANSACTION_TYPE_FX_CONVERSION:
 		txType = domain.TxTypeFXConversion
+	case pb.TransactionType_TRANSACTION_TYPE_SPLIT:
+		txType = domain.TxTypeSplit
 	default:
 		return nil, status.Errorf(codes.InvalidArgument, "invalid transaction type: %v", req.GetType())
 	}
@@ -336,6 +338,8 @@ func (s *PortfolioServer) ListTransactions(ctx context.Context, req *pb.ListTran
 			t = domain.TxTypeTransferOut
 		case pb.TransactionType_TRANSACTION_TYPE_FX_CONVERSION:
 			t = domain.TxTypeFXConversion
+		case pb.TransactionType_TRANSACTION_TYPE_SPLIT:
+			t = domain.TxTypeSplit
 		default:
 			return nil, status.Errorf(codes.InvalidArgument, "invalid transaction type filter: %v", req.GetType())
 		}
@@ -489,6 +493,8 @@ func (s *PortfolioServer) BatchImportTransactions(ctx context.Context, req *pb.B
 			txType = domain.TxTypeTransferOut
 		case pb.TransactionType_TRANSACTION_TYPE_FX_CONVERSION:
 			txType = domain.TxTypeFXConversion
+		case pb.TransactionType_TRANSACTION_TYPE_SPLIT:
+			txType = domain.TxTypeSplit
 		default:
 			return nil, status.Errorf(codes.InvalidArgument, "item %d: invalid transaction type: %v", i, item.GetType())
 		}
@@ -1273,6 +1279,8 @@ func mapDomainTxTypeToProto(t domain.TransactionType) pb.TransactionType {
 		return pb.TransactionType_TRANSACTION_TYPE_TRANSFER_OUT
 	case domain.TxTypeFXConversion:
 		return pb.TransactionType_TRANSACTION_TYPE_FX_CONVERSION
+	case domain.TxTypeSplit:
+		return pb.TransactionType_TRANSACTION_TYPE_SPLIT
 	default:
 		return pb.TransactionType_TRANSACTION_TYPE_UNSPECIFIED
 	}
