@@ -70,6 +70,7 @@ type Query {
   currencyPairs: [CurrencyPair!]!
   currencyPairHistory(baseCurrency: String!, quoteCurrency: String!, timeframe: HistoryTimeframe!): CurrencyPairHistory!
   fxRates(baseCurrency: String, quoteCurrency: String, fromDate: String, toDate: String, limit: Int = 50, offset: Int = 0): FXRatesConnection!
+  checkTransactionDuplicates(externalRefs: [String!]!): [String!]!
 }
 
 enum HistoryTimeframe {
@@ -139,6 +140,34 @@ type Mutation {
   triggerBackfill(input: TriggerBackfillInput!): BackfillPayload!
   updateUserPreferences(input: UpdateUserPreferencesInput!): UpdateUserPreferencesPayload!
   recordFXRateOverride(input: RecordFXRateOverrideInput!): RecordFXRateOverridePayload!
+  importTransactions(input: BatchImportTransactionsInput!): BatchImportTransactionsPayload!
+}
+
+input ImportTransactionInput {
+  externalRef: String!
+  symbol: String!
+  type: TransactionType!
+  tradeDate: String!
+  settleDate: String
+  quantity: Decimal!
+  price: Decimal!
+  amount: Decimal!
+  fee: Decimal!
+  currencyCode: String
+  notes: String
+}
+
+input BatchImportTransactionsInput {
+  transactions: [ImportTransactionInput!]!
+  skipDuplicates: Boolean = true
+}
+
+type BatchImportTransactionsPayload {
+  success: Boolean!
+  importedCount: Int!
+  skippedCount: Int!
+  portfolio: Portfolio!
+  message: String!
 }
 
 type InstrumentPrice {

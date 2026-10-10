@@ -15,6 +15,10 @@ service PortfolioService {
   rpc ListTransactions(ListTransactionsRequest) returns (ListTransactionsResponse) {}
   rpc DeleteTransaction(DeleteTransactionRequest) returns (DeleteTransactionResponse) {}
 
+  // Multi-Broker CSV Ingestion & Deduplication
+  rpc CheckTransactionDuplicates(CheckTransactionDuplicatesRequest) returns (CheckTransactionDuplicatesResponse) {}
+  rpc BatchImportTransactions(BatchImportTransactionsRequest) returns (BatchImportTransactionsResponse) {}
+
   // Admin: Asset Directory Management
   rpc ListAllInstruments(ListAllInstrumentsRequest) returns (ListAllInstrumentsResponse) {}
   rpc CreateInstrument(CreateInstrumentRequest) returns (CreateInstrumentResponse) {}
@@ -449,6 +453,46 @@ message TriggerBackfillResponse {
   int32           fx_rates_synced = 3;
   string          message         = 4;
   repeated string warnings        = 5;
+}
+
+// ------------------------------------------------------------------
+// Multi-Broker CSV Batch Ingestion Messages
+// ------------------------------------------------------------------
+
+message CheckTransactionDuplicatesRequest {
+  string          user_id       = 1;
+  repeated string external_refs = 2;
+}
+
+message CheckTransactionDuplicatesResponse {
+  repeated string existing_external_refs = 1;
+}
+
+message ImportTransactionItem {
+  TransactionType   type          = 1;
+  string            symbol        = 2; // e.g. "BHP"
+  string            trade_date    = 3; // YYYY-MM-DD
+  string            settle_date   = 4; // Optional: YYYY-MM-DD
+  common.v1.Decimal quantity      = 5;
+  common.v1.Money   price         = 6;
+  common.v1.Money   amount        = 7;
+  common.v1.Money   fee           = 8;
+  string            external_ref  = 9; // e.g. "nabtrade:C10982347" or "cs_sha256..."
+  string            notes         = 10;
+}
+
+message BatchImportTransactionsRequest {
+  string                         user_id          = 1;
+  repeated ImportTransactionItem transactions     = 2;
+  bool                           skip_duplicates  = 3; // Default true: ignores existing external_refs
+}
+
+message BatchImportTransactionsResponse {
+  bool      success         = 1;
+  int32     imported_count  = 2;
+  int32     skipped_count   = 3;
+  Portfolio portfolio       = 4; // Updated portfolio snapshot
+  string    message         = 5;
 }
 
 

@@ -3,6 +3,7 @@ package internal
 import (
 	"context"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -426,6 +427,158 @@ func (s *PortfolioServer) DeleteTransaction(ctx context.Context, req *pb.DeleteT
 	return &pb.DeleteTransactionResponse{
 		Success:   true,
 		Portfolio: mapSummaryToProto(summary),
+	}, nil
+}
+
+func (s *PortfolioServer) CheckTransactionDuplicates(ctx context.Context, req *pb.CheckTransactionDuplicatesRequest) (*pb.CheckTransactionDuplicatesResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	userID := req.GetUserId()
+	if userID == "" {
+		userID = "1"
+	}
+
+	existingRefs, err := s.svc.CheckTransactionDuplicates(ctx, userID, req.GetExternalRefs())
+	if err != nil {
+		if errors.Is(err, repository.ErrPortfolioNotFound) {
+			return nil, status.Errorf(codes.NotFound, "portfolio not found: %v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to check duplicates: %v", err)
+	}
+
+	return &pb.CheckTransactionDuplicatesResponse{
+		ExistingExternalRefs: existingRefs,
+	}, nil
+}
+
+func (s *PortfolioServer) BatchImportTransactions(ctx context.Context, req *pb.BatchImportTransactionsRequest) (*pb.BatchImportTransactionsResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	userID := req.GetUserId()
+	if userID == "" {
+		userID = "1"
+	}
+
+	var items []domain.ImportTransactionItem
+	for i, item := range req.GetTransactions() {
+		var txType domain.TransactionType
+		switch item.GetType() {
+		case pb.TransactionType_TRANSACTION_TYPE_BUY:
+			txType = domain.TxTypeBuy
+		case pb.TransactionType_TRANSACTION_TYPE_SELL:
+			txType = domain.TxTypeSell
+		case pb.TransactionType_TRANSACTION_TYPE_DIVIDEND:
+			txType = domain.TxTypeDividend
+		case pb.TransactionType_TRANSACTION_TYPE_DEPOSIT:
+			txType = domain.TxTypeDeposit
+		case pb.TransactionType_TRANSACTION_TYPE_WITHDRAWAL:
+			txType = domain.TxTypeWithdrawal
+		case pb.TransactionType_TRANSACTION_TYPE_INTEREST:
+			txType = domain.TxTypeInterest
+		case pb.TransactionType_TRANSACTION_TYPE_FEE:
+			txType = domain.TxTypeFee
+		case pb.TransactionType_TRANSACTION_TYPE_TAX:
+			txType = domain.TxTypeTax
+		case pb.TransactionType_TRANSACTION_TYPE_TRANSFER_IN:
+			txType = domain.TxTypeTransferIn
+		case pb.TransactionType_TRANSACTION_TYPE_TRANSFER_OUT:
+			txType = domain.TxTypeTransferOut
+		case pb.TransactionType_TRANSACTION_TYPE_FX_CONVERSION:
+			txType = domain.TxTypeFXConversion
+		default:
+			return nil, status.Errorf(codes.InvalidArgument, "item %d: invalid transaction type: %v", i, item.GetType())
+		}
+
+		tradeDate, err := time.Parse("2006-01-02", item.GetTradeDate())
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "item %d: invalid trade date %q: %v", i, item.GetTradeDate(), err)
+		}
+
+		var settleDate *time.Time
+		if item.GetSettleDate() != "" {
+			sd, err := time.Parse("2006-01-02", item.GetSettleDate())
+			if err == nil {
+				settleDate = &sd
+			}
+		}
+
+		var qty decimal.Decimal
+		if item.GetQuantity() != nil {
+			q, err := decimalpb.FromProto(item.GetQuantity())
+			if err == nil {
+				qty = q
+			}
+		}
+
+		var price decimal.Decimal
+		if item.GetPrice() != nil && item.GetPrice().GetAmount() != nil {
+			p, _, err := decimalpb.MoneyFromProto(item.GetPrice())
+			if err == nil {
+				price = p
+			}
+		}
+
+		var amount decimal.Decimal
+		if item.GetAmount() != nil && item.GetAmount().GetAmount() != nil {
+			a, _, err := decimalpb.MoneyFromProto(item.GetAmount())
+			if err != nil {
+				return nil, status.Errorf(codes.InvalidArgument, "item %d: invalid amount: %v", i, err)
+			}
+			amount = a
+		}
+
+		var fee decimal.Decimal
+		if item.GetFee() != nil && item.GetFee().GetAmount() != nil {
+			f, _, err := decimalpb.MoneyFromProto(item.GetFee())
+			if err == nil {
+				fee = f
+			}
+		}
+
+		var currencyCode string
+		if item.GetAmount() != nil && item.GetAmount().GetCurrencyCode() != "" {
+			currencyCode = item.GetAmount().GetCurrencyCode()
+		} else if item.GetPrice() != nil && item.GetPrice().GetCurrencyCode() != "" {
+			currencyCode = item.GetPrice().GetCurrencyCode()
+		}
+
+		items = append(items, domain.ImportTransactionItem{
+			Type:         txType,
+			Symbol:       item.GetSymbol(),
+			TradeDate:    tradeDate,
+			SettleDate:   settleDate,
+			Quantity:     qty,
+			Price:        price,
+			Amount:       amount,
+			Fee:          fee,
+			CurrencyCode: currencyCode,
+			ExternalRef:  item.GetExternalRef(),
+			Notes:        item.GetNotes(),
+		})
+	}
+
+	result, err := s.svc.BatchImportTransactions(ctx, domain.BatchImportInput{
+		UserID:         userID,
+		Transactions:   items,
+		SkipDuplicates: req.GetSkipDuplicates(),
+	})
+	if err != nil {
+		if errors.Is(err, repository.ErrPortfolioNotFound) {
+			return nil, status.Errorf(codes.NotFound, "portfolio not found: %v", err)
+		}
+		return nil, status.Errorf(codes.InvalidArgument, "batch import failed: %v", err)
+	}
+
+	return &pb.BatchImportTransactionsResponse{
+		Success:       true,
+		ImportedCount: int32(result.ImportedCount),
+		SkippedCount:  int32(result.SkippedCount),
+		Portfolio:     mapSummaryToProto(result.Portfolio),
+		Message:       fmt.Sprintf("Successfully imported %d transactions (skipped %d)", result.ImportedCount, result.SkippedCount),
 	}, nil
 }
 

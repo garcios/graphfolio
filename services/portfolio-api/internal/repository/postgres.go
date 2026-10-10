@@ -421,6 +421,75 @@ func (r *PostgresRepository) InsertTransaction(ctx context.Context, tx domain.Tr
 	return &tx, nil
 }
 
+func (r *PostgresRepository) FindExistingExternalRefs(ctx context.Context, portfolioID uuid.UUID, externalRefs []string) ([]string, error) {
+	if len(externalRefs) == 0 {
+		return nil, nil
+	}
+
+	rows, err := r.pool.Query(ctx, checkExistingExternalRefsSQL, portfolioID, externalRefs)
+	if err != nil {
+		return nil, fmt.Errorf("repository: check existing external refs: %w", err)
+	}
+	defer rows.Close()
+
+	var existing []string
+	for rows.Next() {
+		var ref string
+		if err := rows.Scan(&ref); err != nil {
+			return nil, fmt.Errorf("repository: scan external ref: %w", err)
+		}
+		existing = append(existing, ref)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("repository: iterate external refs: %w", err)
+	}
+	return existing, nil
+}
+
+func (r *PostgresRepository) BatchInsertTransactions(ctx context.Context, txs []domain.Transaction) (int, error) {
+	if len(txs) == 0 {
+		return 0, nil
+	}
+
+	batch := &pgx.Batch{}
+	for _, tx := range txs {
+		batch.Queue(bulkInsertTransactionsSQL,
+			tx.PortfolioID,
+			tx.InstrumentID,
+			string(tx.Type),
+			tx.TradeDate,
+			tx.SettleDate,
+			tx.Quantity,
+			tx.Price,
+			tx.Amount,
+			tx.CurrencyCode,
+			tx.Fee,
+			tx.FXRateToBase,
+			tx.ExternalRef,
+			tx.Notes,
+		)
+	}
+
+	br := r.pool.SendBatch(ctx, batch)
+	defer br.Close()
+
+	inserted := 0
+	for i := 0; i < len(txs); i++ {
+		var id uuid.UUID
+		err := br.QueryRow().Scan(&id)
+		if err == nil {
+			inserted++
+		} else if errors.Is(err, pgx.ErrNoRows) {
+			// Skipped due to ON CONFLICT DO NOTHING
+			continue
+		} else {
+			return inserted, fmt.Errorf("repository: batch insert row %d failed: %w", i, err)
+		}
+	}
+
+	return inserted, nil
+}
+
 func (r *PostgresRepository) ListTransactions(ctx context.Context, portfolioID uuid.UUID, filter domain.TransactionFilter) ([]domain.TransactionWithInstrument, int, error) {
 	page := filter.Page
 	if page < 1 {

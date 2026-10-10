@@ -45,6 +45,21 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
+// BatchInsertTransactions mocks base method.
+func (m *MockRepository) BatchInsertTransactions(ctx context.Context, txs []domain.Transaction) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BatchInsertTransactions", ctx, txs)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// BatchInsertTransactions indicates an expected call of BatchInsertTransactions.
+func (mr *MockRepositoryMockRecorder) BatchInsertTransactions(ctx, txs any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BatchInsertTransactions", reflect.TypeOf((*MockRepository)(nil).BatchInsertTransactions), ctx, txs)
+}
+
 // BatchUpsertFXRates mocks base method.
 func (m *MockRepository) BatchUpsertFXRates(ctx context.Context, records []marketdata.FXRecord) error {
 	m.ctrl.T.Helper()
@@ -128,6 +143,21 @@ func (m *MockRepository) DeleteValuationsFromDate(ctx context.Context, portfolio
 func (mr *MockRepositoryMockRecorder) DeleteValuationsFromDate(ctx, portfolioID, fromDate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteValuationsFromDate", reflect.TypeOf((*MockRepository)(nil).DeleteValuationsFromDate), ctx, portfolioID, fromDate)
+}
+
+// FindExistingExternalRefs mocks base method.
+func (m *MockRepository) FindExistingExternalRefs(ctx context.Context, portfolioID uuid.UUID, externalRefs []string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindExistingExternalRefs", ctx, portfolioID, externalRefs)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindExistingExternalRefs indicates an expected call of FindExistingExternalRefs.
+func (mr *MockRepositoryMockRecorder) FindExistingExternalRefs(ctx, portfolioID, externalRefs any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindExistingExternalRefs", reflect.TypeOf((*MockRepository)(nil).FindExistingExternalRefs), ctx, portfolioID, externalRefs)
 }
 
 // FindInstrumentBySymbol mocks base method.

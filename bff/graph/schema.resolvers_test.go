@@ -66,6 +66,8 @@ type fakePortfolioClient struct {
 	listFXRatesFn                 func(ctx context.Context, in *pb.ListFXRatesRequest) (*pb.ListFXRatesResponse, error)
 	getCurrencyPairHistoryFn      func(ctx context.Context, in *pb.GetCurrencyPairHistoryRequest) (*pb.GetCurrencyPairHistoryResponse, error)
 	recordFXRateOverrideFn        func(ctx context.Context, in *pb.RecordFXRateOverrideRequest) (*pb.RecordFXRateOverrideResponse, error)
+	checkTransactionDuplicatesFn  func(ctx context.Context, in *pb.CheckTransactionDuplicatesRequest) (*pb.CheckTransactionDuplicatesResponse, error)
+	batchImportTransactionsFn    func(ctx context.Context, in *pb.BatchImportTransactionsRequest) (*pb.BatchImportTransactionsResponse, error)
 }
 
 func (f *fakePortfolioClient) GetPortfolio(ctx context.Context, in *pb.GetPortfolioRequest, opts ...grpc.CallOption) (*pb.GetPortfolioResponse, error) {
@@ -211,6 +213,20 @@ func (f *fakePortfolioClient) GetCurrencyPairHistory(ctx context.Context, in *pb
 func (f *fakePortfolioClient) RecordFXRateOverride(ctx context.Context, in *pb.RecordFXRateOverrideRequest, opts ...grpc.CallOption) (*pb.RecordFXRateOverrideResponse, error) {
 	if f.recordFXRateOverrideFn != nil {
 		return f.recordFXRateOverrideFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakePortfolioClient) CheckTransactionDuplicates(ctx context.Context, in *pb.CheckTransactionDuplicatesRequest, opts ...grpc.CallOption) (*pb.CheckTransactionDuplicatesResponse, error) {
+	if f.checkTransactionDuplicatesFn != nil {
+		return f.checkTransactionDuplicatesFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakePortfolioClient) BatchImportTransactions(ctx context.Context, in *pb.BatchImportTransactionsRequest, opts ...grpc.CallOption) (*pb.BatchImportTransactionsResponse, error) {
+	if f.batchImportTransactionsFn != nil {
+		return f.batchImportTransactionsFn(ctx, in)
 	}
 	return nil, nil
 }
@@ -1704,6 +1720,124 @@ func TestQueryResolver_Exchanges(t *testing.T) {
 		_, err := qResolver.Exchanges(ctx)
 		if err == nil {
 			t.Fatalf("expected error, got nil")
+		}
+	})
+}
+
+func TestQueryResolver_CheckTransactionDuplicates(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully returns existing external refs", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			checkTransactionDuplicatesFn: func(ctx context.Context, in *pb.CheckTransactionDuplicatesRequest) (*pb.CheckTransactionDuplicatesResponse, error) {
+				if in.GetUserId() != "1" {
+					t.Errorf("expected user_id 1, got %s", in.GetUserId())
+				}
+				return &pb.CheckTransactionDuplicatesResponse{
+					ExistingExternalRefs: []string{"cs_123"},
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		res, err := qResolver.CheckTransactionDuplicates(ctx, []string{"cs_123", "cs_456"})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(res) != 1 || res[0] != "cs_123" {
+			t.Fatalf("expected ['cs_123'], got %v", res)
+		}
+	})
+
+	t.Run("handles error from service", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			checkTransactionDuplicatesFn: func(ctx context.Context, in *pb.CheckTransactionDuplicatesRequest) (*pb.CheckTransactionDuplicatesResponse, error) {
+				return nil, errors.New("service failure")
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		_, err := qResolver.CheckTransactionDuplicates(ctx, []string{"cs_123"})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+	})
+}
+
+func TestMutationResolver_ImportTransactions(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully forwards import transactions request", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			batchImportTransactionsFn: func(ctx context.Context, in *pb.BatchImportTransactionsRequest) (*pb.BatchImportTransactionsResponse, error) {
+				if len(in.GetTransactions()) != 1 {
+					t.Errorf("expected 1 tx, got %d", len(in.GetTransactions()))
+				}
+				tx := in.GetTransactions()[0]
+				if tx.GetSymbol() != "BHP" || tx.GetExternalRef() != "cs_123" {
+					t.Errorf("unexpected tx: %+v", tx)
+				}
+				return &pb.BatchImportTransactionsResponse{
+					Success:       true,
+					ImportedCount: 1,
+					SkippedCount:  0,
+					Message:       "Imported 1 transactions",
+					Portfolio: &pb.Portfolio{
+						TotalValue: &commonpb.Money{
+							Amount:       &commonpb.Decimal{Value: "1000.00"},
+							CurrencyCode: "AUD",
+						},
+					},
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		mResolver := resolver.Mutation()
+
+		skip := true
+		res, err := mResolver.ImportTransactions(ctx, model.BatchImportTransactionsInput{
+			Transactions: []*model.ImportTransactionInput{
+				{
+					ExternalRef: "cs_123",
+					Symbol:      "BHP",
+					Type:        model.TransactionTypeBuy,
+					TradeDate:   "2025-05-10",
+					Quantity:    model.Decimal(decimal.NewFromInt(10)),
+					Price:       model.Decimal(decimal.RequireFromString("45.00")),
+					Amount:      model.Decimal(decimal.RequireFromString("450.00")),
+					Fee:         model.Decimal(decimal.Zero),
+				},
+			},
+			SkipDuplicates: &skip,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !res.Success || res.ImportedCount != 1 || res.SkippedCount != 0 {
+			t.Fatalf("unexpected response: %+v", res)
+		}
+	})
+
+	t.Run("handles error from service", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			batchImportTransactionsFn: func(ctx context.Context, in *pb.BatchImportTransactionsRequest) (*pb.BatchImportTransactionsResponse, error) {
+				return nil, errors.New("batch import failed")
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		mResolver := resolver.Mutation()
+
+		_, err := mResolver.ImportTransactions(ctx, model.BatchImportTransactionsInput{
+			Transactions: []*model.ImportTransactionInput{},
+		})
+		if err == nil {
+			t.Fatal("expected error, got nil")
 		}
 	})
 }

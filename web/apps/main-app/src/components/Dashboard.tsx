@@ -3,6 +3,7 @@ import { client } from '@graphfolio/api-client';
 import { formatMoney, formatPercent, isPositive, Button } from '@graphfolio/ui';
 import './Dashboard.css';
 import { AddTransactionModal } from './AddTransactionModal';
+import { ImportTransactionsModal } from './ImportTransactionsModal';
 import { PerformanceChart } from './PerformanceChart';
 import { TransactionLedger } from './TransactionLedger';
 import { UserPreferencesModal, type UserPreferencesData, type CurrencyItem } from './UserPreferencesModal';
@@ -13,6 +14,7 @@ export const Dashboard = () => {
   const [supportedCurrencies, setSupportedCurrencies] = useState<CurrencyItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'ledger'>('overview');
@@ -138,6 +140,13 @@ export const Dashboard = () => {
 
         <div className="header-actions">
           <Button
+            variant="secondary"
+            className="btn-import-header"
+            onClick={() => setIsImportModalOpen(true)}
+          >
+            📥 Import CSV
+          </Button>
+          <Button
             variant="primary"
             className="btn-add-transaction"
             onClick={() => setIsModalOpen(true)}
@@ -246,6 +255,7 @@ export const Dashboard = () => {
       ) : (
         <TransactionLedger
           refreshTrigger={ledgerRefreshKey}
+          onOpenImportModal={() => setIsImportModalOpen(true)}
           onTransactionDeleted={(updatedPortfolio) => {
             setData(updatedPortfolio);
             setToastMessage('Transaction deleted and projections recomputed!');
@@ -261,6 +271,19 @@ export const Dashboard = () => {
           setData(updatedPortfolio);
           setLedgerRefreshKey((k) => k + 1);
           setToastMessage('Transaction recorded and projections updated!');
+          setTimeout(() => setToastMessage(null), 4000);
+        }}
+      />
+
+      <ImportTransactionsModal
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={(updatedPortfolio, message) => {
+          if (updatedPortfolio) {
+            setData(updatedPortfolio);
+          }
+          setLedgerRefreshKey((k) => k + 1);
+          setToastMessage(message || 'Transactions imported and projections updated!');
           setTimeout(() => setToastMessage(null), 4000);
         }}
       />

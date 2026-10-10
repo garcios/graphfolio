@@ -23,6 +23,8 @@ type PortfolioService interface {
 	GetPortfolioHistory(ctx context.Context, userID string, timeframe domain.HistoryTimeframe) (*domain.PortfolioHistory, error)
 	ListTransactions(ctx context.Context, userID string, filter domain.TransactionFilter) ([]domain.TransactionWithInstrument, int, error)
 	DeleteTransaction(ctx context.Context, userID string, transactionID string) (*domain.PortfolioSummary, error)
+	CheckTransactionDuplicates(ctx context.Context, userID string, externalRefs []string) ([]string, error)
+	BatchImportTransactions(ctx context.Context, input domain.BatchImportInput) (*domain.BatchImportResult, error)
 	RebuildValuations(ctx context.Context, userID string, fromDate *time.Time) error
 
 	// Admin: Asset Directory Management
