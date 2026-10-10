@@ -28,7 +28,7 @@ This document catalogs all implemented features, in-progress components, and pla
 | **18** | **Delete Asset & Price Cascade (Admin Portal)** | **DONE** | Database, Proto, Svc, BFF, Web | [delete-asset-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/delete-asset-implementation-plan.md) |
 | **19** | **Ingestion Job History View (Admin Portal)** | **PLANNED** | Database, Proto, Svc, BFF, Web | [ingestion-job-history-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/ingestion-job-history-implementation-plan.md) |
 | **20** | **Asset Prices Date Range Filter & Pagination (Admin Portal)** | **DONE** | Web, BFF, Svc | [asset-prices-date-range-filter-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/asset-prices-date-range-filter-implementation-plan.md) |
-| **21** | **Multi-Broker CSV Ingestion (CommSec & nabtrade)** | **PLANNED** | Proto, Svc, BFF, Web | [multi-broker-csv-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/multi-broker-csv-ingestion-implementation-plan.md) |
+| **21** | **Multi-Broker CSV Ingestion (CommSec & nabtrade)** | **DONE** | Proto, Svc, BFF, Web | [multi-broker-csv-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/multi-broker-csv-ingestion-implementation-plan.md) |
 | **22** | **Tax Lot Inspector & Capital Gains Reports** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
 | **23** | **Dividend Calendar & Yield Analytics** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
 | **24** | **Real-Time Market Data & WebSocket Price Ticker** | **ROADMAP** | Market Data, Svc, Web | *(Future Plan)* |
@@ -272,6 +272,29 @@ This document catalogs all implemented features, in-progress components, and pla
   - [server_test.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server_test.go)
   - [schema.resolvers_test.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers_test.go)
 
+### 2.21 Multi-Broker CSV Ingestion (CommSec & nabtrade)
+- **Status**: **DONE**
+- **Plan Reference**: [multi-broker-csv-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/multi-broker-csv-ingestion-implementation-plan.md)
+- **Scope**: `proto/portfolio/v1/`, `services/portfolio-api`, `bff/`, `web/apps/main-app`
+- **Description**: Robust end-to-end multi-broker CSV transaction import supporting leading Australian retail brokers (CommSec and nabtrade). Features automated client-side header signature detection with manual override, broker dialect parsers handling Australian date formatting (`DD/MM/YYYY`), currency cleansing (`$`, thousand commas, accounting negative parentheses), and nabtrade metadata header/footer stripping. Incorporates idempotent hash generation (`SHA-256`) and native trade confirmation number mapping into `portfolio.transactions.external_ref`, pre-flight duplicate checking against existing portfolio records via GraphQL BFF, and an interactive glassmorphic modal (`ImportTransactionsModal.tsx`) with summary metric cards, tabbed data preview, and line-level error inspection. Microservice backend implements atomic batch persistence via `pgx.Batch` (`ON CONFLICT (portfolio_id, external_ref) DO NOTHING`), single-pass deterministic projection rebuild (`RebuildProjections`), and automated retroactive portfolio valuation backfills.
+- **Key Files**:
+  - [portfolio.proto](file:///Users/oscargarcia/workspace/graphfolio/proto/portfolio/v1/portfolio.proto)
+  - [transaction.go (Domain)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/domain/transaction.go)
+  - [queries.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/repository/queries.go)
+  - [postgres.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/repository/postgres.go)
+  - [transaction.go (Service)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/transaction.go)
+  - [transaction_test.go (Service)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/transaction_test.go)
+  - [server.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server.go)
+  - [server_test.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server_test.go)
+  - [schema.graphqls](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls)
+  - [schema.resolvers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers.go)
+  - [schema.resolvers_test.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers_test.go)
+  - [csv services](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/services/csv/) (`types.ts`, `utils.ts`, `detector.ts`, `parsers/commsec.ts`, `parsers/nabtrade.ts`)
+  - [ImportTransactionsModal.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/ImportTransactionsModal.tsx)
+  - [ImportTransactionsModal.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/ImportTransactionsModal.css)
+  - [TransactionLedger.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/TransactionLedger.tsx)
+  - [Dashboard.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.tsx)
+
 ---
 
 ## 3. Planned Features (`PLANNED`)
@@ -309,18 +332,6 @@ This document catalogs all implemented features, in-progress components, and pla
   - Granular record split metrics displaying successful vs failed rows (`420 ok / 12 fail`).
   - Server-side sorting by start date (newest first by default) with single-pass `COUNT(*) OVER()` pagination.
   - Interactive drawer/modal to inspect error diagnostics, stack traces, and execution parameters for failed imports.
-
-### 3.4 Multi-Broker CSV Ingestion (CommSec & nabtrade)
-- **Status**: **PLANNED**
-- **Plan Reference**: [multi-broker-csv-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/multi-broker-csv-ingestion-implementation-plan.md)
-- **Scope**: `proto/portfolio/v1/`, `services/portfolio-api`, `bff/`, `web/apps/main-app`
-- **Highlights**:
-  - Client-side broker format auto-detector sniffing header signatures between CommSec and nabtrade CSVs with manual selector override.
-  - Broker-specific normalization adapters handling Australian date formatting (`DD/MM/YYYY`), currency cleansing (`$`, thousand commas, accounting negative parentheses), and nabtrade metadata header/footer stripping.
-  - Deterministic idempotent hash generation (`SHA-256`) and native nabtrade confirmation number mapping into `portfolio.transactions.external_ref`.
-  - Live pre-flight duplicate checking against existing portfolio records via GraphQL query.
-  - Interactive multi-step preview modal (`ImportTransactionsModal.tsx`) showing valid rows, duplicate skip toggles, and malformed row error diagnostics with exact row numbers.
-  - Bulk batch persistence API (`BatchImportTransactions`) executing atomic multi-row insertion (`ON CONFLICT DO NOTHING`), single-pass ledger projection replay, and automatic retroactive portfolio valuation backfills.
 
 ---
 

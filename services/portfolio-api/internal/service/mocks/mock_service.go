@@ -59,6 +59,36 @@ func (mr *MockPortfolioServiceMockRecorder) AddTransaction(ctx, input any) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddTransaction", reflect.TypeOf((*MockPortfolioService)(nil).AddTransaction), ctx, input)
 }
 
+// BatchImportTransactions mocks base method.
+func (m *MockPortfolioService) BatchImportTransactions(ctx context.Context, input domain.BatchImportInput) (*domain.BatchImportResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BatchImportTransactions", ctx, input)
+	ret0, _ := ret[0].(*domain.BatchImportResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// BatchImportTransactions indicates an expected call of BatchImportTransactions.
+func (mr *MockPortfolioServiceMockRecorder) BatchImportTransactions(ctx, input any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BatchImportTransactions", reflect.TypeOf((*MockPortfolioService)(nil).BatchImportTransactions), ctx, input)
+}
+
+// CheckTransactionDuplicates mocks base method.
+func (m *MockPortfolioService) CheckTransactionDuplicates(ctx context.Context, userID string, externalRefs []string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CheckTransactionDuplicates", ctx, userID, externalRefs)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CheckTransactionDuplicates indicates an expected call of CheckTransactionDuplicates.
+func (mr *MockPortfolioServiceMockRecorder) CheckTransactionDuplicates(ctx, userID, externalRefs any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckTransactionDuplicates", reflect.TypeOf((*MockPortfolioService)(nil).CheckTransactionDuplicates), ctx, userID, externalRefs)
+}
+
 // CreateInstrument mocks base method.
 func (m *MockPortfolioService) CreateInstrument(ctx context.Context, input domain.CreateInstrumentInput) (*domain.Instrument, error) {
 	m.ctrl.T.Helper()

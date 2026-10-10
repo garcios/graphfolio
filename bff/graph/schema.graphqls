@@ -98,6 +98,9 @@ type Query {
     limit: Int = 50
     offset: Int = 0
   ): FXRatesConnection!
+
+  # Multi-Broker CSV Ingestion Queries
+  checkTransactionDuplicates(externalRefs: [String!]!): [String!]!
 }
 
 enum HistoryTimeframe {
@@ -173,6 +176,36 @@ type Mutation {
 
   # FX & Currency Pair Mutations
   recordFXRateOverride(input: RecordFXRateOverrideInput!): RecordFXRateOverridePayload!
+
+  # Multi-Broker CSV Ingestion Mutations
+  importTransactions(input: BatchImportTransactionsInput!): BatchImportTransactionsPayload!
+}
+
+input ImportTransactionInput {
+  externalRef: String!
+  symbol: String!
+  type: TransactionType!
+  tradeDate: String! # YYYY-MM-DD
+  settleDate: String # YYYY-MM-DD
+  quantity: Decimal!
+  price: Decimal!
+  amount: Decimal!
+  fee: Decimal!
+  currencyCode: String # Default "AUD"
+  notes: String
+}
+
+input BatchImportTransactionsInput {
+  transactions: [ImportTransactionInput!]!
+  skipDuplicates: Boolean = true
+}
+
+type BatchImportTransactionsPayload {
+  success: Boolean!
+  importedCount: Int!
+  skippedCount: Int!
+  portfolio: Portfolio!
+  message: String!
 }
 
 type InstrumentPrice {

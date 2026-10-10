@@ -146,10 +146,34 @@ INSERT INTO portfolio.transactions (
 )
 RETURNING id;`
 
+	checkExistingExternalRefsSQL = `
+SELECT external_ref
+FROM portfolio.transactions
+WHERE portfolio_id = $1
+  AND external_ref = ANY($2);`
+
+	bulkInsertTransactionsSQL = `
+INSERT INTO portfolio.transactions (
+    portfolio_id, instrument_id, type, trade_date, settle_date,
+    quantity, price, amount, currency_code, fee, fx_rate_to_base,
+    external_ref, notes
+) VALUES (
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+)
+ON CONFLICT (portfolio_id, external_ref) DO NOTHING
+RETURNING id;`
+
 	findInstrumentBySymbolSQL = `
 SELECT id, symbol, exchange_code, name, asset_class, currency_code, isin, is_active
 FROM portfolio.instruments
-WHERE UPPER(symbol) = UPPER($1) AND is_active = true
+WHERE (
+    UPPER(symbol) = UPPER($1)
+    OR UPPER(symbol) = UPPER($1) || '.AX'
+    OR (UPPER($1) LIKE '%.AX' AND UPPER(symbol) = UPPER(REPLACE($1, '.AX', '')))
+    OR (UPPER($1) LIKE '%.ASX' AND UPPER(symbol) = UPPER(REPLACE($1, '.ASX', '')) || '.AX')
+    OR (UPPER($1) LIKE '%.ASX' AND UPPER(symbol) = UPPER(REPLACE($1, '.ASX', '')))
+) AND is_active = true
+ORDER BY CASE WHEN UPPER(symbol) = UPPER($1) THEN 1 ELSE 2 END
 LIMIT 1;`
 
 	listActiveInstrumentsSQL = `
@@ -183,7 +207,14 @@ FROM portfolio.transactions t
 LEFT JOIN portfolio.instruments i ON i.id = t.instrument_id
 WHERE t.portfolio_id = $1
   AND ($2::text IS NULL OR t.type::text = $2)
-  AND ($3::text IS NULL OR UPPER(i.symbol) = UPPER($3))
+  AND (
+    $3::text IS NULL 
+    OR UPPER(i.symbol) = UPPER($3)
+    OR UPPER(i.symbol) = UPPER($3) || '.AX'
+    OR (UPPER($3) LIKE '%.AX' AND UPPER(i.symbol) = UPPER(REPLACE($3, '.AX', '')))
+    OR (UPPER($3) LIKE '%.ASX' AND UPPER(i.symbol) = UPPER(REPLACE($3, '.ASX', '')) || '.AX')
+    OR (UPPER($3) LIKE '%.ASX' AND UPPER(i.symbol) = UPPER(REPLACE($3, '.ASX', '')))
+  )
 ORDER BY t.trade_date DESC, t.created_at DESC, t.id DESC
 LIMIT $4 OFFSET $5;`
 

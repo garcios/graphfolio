@@ -746,3 +746,292 @@ func TestPortfolioService_RebuildValuations(t *testing.T) {
 		}
 	})
 }
+
+func TestPortfolioService_CheckTransactionDuplicates(t *testing.T) {
+	ctx := context.Background()
+	userID := "user-123"
+	portfolioID := uuid.New()
+
+	mockPortfolio := &domain.Portfolio{
+		ID:           portfolioID,
+		UserID:       uuid.New(),
+		Name:         "Core Portfolio",
+		BaseCurrency: "AUD",
+	}
+
+	t.Run("empty external refs returns empty slice", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+
+		refs, err := svc.CheckTransactionDuplicates(ctx, userID, []string{})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(refs) != 0 {
+			t.Fatalf("expected 0 refs, got %d", len(refs))
+		}
+	})
+
+	t.Run("queries repository and returns existing refs", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		queryRefs := []string{"cs_123", "nt_456"}
+		existing := []string{"cs_123"}
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().FindExistingExternalRefs(ctx, portfolioID, queryRefs).Return(existing, nil)
+
+		refs, err := svc.CheckTransactionDuplicates(ctx, userID, queryRefs)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(refs) != 1 || refs[0] != "cs_123" {
+			t.Fatalf("expected ['cs_123'], got %v", refs)
+		}
+	})
+
+	t.Run("portfolio not found returns error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(nil, repository.ErrPortfolioNotFound)
+
+		_, err := svc.CheckTransactionDuplicates(ctx, userID, []string{"ref1"})
+		if !errors.Is(err, repository.ErrPortfolioNotFound) {
+			t.Fatalf("expected ErrPortfolioNotFound, got %v", err)
+		}
+	})
+}
+
+func TestPortfolioService_BatchImportTransactions(t *testing.T) {
+	ctx := context.Background()
+	userID := "user-123"
+	portfolioID := uuid.New()
+	instrumentID := uuid.New()
+
+	mockPortfolio := &domain.Portfolio{
+		ID:              portfolioID,
+		UserID:          uuid.New(),
+		Name:            "Core Portfolio",
+		BaseCurrency:    "AUD",
+		CostBasisMethod: domain.CostBasisMethodFIFO,
+		CreatedAt:       time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+	}
+
+	mockInst := &domain.Instrument{
+		ID:           instrumentID,
+		Symbol:       "BHP",
+		ExchangeCode: "XASX",
+		Name:         "BHP Group Limited",
+		AssetClass:   "EQUITY",
+		CurrencyCode: "AUD",
+		IsActive:     true,
+	}
+
+	tradeDate := time.Date(2025, 5, 10, 0, 0, 0, 0, time.UTC)
+
+	t.Run("empty transactions list returns zero counts", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		// For GetPortfolioSummary:
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetHoldingsWithMarketData(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetCashBalances(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetLatestValuation(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetCashFXRates(ctx, "AUD").Return(map[string]decimal.Decimal{}, nil)
+
+		res, err := svc.BatchImportTransactions(ctx, domain.BatchImportInput{
+			UserID:         userID,
+			Transactions:   nil,
+			SkipDuplicates: true,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res.ImportedCount != 0 || res.SkippedCount != 0 {
+			t.Fatalf("expected 0 imported, 0 skipped; got %d, %d", res.ImportedCount, res.SkippedCount)
+		}
+	})
+
+	t.Run("successfully imports new transactions and skips duplicates", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		mockValuation := serviceMocks.NewMockValuationService(ctrl)
+		svc := service.NewPortfolioService(mockRepo, service.WithValuationService(mockValuation))
+
+		items := []domain.ImportTransactionItem{
+			{
+				Type:        domain.TxTypeBuy,
+				Symbol:      "BHP",
+				TradeDate:   tradeDate,
+				Quantity:    decimal.NewFromInt(100),
+				Price:       decimal.RequireFromString("45.00"),
+				Amount:      decimal.RequireFromString("4519.95"),
+				Fee:         decimal.RequireFromString("19.95"),
+				ExternalRef: "cs_existing_1",
+			},
+			{
+				Type:        domain.TxTypeBuy,
+				Symbol:      "BHP",
+				TradeDate:   tradeDate,
+				Quantity:    decimal.NewFromInt(50),
+				Price:       decimal.RequireFromString("46.00"),
+				Amount:      decimal.RequireFromString("2319.95"),
+				Fee:         decimal.RequireFromString("19.95"),
+				ExternalRef: "cs_new_2",
+			},
+		}
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		// Check duplicates
+		mockRepo.EXPECT().FindExistingExternalRefs(ctx, portfolioID, []string{"cs_existing_1", "cs_new_2"}).
+			Return([]string{"cs_existing_1"}, nil)
+
+		// Item 2 instrument resolution
+		mockRepo.EXPECT().FindInstrumentBySymbol(ctx, "BHP").Return(mockInst, nil)
+
+		// Batch insert of item 2 only
+		mockRepo.EXPECT().BatchInsertTransactions(ctx, gomock.Any()).
+			DoAndReturn(func(ctx context.Context, txs []domain.Transaction) (int, error) {
+				if len(txs) != 1 {
+					t.Fatalf("expected 1 tx to insert, got %d", len(txs))
+				}
+				if *txs[0].ExternalRef != "cs_new_2" {
+					t.Fatalf("expected cs_new_2, got %v", *txs[0].ExternalRef)
+				}
+				return 1, nil
+			})
+
+		// Rebuild projections calls
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetTransactions(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetCorporateActions(ctx, gomock.Any()).Return([]domain.CorporateAction{}, nil)
+		mockRepo.EXPECT().SaveProjectionsTx(ctx, portfolioID, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+		// Valuation backfill called once with earliest trade date
+		mockValuation.EXPECT().BackfillPortfolioValuations(ctx, portfolioID, tradeDate).Return(nil)
+
+		// GetPortfolioSummary calls
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetHoldingsWithMarketData(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetCashBalances(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetLatestValuation(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetCashFXRates(ctx, "AUD").Return(map[string]decimal.Decimal{}, nil)
+
+		res, err := svc.BatchImportTransactions(ctx, domain.BatchImportInput{
+			UserID:         userID,
+			Transactions:   items,
+			SkipDuplicates: true,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res.ImportedCount != 1 {
+			t.Fatalf("expected 1 imported, got %d", res.ImportedCount)
+		}
+		if res.SkippedCount != 1 {
+			t.Fatalf("expected 1 skipped, got %d", res.SkippedCount)
+		}
+	})
+
+	t.Run("missing instrument auto-provisions successfully", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		mockValuation := serviceMocks.NewMockValuationService(ctrl)
+		svc := service.NewPortfolioService(mockRepo, service.WithValuationService(mockValuation))
+
+		items := []domain.ImportTransactionItem{
+			{
+				Type:        domain.TxTypeBuy,
+				Symbol:      "NEWASX",
+				TradeDate:   tradeDate,
+				Quantity:    decimal.NewFromInt(10),
+				Price:       decimal.RequireFromString("10.00"),
+				Amount:      decimal.RequireFromString("100.00"),
+				ExternalRef: "ref_new",
+			},
+		}
+
+		newInst := &domain.Instrument{
+			ID:           uuid.New(),
+			Symbol:       "NEWASX.AX",
+			ExchangeCode: "XASX",
+			CurrencyCode: "AUD",
+		}
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().FindExistingExternalRefs(ctx, portfolioID, []string{"ref_new"}).Return(nil, nil)
+		mockRepo.EXPECT().FindInstrumentBySymbol(ctx, "NEWASX").Return(nil, repository.ErrInstrumentNotFound)
+		mockRepo.EXPECT().CreateInstrument(ctx, gomock.Any()).Return(newInst, nil)
+		mockRepo.EXPECT().BatchInsertTransactions(ctx, gomock.Len(1)).Return(1, nil)
+
+		// Rebuild projections calls
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetTransactions(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetCorporateActions(ctx, gomock.Any()).Return([]domain.CorporateAction{}, nil)
+		mockRepo.EXPECT().SaveProjectionsTx(ctx, portfolioID, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+		// Valuation backfill
+		mockValuation.EXPECT().BackfillPortfolioValuations(ctx, portfolioID, tradeDate).Return(nil)
+
+		// GetPortfolioSummary calls
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetHoldingsWithMarketData(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetCashBalances(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetLatestValuation(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetCashFXRates(ctx, "AUD").Return(map[string]decimal.Decimal{}, nil)
+
+		res, err := svc.BatchImportTransactions(ctx, domain.BatchImportInput{
+			UserID:         userID,
+			Transactions:   items,
+			SkipDuplicates: true,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res.ImportedCount != 1 {
+			t.Fatalf("expected 1 imported, got %d", res.ImportedCount)
+		}
+	})
+
+	t.Run("missing instrument auto-provision failure returns error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		items := []domain.ImportTransactionItem{
+			{
+				Type:        domain.TxTypeBuy,
+				Symbol:      "UNKNOWN",
+				TradeDate:   tradeDate,
+				Quantity:    decimal.NewFromInt(10),
+				Price:       decimal.RequireFromString("10.00"),
+				Amount:      decimal.RequireFromString("100.00"),
+				ExternalRef: "ref_unknown",
+			},
+		}
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().FindExistingExternalRefs(ctx, portfolioID, []string{"ref_unknown"}).Return(nil, nil)
+		mockRepo.EXPECT().FindInstrumentBySymbol(ctx, "UNKNOWN").Return(nil, repository.ErrInstrumentNotFound)
+		mockRepo.EXPECT().CreateInstrument(ctx, gomock.Any()).Return(nil, errors.New("db error"))
+
+		_, err := svc.BatchImportTransactions(ctx, domain.BatchImportInput{
+			UserID:         userID,
+			Transactions:   items,
+			SkipDuplicates: true,
+		})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+	})
+}

@@ -50,6 +50,14 @@ type ComplexityRoot struct {
 		Warnings      func(childComplexity int) int
 	}
 
+	BatchImportTransactionsPayload struct {
+		ImportedCount func(childComplexity int) int
+		Message       func(childComplexity int) int
+		Portfolio     func(childComplexity int) int
+		SkippedCount  func(childComplexity int) int
+		Success       func(childComplexity int) int
+	}
+
 	Currency struct {
 		Code   func(childComplexity int) int
 		Name   func(childComplexity int) int
@@ -198,6 +206,7 @@ type ComplexityRoot struct {
 		CreateInstrument      func(childComplexity int, input model.CreateInstrumentInput) int
 		DeleteInstrument      func(childComplexity int, id string) int
 		DeleteTransaction     func(childComplexity int, id string) int
+		ImportTransactions    func(childComplexity int, input model.BatchImportTransactionsInput) int
 		RecordFXRateOverride  func(childComplexity int, input model.RecordFXRateOverrideInput) int
 		RecordPriceOverride   func(childComplexity int, input model.RecordPriceOverrideInput) int
 		TriggerBackfill       func(childComplexity int, input model.TriggerBackfillInput) int
@@ -224,19 +233,20 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		AllInstruments      func(childComplexity int, isActive *bool, search *string) int
-		CurrencyPairHistory func(childComplexity int, baseCurrency string, quoteCurrency string, timeframe model.HistoryTimeframe) int
-		CurrencyPairs       func(childComplexity int) int
-		Exchanges           func(childComplexity int) int
-		FxRates             func(childComplexity int, baseCurrency *string, quoteCurrency *string, fromDate *string, toDate *string, limit *int, offset *int) int
-		IngestionStatus     func(childComplexity int) int
-		InstrumentPrices    func(childComplexity int, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) int
-		Instruments         func(childComplexity int) int
-		Portfolio           func(childComplexity int) int
-		PortfolioHistory    func(childComplexity int, timeframe model.HistoryTimeframe) int
-		SupportedCurrencies func(childComplexity int) int
-		Transactions        func(childComplexity int, typeArg *model.TransactionType, symbol *string, page *int, pageSize *int) int
-		UserPreferences     func(childComplexity int) int
+		AllInstruments             func(childComplexity int, isActive *bool, search *string) int
+		CheckTransactionDuplicates func(childComplexity int, externalRefs []string) int
+		CurrencyPairHistory        func(childComplexity int, baseCurrency string, quoteCurrency string, timeframe model.HistoryTimeframe) int
+		CurrencyPairs              func(childComplexity int) int
+		Exchanges                  func(childComplexity int) int
+		FxRates                    func(childComplexity int, baseCurrency *string, quoteCurrency *string, fromDate *string, toDate *string, limit *int, offset *int) int
+		IngestionStatus            func(childComplexity int) int
+		InstrumentPrices           func(childComplexity int, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) int
+		Instruments                func(childComplexity int) int
+		Portfolio                  func(childComplexity int) int
+		PortfolioHistory           func(childComplexity int, timeframe model.HistoryTimeframe) int
+		SupportedCurrencies        func(childComplexity int) int
+		Transactions               func(childComplexity int, typeArg *model.TransactionType, symbol *string, page *int, pageSize *int) int
+		UserPreferences            func(childComplexity int) int
 	}
 
 	RecordFXRateOverridePayload struct {
@@ -310,6 +320,7 @@ type MutationResolver interface {
 	TriggerBackfill(ctx context.Context, input model.TriggerBackfillInput) (*model.BackfillPayload, error)
 	UpdateUserPreferences(ctx context.Context, input model.UpdateUserPreferencesInput) (*model.UpdateUserPreferencesPayload, error)
 	RecordFXRateOverride(ctx context.Context, input model.RecordFXRateOverrideInput) (*model.RecordFXRateOverridePayload, error)
+	ImportTransactions(ctx context.Context, input model.BatchImportTransactionsInput) (*model.BatchImportTransactionsPayload, error)
 }
 type QueryResolver interface {
 	Portfolio(ctx context.Context) (*model.Portfolio, error)
@@ -325,6 +336,7 @@ type QueryResolver interface {
 	CurrencyPairs(ctx context.Context) ([]*model.CurrencyPair, error)
 	CurrencyPairHistory(ctx context.Context, baseCurrency string, quoteCurrency string, timeframe model.HistoryTimeframe) (*model.CurrencyPairHistory, error)
 	FxRates(ctx context.Context, baseCurrency *string, quoteCurrency *string, fromDate *string, toDate *string, limit *int, offset *int) (*model.FXRatesConnection, error)
+	CheckTransactionDuplicates(ctx context.Context, externalRefs []string) ([]string, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -388,6 +400,37 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.BackfillPayload.Warnings(childComplexity), true
+
+	case "BatchImportTransactionsPayload.importedCount":
+		if e.ComplexityRoot.BatchImportTransactionsPayload.ImportedCount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BatchImportTransactionsPayload.ImportedCount(childComplexity), true
+	case "BatchImportTransactionsPayload.message":
+		if e.ComplexityRoot.BatchImportTransactionsPayload.Message == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BatchImportTransactionsPayload.Message(childComplexity), true
+	case "BatchImportTransactionsPayload.portfolio":
+		if e.ComplexityRoot.BatchImportTransactionsPayload.Portfolio == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BatchImportTransactionsPayload.Portfolio(childComplexity), true
+	case "BatchImportTransactionsPayload.skippedCount":
+		if e.ComplexityRoot.BatchImportTransactionsPayload.SkippedCount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BatchImportTransactionsPayload.SkippedCount(childComplexity), true
+	case "BatchImportTransactionsPayload.success":
+		if e.ComplexityRoot.BatchImportTransactionsPayload.Success == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BatchImportTransactionsPayload.Success(childComplexity), true
 
 	case "Currency.code":
 		if e.ComplexityRoot.Currency.Code == nil {
@@ -1002,6 +1045,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.DeleteTransaction(childComplexity, args["id"].(string)), true
+	case "Mutation.importTransactions":
+		if e.ComplexityRoot.Mutation.ImportTransactions == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_importTransactions_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.ImportTransactions(childComplexity, args["input"].(model.BatchImportTransactionsInput)), true
 	case "Mutation.recordFXRateOverride":
 		if e.ComplexityRoot.Mutation.RecordFXRateOverride == nil {
 			break
@@ -1148,6 +1202,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.AllInstruments(childComplexity, args["isActive"].(*bool), args["search"].(*string)), true
+	case "Query.checkTransactionDuplicates":
+		if e.ComplexityRoot.Query.CheckTransactionDuplicates == nil {
+			break
+		}
+
+		args, err := ec.field_Query_checkTransactionDuplicates_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.CheckTransactionDuplicates(childComplexity, args["externalRefs"].([]string)), true
 	case "Query.currencyPairHistory":
 		if e.ComplexityRoot.Query.CurrencyPairHistory == nil {
 			break
@@ -1467,7 +1532,9 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	ec := newExecutionContext(opCtx, e, make(chan graphql.DeferredResult))
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputAddTransactionInput,
+		ec.unmarshalInputBatchImportTransactionsInput,
 		ec.unmarshalInputCreateInstrumentInput,
+		ec.unmarshalInputImportTransactionInput,
 		ec.unmarshalInputRecordFXRateOverrideInput,
 		ec.unmarshalInputRecordPriceOverrideInput,
 		ec.unmarshalInputTriggerBackfillInput,
@@ -1591,6 +1658,22 @@ func (ec *executionContext) childFields_BackfillPayload(ctx context.Context, fie
 		return ec.fieldContext_BackfillPayload_warnings(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type BackfillPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_BatchImportTransactionsPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "success":
+		return ec.fieldContext_BatchImportTransactionsPayload_success(ctx, field)
+	case "importedCount":
+		return ec.fieldContext_BatchImportTransactionsPayload_importedCount(ctx, field)
+	case "skippedCount":
+		return ec.fieldContext_BatchImportTransactionsPayload_skippedCount(ctx, field)
+	case "portfolio":
+		return ec.fieldContext_BatchImportTransactionsPayload_portfolio(ctx, field)
+	case "message":
+		return ec.fieldContext_BatchImportTransactionsPayload_message(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type BatchImportTransactionsPayload", field.Name)
 }
 
 func (ec *executionContext) childFields_Currency(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -2195,6 +2278,20 @@ func (ec *executionContext) field_Mutation_deleteTransaction_args(ctx context.Co
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_importTransactions_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.BatchImportTransactionsInput, error) {
+			return ec.unmarshalNBatchImportTransactionsInput2bffᚋgraphᚋmodelᚐBatchImportTransactionsInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_recordFXRateOverride_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -2320,6 +2417,20 @@ func (ec *executionContext) field_Query_allInstruments_args(ctx context.Context,
 		return nil, err
 	}
 	args["search"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_checkTransactionDuplicates_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "externalRefs",
+		func(ctx context.Context, v any) ([]string, error) {
+			return ec.unmarshalNString2ᚕstringᚄ(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["externalRefs"] = arg0
 	return args, nil
 }
 
@@ -2733,6 +2844,130 @@ func (ec *executionContext) _BackfillPayload_warnings(ctx context.Context, field
 }
 func (ec *executionContext) fieldContext_BackfillPayload_warnings(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("BackfillPayload", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _BatchImportTransactionsPayload_success(ctx context.Context, field graphql.CollectedField, obj *model.BatchImportTransactionsPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BatchImportTransactionsPayload_success(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Success, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BatchImportTransactionsPayload_success(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BatchImportTransactionsPayload", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _BatchImportTransactionsPayload_importedCount(ctx context.Context, field graphql.CollectedField, obj *model.BatchImportTransactionsPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BatchImportTransactionsPayload_importedCount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ImportedCount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BatchImportTransactionsPayload_importedCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BatchImportTransactionsPayload", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _BatchImportTransactionsPayload_skippedCount(ctx context.Context, field graphql.CollectedField, obj *model.BatchImportTransactionsPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BatchImportTransactionsPayload_skippedCount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.SkippedCount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BatchImportTransactionsPayload_skippedCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BatchImportTransactionsPayload", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _BatchImportTransactionsPayload_portfolio(ctx context.Context, field graphql.CollectedField, obj *model.BatchImportTransactionsPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BatchImportTransactionsPayload_portfolio(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Portfolio, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Portfolio) graphql.Marshaler {
+			return ec.marshalNPortfolio2ᚖbffᚋgraphᚋmodelᚐPortfolio(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BatchImportTransactionsPayload_portfolio(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BatchImportTransactionsPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Portfolio(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BatchImportTransactionsPayload_message(ctx context.Context, field graphql.CollectedField, obj *model.BatchImportTransactionsPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BatchImportTransactionsPayload_message(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Message, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BatchImportTransactionsPayload_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BatchImportTransactionsPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Currency_code(ctx context.Context, field graphql.CollectedField, obj *model.Currency) (ret graphql.Marshaler) {
@@ -5381,6 +5616,50 @@ func (ec *executionContext) fieldContext_Mutation_recordFXRateOverride(ctx conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_importTransactions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_importTransactions(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().ImportTransactions(ctx, fc.Args["input"].(model.BatchImportTransactionsInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.BatchImportTransactionsPayload) graphql.Marshaler {
+			return ec.marshalNBatchImportTransactionsPayload2ᚖbffᚋgraphᚋmodelᚐBatchImportTransactionsPayload(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_importTransactions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_BatchImportTransactionsPayload(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_importTransactions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Portfolio_totalValue(ctx context.Context, field graphql.CollectedField, obj *model.Portfolio) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -6188,6 +6467,50 @@ func (ec *executionContext) fieldContext_Query_fxRates(ctx context.Context, fiel
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_fxRates_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_checkTransactionDuplicates(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_checkTransactionDuplicates(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().CheckTransactionDuplicates(ctx, fc.Args["externalRefs"].([]string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []string) graphql.Marshaler {
+			return ec.marshalNString2ᚕstringᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_checkTransactionDuplicates(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_checkTransactionDuplicates_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -8296,6 +8619,47 @@ func (ec *executionContext) unmarshalInputAddTransactionInput(ctx context.Contex
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputBatchImportTransactionsInput(ctx context.Context, obj any) (model.BatchImportTransactionsInput, error) {
+	var it model.BatchImportTransactionsInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	if _, present := asMap["skipDuplicates"]; !present {
+		asMap["skipDuplicates"] = true
+	}
+
+	fieldsInOrder := [...]string{"transactions", "skipDuplicates"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "transactions":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("transactions"))
+			data, err := ec.unmarshalNImportTransactionInput2ᚕᚖbffᚋgraphᚋmodelᚐImportTransactionInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Transactions = data
+		case "skipDuplicates":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("skipDuplicates"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SkipDuplicates = data
+		}
+	}
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreateInstrumentInput(ctx context.Context, obj any) (model.CreateInstrumentInput, error) {
 	var it model.CreateInstrumentInput
 	if obj == nil {
@@ -8356,6 +8720,106 @@ func (ec *executionContext) unmarshalInputCreateInstrumentInput(ctx context.Cont
 				return it, err
 			}
 			it.Isin = data
+		}
+	}
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputImportTransactionInput(ctx context.Context, obj any) (model.ImportTransactionInput, error) {
+	var it model.ImportTransactionInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"externalRef", "symbol", "type", "tradeDate", "settleDate", "quantity", "price", "amount", "fee", "currencyCode", "notes"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "externalRef":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("externalRef"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExternalRef = data
+		case "symbol":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("symbol"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Symbol = data
+		case "type":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
+			data, err := ec.unmarshalNTransactionType2bffᚋgraphᚋmodelᚐTransactionType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Type = data
+		case "tradeDate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tradeDate"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TradeDate = data
+		case "settleDate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("settleDate"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SettleDate = data
+		case "quantity":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("quantity"))
+			data, err := ec.unmarshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Quantity = data
+		case "price":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("price"))
+			data, err := ec.unmarshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Price = data
+		case "amount":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("amount"))
+			data, err := ec.unmarshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Amount = data
+		case "fee":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fee"))
+			data, err := ec.unmarshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Fee = data
+		case "currencyCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyCode"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrencyCode = data
+		case "notes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Notes = data
 		}
 	}
 	return it, nil
@@ -8736,6 +9200,64 @@ func (ec *executionContext) _BackfillPayload(ctx context.Context, sel ast.Select
 			}
 		case "warnings":
 			out.Values[i] = ec._BackfillPayload_warnings(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var batchImportTransactionsPayloadImplementors = []string{"BatchImportTransactionsPayload"}
+
+func (ec *executionContext) _BatchImportTransactionsPayload(ctx context.Context, sel ast.SelectionSet, obj *model.BatchImportTransactionsPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, batchImportTransactionsPayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BatchImportTransactionsPayload")
+		case "success":
+			out.Values[i] = ec._BatchImportTransactionsPayload_success(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "importedCount":
+			out.Values[i] = ec._BatchImportTransactionsPayload_importedCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "skippedCount":
+			out.Values[i] = ec._BatchImportTransactionsPayload_skippedCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "portfolio":
+			out.Values[i] = ec._BatchImportTransactionsPayload_portfolio(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "message":
+			out.Values[i] = ec._BatchImportTransactionsPayload_message(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -9871,6 +10393,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "importTransactions":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_importTransactions(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -10307,6 +10836,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_fxRates(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "checkTransactionDuplicates":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_checkTransactionDuplicates(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -11172,6 +11723,21 @@ func (ec *executionContext) marshalNBackfillPayload2ᚖbffᚋgraphᚋmodelᚐBac
 	return ec._BackfillPayload(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNBatchImportTransactionsInput2bffᚋgraphᚋmodelᚐBatchImportTransactionsInput(ctx context.Context, v any) (model.BatchImportTransactionsInput, error) {
+	res, err := ec.unmarshalInputBatchImportTransactionsInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNBatchImportTransactionsPayload2ᚖbffᚋgraphᚋmodelᚐBatchImportTransactionsPayload(ctx context.Context, sel ast.SelectionSet, v *model.BatchImportTransactionsPayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BatchImportTransactionsPayload(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v any) (bool, error) {
 	res, err := graphql.UnmarshalBoolean(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -11423,6 +11989,25 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNImportTransactionInput2ᚕᚖbffᚋgraphᚋmodelᚐImportTransactionInputᚄ(ctx context.Context, v any) ([]*model.ImportTransactionInput, error) {
+	vSlice := graphql.CoerceList(v)
+	var err error
+	res := make([]*model.ImportTransactionInput, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNImportTransactionInput2ᚖbffᚋgraphᚋmodelᚐImportTransactionInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNImportTransactionInput2ᚖbffᚋgraphᚋmodelᚐImportTransactionInput(ctx context.Context, v any) (*model.ImportTransactionInput, error) {
+	res, err := ec.unmarshalInputImportTransactionInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalNIngestionStatus2ᚖbffᚋgraphᚋmodelᚐIngestionStatus(ctx context.Context, sel ast.SelectionSet, v *model.IngestionStatus) graphql.Marshaler {

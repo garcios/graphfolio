@@ -34,6 +34,19 @@ type BackfillPayload struct {
 	Warnings      []string `json:"warnings"`
 }
 
+type BatchImportTransactionsInput struct {
+	Transactions   []*ImportTransactionInput `json:"transactions"`
+	SkipDuplicates *bool                     `json:"skipDuplicates,omitempty"`
+}
+
+type BatchImportTransactionsPayload struct {
+	Success       bool       `json:"success"`
+	ImportedCount int        `json:"importedCount"`
+	SkippedCount  int        `json:"skippedCount"`
+	Portfolio     *Portfolio `json:"portfolio"`
+	Message       string     `json:"message"`
+}
+
 type CreateInstrumentInput struct {
 	Symbol       string  `json:"symbol"`
 	ExchangeCode string  `json:"exchangeCode"`
@@ -124,6 +137,20 @@ type FeedHealthStatus struct {
 	Schedule string `json:"schedule"`
 	LastRun  string `json:"lastRun"`
 	Details  string `json:"details"`
+}
+
+type ImportTransactionInput struct {
+	ExternalRef  string          `json:"externalRef"`
+	Symbol       string          `json:"symbol"`
+	Type         TransactionType `json:"type"`
+	TradeDate    string          `json:"tradeDate"`
+	SettleDate   *string         `json:"settleDate,omitempty"`
+	Quantity     Decimal         `json:"quantity"`
+	Price        Decimal         `json:"price"`
+	Amount       Decimal         `json:"amount"`
+	Fee          Decimal         `json:"fee"`
+	CurrencyCode *string         `json:"currencyCode,omitempty"`
+	Notes        *string         `json:"notes,omitempty"`
 }
 
 type IngestionStatus struct {

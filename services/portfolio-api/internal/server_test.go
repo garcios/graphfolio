@@ -11,6 +11,7 @@ import (
 	"portfolio-api/internal/service"
 	mocks "portfolio-api/internal/service/mocks"
 
+	commonpb "graphfolio/proto/common/v1"
 	pb "graphfolio/proto/portfolio/v1"
 
 	"github.com/google/uuid"
@@ -2296,6 +2297,135 @@ func TestPortfolioServer_TriggerBackfill(t *testing.T) {
 		})
 		if err == nil {
 			t.Fatalf("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.Unavailable {
+			t.Errorf("expected Unavailable, got %v", err)
+		}
+	})
+}
+
+func TestPortfolioServer_CheckTransactionDuplicates(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().CheckTransactionDuplicates(ctx, "user-123", []string{"ref-1", "ref-2"}).
+			Return([]string{"ref-1"}, nil)
+
+		res, err := server.CheckTransactionDuplicates(ctx, &pb.CheckTransactionDuplicatesRequest{
+			UserId:       "user-123",
+			ExternalRefs: []string{"ref-1", "ref-2"},
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(res.ExistingExternalRefs) != 1 || res.ExistingExternalRefs[0] != "ref-1" {
+			t.Fatalf("unexpected response: %v", res.ExistingExternalRefs)
+		}
+	})
+
+	t.Run("service unavailable when svc is nil", func(t *testing.T) {
+		server := NewPortfolioServer(nil)
+		_, err := server.CheckTransactionDuplicates(ctx, &pb.CheckTransactionDuplicatesRequest{
+			UserId: "user-123",
+		})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.Unavailable {
+			t.Errorf("expected Unavailable, got %v", err)
+		}
+	})
+}
+
+func TestPortfolioServer_BatchImportTransactions(t *testing.T) {
+	ctx := context.Background()
+
+	mockSummary := &domain.PortfolioSummary{
+		Portfolio: domain.Portfolio{
+			ID:           uuid.New(),
+			UserID:       uuid.New(),
+			Name:         "Main Tech",
+			BaseCurrency: "AUD",
+		},
+		TotalValue: domain.Money{
+			Amount:       decimal.RequireFromString("1000.00"),
+			CurrencyCode: "AUD",
+		},
+	}
+
+	t.Run("success", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().BatchImportTransactions(ctx, gomock.Any()).
+			Return(&domain.BatchImportResult{
+				ImportedCount: 5,
+				SkippedCount:  2,
+				Portfolio:     mockSummary,
+			}, nil)
+
+		res, err := server.BatchImportTransactions(ctx, &pb.BatchImportTransactionsRequest{
+			UserId: "user-123",
+			Transactions: []*pb.ImportTransactionItem{
+				{
+					Type:       pb.TransactionType_TRANSACTION_TYPE_BUY,
+					Symbol:     "BHP",
+					TradeDate:  "2025-05-10",
+					Quantity:    &commonpb.Decimal{Value: "100"},
+					Price:       &commonpb.Money{Amount: &commonpb.Decimal{Value: "45.00"}, CurrencyCode: "AUD"},
+					Amount:      &commonpb.Money{Amount: &commonpb.Decimal{Value: "4519.95"}, CurrencyCode: "AUD"},
+					Fee:         &commonpb.Money{Amount: &commonpb.Decimal{Value: "19.95"}, CurrencyCode: "AUD"},
+					ExternalRef: "cs_123",
+				},
+			},
+			SkipDuplicates: true,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !res.Success || res.ImportedCount != 5 || res.SkippedCount != 2 {
+			t.Fatalf("unexpected response: %+v", res)
+		}
+	})
+
+	t.Run("invalid trade date returns InvalidArgument", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		_, err := server.BatchImportTransactions(ctx, &pb.BatchImportTransactionsRequest{
+			UserId: "user-123",
+			Transactions: []*pb.ImportTransactionItem{
+				{
+					Type:      pb.TransactionType_TRANSACTION_TYPE_BUY,
+					Symbol:    "BHP",
+					TradeDate: "invalid-date",
+				},
+			},
+		})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", err)
+		}
+	})
+
+	t.Run("service unavailable when svc is nil", func(t *testing.T) {
+		server := NewPortfolioServer(nil)
+		_, err := server.BatchImportTransactions(ctx, &pb.BatchImportTransactionsRequest{
+			UserId: "user-123",
+		})
+		if err == nil {
+			t.Fatal("expected error, got nil")
 		}
 		st, ok := status.FromError(err)
 		if !ok || st.Code() != codes.Unavailable {

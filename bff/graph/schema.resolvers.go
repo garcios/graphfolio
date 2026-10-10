@@ -279,6 +279,67 @@ func (r *mutationResolver) RecordFXRateOverride(ctx context.Context, input model
 	}, nil
 }
 
+// ImportTransactions is the resolver for the importTransactions field.
+func (r *mutationResolver) ImportTransactions(ctx context.Context, input model.BatchImportTransactionsInput) (*model.BatchImportTransactionsPayload, error) {
+	var items []*pb.ImportTransactionItem
+	for _, item := range input.Transactions {
+		currency := "AUD"
+		if item.CurrencyCode != nil && *item.CurrencyCode != "" {
+			currency = *item.CurrencyCode
+		}
+
+		qty := toProtoDecimal(&item.Quantity)
+		price := toProtoMoney(&item.Price, currency)
+		amount := toProtoMoney(&item.Amount, currency)
+		fee := toProtoMoney(&item.Fee, currency)
+
+		var settleDate string
+		if item.SettleDate != nil {
+			settleDate = *item.SettleDate
+		}
+
+		var notes string
+		if item.Notes != nil {
+			notes = *item.Notes
+		}
+
+		items = append(items, &pb.ImportTransactionItem{
+			Type:        toProtoTransactionType(item.Type),
+			Symbol:      item.Symbol,
+			TradeDate:   item.TradeDate,
+			SettleDate:  settleDate,
+			Quantity:    qty,
+			Price:       price,
+			Amount:      amount,
+			Fee:         fee,
+			ExternalRef: item.ExternalRef,
+			Notes:       notes,
+		})
+	}
+
+	skipDuplicates := true
+	if input.SkipDuplicates != nil {
+		skipDuplicates = *input.SkipDuplicates
+	}
+
+	resp, err := r.PortfolioClient.BatchImportTransactions(ctx, &pb.BatchImportTransactionsRequest{
+		UserId:         "1",
+		Transactions:   items,
+		SkipDuplicates: skipDuplicates,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.BatchImportTransactionsPayload{
+		Success:       resp.Success,
+		ImportedCount: int(resp.ImportedCount),
+		SkippedCount:  int(resp.SkippedCount),
+		Portfolio:     toModelPortfolio(resp.Portfolio),
+		Message:       resp.Message,
+	}, nil
+}
+
 // Portfolio is the resolver for the portfolio field.
 func (r *queryResolver) Portfolio(ctx context.Context) (*model.Portfolio, error) {
 	var portResp *pb.GetPortfolioResponse
@@ -510,6 +571,21 @@ func (r *queryResolver) FxRates(ctx context.Context, baseCurrency *string, quote
 		return nil, err
 	}
 	return toModelFXRatesConnection(resp), nil
+}
+
+// CheckTransactionDuplicates is the resolver for the checkTransactionDuplicates field.
+func (r *queryResolver) CheckTransactionDuplicates(ctx context.Context, externalRefs []string) ([]string, error) {
+	resp, err := r.PortfolioClient.CheckTransactionDuplicates(ctx, &pb.CheckTransactionDuplicatesRequest{
+		UserId:       "1",
+		ExternalRefs: externalRefs,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil || resp.ExistingExternalRefs == nil {
+		return []string{}, nil
+	}
+	return resp.ExistingExternalRefs, nil
 }
 
 // Mutation returns MutationResolver implementation.

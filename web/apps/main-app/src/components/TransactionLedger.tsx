@@ -24,6 +24,7 @@ export interface TransactionItem {
 
 interface TransactionLedgerProps {
   onTransactionDeleted?: (updatedPortfolio: any) => void;
+  onOpenImportModal?: () => void;
   refreshTrigger?: number;
 }
 
@@ -38,6 +39,7 @@ const filterTypes: Array<{ label: string; value: string | null }> = [
 
 export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
   onTransactionDeleted,
+  onOpenImportModal,
   refreshTrigger = 0,
 }) => {
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
@@ -213,6 +215,16 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
             <h3>Transaction Ledger</h3>
             <p>Authoritative record of all cash flows and trades with automatic projection replay</p>
           </div>
+          {onOpenImportModal && (
+            <button
+              type="button"
+              className="btn-import-csv"
+              onClick={onOpenImportModal}
+              title="Import trades from CommSec or nabtrade CSV"
+            >
+              📥 Import CSV
+            </button>
+          )}
         </div>
 
         {/* Toolbar: Filters and Search */}

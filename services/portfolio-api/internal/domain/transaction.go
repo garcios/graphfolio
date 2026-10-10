@@ -29,6 +29,7 @@ type Transaction struct {
 	InstrumentID   *uuid.UUID
 	Type           TransactionType
 	TradeDate      time.Time
+	SettleDate     *time.Time
 	Quantity       *decimal.Decimal
 	Price          *decimal.Decimal
 	Amount         decimal.Decimal
@@ -65,6 +66,32 @@ type AddTransactionInput struct {
 	CurrencyCode *string
 	Fee          *decimal.Decimal
 	Notes        *string
+}
+
+type ImportTransactionItem struct {
+	Type         TransactionType
+	Symbol       string
+	TradeDate    time.Time
+	SettleDate   *time.Time
+	Quantity     decimal.Decimal
+	Price        decimal.Decimal
+	Amount       decimal.Decimal
+	Fee          decimal.Decimal
+	CurrencyCode string
+	ExternalRef  string
+	Notes        string
+}
+
+type BatchImportInput struct {
+	UserID         string
+	Transactions   []ImportTransactionItem
+	SkipDuplicates bool
+}
+
+type BatchImportResult struct {
+	ImportedCount int
+	SkippedCount  int
+	Portfolio     *PortfolioSummary
 }
 
 type TaxLot struct {

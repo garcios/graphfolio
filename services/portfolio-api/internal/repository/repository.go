@@ -29,6 +29,8 @@ type Repository interface {
 	SaveProjectionsTx(ctx context.Context, portfolioID uuid.UUID, lots []domain.TaxLot, disposals []domain.LotDisposal, holdings []domain.Holding, cash []domain.CashBalance) error
 
 	InsertTransaction(ctx context.Context, tx domain.Transaction) (*domain.Transaction, error)
+	FindExistingExternalRefs(ctx context.Context, portfolioID uuid.UUID, externalRefs []string) ([]string, error)
+	BatchInsertTransactions(ctx context.Context, txs []domain.Transaction) (int, error)
 	ListTransactions(ctx context.Context, portfolioID uuid.UUID, filter domain.TransactionFilter) ([]domain.TransactionWithInstrument, int, error)
 	DeleteTransaction(ctx context.Context, portfolioID uuid.UUID, transactionID uuid.UUID) error
 	FindInstrumentBySymbol(ctx context.Context, symbol string) (*domain.Instrument, error)

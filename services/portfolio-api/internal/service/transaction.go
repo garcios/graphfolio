@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -295,4 +296,216 @@ func (s *portfolioService) DeleteTransaction(ctx context.Context, userID string,
 	}
 
 	return summary, nil
+}
+
+func (s *portfolioService) CheckTransactionDuplicates(ctx context.Context, userID string, externalRefs []string) ([]string, error) {
+	if userID == "" {
+		userID = "1"
+	}
+
+	portfolio, err := s.repo.FindPortfolioByUser(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("service: find portfolio: %w", err)
+	}
+
+	if len(externalRefs) == 0 {
+		return []string{}, nil
+	}
+
+	existingRefs, err := s.repo.FindExistingExternalRefs(ctx, portfolio.ID, externalRefs)
+	if err != nil {
+		return nil, fmt.Errorf("service: check duplicates: %w", err)
+	}
+	if existingRefs == nil {
+		existingRefs = []string{}
+	}
+	return existingRefs, nil
+}
+
+func (s *portfolioService) BatchImportTransactions(ctx context.Context, input domain.BatchImportInput) (*domain.BatchImportResult, error) {
+	userID := input.UserID
+	if userID == "" {
+		userID = "1"
+	}
+
+	portfolio, err := s.repo.FindPortfolioByUser(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("service: find portfolio: %w", err)
+	}
+
+	if len(input.Transactions) == 0 {
+		summary, err := s.GetPortfolioSummary(ctx, userID)
+		if err != nil {
+			return nil, fmt.Errorf("service: get summary: %w", err)
+		}
+		return &domain.BatchImportResult{ImportedCount: 0, SkippedCount: 0, Portfolio: summary}, nil
+	}
+
+	// 1. Gather all external refs to check duplicates
+	var refsToCheck []string
+	for _, item := range input.Transactions {
+		if item.ExternalRef != "" {
+			refsToCheck = append(refsToCheck, item.ExternalRef)
+		}
+	}
+
+	existingSet := make(map[string]bool)
+	if len(refsToCheck) > 0 {
+		existingRefs, err := s.repo.FindExistingExternalRefs(ctx, portfolio.ID, refsToCheck)
+		if err != nil {
+			return nil, fmt.Errorf("service: check duplicates: %w", err)
+		}
+		for _, ref := range existingRefs {
+			existingSet[ref] = true
+		}
+	}
+
+	var txsToInsert []domain.Transaction
+	var earliestTradeDate time.Time
+	skippedCount := 0
+
+	// 2. Resolve instruments & build transactions
+	for _, item := range input.Transactions {
+		if input.SkipDuplicates && item.ExternalRef != "" && existingSet[item.ExternalRef] {
+			skippedCount++
+			continue
+		}
+
+		var instID *uuid.UUID
+		currencyCode := portfolio.BaseCurrency
+		var fxRate *decimal.Decimal
+
+		if item.Symbol != "" {
+			inst, err := s.repo.FindInstrumentBySymbol(ctx, item.Symbol)
+			if err != nil {
+				if errors.Is(err, repository.ErrInstrumentNotFound) {
+					currCode := item.CurrencyCode
+					if currCode == "" {
+						currCode = portfolio.BaseCurrency
+					}
+					currCode = strings.ToUpper(strings.TrimSpace(currCode))
+
+					sym := strings.ToUpper(strings.TrimSpace(item.Symbol))
+					exchangeCode := "XNAS"
+					if currCode == "AUD" {
+						exchangeCode = "XASX"
+						if !strings.HasSuffix(sym, ".AX") {
+							sym = sym + ".AX"
+						}
+					}
+
+					newInst, createErr := s.repo.CreateInstrument(ctx, domain.CreateInstrumentInput{
+						Symbol:       sym,
+						ExchangeCode: exchangeCode,
+						Name:         strings.ToUpper(strings.TrimSpace(item.Symbol)),
+						AssetClass:   "EQUITY",
+						CurrencyCode: currCode,
+					})
+					if createErr != nil {
+						if errors.Is(createErr, repository.ErrInstrumentConflict) {
+							inst, err = s.repo.FindInstrumentBySymbol(ctx, item.Symbol)
+							if err != nil {
+								return nil, fmt.Errorf("service: instrument %s resolution failed: %w", item.Symbol, err)
+							}
+						} else {
+							return nil, fmt.Errorf("service: auto-provision instrument %s failed: %w", item.Symbol, createErr)
+						}
+					} else {
+						inst = newInst
+					}
+				} else {
+					return nil, fmt.Errorf("service: instrument %s lookup failed: %w", item.Symbol, err)
+				}
+			}
+			instID = &inst.ID
+			currencyCode = inst.CurrencyCode
+
+			if inst.CurrencyCode != portfolio.BaseCurrency {
+				rate, err := s.repo.GetFXRate(ctx, inst.CurrencyCode, portfolio.BaseCurrency)
+				if err == nil && rate.IsPositive() {
+					fxRate = &rate
+				}
+			}
+		}
+
+		qty := item.Quantity
+		price := item.Price
+		var qtyPtr *decimal.Decimal
+		var pricePtr *decimal.Decimal
+		if !qty.IsZero() {
+			qtyPtr = &qty
+		}
+		if !price.IsZero() {
+			pricePtr = &price
+		}
+
+		var extRefPtr *string
+		if item.ExternalRef != "" {
+			extRefCopy := item.ExternalRef
+			extRefPtr = &extRefCopy
+		}
+
+		var notesPtr *string
+		if item.Notes != "" {
+			notesCopy := item.Notes
+			notesPtr = &notesCopy
+		}
+
+		tx := domain.Transaction{
+			PortfolioID:  portfolio.ID,
+			InstrumentID: instID,
+			Type:         item.Type,
+			TradeDate:    item.TradeDate,
+			SettleDate:   item.SettleDate,
+			Quantity:     qtyPtr,
+			Price:        pricePtr,
+			Amount:       item.Amount,
+			CurrencyCode: currencyCode,
+			Fee:          item.Fee,
+			FXRateToBase: fxRate,
+			ExternalRef:  extRefPtr,
+			Notes:        notesPtr,
+		}
+
+		txsToInsert = append(txsToInsert, tx)
+
+		if earliestTradeDate.IsZero() || item.TradeDate.Before(earliestTradeDate) {
+			earliestTradeDate = item.TradeDate
+		}
+	}
+
+	// 3. Bulk insert to database
+	insertedCount, err := s.repo.BatchInsertTransactions(ctx, txsToInsert)
+	if err != nil {
+		return nil, fmt.Errorf("service: batch insert transactions: %w", err)
+	}
+
+	// 4. Rebuild ledger projections ONCE for the entire batch
+	if insertedCount > 0 {
+		if err := s.RebuildProjections(ctx, userID); err != nil {
+			return nil, fmt.Errorf("service: rebuild projections: %w", err)
+		}
+
+		// 5. Retroactively backfill daily portfolio valuations from earliest trade date
+		if s.valuations != nil && !earliestTradeDate.IsZero() {
+			todayUTC := s.nowFunc().UTC().Truncate(24 * time.Hour)
+			earliestTruncated := earliestTradeDate.UTC().Truncate(24 * time.Hour)
+			if earliestTruncated.Before(todayUTC) {
+				_ = s.valuations.BackfillPortfolioValuations(ctx, portfolio.ID, earliestTruncated)
+			} else {
+				_, _ = s.valuations.SnapshotValuation(ctx, portfolio.ID, todayUTC)
+			}
+		}
+	}
+
+	summary, err := s.GetPortfolioSummary(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("service: get updated summary: %w", err)
+	}
+
+	return &domain.BatchImportResult{
+		ImportedCount: insertedCount,
+		SkippedCount:  skippedCount + (len(txsToInsert) - insertedCount),
+		Portfolio:     summary,
+	}, nil
 }

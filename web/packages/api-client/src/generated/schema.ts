@@ -61,6 +61,7 @@ export interface Query {
     currencyPairs: CurrencyPair[]
     currencyPairHistory: CurrencyPairHistory
     fxRates: FXRatesConnection
+    checkTransactionDuplicates: Scalars['String'][]
     __typename: 'Query'
 }
 
@@ -131,7 +132,17 @@ export interface Mutation {
     triggerBackfill: BackfillPayload
     updateUserPreferences: UpdateUserPreferencesPayload
     recordFXRateOverride: RecordFXRateOverridePayload
+    importTransactions: BatchImportTransactionsPayload
     __typename: 'Mutation'
+}
+
+export interface BatchImportTransactionsPayload {
+    success: Scalars['Boolean']
+    importedCount: Scalars['Int']
+    skippedCount: Scalars['Int']
+    portfolio: Portfolio
+    message: Scalars['String']
+    __typename: 'BatchImportTransactionsPayload'
 }
 
 export interface InstrumentPrice {
@@ -358,6 +369,7 @@ export interface QueryGenqlSelection{
     currencyPairs?: CurrencyPairGenqlSelection
     currencyPairHistory?: (CurrencyPairHistoryGenqlSelection & { __args: {baseCurrency: Scalars['String'], quoteCurrency: Scalars['String'], timeframe: HistoryTimeframe} })
     fxRates?: (FXRatesConnectionGenqlSelection & { __args?: {baseCurrency?: (Scalars['String'] | null), quoteCurrency?: (Scalars['String'] | null), fromDate?: (Scalars['String'] | null), toDate?: (Scalars['String'] | null), limit?: (Scalars['Int'] | null), offset?: (Scalars['Int'] | null)} })
+    checkTransactionDuplicates?: { __args: {externalRefs: Scalars['String'][]} }
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -433,6 +445,21 @@ export interface MutationGenqlSelection{
     triggerBackfill?: (BackfillPayloadGenqlSelection & { __args: {input: TriggerBackfillInput} })
     updateUserPreferences?: (UpdateUserPreferencesPayloadGenqlSelection & { __args: {input: UpdateUserPreferencesInput} })
     recordFXRateOverride?: (RecordFXRateOverridePayloadGenqlSelection & { __args: {input: RecordFXRateOverrideInput} })
+    importTransactions?: (BatchImportTransactionsPayloadGenqlSelection & { __args: {input: BatchImportTransactionsInput} })
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface ImportTransactionInput {externalRef: Scalars['String'],symbol: Scalars['String'],type: TransactionType,tradeDate: Scalars['String'],settleDate?: (Scalars['String'] | null),quantity: Scalars['Decimal'],price: Scalars['Decimal'],amount: Scalars['Decimal'],fee: Scalars['Decimal'],currencyCode?: (Scalars['String'] | null),notes?: (Scalars['String'] | null)}
+
+export interface BatchImportTransactionsInput {transactions: ImportTransactionInput[],skipDuplicates?: (Scalars['Boolean'] | null)}
+
+export interface BatchImportTransactionsPayloadGenqlSelection{
+    success?: boolean | number
+    importedCount?: boolean | number
+    skippedCount?: boolean | number
+    portfolio?: PortfolioGenqlSelection
+    message?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -730,6 +757,14 @@ export interface RecordFXRateOverridePayloadGenqlSelection{
     export const isMutation = (obj?: { __typename?: any } | null): obj is Mutation => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isMutation"')
       return Mutation_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const BatchImportTransactionsPayload_possibleTypes: string[] = ['BatchImportTransactionsPayload']
+    export const isBatchImportTransactionsPayload = (obj?: { __typename?: any } | null): obj is BatchImportTransactionsPayload => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isBatchImportTransactionsPayload"')
+      return BatchImportTransactionsPayload_possibleTypes.includes(obj.__typename)
     }
     
 
