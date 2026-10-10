@@ -33,14 +33,15 @@ type Transaction struct {
 	SettleDate     *time.Time
 	Quantity       *decimal.Decimal
 	Price          *decimal.Decimal
-	Amount         decimal.Decimal
-	CurrencyCode   string
-	Fee            decimal.Decimal
-	WithholdingTax decimal.Decimal
-	FXRateToBase   *decimal.Decimal
-	ExternalRef    *string
-	Notes          *string
-	CreatedAt      time.Time
+	Amount          decimal.Decimal
+	CurrencyCode    string
+	Fee             decimal.Decimal
+	FeeCurrencyCode *string
+	WithholdingTax  decimal.Decimal
+	FXRateToBase    *decimal.Decimal
+	ExternalRef     *string
+	Notes           *string
+	CreatedAt       time.Time
 }
 
 type TransactionWithInstrument struct {
@@ -57,30 +58,32 @@ type TransactionFilter struct {
 }
 
 type AddTransactionInput struct {
-	UserID       string
-	Type         TransactionType
-	Symbol       *string
-	TradeDate    time.Time
-	Quantity     *decimal.Decimal
-	Price        *decimal.Decimal
-	Amount       *decimal.Decimal
-	CurrencyCode *string
-	Fee          *decimal.Decimal
-	Notes        *string
+	UserID          string
+	Type            TransactionType
+	Symbol          *string
+	TradeDate       time.Time
+	Quantity        *decimal.Decimal
+	Price           *decimal.Decimal
+	Amount          *decimal.Decimal
+	CurrencyCode    *string
+	Fee             *decimal.Decimal
+	FeeCurrencyCode *string
+	Notes           *string
 }
 
 type ImportTransactionItem struct {
-	Type         TransactionType
-	Symbol       string
-	TradeDate    time.Time
-	SettleDate   *time.Time
-	Quantity     decimal.Decimal
-	Price        decimal.Decimal
-	Amount       decimal.Decimal
-	Fee          decimal.Decimal
-	CurrencyCode string
-	ExternalRef  string
-	Notes        string
+	Type            TransactionType
+	Symbol          string
+	TradeDate       time.Time
+	SettleDate      *time.Time
+	Quantity        decimal.Decimal
+	Price           decimal.Decimal
+	Amount          decimal.Decimal
+	Fee             decimal.Decimal
+	FeeCurrencyCode *string
+	CurrencyCode    string
+	ExternalRef     string
+	Notes           string
 }
 
 type BatchImportInput struct {

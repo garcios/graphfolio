@@ -79,9 +79,23 @@ func ProcessLedger(
 		switch tx.Type {
 		case domain.TxTypeDeposit:
 			cashBalances[tx.CurrencyCode] = cashBalances[tx.CurrencyCode].Add(tx.Amount)
+			if tx.Fee.IsPositive() {
+				feeCurr := tx.CurrencyCode
+				if tx.FeeCurrencyCode != nil && *tx.FeeCurrencyCode != "" {
+					feeCurr = *tx.FeeCurrencyCode
+				}
+				cashBalances[feeCurr] = cashBalances[feeCurr].Sub(tx.Fee)
+			}
 
 		case domain.TxTypeWithdrawal:
 			cashBalances[tx.CurrencyCode] = cashBalances[tx.CurrencyCode].Sub(tx.Amount)
+			if tx.Fee.IsPositive() {
+				feeCurr := tx.CurrencyCode
+				if tx.FeeCurrencyCode != nil && *tx.FeeCurrencyCode != "" {
+					feeCurr = *tx.FeeCurrencyCode
+				}
+				cashBalances[feeCurr] = cashBalances[feeCurr].Sub(tx.Fee)
+			}
 
 		case domain.TxTypeDividend, domain.TxTypeInterest:
 			netIncome := tx.Amount.Sub(tx.WithholdingTax)
@@ -95,9 +109,34 @@ func ProcessLedger(
 				continue
 			}
 
-			// Cash impact: deduct gross amount + fee
-			totalCost := tx.Amount.Add(tx.Fee)
-			cashBalances[tx.CurrencyCode] = cashBalances[tx.CurrencyCode].Sub(totalCost)
+			feeCurr := tx.CurrencyCode
+			if tx.FeeCurrencyCode != nil && *tx.FeeCurrencyCode != "" {
+				feeCurr = *tx.FeeCurrencyCode
+			}
+
+			var costBasisInst, costBasisBase decimal.Decimal
+			if feeCurr == tx.CurrencyCode {
+				totalCost := tx.Amount.Add(tx.Fee)
+				cashBalances[tx.CurrencyCode] = cashBalances[tx.CurrencyCode].Sub(totalCost)
+				costBasisInst = totalCost
+				costBasisBase = totalCost.Mul(fxRate)
+			} else {
+				cashBalances[tx.CurrencyCode] = cashBalances[tx.CurrencyCode].Sub(tx.Amount)
+				cashBalances[feeCurr] = cashBalances[feeCurr].Sub(tx.Fee)
+
+				var feeBase decimal.Decimal
+				if feeCurr == portfolio.BaseCurrency {
+					feeBase = tx.Fee
+				} else if fxRate.IsPositive() {
+					feeBase = tx.Fee
+				}
+				costBasisBase = tx.Amount.Mul(fxRate).Add(feeBase)
+				if fxRate.IsPositive() {
+					costBasisInst = tx.Amount.Add(feeBase.Div(fxRate)).Round(6)
+				} else {
+					costBasisInst = tx.Amount
+				}
+			}
 
 			lot := domain.TaxLot{
 				ID:                uuid.New(),
@@ -107,8 +146,8 @@ func ProcessLedger(
 				AcquiredDate:      tx.TradeDate,
 				OriginalQuantity:  *tx.Quantity,
 				RemainingQuantity: *tx.Quantity,
-				CostBasis:         totalCost,
-				CostBasisBase:     totalCost.Mul(fxRate),
+				CostBasis:         costBasisInst,
+				CostBasisBase:     costBasisBase,
 			}
 
 			openLots[*tx.InstrumentID] = append(openLots[*tx.InstrumentID], &lot)
@@ -120,9 +159,29 @@ func ProcessLedger(
 
 			instID := *tx.InstrumentID
 			sellQty := *tx.Quantity
-			netProceeds := tx.Amount.Sub(tx.Fee)
-			netProceedsBase := netProceeds.Mul(fxRate)
-			cashBalances[tx.CurrencyCode] = cashBalances[tx.CurrencyCode].Add(netProceeds)
+
+			feeCurr := tx.CurrencyCode
+			if tx.FeeCurrencyCode != nil && *tx.FeeCurrencyCode != "" {
+				feeCurr = *tx.FeeCurrencyCode
+			}
+
+			var netProceedsBase decimal.Decimal
+			if feeCurr == tx.CurrencyCode {
+				netProceeds := tx.Amount.Sub(tx.Fee)
+				netProceedsBase = netProceeds.Mul(fxRate)
+				cashBalances[tx.CurrencyCode] = cashBalances[tx.CurrencyCode].Add(netProceeds)
+			} else {
+				cashBalances[tx.CurrencyCode] = cashBalances[tx.CurrencyCode].Add(tx.Amount)
+				cashBalances[feeCurr] = cashBalances[feeCurr].Sub(tx.Fee)
+
+				var feeBase decimal.Decimal
+				if feeCurr == portfolio.BaseCurrency {
+					feeBase = tx.Fee
+				} else if fxRate.IsPositive() {
+					feeBase = tx.Fee
+				}
+				netProceedsBase = tx.Amount.Mul(fxRate).Sub(feeBase)
+			}
 
 			instLots := openLots[instID]
 			if len(instLots) == 0 {

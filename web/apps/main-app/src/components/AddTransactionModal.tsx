@@ -11,16 +11,26 @@ interface InstrumentOption {
   currencyCode: string;
 }
 
+export interface CurrencyOption {
+  code: string;
+  name?: string;
+  symbol?: string;
+}
+
 interface AddTransactionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (updatedPortfolio: any) => void;
+  preferredCurrency?: string;
+  supportedCurrencies?: CurrencyOption[];
 }
 
 export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   isOpen,
   onClose,
   onSuccess,
+  preferredCurrency,
+  supportedCurrencies,
 }) => {
   const [type, setType] = useState<TransactionType>('BUY');
   const [symbol, setSymbol] = useState('AAPL');
@@ -31,12 +41,51 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   const [splitRatioTo, setSplitRatioTo] = useState('2');
   const [splitRatioFrom, setSplitRatioFrom] = useState('1');
   const [fee, setFee] = useState('0.00');
+  const [feeCurrencyCode, setFeeCurrencyCode] = useState(preferredCurrency || 'USD');
+  const [prevPreferredCurrency, setPrevPreferredCurrency] = useState(preferredCurrency);
   const [currencyCode, setCurrencyCode] = useState('USD');
   const [notes, setNotes] = useState('');
+
+  if (preferredCurrency && preferredCurrency !== prevPreferredCurrency) {
+    setPrevPreferredCurrency(preferredCurrency);
+    setFeeCurrencyCode(preferredCurrency);
+  }
 
   const [instruments, setInstruments] = useState<InstrumentOption[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Fallback: If preferredCurrency was not provided, fetch user's preferences to default fee currency
+  useEffect(() => {
+    if (!preferredCurrency && isOpen) {
+      client
+        .query({
+          userPreferences: {
+            displayCurrency: true,
+          },
+        })
+        .then((res) => {
+          if (res.userPreferences?.displayCurrency) {
+            setFeeCurrencyCode(res.userPreferences.displayCurrency);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [preferredCurrency, isOpen]);
+
+  const availableCurrencies = Array.from(
+    new Set([
+      preferredCurrency,
+      ...(supportedCurrencies || []).map((c) => c.code),
+      'USD',
+      'AUD',
+      'EUR',
+      'GBP',
+      'CAD',
+      'JPY',
+      'CHF',
+    ].filter(Boolean) as string[])
+  );
 
   // Fetch available instruments on mount
   useEffect(() => {
@@ -124,6 +173,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
         currencyCode,
         notes: notes || undefined,
         fee: fee ? fee : undefined,
+        feeCurrencyCode: (type === 'BUY' || type === 'SELL') ? feeCurrencyCode : (feeCurrencyCode || undefined),
       };
 
       if (type === 'BUY' || type === 'SELL') {
@@ -184,6 +234,8 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
         setQuantity('');
         setPrice('');
         setAmount('');
+        setFee('0.00');
+        setFeeCurrencyCode(preferredCurrency || 'USD');
         setNotes('');
       }
     } catch (err: any) {
@@ -264,10 +316,11 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                 value={currencyCode}
                 onChange={(e) => setCurrencyCode(e.target.value)}
               >
-                <option value="USD">USD</option>
-                <option value="EUR">EUR</option>
-                <option value="GBP">GBP</option>
-                <option value="AUD">AUD</option>
+                {availableCurrencies.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -384,14 +437,28 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
               {(type === 'BUY' || type === 'SELL') && (
                 <div className="form-group">
                   <label>Brokerage Fee</label>
-                  <input
-                    type="number"
-                    step="any"
-                    placeholder="0.00"
-                    className="form-input"
-                    value={fee}
-                    onChange={(e) => setFee(e.target.value)}
-                  />
+                  <div className="fee-input-row">
+                    <input
+                      type="number"
+                      step="any"
+                      placeholder="0.00"
+                      className="form-input fee-amount-input"
+                      value={fee}
+                      onChange={(e) => setFee(e.target.value)}
+                    />
+                    <select
+                      className="form-select fee-currency-select"
+                      value={feeCurrencyCode}
+                      onChange={(e) => setFeeCurrencyCode(e.target.value)}
+                      title="Brokerage Fee Currency"
+                    >
+                      {availableCurrencies.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               )}
             </div>

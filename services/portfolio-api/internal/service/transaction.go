@@ -73,18 +73,24 @@ func (s *portfolioService) AddTransaction(ctx context.Context, input domain.AddT
 			}
 		}
 
+		feeCurrencyCode := currencyCode
+		if input.FeeCurrencyCode != nil && *input.FeeCurrencyCode != "" {
+			feeCurrencyCode = *input.FeeCurrencyCode
+		}
+
 		tx := domain.Transaction{
-			PortfolioID:  portfolio.ID,
-			InstrumentID: instID,
-			Type:         input.Type,
-			TradeDate:    tradeDate,
-			Quantity:     input.Quantity,
-			Price:        input.Price,
-			Amount:       amount,
-			CurrencyCode: currencyCode,
-			Fee:          fee,
-			FXRateToBase: fxRateToBase,
-			Notes:        input.Notes,
+			PortfolioID:     portfolio.ID,
+			InstrumentID:    instID,
+			Type:            input.Type,
+			TradeDate:       tradeDate,
+			Quantity:        input.Quantity,
+			Price:           input.Price,
+			Amount:          amount,
+			CurrencyCode:    currencyCode,
+			Fee:             fee,
+			FeeCurrencyCode: &feeCurrencyCode,
+			FXRateToBase:    fxRateToBase,
+			Notes:           input.Notes,
 		}
 
 		savedTx, err := s.repo.InsertTransaction(ctx, tx)
@@ -99,6 +105,9 @@ func (s *portfolioService) AddTransaction(ctx context.Context, input domain.AddT
 				_, _ = s.ingestion.BackfillInstrumentPrices(ctx, *instID, *input.Symbol, inst.ExchangeCode, tradeDate, todayUTC)
 				if inst.CurrencyCode != portfolio.BaseCurrency {
 					_, _ = s.ingestion.BackfillCurrencyPair(ctx, inst.CurrencyCode, portfolio.BaseCurrency, tradeDate, todayUTC)
+				}
+				if feeCurrencyCode != portfolio.BaseCurrency && feeCurrencyCode != inst.CurrencyCode {
+					_, _ = s.ingestion.BackfillCurrencyPair(ctx, feeCurrencyCode, portfolio.BaseCurrency, tradeDate, todayUTC)
 				}
 			}
 		}
@@ -127,15 +136,21 @@ func (s *portfolioService) AddTransaction(ctx context.Context, input domain.AddT
 			}
 		}
 
+		feeCurrencyCode := currencyCode
+		if input.FeeCurrencyCode != nil && *input.FeeCurrencyCode != "" {
+			feeCurrencyCode = *input.FeeCurrencyCode
+		}
+
 		tx := domain.Transaction{
-			PortfolioID:  portfolio.ID,
-			Type:         input.Type,
-			TradeDate:    tradeDate,
-			Amount:       *input.Amount,
-			CurrencyCode: currencyCode,
-			Fee:          fee,
-			FXRateToBase: fxRateToBase,
-			Notes:        input.Notes,
+			PortfolioID:     portfolio.ID,
+			Type:            input.Type,
+			TradeDate:       tradeDate,
+			Amount:          *input.Amount,
+			CurrencyCode:    currencyCode,
+			Fee:             fee,
+			FeeCurrencyCode: &feeCurrencyCode,
+			FXRateToBase:    fxRateToBase,
+			Notes:           input.Notes,
 		}
 
 		savedTx, err := s.repo.InsertTransaction(ctx, tx)
@@ -175,16 +190,22 @@ func (s *portfolioService) AddTransaction(ctx context.Context, input domain.AddT
 			}
 		}
 
+		feeCurrencyCode := currencyCode
+		if input.FeeCurrencyCode != nil && *input.FeeCurrencyCode != "" {
+			feeCurrencyCode = *input.FeeCurrencyCode
+		}
+
 		tx := domain.Transaction{
-			PortfolioID:  portfolio.ID,
-			InstrumentID: instID,
-			Type:         input.Type,
-			TradeDate:    tradeDate,
-			Amount:       *input.Amount,
-			CurrencyCode: currencyCode,
-			Fee:          fee,
-			FXRateToBase: fxRateToBase,
-			Notes:        input.Notes,
+			PortfolioID:     portfolio.ID,
+			InstrumentID:    instID,
+			Type:            input.Type,
+			TradeDate:       tradeDate,
+			Amount:          *input.Amount,
+			CurrencyCode:    currencyCode,
+			Fee:             fee,
+			FeeCurrencyCode: &feeCurrencyCode,
+			FXRateToBase:    fxRateToBase,
+			Notes:           input.Notes,
 		}
 
 		savedTx, err := s.repo.InsertTransaction(ctx, tx)
@@ -496,20 +517,26 @@ func (s *portfolioService) BatchImportTransactions(ctx context.Context, input do
 			notesPtr = &notesCopy
 		}
 
+		feeCurrencyCode := currencyCode
+		if item.FeeCurrencyCode != nil && *item.FeeCurrencyCode != "" {
+			feeCurrencyCode = *item.FeeCurrencyCode
+		}
+
 		tx := domain.Transaction{
-			PortfolioID:  portfolio.ID,
-			InstrumentID: instID,
-			Type:         item.Type,
-			TradeDate:    item.TradeDate,
-			SettleDate:   item.SettleDate,
-			Quantity:     qtyPtr,
-			Price:        pricePtr,
-			Amount:       item.Amount,
-			CurrencyCode: currencyCode,
-			Fee:          item.Fee,
-			FXRateToBase: fxRate,
-			ExternalRef:  extRefPtr,
-			Notes:        notesPtr,
+			PortfolioID:     portfolio.ID,
+			InstrumentID:    instID,
+			Type:            item.Type,
+			TradeDate:       item.TradeDate,
+			SettleDate:      item.SettleDate,
+			Quantity:        qtyPtr,
+			Price:           pricePtr,
+			Amount:          item.Amount,
+			CurrencyCode:    currencyCode,
+			Fee:             item.Fee,
+			FeeCurrencyCode: &feeCurrencyCode,
+			FXRateToBase:    fxRate,
+			ExternalRef:     extRefPtr,
+			Notes:           notesPtr,
 		}
 
 		txsToInsert = append(txsToInsert, tx)

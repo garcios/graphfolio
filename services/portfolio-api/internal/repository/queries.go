@@ -140,7 +140,8 @@ ORDER BY base_currency, rate_date DESC;`
 	getTransactionsSQL = `
 SELECT 
     id, portfolio_id, instrument_id, type, trade_date, quantity, price, amount,
-    currency_code, fee, withholding_tax, fx_rate_to_base, external_ref, notes
+    currency_code, fee, withholding_tax, fx_rate_to_base, external_ref, notes,
+    fee_currency_code
 FROM portfolio.transactions
 WHERE portfolio_id = $1
 ORDER BY trade_date ASC, id ASC;`
@@ -156,9 +157,10 @@ ORDER BY ex_date ASC, id ASC;`
 	insertTransactionSQL = `
 INSERT INTO portfolio.transactions (
     portfolio_id, instrument_id, type, trade_date, quantity, price, amount,
-    currency_code, fee, withholding_tax, fx_rate_to_base, external_ref, notes
+    currency_code, fee, withholding_tax, fx_rate_to_base, external_ref, notes,
+    fee_currency_code
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
 )
 RETURNING id;`
 
@@ -172,9 +174,9 @@ WHERE portfolio_id = $1
 INSERT INTO portfolio.transactions (
     portfolio_id, instrument_id, type, trade_date, settle_date,
     quantity, price, amount, currency_code, fee, fx_rate_to_base,
-    external_ref, notes
+    external_ref, notes, fee_currency_code
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
 )
 ON CONFLICT (portfolio_id, external_ref) DO NOTHING
 RETURNING id;`
@@ -218,6 +220,7 @@ SELECT
     t.quantity, t.price, t.amount, t.currency_code, t.fee,
     t.withholding_tax, t.fx_rate_to_base, t.external_ref, t.notes,
     t.created_at, i.symbol, i.name AS instrument_name,
+    t.fee_currency_code,
     COUNT(*) OVER() AS total_count
 FROM portfolio.transactions t
 LEFT JOIN portfolio.instruments i ON i.id = t.instrument_id

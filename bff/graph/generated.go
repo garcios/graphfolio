@@ -8544,7 +8544,7 @@ func (ec *executionContext) unmarshalInputAddTransactionInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"type", "symbol", "tradeDate", "quantity", "price", "amount", "currencyCode", "fee", "notes"}
+	fieldsInOrder := [...]string{"type", "symbol", "tradeDate", "quantity", "price", "amount", "currencyCode", "fee", "feeCurrencyCode", "notes"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -8607,6 +8607,13 @@ func (ec *executionContext) unmarshalInputAddTransactionInput(ctx context.Contex
 				return it, err
 			}
 			it.Fee = data
+		case "feeCurrencyCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("feeCurrencyCode"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FeeCurrencyCode = data
 		case "notes":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
@@ -8736,7 +8743,7 @@ func (ec *executionContext) unmarshalInputImportTransactionInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"externalRef", "symbol", "type", "tradeDate", "settleDate", "quantity", "price", "amount", "fee", "currencyCode", "notes"}
+	fieldsInOrder := [...]string{"externalRef", "symbol", "type", "tradeDate", "settleDate", "quantity", "price", "amount", "fee", "feeCurrencyCode", "currencyCode", "notes"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -8806,6 +8813,13 @@ func (ec *executionContext) unmarshalInputImportTransactionInput(ctx context.Con
 				return it, err
 			}
 			it.Fee = data
+		case "feeCurrencyCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("feeCurrencyCode"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FeeCurrencyCode = data
 		case "currencyCode":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currencyCode"))
 			data, err := ec.unmarshalOString2ᚖstring(ctx, v)

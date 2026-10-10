@@ -88,12 +88,13 @@ This document catalogs all implemented features, in-progress components, and pla
 ### 2.6 Interactive Transaction Ingestion Modal
 - **Status**: **DONE**
 - **Plan Reference**: [add-transactions-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/add-transactions-implementation-plan.md)
-- **Description**: End-to-end transaction entry flow allowing investors to record `BUY`, `SELL`, `DIVIDEND`, `SPLIT`, `DEPOSIT`, and `WITHDRAWAL` transactions. Features dynamic instrument lookup, stock split ratio input with popular presets (2:1, 3:1, 4:1, 10:1, reverse splits) preserving total cost basis, trade date validation, automatic projection rebuilds, and instantaneous UI refresh without full page reload.
+- **Description**: End-to-end transaction entry flow allowing investors to record `BUY`, `SELL`, `DIVIDEND`, `SPLIT`, `DEPOSIT`, and `WITHDRAWAL` transactions. Features dynamic instrument lookup, custom brokerage fee currency selection (defaulting to the investor's preferred display currency with exact multi-currency cash balance & tax lot cost basis adjustments), stock split ratio input with popular presets (2:1, 3:1, 4:1, 10:1, reverse splits) preserving total cost basis, trade date validation, automatic projection rebuilds, and instantaneous UI refresh without full page reload.
 - **Key Files**:
   - [portfolio.proto](file:///Users/oscargarcia/workspace/graphfolio/proto/portfolio/v1/portfolio.proto)
   - [AddTransactionModal.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/AddTransactionModal.tsx)
   - [AddTransactionModal.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/AddTransactionModal.css)
   - [transaction.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/transaction.go)
+  - [projection.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/projection.go)
 
 ### 2.7 Interactive SVG Performance Chart & Time Range Filtering
 - **Status**: **DONE**

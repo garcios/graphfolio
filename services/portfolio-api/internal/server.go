@@ -161,12 +161,16 @@ func (s *PortfolioServer) AddTransaction(ctx context.Context, req *pb.AddTransac
 	}
 
 	var fee *decimal.Decimal
+	var feeCurrency *string
 	if req.GetFee() != nil && req.GetFee().GetAmount() != nil {
-		f, _, err := decimalpb.MoneyFromProto(req.GetFee())
+		f, c, err := decimalpb.MoneyFromProto(req.GetFee())
 		if err != nil {
 			return nil, status.Errorf(codes.InvalidArgument, "invalid fee: %v", err)
 		}
 		fee = &f
+		if c != "" {
+			feeCurrency = &c
+		}
 	}
 
 	var symbol *string
@@ -182,16 +186,17 @@ func (s *PortfolioServer) AddTransaction(ctx context.Context, req *pb.AddTransac
 	}
 
 	input := domain.AddTransactionInput{
-		UserID:       req.GetUserId(),
-		Type:         txType,
-		Symbol:       symbol,
-		TradeDate:    tradeDate,
-		Quantity:     qty,
-		Price:        price,
-		Amount:       amount,
-		CurrencyCode: ccy,
-		Fee:          fee,
-		Notes:        notes,
+		UserID:          req.GetUserId(),
+		Type:            txType,
+		Symbol:          symbol,
+		TradeDate:       tradeDate,
+		Quantity:        qty,
+		Price:           price,
+		Amount:          amount,
+		CurrencyCode:    ccy,
+		Fee:             fee,
+		FeeCurrencyCode: feeCurrency,
+		Notes:           notes,
 	}
 
 	tx, summary, err := s.svc.AddTransaction(ctx, input)
@@ -369,12 +374,16 @@ func (s *PortfolioServer) ListTransactions(ctx context.Context, req *pb.ListTran
 
 	protoItems := make([]*pb.TransactionItem, len(items))
 	for i, item := range items {
+		feeCurr := item.CurrencyCode
+		if item.FeeCurrencyCode != nil && *item.FeeCurrencyCode != "" {
+			feeCurr = *item.FeeCurrencyCode
+		}
 		protoItem := &pb.TransactionItem{
 			Id:        item.ID.String(),
 			Type:      mapDomainTxTypeToProto(item.Type),
 			TradeDate: item.TradeDate.Format("2006-01-02"),
 			Amount:    decimalpb.MoneyToProto(item.Amount, item.CurrencyCode),
-			Fee:       decimalpb.MoneyToProto(item.Fee, item.CurrencyCode),
+			Fee:       decimalpb.MoneyToProto(item.Fee, feeCurr),
 			CreatedAt: "",
 		}
 		if !item.CreatedAt.IsZero() {
@@ -538,10 +547,14 @@ func (s *PortfolioServer) BatchImportTransactions(ctx context.Context, req *pb.B
 		}
 
 		var fee decimal.Decimal
+		var feeCurrency *string
 		if item.GetFee() != nil && item.GetFee().GetAmount() != nil {
-			f, _, err := decimalpb.MoneyFromProto(item.GetFee())
+			f, c, err := decimalpb.MoneyFromProto(item.GetFee())
 			if err == nil {
 				fee = f
+				if c != "" {
+					feeCurrency = &c
+				}
 			}
 		}
 
@@ -553,17 +566,18 @@ func (s *PortfolioServer) BatchImportTransactions(ctx context.Context, req *pb.B
 		}
 
 		items = append(items, domain.ImportTransactionItem{
-			Type:         txType,
-			Symbol:       item.GetSymbol(),
-			TradeDate:    tradeDate,
-			SettleDate:   settleDate,
-			Quantity:     qty,
-			Price:        price,
-			Amount:       amount,
-			Fee:          fee,
-			CurrencyCode: currencyCode,
-			ExternalRef:  item.GetExternalRef(),
-			Notes:        item.GetNotes(),
+			Type:            txType,
+			Symbol:          item.GetSymbol(),
+			TradeDate:       tradeDate,
+			SettleDate:      settleDate,
+			Quantity:        qty,
+			Price:           price,
+			Amount:          amount,
+			Fee:             fee,
+			FeeCurrencyCode: feeCurrency,
+			CurrencyCode:    currencyCode,
+			ExternalRef:     item.GetExternalRef(),
+			Notes:           item.GetNotes(),
 		})
 	}
 

@@ -10,15 +10,16 @@ import (
 )
 
 type AddTransactionInput struct {
-	Type         TransactionType `json:"type"`
-	Symbol       *string         `json:"symbol,omitempty"`
-	TradeDate    string          `json:"tradeDate"`
-	Quantity     *Decimal        `json:"quantity,omitempty"`
-	Price        *Decimal        `json:"price,omitempty"`
-	Amount       *Decimal        `json:"amount,omitempty"`
-	CurrencyCode *string         `json:"currencyCode,omitempty"`
-	Fee          *Decimal        `json:"fee,omitempty"`
-	Notes        *string         `json:"notes,omitempty"`
+	Type            TransactionType `json:"type"`
+	Symbol          *string         `json:"symbol,omitempty"`
+	TradeDate       string          `json:"tradeDate"`
+	Quantity        *Decimal        `json:"quantity,omitempty"`
+	Price           *Decimal        `json:"price,omitempty"`
+	Amount          *Decimal        `json:"amount,omitempty"`
+	CurrencyCode    *string         `json:"currencyCode,omitempty"`
+	Fee             *Decimal        `json:"fee,omitempty"`
+	FeeCurrencyCode *string         `json:"feeCurrencyCode,omitempty"`
+	Notes           *string         `json:"notes,omitempty"`
 }
 
 type AddTransactionPayload struct {
@@ -140,17 +141,18 @@ type FeedHealthStatus struct {
 }
 
 type ImportTransactionInput struct {
-	ExternalRef  string          `json:"externalRef"`
-	Symbol       string          `json:"symbol"`
-	Type         TransactionType `json:"type"`
-	TradeDate    string          `json:"tradeDate"`
-	SettleDate   *string         `json:"settleDate,omitempty"`
-	Quantity     Decimal         `json:"quantity"`
-	Price        Decimal         `json:"price"`
-	Amount       Decimal         `json:"amount"`
-	Fee          Decimal         `json:"fee"`
-	CurrencyCode *string         `json:"currencyCode,omitempty"`
-	Notes        *string         `json:"notes,omitempty"`
+	ExternalRef     string          `json:"externalRef"`
+	Symbol          string          `json:"symbol"`
+	Type            TransactionType `json:"type"`
+	TradeDate       string          `json:"tradeDate"`
+	SettleDate      *string         `json:"settleDate,omitempty"`
+	Quantity        Decimal         `json:"quantity"`
+	Price           Decimal         `json:"price"`
+	Amount          Decimal         `json:"amount"`
+	Fee             Decimal         `json:"fee"`
+	FeeCurrencyCode *string         `json:"feeCurrencyCode,omitempty"`
+	CurrencyCode    *string         `json:"currencyCode,omitempty"`
+	Notes           *string         `json:"notes,omitempty"`
 }
 
 type IngestionStatus struct {

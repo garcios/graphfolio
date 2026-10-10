@@ -9,7 +9,7 @@ A modern portfolio tracker built for serious investors. GraphFolio accurately me
 - **Consolidated Dashboard**: View all your investments across multiple asset classes in a single, unified view.
 - **Exact Decimal Arithmetic**: Zero floating-point drift. All money, quantities, prices, and rates use fixed-point decimal arithmetic from database to browser.
 - **Interactive Performance Chart**: Timeframe-selectable SVG performance chart (1D, 1W, 1M, YTD, 1Y, ALL) rendering cubic Bezier curves, dynamic profit/loss color gradients, crosshair tracking, inspection tooltips, and exact period returns.
-- **Interactive Transaction Logging**: Record Buys, Sells, Cash Deposits, Withdrawals, Dividends, and Stock Splits directly in the UI. Holding quantities, cost bases, cash balances, and returns re-project deterministically in real time.
+- **Interactive Transaction Logging & Multi-Currency Fees**: Record Buys, Sells, Cash Deposits, Withdrawals, Dividends, and Stock Splits directly in the UI (`AddTransactionModal`). Investors can specify custom currencies for brokerage fees (defaulting to the investor's preferred display currency, e.g. paying AUD brokerage for USD share purchases), with exact multi-currency cash balance deduction and tax lot cost basis calibration. Holding quantities, cost bases, cash balances, and returns re-project deterministically in real time.
 - **Corporate Action Stock Splits & Reverse Splits**: Native handling of forward and reverse stock splits (`SPLIT`). Features ratio presets (`2:1`, `3:1`, `4:1`, `10:1`, `1:2 Reverse`, `1:10 Reverse`) or custom ratios with live multiplier calculation. Preserves overall holding cost basis and cash balances while proportionally scaling share quantities across all open tax lots ($Q_{\text{new}} = Q_{\text{old}} \times \text{multiplier}$), conforming to US GAAP, IFRS, and GIPS standards.
 - **Transaction History & Ledger Management**: Paginated transaction history with type filtering, exact execution prices, fee tracking, and safe deletion with immediate atomic ledger replay.
 - **Transaction-Ledger Architecture**: Immutable transaction ledger acts as the authoritative source of truth, deterministically projecting holdings, cash balances, and valuations.
@@ -167,9 +167,10 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
    - `tax_lots` and `lot_disposals`
    - `holding_projections` (quantity, cost basis, realized PnL, dividend income)
    - `cash_balances`
-3. **Stock Splits (`SPLIT`)**: Corporate action stock splits scale the share quantities of all open tax lots acquired prior to the split date ($Q_{\text{new}} = Q_{\text{old}} \times \text{multiplier}$) while keeping total cost basis and cash balance unchanged. Subsequent sales relieve split-adjusted lots.
-4. **Atomic Replacement**: Rebuild runs under a row lock (`SELECT ... FOR UPDATE` on `portfolio.portfolios`) to serialize concurrent updates and atomically save recomputed projections in `SaveProjectionsTx`.
-5. **Accounting Methods**:
+3. **Multi-Currency Brokerage Fees**: When trade fees are paid in a currency different from the asset (e.g. AUD brokerage for USD shares), the engine deducts gross trade proceeds from the asset currency cash account and the fee from the fee currency cash account. In base currency, tax lot cost bases and disposal net proceeds properly incorporate the fee via live or historical exchange rates.
+4. **Stock Splits (`SPLIT`)**: Corporate action stock splits scale the share quantities of all open tax lots acquired prior to the split date ($Q_{\text{new}} = Q_{\text{old}} \times \text{multiplier}$) while keeping total cost basis and cash balance unchanged. Subsequent sales relieve split-adjusted lots.
+5. **Atomic Replacement**: Rebuild runs under a row lock (`SELECT ... FOR UPDATE` on `portfolio.portfolios`) to serialize concurrent updates and atomically save recomputed projections in `SaveProjectionsTx`.
+6. **Accounting Methods**:
    - `AVERAGE_COST`: Disposals proportionally relieve cost basis across all open tax lots.
    - `FIFO`: Disposals relieve the earliest acquired tax lots first.
 
@@ -202,7 +203,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── cmd/worker/           # Scheduled EOD & on-demand valuation worker (make run-valuation-job)
 │   │   ├── cmd/market-ingest/    # Market data ingestion & historical backfill CLI (make ingest-market-data)
 │   │   ├── internal/             # Domain entities, repository, service, and gRPC server
-│   │   ├── migrations/           # Versioned schema migrations (000001 - 000008)
+│   │   ├── migrations/           # Versioned schema migrations (000001 - 000009)
 │   │   └── seeds/                # Seed fixtures (dev_seed.sql with 365-day history)
 │   └── user-api/                 # User domain microservice (:50052)
 │       ├── cmd/server/           # Application entrypoint (:50052)

@@ -322,7 +322,7 @@ export interface MoneyGenqlSelection{
     __scalar?: boolean | number
 }
 
-export interface AddTransactionInput {type: TransactionType,symbol?: (Scalars['String'] | null),tradeDate: Scalars['String'],quantity?: (Scalars['Decimal'] | null),price?: (Scalars['Decimal'] | null),amount?: (Scalars['Decimal'] | null),currencyCode?: (Scalars['String'] | null),fee?: (Scalars['Decimal'] | null),notes?: (Scalars['String'] | null)}
+export interface AddTransactionInput {type: TransactionType,symbol?: (Scalars['String'] | null),tradeDate: Scalars['String'],quantity?: (Scalars['Decimal'] | null),price?: (Scalars['Decimal'] | null),amount?: (Scalars['Decimal'] | null),currencyCode?: (Scalars['String'] | null),fee?: (Scalars['Decimal'] | null),feeCurrencyCode?: (Scalars['String'] | null),notes?: (Scalars['String'] | null)}
 
 export interface AddTransactionPayloadGenqlSelection{
     transactionId?: boolean | number
@@ -450,7 +450,7 @@ export interface MutationGenqlSelection{
     __scalar?: boolean | number
 }
 
-export interface ImportTransactionInput {externalRef: Scalars['String'],symbol: Scalars['String'],type: TransactionType,tradeDate: Scalars['String'],settleDate?: (Scalars['String'] | null),quantity: Scalars['Decimal'],price: Scalars['Decimal'],amount: Scalars['Decimal'],fee: Scalars['Decimal'],currencyCode?: (Scalars['String'] | null),notes?: (Scalars['String'] | null)}
+export interface ImportTransactionInput {externalRef: Scalars['String'],symbol: Scalars['String'],type: TransactionType,tradeDate: Scalars['String'],settleDate?: (Scalars['String'] | null),quantity: Scalars['Decimal'],price: Scalars['Decimal'],amount: Scalars['Decimal'],fee: Scalars['Decimal'],feeCurrencyCode?: (Scalars['String'] | null),currencyCode?: (Scalars['String'] | null),notes?: (Scalars['String'] | null)}
 
 export interface BatchImportTransactionsInput {transactions: ImportTransactionInput[],skipDuplicates?: (Scalars['Boolean'] | null)}
 
