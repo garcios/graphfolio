@@ -45,6 +45,9 @@ service PortfolioService {
 
   // Historical Valuation Engine & Replay
   rpc RebuildValuations(RebuildValuationsRequest) returns (RebuildValuationsResponse) {}
+
+  // Portfolio Cash Flow Report
+  rpc GetCashFlowReport(GetCashFlowReportRequest) returns (GetCashFlowReportResponse) {}
 }
 
 message RebuildValuationsRequest {
@@ -503,5 +506,70 @@ message BatchImportTransactionsResponse {
   Portfolio portfolio       = 4; // Updated portfolio snapshot
   string    message         = 5;
 }
+
+enum CashFlowTimeframe {
+  CASH_FLOW_TIMEFRAME_UNSPECIFIED = 0;
+  CASH_FLOW_TIMEFRAME_MTD = 1;
+  CASH_FLOW_TIMEFRAME_YTD = 2;
+  CASH_FLOW_TIMEFRAME_1M  = 3;
+  CASH_FLOW_TIMEFRAME_3M  = 4;
+  CASH_FLOW_TIMEFRAME_6M  = 5;
+  CASH_FLOW_TIMEFRAME_1Y  = 6;
+  CASH_FLOW_TIMEFRAME_ALL = 7;
+  CASH_FLOW_TIMEFRAME_CUSTOM = 8;
+}
+
+message GetCashFlowReportRequest {
+  string            user_id   = 1;
+  CashFlowTimeframe timeframe = 2;
+  string            from_date = 3; // YYYY-MM-DD (used if CUSTOM)
+  string            to_date   = 4; // YYYY-MM-DD (optional, defaults to current date)
+  string            currency  = 5; // Optional currency filter / target
+}
+
+message CashFlowSummary {
+  common.v1.Money starting_cash_balance = 1;
+  common.v1.Money total_inflows         = 2;
+  common.v1.Money total_outflows        = 3;
+  common.v1.Money net_cash_flow         = 4;
+  common.v1.Money ending_cash_balance   = 5;
+}
+
+message CashFlowCategoryBreakdown {
+  common.v1.Money deposits       = 1;
+  common.v1.Money dividends      = 2;
+  common.v1.Money interest       = 3;
+  common.v1.Money sales_proceeds = 4;
+  common.v1.Money withdrawals    = 5;
+  common.v1.Money purchases      = 6;
+  common.v1.Money fees           = 7;
+  common.v1.Money taxes          = 8;
+}
+
+message CashFlowItem {
+  string            id              = 1;
+  string            event_date      = 2; // YYYY-MM-DD
+  TransactionType   type            = 3;
+  string            flow_direction  = 4; // "INFLOW" or "OUTFLOW"
+  string            category        = 5; // e.g. "DIVIDENDS", "PURCHASES", "CAPITAL_DEPOSITS"
+  string            symbol          = 6; // e.g. "AAPL", "IVV.AX", or empty
+  string            instrument_name = 7;
+  string            description     = 8;
+  common.v1.Money   net_amount      = 9; // Net cash flow impact in base currency
+  common.v1.Money   running_balance = 10;// Cumulative cash balance in base currency
+  common.v1.Money   local_amount    = 11;// Original transaction currency & amount
+  common.v1.Money   fee             = 12;
+  common.v1.Money   withholding_tax = 13;
+}
+
+message GetCashFlowReportResponse {
+  CashFlowSummary           summary        = 1;
+  CashFlowCategoryBreakdown breakdown      = 2;
+  repeated CashFlowItem     items          = 3;
+  string                    base_currency  = 4;
+  string                    from_date      = 5;
+  string                    to_date        = 6;
+}
+
 
 

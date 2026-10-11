@@ -6,7 +6,10 @@ export default {
         7,
         8,
         11,
-        12
+        12,
+        47,
+        48,
+        49
     ],
     "types": {
         "Decimal": {},
@@ -242,6 +245,15 @@ export default {
                     "externalRefs": [
                         2,
                         "[String!]!"
+                    ]
+                }
+            ],
+            "cashFlowReport": [
+                54,
+                {
+                    "filter": [
+                        50,
+                        "CashFlowFilterInput!"
                     ]
                 }
             ],
@@ -1076,6 +1088,142 @@ export default {
             ],
             "valuationsRecomputed": [
                 8
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "CashFlowTimeframe": {},
+        "CashFlowDirection": {},
+        "CashFlowCategory": {},
+        "CashFlowFilterInput": {
+            "timeframe": [
+                47
+            ],
+            "fromDate": [
+                2
+            ],
+            "toDate": [
+                2
+            ],
+            "currency": [
+                2
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "CashFlowSummary": {
+            "startingCashBalance": [
+                1
+            ],
+            "totalInflows": [
+                1
+            ],
+            "totalOutflows": [
+                1
+            ],
+            "netCashFlow": [
+                1
+            ],
+            "endingCashBalance": [
+                1
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "CashFlowCategoryBreakdown": {
+            "deposits": [
+                1
+            ],
+            "dividends": [
+                1
+            ],
+            "interest": [
+                1
+            ],
+            "salesProceeds": [
+                1
+            ],
+            "withdrawals": [
+                1
+            ],
+            "purchases": [
+                1
+            ],
+            "fees": [
+                1
+            ],
+            "taxes": [
+                1
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "CashFlowItem": {
+            "id": [
+                7
+            ],
+            "eventDate": [
+                2
+            ],
+            "type": [
+                3
+            ],
+            "flowDirection": [
+                48
+            ],
+            "category": [
+                49
+            ],
+            "symbol": [
+                2
+            ],
+            "instrumentName": [
+                2
+            ],
+            "description": [
+                2
+            ],
+            "netAmount": [
+                1
+            ],
+            "runningBalance": [
+                1
+            ],
+            "localAmount": [
+                1
+            ],
+            "fee": [
+                1
+            ],
+            "withholdingTax": [
+                1
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "CashFlowReport": {
+            "summary": [
+                51
+            ],
+            "breakdown": [
+                52
+            ],
+            "items": [
+                53
+            ],
+            "baseCurrency": [
+                2
+            ],
+            "fromDate": [
+                2
+            ],
+            "toDate": [
+                2
             ],
             "__typename": [
                 2

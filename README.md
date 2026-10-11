@@ -28,8 +28,9 @@ A modern portfolio tracker built for serious investors. GraphFolio accurately me
   - **Currency Gain/Loss**: Foreign exchange rate fluctuation between the acquisition rate and current market rate: $\text{FXGain}_{\text{base}} = V_{\text{local}} \times (\text{FX}_t - \overline{\text{FX}}_0)$ for international assets, with a clean neutral indicator (`—`) for domestic assets.
   - **Verified Mathematical Identity**: $\text{CapGain}_{\text{base}} + \text{FXGain}_{\text{base}} \equiv V_{\text{base}} - C_{\text{base}}$ invariant preserved across all multi-currency assets.
   - **Expanded Desktop Layout**: Widened dashboard layout (`max-width: 1680px`) with 10 columns (`Asset`, `Price`, `Avg Buy Price`, `Quantity`, `Total Value`, `Capital Gain`, `Income`, `Currency Gain`, `Total Return`, `Today's Return`), `INTL` badges, itemized subtotal footer row, and responsive card views on mobile.
+- **Portfolio Cash Flow Report & Unified Reports Hub**: Dedicated investor reporting workspace accessible via the dashboard "Reports" tab (`ReportsView`). Features a comprehensive Cash Flow Report (`CashFlowReport`) with dynamic timeframe selection (`MTD`, `QTD`, `YTD`, `Last Year`, `All-Time`, `Custom Date Range`), 4 summary KPI cards (Opening Cash Balance, Total Inflows, Total Outflows, Closing Cash Balance, Net Cash Flow), categorized breakdowns (Inflows: Deposits, Dividends, Asset Sales; Outflows: Withdrawals, Asset Purchases, Brokerage Fees), mathematical reconciliation verification ($\text{Closing Balance} \equiv \text{Opening Balance} + \text{Net Cash Flow}$), chronological transaction ledger with running cash balances, and client-side CSV export. Designed as an extensible hub for upcoming tax and dividend reports.
 - **Clean Microservice Monorepo**: Contract-first gRPC services with a Go GraphQL Backend-for-Frontend (BFF) and strongly-typed frontend queries.
-- **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, Vite, modal transaction entry (`AddTransactionModal`), statement import (`ImportTransactionsModal`), investor preferences dialog (`UserPreferencesModal`), and instant reactive state refresh.
+- **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, Vite, modal transaction entry (`AddTransactionModal`), statement import (`ImportTransactionsModal`), investor preferences dialog (`UserPreferencesModal`), reports hub (`ReportsView`), and instant reactive state refresh.
 
 > 📋 *For a comprehensive list of completed milestones, in-progress components, and planned roadmap items, see [`FEATURES.md`](file:///Users/oscargarcia/workspace/graphfolio/FEATURES.md).*
 
@@ -143,7 +144,7 @@ make run
 GraphFolio enforces a strict separation of concerns across layered boundaries:
 
 ```text
-React Components (Dashboard, PerformanceChart, TransactionLedger, UserPreferencesModal)
+React Components (Dashboard, PerformanceChart, TransactionLedger, ReportsView, CashFlowReport, UserPreferencesModal)
       │
       ▼  (Typed queries & mutations via GenQL)
 GraphQL Backend-for-Frontend (BFF)  [localhost:8080]
@@ -197,7 +198,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 ```text
 ├── proto/                        # Single Source of Truth for APIs (Protobuf definitions)
 │   ├── common/v1/decimal.proto   # Decimal and Money contracts
-│   ├── portfolio/v1/             # Portfolio gRPC service (GetPortfolio, UpdatePortfolioBaseCurrency, AddTransaction, DeleteInstrument, TriggerBackfill, etc.)
+│   ├── portfolio/v1/             # Portfolio gRPC service (GetPortfolio, UpdatePortfolioBaseCurrency, AddTransaction, GetCashFlowReport, DeleteInstrument, TriggerBackfill, etc.)
 │   └── user/v1/user.proto        # User gRPC service (GetUserPreferences, UpdateUserPreferences, ListSupportedCurrencies)
 ├── pkg/                          # Shared Go infrastructure
 │   ├── database/                 # pgx connection pooling, auto .env loading, migration runner
@@ -208,7 +209,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── cmd/server/           # Application entrypoint (:50051)
 │   │   ├── cmd/worker/           # Scheduled EOD & on-demand valuation worker (make run-valuation-job)
 │   │   ├── cmd/market-ingest/    # Market data ingestion & historical backfill CLI (make ingest-market-data)
-│   │   ├── internal/             # Domain entities, repository, service, and gRPC server
+│   │   ├── internal/             # Domain entities, repository, service (incl. cash flow report & engine), and gRPC server
 │   │   ├── migrations/           # Versioned schema migrations (000001 - 000009)
 │   │   └── seeds/                # Seed fixtures (dev_seed.sql with 365-day history)
 │   └── user-api/                 # User domain microservice (:50052)
@@ -221,7 +222,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   └── cmd/server/               # BFF entrypoint
 ├── web/                          # Frontend Workspace Monorepo
 │   │   ├── main-app/             # Primary Investor React App (:5173)
-│   │   │   └── src/components/   # Dashboard, PerformanceChart, TransactionLedger, AddTransactionModal, ImportTransactionsModal, UserPreferencesModal
+│   │   │   └── src/components/   # Dashboard, PerformanceChart, TransactionLedger, ReportsView, CashFlowReport, AddTransactionModal, ImportTransactionsModal, UserPreferencesModal
 │   │   └── admin-app/            # Internal Operations Portal (:5174)
 │   │       └── src/components/   # AssetManagement, DeleteAssetModal, PriceManagement, FXManagement, FXTrendChart, FXOverrideModal, BackfillModal, IngestionPipeline
 │   └── packages/
@@ -248,9 +249,12 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── multi-broker-csv-ingestion-implementation-plan.md
 │   │   ├── cash-statement-csv-ingestion-implementation-plan.md
 │   │   ├── holding-return-attribution-implementation-plan.md
+│   │   ├── portfolio-cash-flow-report-implementation-plan.md
 │   │   └── web-workspace-refactoring-plan.md
 │   ├── user-stories/             # Product specifications & acceptance criteria
-│   │   └── investment-holding-capital-gain-income-currency.md
+│   │   ├── investment-holding-capital-gain-income-currency.md
+│   │   └── portfolio-cash-flow-report-generation.md
+│   ├── negative-cash-balance-investigation-report.md # Cash ledger overdraft root cause & remediation report
 │   ├── competitive-analysis.md
 │   └── genql-usage.md
 ├── FEATURES.md                   # Master features matrix & roadmap (completed & planned)
@@ -336,6 +340,8 @@ make generate
 - **Cash Statement CSV Ingestion Plan**: [`docs/plans/cash-statement-csv-ingestion-implementation-plan.md`](./docs/plans/cash-statement-csv-ingestion-implementation-plan.md)
 - **Holding Return Attribution Implementation Plan**: [`docs/plans/holding-return-attribution-implementation-plan.md`](./docs/plans/holding-return-attribution-implementation-plan.md)
 - **Holding Return Attribution User Story**: [`docs/user-stories/investment-holding-capital-gain-income-currency.md`](./docs/user-stories/investment-holding-capital-gain-income-currency.md)
+- **Portfolio Cash Flow Report Implementation Plan**: [`docs/plans/portfolio-cash-flow-report-implementation-plan.md`](./docs/plans/portfolio-cash-flow-report-implementation-plan.md)
+- **Portfolio Cash Flow Report User Story**: [`docs/user-stories/portfolio-cash-flow-report-generation.md`](./docs/user-stories/portfolio-cash-flow-report-generation.md)
 - **Negative Cash Balance Investigation Report**: [`docs/negative-cash-balance-investigation-report.md`](./docs/negative-cash-balance-investigation-report.md)
 - **Competitive Strategy Analysis**: [`docs/competitive-analysis.md`](./docs/competitive-analysis.md)
 - **Frontend GraphQL Setup**: [`docs/genql-usage.md`](./docs/genql-usage.md)

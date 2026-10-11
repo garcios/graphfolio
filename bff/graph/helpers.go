@@ -520,3 +520,95 @@ func toModelExchange(e *pb.Exchange) *model.Exchange {
 		Timezone: e.Timezone,
 	}
 }
+
+func toProtoCashFlowTimeframe(tf model.CashFlowTimeframe) pb.CashFlowTimeframe {
+	switch tf {
+	case model.CashFlowTimeframeMtd:
+		return pb.CashFlowTimeframe_CASH_FLOW_TIMEFRAME_MTD
+	case model.CashFlowTimeframeYtd:
+		return pb.CashFlowTimeframe_CASH_FLOW_TIMEFRAME_YTD
+	case model.CashFlowTimeframeM1:
+		return pb.CashFlowTimeframe_CASH_FLOW_TIMEFRAME_1M
+	case model.CashFlowTimeframeM3:
+		return pb.CashFlowTimeframe_CASH_FLOW_TIMEFRAME_3M
+	case model.CashFlowTimeframeM6:
+		return pb.CashFlowTimeframe_CASH_FLOW_TIMEFRAME_6M
+	case model.CashFlowTimeframeY1:
+		return pb.CashFlowTimeframe_CASH_FLOW_TIMEFRAME_1Y
+	case model.CashFlowTimeframeAll:
+		return pb.CashFlowTimeframe_CASH_FLOW_TIMEFRAME_ALL
+	case model.CashFlowTimeframeCustom:
+		return pb.CashFlowTimeframe_CASH_FLOW_TIMEFRAME_CUSTOM
+	default:
+		return pb.CashFlowTimeframe_CASH_FLOW_TIMEFRAME_YTD
+	}
+}
+
+func toModelCashFlowReport(resp *pb.GetCashFlowReportResponse) *model.CashFlowReport {
+	if resp == nil {
+		return nil
+	}
+
+	summary := &model.CashFlowSummary{
+		StartingCashBalance: toModelMoney(resp.GetSummary().GetStartingCashBalance()),
+		TotalInflows:        toModelMoney(resp.GetSummary().GetTotalInflows()),
+		TotalOutflows:       toModelMoney(resp.GetSummary().GetTotalOutflows()),
+		NetCashFlow:         toModelMoney(resp.GetSummary().GetNetCashFlow()),
+		EndingCashBalance:   toModelMoney(resp.GetSummary().GetEndingCashBalance()),
+	}
+
+	breakdown := &model.CashFlowCategoryBreakdown{
+		Deposits:      toModelMoney(resp.GetBreakdown().GetDeposits()),
+		Dividends:     toModelMoney(resp.GetBreakdown().GetDividends()),
+		Interest:      toModelMoney(resp.GetBreakdown().GetInterest()),
+		SalesProceeds: toModelMoney(resp.GetBreakdown().GetSalesProceeds()),
+		Withdrawals:   toModelMoney(resp.GetBreakdown().GetWithdrawals()),
+		Purchases:     toModelMoney(resp.GetBreakdown().GetPurchases()),
+		Fees:          toModelMoney(resp.GetBreakdown().GetFees()),
+		Taxes:         toModelMoney(resp.GetBreakdown().GetTaxes()),
+	}
+
+	items := make([]*model.CashFlowItem, len(resp.GetItems()))
+	for i, item := range resp.GetItems() {
+		flowDir := model.CashFlowDirectionInflow
+		if item.GetFlowDirection() == "OUTFLOW" {
+			flowDir = model.CashFlowDirectionOutflow
+		}
+
+		var symPtr, namePtr *string
+		if item.GetSymbol() != "" {
+			s := item.GetSymbol()
+			symPtr = &s
+		}
+		if item.GetInstrumentName() != "" {
+			n := item.GetInstrumentName()
+			namePtr = &n
+		}
+
+		items[i] = &model.CashFlowItem{
+			ID:             item.GetId(),
+			EventDate:      item.GetEventDate(),
+			Type:           toModelTransactionType(item.GetType()),
+			FlowDirection:  flowDir,
+			Category:       model.CashFlowCategory(item.GetCategory()),
+			Symbol:         symPtr,
+			InstrumentName: namePtr,
+			Description:    item.GetDescription(),
+			NetAmount:      toModelMoney(item.GetNetAmount()),
+			RunningBalance: toModelMoney(item.GetRunningBalance()),
+			LocalAmount:    toModelMoney(item.GetLocalAmount()),
+			Fee:            toModelMoney(item.GetFee()),
+			WithholdingTax: toModelMoney(item.GetWithholdingTax()),
+		}
+	}
+
+	return &model.CashFlowReport{
+		Summary:      summary,
+		Breakdown:    breakdown,
+		Items:        items,
+		BaseCurrency: resp.GetBaseCurrency(),
+		FromDate:     resp.GetFromDate(),
+		ToDate:       resp.GetToDate(),
+	}
+}
+

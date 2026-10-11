@@ -26,6 +26,7 @@ type PortfolioService interface {
 	CheckTransactionDuplicates(ctx context.Context, userID string, externalRefs []string) ([]string, error)
 	BatchImportTransactions(ctx context.Context, input domain.BatchImportInput) (*domain.BatchImportResult, error)
 	RebuildValuations(ctx context.Context, userID string, fromDate *time.Time) error
+	GetCashFlowReport(ctx context.Context, input domain.CashFlowFilter) (*domain.CashFlowReport, error)
 
 	// Admin: Asset Directory Management
 	ListAllInstruments(ctx context.Context, isActive *bool, search *string) ([]domain.Instrument, error)

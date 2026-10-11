@@ -6,6 +6,7 @@ import { AddTransactionModal } from './AddTransactionModal';
 import { ImportTransactionsModal } from './ImportTransactionsModal';
 import { PerformanceChart } from './PerformanceChart';
 import { TransactionLedger } from './TransactionLedger';
+import { ReportsView } from './ReportsView';
 import { UserPreferencesModal, type UserPreferencesData, type CurrencyItem } from './UserPreferencesModal';
 
 type SortField = 'ticker' | 'price' | 'averageBuyPrice' | 'quantity' | 'totalValue' | 'capitalGain' | 'income' | 'currencyGain' | 'totalReturn' | 'todayReturn';
@@ -22,7 +23,7 @@ export const Dashboard = () => {
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'ledger'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'ledger' | 'reports'>('overview');
   const [ledgerRefreshKey, setLedgerRefreshKey] = useState(0);
   const [sortField, setSortField] = useState<SortField>('totalValue');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
@@ -283,6 +284,13 @@ export const Dashboard = () => {
           >
             Transaction Ledger
           </button>
+          <button
+            type="button"
+            className={`view-tab-btn ${activeTab === 'reports' ? 'active' : ''}`}
+            onClick={() => setActiveTab('reports')}
+          >
+            Reports
+          </button>
         </div>
 
         <div className="header-actions">
@@ -538,7 +546,7 @@ export const Dashboard = () => {
             </div>
           </section>
         </>
-      ) : (
+      ) : activeTab === 'ledger' ? (
         <TransactionLedger
           refreshTrigger={ledgerRefreshKey}
           onOpenImportModal={() => setIsImportModalOpen(true)}
@@ -548,6 +556,8 @@ export const Dashboard = () => {
             setTimeout(() => setToastMessage(null), 4000);
           }}
         />
+      ) : (
+        <ReportsView preferredCurrency={userPrefs?.displayCurrency} />
       )}
 
       <AddTransactionModal

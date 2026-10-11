@@ -43,6 +43,7 @@ const (
 	PortfolioService_RecordFXRateOverride_FullMethodName        = "/portfolio.v1.PortfolioService/RecordFXRateOverride"
 	PortfolioService_TriggerBackfill_FullMethodName             = "/portfolio.v1.PortfolioService/TriggerBackfill"
 	PortfolioService_RebuildValuations_FullMethodName           = "/portfolio.v1.PortfolioService/RebuildValuations"
+	PortfolioService_GetCashFlowReport_FullMethodName           = "/portfolio.v1.PortfolioService/GetCashFlowReport"
 )
 
 // PortfolioServiceClient is the client API for PortfolioService service.
@@ -80,6 +81,8 @@ type PortfolioServiceClient interface {
 	TriggerBackfill(ctx context.Context, in *TriggerBackfillRequest, opts ...grpc.CallOption) (*TriggerBackfillResponse, error)
 	// Historical Valuation Engine & Replay
 	RebuildValuations(ctx context.Context, in *RebuildValuationsRequest, opts ...grpc.CallOption) (*RebuildValuationsResponse, error)
+	// Portfolio Cash Flow Report
+	GetCashFlowReport(ctx context.Context, in *GetCashFlowReportRequest, opts ...grpc.CallOption) (*GetCashFlowReportResponse, error)
 }
 
 type portfolioServiceClient struct {
@@ -306,6 +309,15 @@ func (c *portfolioServiceClient) RebuildValuations(ctx context.Context, in *Rebu
 	return out, nil
 }
 
+func (c *portfolioServiceClient) GetCashFlowReport(ctx context.Context, in *GetCashFlowReportRequest, opts ...grpc.CallOption) (*GetCashFlowReportResponse, error) {
+	out := new(GetCashFlowReportResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_GetCashFlowReport_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PortfolioServiceServer is the server API for PortfolioService service.
 // All implementations must embed UnimplementedPortfolioServiceServer
 // for forward compatibility
@@ -341,6 +353,8 @@ type PortfolioServiceServer interface {
 	TriggerBackfill(context.Context, *TriggerBackfillRequest) (*TriggerBackfillResponse, error)
 	// Historical Valuation Engine & Replay
 	RebuildValuations(context.Context, *RebuildValuationsRequest) (*RebuildValuationsResponse, error)
+	// Portfolio Cash Flow Report
+	GetCashFlowReport(context.Context, *GetCashFlowReportRequest) (*GetCashFlowReportResponse, error)
 	mustEmbedUnimplementedPortfolioServiceServer()
 }
 
@@ -419,6 +433,9 @@ func (UnimplementedPortfolioServiceServer) TriggerBackfill(context.Context, *Tri
 }
 func (UnimplementedPortfolioServiceServer) RebuildValuations(context.Context, *RebuildValuationsRequest) (*RebuildValuationsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RebuildValuations not implemented")
+}
+func (UnimplementedPortfolioServiceServer) GetCashFlowReport(context.Context, *GetCashFlowReportRequest) (*GetCashFlowReportResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetCashFlowReport not implemented")
 }
 func (UnimplementedPortfolioServiceServer) mustEmbedUnimplementedPortfolioServiceServer() {}
 
@@ -865,6 +882,24 @@ func _PortfolioService_RebuildValuations_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortfolioService_GetCashFlowReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetCashFlowReportRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).GetCashFlowReport(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_GetCashFlowReport_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).GetCashFlowReport(ctx, req.(*GetCashFlowReportRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PortfolioService_ServiceDesc is the grpc.ServiceDesc for PortfolioService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -967,6 +1002,10 @@ var PortfolioService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RebuildValuations",
 			Handler:    _PortfolioService_RebuildValuations_Handler,
+		},
+		{
+			MethodName: "GetCashFlowReport",
+			Handler:    _PortfolioService_GetCashFlowReport_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

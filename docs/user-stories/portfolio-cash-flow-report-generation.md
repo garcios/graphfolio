@@ -1,5 +1,8 @@
 # User Story: Portfolio Cash Flow Report Generation
 
+> **Implementation Plan**: [portfolio-cash-flow-report-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/portfolio-cash-flow-report-implementation-plan.md)  
+> **Status**: Completed  
+
 ## 1. Story Statement
 **As an** investor tracking my stock portfolio,  
 **I want to** generate and view a comprehensive Cash Flow Report covering all inflows and outflows (deposits, withdrawals, dividends, interest, and trade settlements),  
@@ -25,7 +28,7 @@
 
 ### AC 1: Filter & Date Range Selection
 - **Scenario: Choosing the reporting period**
-  - **Given** I am on the Cash Flow Report page,
+  - **Given** I am on the Reports page and select the "Cash Flow Report",
   - **When** I select a date range (e.g., *MTD, YTD, Trailing 12 Months, Custom Date Range*),
   - **Then** the report updates to only display cash events where `settlement_date` falls within the selected window.
 

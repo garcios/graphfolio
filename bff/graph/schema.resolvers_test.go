@@ -68,6 +68,7 @@ type fakePortfolioClient struct {
 	recordFXRateOverrideFn        func(ctx context.Context, in *pb.RecordFXRateOverrideRequest) (*pb.RecordFXRateOverrideResponse, error)
 	checkTransactionDuplicatesFn  func(ctx context.Context, in *pb.CheckTransactionDuplicatesRequest) (*pb.CheckTransactionDuplicatesResponse, error)
 	batchImportTransactionsFn     func(ctx context.Context, in *pb.BatchImportTransactionsRequest) (*pb.BatchImportTransactionsResponse, error)
+	getCashFlowReportFn           func(ctx context.Context, in *pb.GetCashFlowReportRequest) (*pb.GetCashFlowReportResponse, error)
 }
 
 func (f *fakePortfolioClient) GetPortfolio(ctx context.Context, in *pb.GetPortfolioRequest, opts ...grpc.CallOption) (*pb.GetPortfolioResponse, error) {
@@ -227,6 +228,13 @@ func (f *fakePortfolioClient) CheckTransactionDuplicates(ctx context.Context, in
 func (f *fakePortfolioClient) BatchImportTransactions(ctx context.Context, in *pb.BatchImportTransactionsRequest, opts ...grpc.CallOption) (*pb.BatchImportTransactionsResponse, error) {
 	if f.batchImportTransactionsFn != nil {
 		return f.batchImportTransactionsFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakePortfolioClient) GetCashFlowReport(ctx context.Context, in *pb.GetCashFlowReportRequest, opts ...grpc.CallOption) (*pb.GetCashFlowReportResponse, error) {
+	if f.getCashFlowReportFn != nil {
+		return f.getCashFlowReportFn(ctx, in)
 	}
 	return nil, nil
 }
@@ -2031,3 +2039,108 @@ func TestMutationResolver_ImportTransactions(t *testing.T) {
 		}
 	})
 }
+
+func TestQueryResolver_CashFlowReport(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully queries cash flow report", func(t *testing.T) {
+		sym := "BHP.AX"
+		name := "BHP Group"
+		fakeClient := &fakePortfolioClient{
+			getCashFlowReportFn: func(ctx context.Context, in *pb.GetCashFlowReportRequest) (*pb.GetCashFlowReportResponse, error) {
+				if in.GetUserId() != "1" {
+					t.Errorf("expected user_id 1, got %s", in.GetUserId())
+				}
+				if in.GetTimeframe() != pb.CashFlowTimeframe_CASH_FLOW_TIMEFRAME_MTD {
+					t.Errorf("expected MTD timeframe, got %v", in.GetTimeframe())
+				}
+				return &pb.GetCashFlowReportResponse{
+					Summary: &pb.CashFlowSummary{
+						StartingCashBalance: &commonpb.Money{Amount: &commonpb.Decimal{Value: "5000.00"}, CurrencyCode: "AUD"},
+						TotalInflows:        &commonpb.Money{Amount: &commonpb.Decimal{Value: "1500.00"}, CurrencyCode: "AUD"},
+						TotalOutflows:       &commonpb.Money{Amount: &commonpb.Decimal{Value: "2000.00"}, CurrencyCode: "AUD"},
+						NetCashFlow:         &commonpb.Money{Amount: &commonpb.Decimal{Value: "-500.00"}, CurrencyCode: "AUD"},
+						EndingCashBalance:   &commonpb.Money{Amount: &commonpb.Decimal{Value: "4500.00"}, CurrencyCode: "AUD"},
+					},
+					Breakdown: &pb.CashFlowCategoryBreakdown{
+						Deposits:      &commonpb.Money{Amount: &commonpb.Decimal{Value: "1000.00"}, CurrencyCode: "AUD"},
+						Dividends:     &commonpb.Money{Amount: &commonpb.Decimal{Value: "500.00"}, CurrencyCode: "AUD"},
+						Interest:      &commonpb.Money{Amount: &commonpb.Decimal{Value: "0.00"}, CurrencyCode: "AUD"},
+						SalesProceeds: &commonpb.Money{Amount: &commonpb.Decimal{Value: "0.00"}, CurrencyCode: "AUD"},
+						Withdrawals:   &commonpb.Money{Amount: &commonpb.Decimal{Value: "0.00"}, CurrencyCode: "AUD"},
+						Purchases:     &commonpb.Money{Amount: &commonpb.Decimal{Value: "2000.00"}, CurrencyCode: "AUD"},
+						Fees:          &commonpb.Money{Amount: &commonpb.Decimal{Value: "0.00"}, CurrencyCode: "AUD"},
+						Taxes:         &commonpb.Money{Amount: &commonpb.Decimal{Value: "0.00"}, CurrencyCode: "AUD"},
+					},
+					Items: []*pb.CashFlowItem{
+						{
+							Id:             "item-1",
+							EventDate:      "2026-10-05",
+							Type:           pb.TransactionType_TRANSACTION_TYPE_DIVIDEND,
+							FlowDirection:  "INFLOW",
+							Category:       "DIVIDENDS",
+							Symbol:         sym,
+							InstrumentName: name,
+							Description:    "Dividend from BHP.AX",
+							NetAmount:      &commonpb.Money{Amount: &commonpb.Decimal{Value: "500.00"}, CurrencyCode: "AUD"},
+							RunningBalance: &commonpb.Money{Amount: &commonpb.Decimal{Value: "5500.00"}, CurrencyCode: "AUD"},
+							LocalAmount:    &commonpb.Money{Amount: &commonpb.Decimal{Value: "500.00"}, CurrencyCode: "AUD"},
+							Fee:            &commonpb.Money{Amount: &commonpb.Decimal{Value: "0.00"}, CurrencyCode: "AUD"},
+							WithholdingTax: &commonpb.Money{Amount: &commonpb.Decimal{Value: "0.00"}, CurrencyCode: "AUD"},
+						},
+					},
+					BaseCurrency: "AUD",
+					FromDate:     "2026-10-01",
+					ToDate:       "2026-10-15",
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		res, err := qResolver.CashFlowReport(ctx, model.CashFlowFilterInput{
+			Timeframe: model.CashFlowTimeframeMtd,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res == nil {
+			t.Fatalf("expected result, got nil")
+		}
+		if res.BaseCurrency != "AUD" {
+			t.Errorf("expected base currency AUD, got %s", res.BaseCurrency)
+		}
+		if res.Summary.StartingCashBalance.Amount.String() != "5000.00" && res.Summary.StartingCashBalance.Amount.String() != "5000" {
+			t.Errorf("expected starting cash 5000.00, got %s", res.Summary.StartingCashBalance.Amount.String())
+		}
+		if res.Summary.EndingCashBalance.Amount.String() != "4500.00" && res.Summary.EndingCashBalance.Amount.String() != "4500" {
+			t.Errorf("expected ending cash 4500.00, got %s", res.Summary.EndingCashBalance.Amount.String())
+		}
+		if len(res.Items) != 1 {
+			t.Fatalf("expected 1 item, got %d", len(res.Items))
+		}
+		if res.Items[0].Description != "Dividend from BHP.AX" {
+			t.Errorf("expected description 'Dividend from BHP.AX', got %s", res.Items[0].Description)
+		}
+	})
+
+	t.Run("handles error from portfolio service", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			getCashFlowReportFn: func(ctx context.Context, in *pb.GetCashFlowReportRequest) (*pb.GetCashFlowReportResponse, error) {
+				return nil, errors.New("portfolio service unavailable")
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		_, err := qResolver.CashFlowReport(ctx, model.CashFlowFilterInput{
+			Timeframe: model.CashFlowTimeframeMtd,
+		})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+	})
+}
+

@@ -235,6 +235,21 @@ func (mr *MockRepositoryMockRecorder) GetCashFXRates(ctx, baseCurrency any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCashFXRates", reflect.TypeOf((*MockRepository)(nil).GetCashFXRates), ctx, baseCurrency)
 }
 
+// GetCashFlowTransactions mocks base method.
+func (m *MockRepository) GetCashFlowTransactions(ctx context.Context, portfolioID uuid.UUID, toDate time.Time) ([]domain.TransactionWithInstrument, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCashFlowTransactions", ctx, portfolioID, toDate)
+	ret0, _ := ret[0].([]domain.TransactionWithInstrument)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCashFlowTransactions indicates an expected call of GetCashFlowTransactions.
+func (mr *MockRepositoryMockRecorder) GetCashFlowTransactions(ctx, portfolioID, toDate any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCashFlowTransactions", reflect.TypeOf((*MockRepository)(nil).GetCashFlowTransactions), ctx, portfolioID, toDate)
+}
+
 // GetCorporateActions mocks base method.
 func (m *MockRepository) GetCorporateActions(ctx context.Context, instrumentIDs []uuid.UUID) ([]domain.CorporateAction, error) {
 	m.ctrl.T.Helper()

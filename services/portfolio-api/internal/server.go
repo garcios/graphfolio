@@ -962,6 +962,125 @@ func (s *PortfolioServer) RebuildValuations(ctx context.Context, req *pb.Rebuild
 	}, nil
 }
 
+func (s *PortfolioServer) GetCashFlowReport(ctx context.Context, req *pb.GetCashFlowReportRequest) (*pb.GetCashFlowReportResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	userID := req.GetUserId()
+	if userID == "" {
+		userID = "1"
+	}
+
+	timeframe := mapProtoCashFlowTimeframeToDomain(req.GetTimeframe())
+
+	var fromDate, toDate time.Time
+	if req.GetFromDate() != "" {
+		if parsed, err := time.Parse("2006-01-02", req.GetFromDate()); err == nil {
+			fromDate = parsed.UTC()
+		}
+	}
+	if req.GetToDate() != "" {
+		if parsed, err := time.Parse("2006-01-02", req.GetToDate()); err == nil {
+			toDate = parsed.UTC()
+		}
+	}
+
+	filter := domain.CashFlowFilter{
+		UserID:    userID,
+		Timeframe: timeframe,
+		FromDate:  fromDate,
+		ToDate:    toDate,
+		Currency:  req.GetCurrency(),
+	}
+
+	report, err := s.svc.GetCashFlowReport(ctx, filter)
+	if err != nil {
+		if errors.Is(err, repository.ErrPortfolioNotFound) {
+			return nil, status.Errorf(codes.NotFound, "portfolio not found for user: %s", userID)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to generate cash flow report: %v", err)
+	}
+
+	items := make([]*pb.CashFlowItem, len(report.Items))
+	for i, item := range report.Items {
+		var sym, name string
+		if item.Symbol != nil {
+			sym = *item.Symbol
+		}
+		if item.InstrumentName != nil {
+			name = *item.InstrumentName
+		}
+		items[i] = &pb.CashFlowItem{
+			Id:             item.ID.String(),
+			EventDate:      item.EventDate.Format("2006-01-02"),
+			Type:           mapDomainTxTypeToProto(item.Type),
+			FlowDirection:  string(item.FlowDirection),
+			Category:       string(item.Category),
+			Symbol:         sym,
+			InstrumentName: name,
+			Description:    item.Description,
+			NetAmount:      decimalpb.MoneyToProto(item.NetAmount.Amount, item.NetAmount.CurrencyCode),
+			RunningBalance: decimalpb.MoneyToProto(item.RunningBalance.Amount, item.RunningBalance.CurrencyCode),
+			LocalAmount:    decimalpb.MoneyToProto(item.LocalAmount.Amount, item.LocalAmount.CurrencyCode),
+			Fee:            decimalpb.MoneyToProto(item.Fee.Amount, item.Fee.CurrencyCode),
+			WithholdingTax: decimalpb.MoneyToProto(item.WithholdingTax.Amount, item.WithholdingTax.CurrencyCode),
+		}
+	}
+
+	var fromDateStr string
+	if !report.FromDate.IsZero() {
+		fromDateStr = report.FromDate.Format("2006-01-02")
+	}
+
+	return &pb.GetCashFlowReportResponse{
+		Summary: &pb.CashFlowSummary{
+			StartingCashBalance: decimalpb.MoneyToProto(report.Summary.StartingCashBalance.Amount, report.Summary.StartingCashBalance.CurrencyCode),
+			TotalInflows:        decimalpb.MoneyToProto(report.Summary.TotalInflows.Amount, report.Summary.TotalInflows.CurrencyCode),
+			TotalOutflows:       decimalpb.MoneyToProto(report.Summary.TotalOutflows.Amount, report.Summary.TotalOutflows.CurrencyCode),
+			NetCashFlow:         decimalpb.MoneyToProto(report.Summary.NetCashFlow.Amount, report.Summary.NetCashFlow.CurrencyCode),
+			EndingCashBalance:   decimalpb.MoneyToProto(report.Summary.EndingCashBalance.Amount, report.Summary.EndingCashBalance.CurrencyCode),
+		},
+		Breakdown: &pb.CashFlowCategoryBreakdown{
+			Deposits:      decimalpb.MoneyToProto(report.Breakdown.Deposits.Amount, report.Breakdown.Deposits.CurrencyCode),
+			Dividends:     decimalpb.MoneyToProto(report.Breakdown.Dividends.Amount, report.Breakdown.Dividends.CurrencyCode),
+			Interest:      decimalpb.MoneyToProto(report.Breakdown.Interest.Amount, report.Breakdown.Interest.CurrencyCode),
+			SalesProceeds: decimalpb.MoneyToProto(report.Breakdown.SalesProceeds.Amount, report.Breakdown.SalesProceeds.CurrencyCode),
+			Withdrawals:   decimalpb.MoneyToProto(report.Breakdown.Withdrawals.Amount, report.Breakdown.Withdrawals.CurrencyCode),
+			Purchases:     decimalpb.MoneyToProto(report.Breakdown.Purchases.Amount, report.Breakdown.Purchases.CurrencyCode),
+			Fees:          decimalpb.MoneyToProto(report.Breakdown.Fees.Amount, report.Breakdown.Fees.CurrencyCode),
+			Taxes:         decimalpb.MoneyToProto(report.Breakdown.Taxes.Amount, report.Breakdown.Taxes.CurrencyCode),
+		},
+		Items:        items,
+		BaseCurrency: report.BaseCurrency,
+		FromDate:     fromDateStr,
+		ToDate:       report.ToDate.Format("2006-01-02"),
+	}, nil
+}
+
+func mapProtoCashFlowTimeframeToDomain(tf pb.CashFlowTimeframe) domain.CashFlowTimeframe {
+	switch tf {
+	case pb.CashFlowTimeframe_CASH_FLOW_TIMEFRAME_MTD:
+		return domain.CashFlowTimeframeMTD
+	case pb.CashFlowTimeframe_CASH_FLOW_TIMEFRAME_YTD:
+		return domain.CashFlowTimeframeYTD
+	case pb.CashFlowTimeframe_CASH_FLOW_TIMEFRAME_1M:
+		return domain.CashFlowTimeframe1M
+	case pb.CashFlowTimeframe_CASH_FLOW_TIMEFRAME_3M:
+		return domain.CashFlowTimeframe3M
+	case pb.CashFlowTimeframe_CASH_FLOW_TIMEFRAME_6M:
+		return domain.CashFlowTimeframe6M
+	case pb.CashFlowTimeframe_CASH_FLOW_TIMEFRAME_1Y:
+		return domain.CashFlowTimeframe1Y
+	case pb.CashFlowTimeframe_CASH_FLOW_TIMEFRAME_ALL:
+		return domain.CashFlowTimeframeAll
+	case pb.CashFlowTimeframe_CASH_FLOW_TIMEFRAME_CUSTOM:
+		return domain.CashFlowTimeframeCustom
+	default:
+		return domain.CashFlowTimeframeYTD
+	}
+}
+
 func (s *PortfolioServer) ListCurrencyPairs(ctx context.Context, req *pb.ListCurrencyPairsRequest) (*pb.ListCurrencyPairsResponse, error) {
 	if s.svc == nil {
 		return nil, status.Error(codes.Unavailable, "service not initialized")
