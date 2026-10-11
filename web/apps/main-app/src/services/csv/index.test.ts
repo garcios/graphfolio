@@ -36,4 +36,21 @@ describe('parseBrokerCSV end-to-end', () => {
     expect(googl?.type).toBe('DIVIDEND');
     expect(googl?.tradeDate).toBe('2026-10-08');
   });
+
+  it('automatically detects and parses a CommSec Cash Account CSV statement', async () => {
+    const csvContent = `Date,Reference,Details,Debit($),Credit($),Balance($)
+24/06/2026,P36741365,Direct Transfer - Payee MR TOM CRUZ,7960.00,,0.00
+22/06/2026,C176305381,S 125 NDQ @ 63.680000  ,,7960.00,-7960.00
+09/06/2026,R71985282,Direct Transfer 054190 20173861 Drawer MR TOM CRUZ,,251.22,0.00
+04/06/2026,C175717445,B 4 NDQ @ 62.806028  ,251.22,,251.22`;
+
+    const res = await parseBrokerCSV(csvContent, 'auto');
+    expect(res.broker).toBe('commsec');
+    expect(res.errors.length).toBe(0);
+    expect(res.validRows.length).toBe(4);
+    expect(res.totalRowsRead).toBe(4);
+
+    const types = res.validRows.map((r) => r.type);
+    expect(types).toEqual(['BUY', 'DEPOSIT', 'SELL', 'WITHDRAWAL']);
+  });
 });

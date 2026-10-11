@@ -29,6 +29,8 @@ export function detectBrokerFormat(lines: string[]): DetectionResult {
 
     const lower = rawLine.toLowerCase();
     const cells = lower.split(',').map((c) => c.replace(/^["']|["']$/g, '').trim());
+    const normalizedCells = cells.map((c) => c.replace(/\s*\(\$\)\s*$/, '').trim());
+
     const hasNabtrade = NABTRADE_SIGNATURES.some((sig) => cells.includes(sig) || lower.includes(sig));
     if (hasNabtrade) {
       return { detected: 'nabtrade', headerIndex: i, headers: cells };
@@ -39,14 +41,31 @@ export function detectBrokerFormat(lines: string[]): DetectionResult {
       return { detected: 'commsec', headerIndex: i, headers: cells };
     }
 
-    // Check for NAB International: header Date,Description,Debit,Credit,Balance with broker trade/dividend rows
+    // Check for cash account statements (CommSec or nabtrade)
     const isCashStatement =
-      cells.includes('description') &&
-      cells.includes('balance') &&
-      (cells.includes('debit') || cells.includes('credit'));
+      (normalizedCells.includes('description') || normalizedCells.includes('details')) &&
+      normalizedCells.includes('balance') &&
+      (normalizedCells.includes('debit') || normalizedCells.includes('credit'));
 
     if (isCashStatement) {
-      const hasBrokerRows = lines.slice(i + 1, i + 10).some((l) => {
+      const candidateRows = lines.slice(i + 1, i + 15);
+
+      const hasCommSecRows = candidateRows.some((l) => {
+        const upper = l.toUpperCase();
+        return (
+          /,\s*[BS]\s+\d+\s+[A-Z0-9.]+\s+@/i.test(l) ||
+          upper.includes('COMMSEC') ||
+          upper.includes('COMMONWEALTH') ||
+          upper.includes('REJ D/TSFER') ||
+          /^[A-Z0-9/]+,[CRPJ]\d{7,}/i.test(l)
+        );
+      });
+
+      if (hasCommSecRows) {
+        return { detected: 'commsec', headerIndex: i, headers: cells };
+      }
+
+      const hasNabtradeRows = candidateRows.some((l) => {
         const upper = l.toUpperCase();
         return (
           upper.includes('BUY ') ||
@@ -61,7 +80,7 @@ export function detectBrokerFormat(lines: string[]): DetectionResult {
         );
       });
 
-      if (hasBrokerRows) {
+      if (hasNabtradeRows) {
         return { detected: 'nabtrade', headerIndex: i, headers: cells };
       }
     }
