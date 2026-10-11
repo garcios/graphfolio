@@ -58,6 +58,18 @@ describe('BrokerFormatDetector', () => {
     expect(res.headerIndex).toBe(0);
   });
 
+  it('detects CommSec cash account / transaction statement format', () => {
+    const lines = [
+      'Date,Reference,Details,Debit($),Credit($),Balance($)',
+      '24/06/2026,P36741365,Direct Transfer - Payee MR TOM CRUZ,7960.00,,0.00',
+      '22/06/2026,C176305381,S 125 NDQ @ 63.680000  ,,7960.00,-7960.00',
+      '04/06/2026,C175717445,B 4 NDQ @ 62.806028  ,251.22,,251.22',
+    ];
+    const res = detectBrokerFormat(lines);
+    expect(res.detected).toBe('commsec');
+    expect(res.headerIndex).toBe(0);
+  });
+
   it('returns null when headers are unrecognized or generic', () => {
     const lines = [
       'Date,Description,Debit,Credit,Balance',
