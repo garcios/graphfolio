@@ -112,12 +112,20 @@ func (s *portfolioService) GetPortfolioSummary(ctx context.Context, userID strin
 		return nil, fmt.Errorf("service: failed to get valuation: %w", err)
 	}
 
+	var earliestValuation *domain.PortfolioValuation
+	if valuation != nil {
+		earliestValuation, err = s.repo.GetEarliestValuation(ctx, portfolio.ID)
+		if err != nil {
+			return nil, fmt.Errorf("service: failed to get earliest valuation: %w", err)
+		}
+	}
+
 	fxRates, err := s.repo.GetCashFXRates(ctx, portfolio.BaseCurrency)
 	if err != nil {
 		return nil, fmt.Errorf("service: failed to get fx rates: %w", err)
 	}
 
-	summary := domain.CalculatePortfolioSummary(*portfolio, holdings, cash, valuation, fxRates)
+	summary := domain.CalculatePortfolioSummary(*portfolio, holdings, cash, valuation, fxRates, earliestValuation)
 	return &summary, nil
 }
 

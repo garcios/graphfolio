@@ -111,6 +111,7 @@ func CalculatePortfolioSummary(
 	cashBalances []CashBalance,
 	latestValuation *PortfolioValuation,
 	cashFXRates map[string]decimal.Decimal,
+	earliestValuation ...*PortfolioValuation,
 ) PortfolioSummary {
 	baseCurrency := portfolio.BaseCurrency
 
@@ -161,8 +162,26 @@ func CalculatePortfolioSummary(
 	// Annualized Return / TWR from latest valuation snapshot
 	var annualizedReturnPercent decimal.Decimal
 	if latestValuation != nil && latestValuation.TWRIndex.IsPositive() {
-		// TWR index e.g. 1.1420 corresponds to 14.2%
-		annualizedReturnPercent = latestValuation.TWRIndex.Sub(one).Mul(oneHundred).Round(1)
+		var earliestVal *PortfolioValuation
+		if len(earliestValuation) > 0 {
+			earliestVal = earliestValuation[0]
+		}
+
+		days := 0
+		if earliestVal != nil && !earliestVal.ValuationDate.IsZero() && !latestValuation.ValuationDate.IsZero() {
+			days = int(latestValuation.ValuationDate.Sub(earliestVal.ValuationDate).Hours() / 24)
+		}
+
+		if days > 0 {
+			annReturn, _, err := CalculateAnnualizedReturn(latestValuation.TWRIndex, days)
+			if err == nil {
+				annualizedReturnPercent = annReturn.Round(1)
+			} else {
+				annualizedReturnPercent = latestValuation.TWRIndex.Sub(one).Mul(oneHundred).Round(1)
+			}
+		} else {
+			annualizedReturnPercent = latestValuation.TWRIndex.Sub(one).Mul(oneHundred).Round(1)
+		}
 	}
 
 	return PortfolioSummary{

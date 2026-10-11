@@ -122,6 +122,14 @@ WHERE portfolio_id = $1
 ORDER BY valuation_date DESC
 LIMIT 1;`
 
+	getEarliestValuationSQL = `
+SELECT 
+    portfolio_id, valuation_date, market_value_base, cash_value_base, net_flow_base, daily_return, twr_index
+FROM portfolio.portfolio_valuations
+WHERE portfolio_id = $1
+ORDER BY valuation_date ASC
+LIMIT 1;`
+
 	getPortfolioValuationsSQL = `
 SELECT 
     portfolio_id, valuation_date, market_value_base, cash_value_base,

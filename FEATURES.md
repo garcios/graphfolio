@@ -35,6 +35,7 @@ This document catalogs all implemented features, in-progress components, and pla
 | **25** | **Investment Holding Return Attribution (Capital Gain, Income & Currency Gain/Loss)** | **DONE** | Proto, Svc, BFF, Web | [holding-return-attribution-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/holding-return-attribution-implementation-plan.md) |
 | **26** | **Average Buy Price Holdings Column** | **DONE** | Proto, Svc, BFF, Web | [average-buy-price-column-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/average-buy-price-column-implementation-plan.md) |
 | **27** | **Portfolio Cash Flow Report Generation** | **DONE** | Proto, Svc, BFF, Web | [portfolio-cash-flow-report-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/portfolio-cash-flow-report-implementation-plan.md) |
+| **28** | **GIPS CAGR Annualized Return & Valuation Cost-Basis Resiliency** | **DONE** | Database, Svc, Domain, Worker | [annualized-return-twr-fix-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/annualized-return-twr-fix-implementation-plan.md) |
 
 ---
 
@@ -360,6 +361,19 @@ This document catalogs all implemented features, in-progress components, and pla
   - [ReportsView.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/ReportsView.tsx)
   - [CashFlowReport.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/CashFlowReport.tsx)
   - [CashFlowReport.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/CashFlowReport.css)
+
+### 2.28 GIPS CAGR Annualized Return & Valuation Cost-Basis Resiliency
+- **Status**: **DONE**
+- **Plan Reference**: [annualized-return-twr-fix-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/annualized-return-twr-fix-implementation-plan.md) & [annualized-twr-return-investigation-report.md](file:///Users/oscargarcia/workspace/graphfolio/docs/annualized-twr-return-investigation-report.md)
+- **Description**: Robust valuation engine defense and true GIPS-compliant performance measurement. Features US GAAP ASC 820 Level 2/3 cost basis fallback (`h.CostBasisBase` / `h.CostBasis / h.Quantity`) in `valuation.go` (`SnapshotValuation` & `RebuildValuations`) whenever closing market prices are missing from the database, eliminating artificial asset write-downs and false $-573\%$ daily return drops on inflow days. Integrates inception tracking via `GetEarliestValuation` and GIPS Standard 2.A.20 CAGR annualization in `calculator.go` $((\text{TWRIndex})^{\frac{365.25}{D}} - 1) \times 100$ for periods $\ge 365$ days, preserving cumulative period returns for sub-annual holding periods.
+- **Key Files**:
+  - [valuation.go (service)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/valuation.go)
+  - [valuation_test.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/valuation_test.go)
+  - [calculator.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/domain/calculator.go)
+  - [calculator_test.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/domain/calculator_test.go)
+  - [service.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/service.go)
+  - [repository.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/repository/repository.go)
+  - [postgres.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/repository/postgres.go)
 
 ---
 
