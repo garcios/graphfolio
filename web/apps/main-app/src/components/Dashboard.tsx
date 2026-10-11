@@ -11,6 +11,8 @@ import { UserPreferencesModal, type UserPreferencesData, type CurrencyItem } fro
 type SortField = 'ticker' | 'price' | 'averageBuyPrice' | 'quantity' | 'totalValue' | 'capitalGain' | 'income' | 'currencyGain' | 'totalReturn' | 'todayReturn';
 type SortDirection = 'asc' | 'desc';
 
+const EMPTY_INVESTMENTS: any[] = [];
+
 export const Dashboard = () => {
   const [data, setData] = useState<any>(null);
   const [userPrefs, setUserPrefs] = useState<UserPreferencesData | null>(null);
@@ -22,17 +24,17 @@ export const Dashboard = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'ledger'>('overview');
   const [ledgerRefreshKey, setLedgerRefreshKey] = useState(0);
-  const [sortField, setSortField] = useState<SortField | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [sortField, setSortField] = useState<SortField>('totalValue');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
-  const investments = data?.investments || [];
+  const investments = data?.investments ?? EMPTY_INVESTMENTS;
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+      setSortDirection(prev => (prev === 'asc' ? 'desc' : 'asc'));
     } else {
       setSortField(field);
-      setSortDirection('asc');
+      setSortDirection(field === 'ticker' ? 'asc' : 'desc');
     }
   };
 
@@ -41,6 +43,15 @@ export const Dashboard = () => {
     return [...investments].sort((a: any, b: any) => {
       let aVal = 0;
       let bVal = 0;
+
+      if (sortField === 'ticker') {
+        const aTicker = (a.ticker || a.name || '').toLowerCase();
+        const bTicker = (b.ticker || b.name || '').toLowerCase();
+        return sortDirection === 'asc'
+          ? aTicker.localeCompare(bTicker)
+          : bTicker.localeCompare(aTicker);
+      }
+
       if (sortField === 'averageBuyPrice') {
         const aNum = parseFloat(a.averageBuyPrice?.amount);
         const bNum = parseFloat(b.averageBuyPrice?.amount);
@@ -60,16 +71,52 @@ export const Dashboard = () => {
       } else if (sortField === 'totalValue') {
         aVal = parseFloat(a.totalValue?.amount) || 0;
         bVal = parseFloat(b.totalValue?.amount) || 0;
-      } else if (sortField === 'ticker') {
-        return sortDirection === 'asc'
-          ? (a.ticker || '').localeCompare(b.ticker || '')
-          : (b.ticker || '').localeCompare(a.ticker || '');
+      } else if (sortField === 'capitalGain') {
+        aVal = parseFloat(a.capitalGainAmount?.amount) || 0;
+        bVal = parseFloat(b.capitalGainAmount?.amount) || 0;
+      } else if (sortField === 'income') {
+        aVal = parseFloat(a.incomeAmount?.amount) || 0;
+        bVal = parseFloat(b.incomeAmount?.amount) || 0;
+      } else if (sortField === 'currencyGain') {
+        aVal = parseFloat(a.currencyGainAmount?.amount) || 0;
+        bVal = parseFloat(b.currencyGainAmount?.amount) || 0;
+      } else if (sortField === 'totalReturn') {
+        aVal = parseFloat(a.totalReturnAmount?.amount) || 0;
+        bVal = parseFloat(b.totalReturnAmount?.amount) || 0;
+      } else if (sortField === 'todayReturn') {
+        aVal = parseFloat(a.todayReturnAmount?.amount) || 0;
+        bVal = parseFloat(b.todayReturnAmount?.amount) || 0;
       }
+
       if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
       if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
+      return (a.ticker || '').localeCompare(b.ticker || '');
     });
   }, [investments, sortField, sortDirection]);
+
+  const renderSortableTh = (
+    field: SortField,
+    label: string,
+    isNumCol: boolean = false,
+    title?: string
+  ) => {
+    const isCurrent = sortField === field;
+    const icon = isCurrent ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : ' ↕';
+    return (
+      <th
+        key={field}
+        className={`sortable-th ${isNumCol ? 'num-col' : ''}`.trim()}
+        onClick={() => handleSort(field)}
+        aria-sort={isCurrent ? (sortDirection === 'asc' ? 'ascending' : 'descending') : 'none'}
+        title={title || `Sort by ${label}`}
+      >
+        <div className="th-content">
+          <span>{label}</span>
+          <span className={`sort-icon ${isCurrent ? 'active' : ''}`}>{icon}</span>
+        </div>
+      </th>
+    );
+  };
 
   const getInitials = (name: string): string => {
     const parts = name.trim().split(/\s+/);
@@ -313,27 +360,21 @@ export const Dashboard = () => {
                 <table className="investments-table">
                   <thead>
                     <tr>
-                      <th>Asset</th>
-                      <th className="num-col">Price</th>
-                      <th
-                        className="num-col sortable-th"
-                        onClick={() => handleSort('averageBuyPrice')}
-                        title="The weighted average price paid per share/unit across all open lots."
-                      >
-                        <div className="th-content">
-                          <span>Avg Buy Price</span>
-                          <span className="sort-icon">
-                            {sortField === 'averageBuyPrice' ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
-                          </span>
-                        </div>
-                      </th>
-                      <th className="num-col">Quantity</th>
-                      <th className="num-col">Total Value</th>
-                      <th>Capital Gain</th>
-                      <th>Income</th>
-                      <th>Currency Gain</th>
-                      <th>Total Return</th>
-                      <th>Today's Return</th>
+                      {renderSortableTh('ticker', 'Asset')}
+                      {renderSortableTh('price', 'Price', true)}
+                      {renderSortableTh(
+                        'averageBuyPrice',
+                        'Avg Buy Price',
+                        true,
+                        'The weighted average price paid per share/unit across all open lots.'
+                      )}
+                      {renderSortableTh('quantity', 'Quantity', true)}
+                      {renderSortableTh('totalValue', 'Total Value', true)}
+                      {renderSortableTh('capitalGain', 'Capital Gain')}
+                      {renderSortableTh('income', 'Income')}
+                      {renderSortableTh('currencyGain', 'Currency Gain')}
+                      {renderSortableTh('totalReturn', 'Total Return')}
+                      {renderSortableTh('todayReturn', "Today's Return")}
                     </tr>
                   </thead>
                   <tbody>

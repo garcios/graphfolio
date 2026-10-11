@@ -236,7 +236,7 @@
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: 16px;
-  padding: 1.25rem 1.5rem;
+  padding: 1.25rem;
   backdrop-filter: blur(10px);
 }
 
@@ -258,7 +258,7 @@
 }
 
 .investments-table th {
-  padding: 0.85rem 0.6rem;
+  padding: 0.85rem 0.5rem;
   color: var(--text-secondary);
   font-weight: 500;
   font-size: 0.8rem;
@@ -269,7 +269,7 @@
 }
 
 .investments-table td {
-  padding: 0.85rem 0.6rem;
+  padding: 0.85rem 0.5rem;
   border-bottom: 1px solid rgba(255,255,255,0.03);
   vertical-align: middle;
   white-space: nowrap;
@@ -297,13 +297,22 @@
 .sortable-th .th-content {
   display: inline-flex;
   align-items: center;
+  gap: 0.3rem;
+}
+
+.sortable-th.num-col .th-content {
   justify-content: flex-end;
-  gap: 0.35rem;
 }
 
 .sort-icon {
   font-size: 0.75rem;
-  opacity: 0.6;
+  opacity: 0.45;
+  transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.sort-icon.active {
+  opacity: 1;
+  color: var(--accent-green, #10b981);
 }
 
 .sortable-th:hover .sort-icon {

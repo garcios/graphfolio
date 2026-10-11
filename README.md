@@ -27,7 +27,7 @@ A modern portfolio tracker built for serious investors. GraphFolio accurately me
   - **Income (Dividends & Distributions)**: Cumulative gross dividends received in base currency, accompanied by Yield on Cost ($\text{YOC}\%$).
   - **Currency Gain/Loss**: Foreign exchange rate fluctuation between the acquisition rate and current market rate: $\text{FXGain}_{\text{base}} = V_{\text{local}} \times (\text{FX}_t - \overline{\text{FX}}_0)$ for international assets, with a clean neutral indicator (`—`) for domestic assets.
   - **Verified Mathematical Identity**: $\text{CapGain}_{\text{base}} + \text{FXGain}_{\text{base}} \equiv V_{\text{base}} - C_{\text{base}}$ invariant preserved across all multi-currency assets.
-  - **Expanded Desktop Layout**: Widened dashboard layout (`max-width: 1520px`) with 9 columns (`Asset`, `Price`, `Quantity`, `Total Value`, `Capital Gain`, `Income`, `Currency Gain`, `Total Return`, `Today's Return`), `INTL` badges, itemized subtotal footer row, and responsive card views on mobile.
+  - **Expanded Desktop Layout**: Widened dashboard layout (`max-width: 1680px`) with 10 columns (`Asset`, `Price`, `Avg Buy Price`, `Quantity`, `Total Value`, `Capital Gain`, `Income`, `Currency Gain`, `Total Return`, `Today's Return`), `INTL` badges, itemized subtotal footer row, and responsive card views on mobile.
 - **Clean Microservice Monorepo**: Contract-first gRPC services with a Go GraphQL Backend-for-Frontend (BFF) and strongly-typed frontend queries.
 - **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, Vite, modal transaction entry (`AddTransactionModal`), statement import (`ImportTransactionsModal`), investor preferences dialog (`UserPreferencesModal`), and instant reactive state refresh.
 
