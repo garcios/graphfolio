@@ -11,9 +11,11 @@ import {
   TableCell,
   Input,
   Select,
+  formatMoney,
 } from '@graphfolio/ui';
 import { AddInstrumentModal, type NewInstrumentData, type ExchangeOption } from './AddInstrumentModal';
 import { DeleteAssetModal } from './DeleteAssetModal';
+import { AddAssetPriceModal, type AddAssetPriceSubmitData } from './AddAssetPriceModal';
 import './AssetManagement.css';
 
 interface InstrumentRecord {
@@ -41,6 +43,7 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({ onNotify }) =>
   const [assetToDelete, setAssetToDelete] = useState<InstrumentRecord | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [priceAsset, setPriceAsset] = useState<InstrumentRecord | null>(null);
 
   const [exchanges, setExchanges] = useState<ExchangeOption[]>([]);
   const [exchangesLoading, setExchangesLoading] = useState(false);
@@ -190,6 +193,44 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({ onNotify }) =>
     }
   };
 
+  const handleAddPriceForAsset = async (data: AddAssetPriceSubmitData) => {
+    try {
+      const res = await client.mutation({
+        recordPriceOverride: {
+          __args: {
+            input: {
+              symbol: data.symbol,
+              priceDate: data.priceDate,
+              price: data.price,
+              reason: data.reason || undefined,
+              recomputeValuations: data.recomputeValuations,
+            },
+          },
+          price: {
+            id: true,
+            symbol: true,
+            priceDate: true,
+            price: {
+              amount: true,
+              currencyCode: true,
+            },
+          },
+          valuationsRecomputed: true,
+        },
+      });
+
+      onNotify(
+        `Closing price recorded for ${data.symbol} on ${data.priceDate}: ${formatMoney(res.recordPriceOverride.price.price)}${
+          res.recordPriceOverride.valuationsRecomputed ? ' (Valuations recalibrated)' : ''
+        }`
+      );
+    } catch (err: any) {
+      console.error('Failed to record price for asset:', err);
+      onNotify(`Record price failed: ${err?.message || 'Server error'}`);
+      throw err;
+    }
+  };
+
   const filteredInstruments = instruments.filter((inst) => {
     const matchesSearch =
       inst.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -301,6 +342,14 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({ onNotify }) =>
                     <div className="asset-actions" style={{ justifyContent: 'flex-end' }}>
                       <Button
                         size="sm"
+                        variant="ghost"
+                        onClick={() => setPriceAsset(inst)}
+                        title="Record closing price for this asset"
+                      >
+                        + Add Price
+                      </Button>
+                      <Button
+                        size="sm"
                         variant={inst.isActive ? 'ghost' : 'secondary'}
                         onClick={() => handleToggleStatus(inst.id, inst.isActive)}
                       >
@@ -346,6 +395,18 @@ export const AssetManagement: React.FC<AssetManagementProps> = ({ onNotify }) =>
         onConfirm={handleConfirmDelete}
         isDeleting={isDeleting}
         error={deleteError}
+      />
+
+      <AddAssetPriceModal
+        isOpen={!!priceAsset}
+        onClose={() => setPriceAsset(null)}
+        instruments={instruments.map((i) => ({
+          symbol: i.symbol,
+          name: i.name,
+          currencyCode: i.currencyCode,
+        }))}
+        defaultSymbol={priceAsset?.symbol}
+        onSubmit={handleAddPriceForAsset}
       />
     </div>
   );

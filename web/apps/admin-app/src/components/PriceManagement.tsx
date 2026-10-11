@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { client } from '@graphfolio/api-client';
 import {
   Button,
@@ -15,7 +15,12 @@ import {
   formatMoney,
   formatDate,
 } from '@graphfolio/ui';
-import { PriceOverrideModal, type PriceOverrideData } from './PriceOverrideModal';
+import {
+  AddAssetPriceModal,
+  type AddAssetPriceSubmitData,
+  type InstrumentOption,
+  type ExistingPriceCheck,
+} from './AddAssetPriceModal';
 import { BackfillModal, type BackfillSubmitData, type BackfillModalResult } from './BackfillModal';
 import './PriceManagement.css';
 
@@ -84,35 +89,49 @@ export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) =>
   const [activePreset, setActivePreset] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [isOverrideModalOpen, setIsOverrideModalOpen] = useState(false);
+  const [isAddPriceModalOpen, setIsAddPriceModalOpen] = useState(false);
   const [isBackfillModalOpen, setIsBackfillModalOpen] = useState(false);
-  const [selectedSymbolForOverride, setSelectedSymbolForOverride] = useState('AAPL');
+  const [targetPriceModalData, setTargetPriceModalData] = useState<{
+    symbol: string;
+    priceDate?: string;
+    price?: string;
+  }>({ symbol: 'AAPL' });
   const [availableSymbols, setAvailableSymbols] = useState<string[]>([]);
+  const [availableInstruments, setAvailableInstruments] = useState<InstrumentOption[]>([]);
   const [latestPriceDate, setLatestPriceDate] = useState<string>('—');
 
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
   const isDateRangeInvalid = Boolean(fromDate && toDate && fromDate > toDate);
 
-  // Load available instruments from BFF for the dropdown filter
+  // Load available instruments from BFF for the dropdown filter and add-price modal
   const fetchInstruments = useCallback(() => {
     client
       .query({
         allInstruments: {
           symbol: true,
+          name: true,
+          currencyCode: true,
           isActive: true,
         },
       })
       .then((res) => {
         if (res.allInstruments && res.allInstruments.length > 0) {
+          const instOptions: InstrumentOption[] = res.allInstruments.map((i) => ({
+            symbol: i.symbol,
+            name: i.name,
+            currencyCode: i.currencyCode,
+          }));
+          setAvailableInstruments(instOptions);
+
           const syms = Array.from(new Set(res.allInstruments.map((i) => i.symbol))).sort();
           setAvailableSymbols(syms);
-          if (syms.length > 0 && !syms.includes(selectedSymbolForOverride)) {
-            setSelectedSymbolForOverride(syms[0]);
+          if (syms.length > 0 && !syms.includes(targetPriceModalData.symbol)) {
+            setTargetPriceModalData((prev) => ({ ...prev, symbol: syms[0] }));
           }
         }
       })
       .catch((err) => console.warn('Could not fetch instrument symbols for filter:', err));
-  }, [selectedSymbolForOverride]);
+  }, [targetPriceModalData.symbol]);
 
   const fetchPrices = useCallback(() => {
     if (fromDate && toDate && fromDate > toDate) {
@@ -215,7 +234,16 @@ export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) =>
     }
   };
 
-  const handleApplyOverride = async (data: PriceOverrideData) => {
+  const existingPriceChecks: ExistingPriceCheck[] = useMemo(() => {
+    return prices.map((p) => ({
+      symbol: p.symbol,
+      priceDate: p.priceDate,
+      priceAmount: p.price.amount,
+      currencyCode: p.price.currencyCode,
+    }));
+  }, [prices]);
+
+  const handleRecordPrice = async (data: AddAssetPriceSubmitData) => {
     try {
       const res = await client.mutation({
         recordPriceOverride: {
@@ -243,16 +271,16 @@ export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) =>
         },
       });
 
-      const overridePrice = res.recordPriceOverride.price;
+      const recordedPrice = res.recordPriceOverride.price;
       onNotify(
-        `Closing price override applied for ${data.symbol} on ${data.priceDate}: ${formatMoney(overridePrice.price)}${
+        `Closing price recorded for ${data.symbol} on ${data.priceDate}: ${formatMoney(recordedPrice.price)}${
           res.recordPriceOverride.valuationsRecomputed ? ' (Valuations recalibrated)' : ''
         }`
       );
       fetchPrices();
     } catch (err: any) {
-      console.error('Price override error:', err);
-      onNotify(`Price override failed: ${err?.message || 'Server error'}`);
+      console.error('Record asset price error:', err);
+      onNotify(`Record asset price failed: ${err?.message || 'Server error'}`);
       throw err;
     }
   };
@@ -413,11 +441,12 @@ export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) =>
           <Button
             variant="primary"
             onClick={() => {
-              setSelectedSymbolForOverride(symbolFilter === 'ALL' ? (availableSymbols[0] || 'AAPL') : symbolFilter);
-              setIsOverrideModalOpen(true);
+              const sym = symbolFilter === 'ALL' ? (availableSymbols[0] || 'AAPL') : symbolFilter;
+              setTargetPriceModalData({ symbol: sym });
+              setIsAddPriceModalOpen(true);
             }}
           >
-            + Manual Price Override
+            + Add Asset Price
           </Button>
         </div>
       </div>
@@ -481,11 +510,15 @@ export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) =>
                         size="sm"
                         variant="ghost"
                         onClick={() => {
-                          setSelectedSymbolForOverride(rec.symbol);
-                          setIsOverrideModalOpen(true);
+                          setTargetPriceModalData({
+                            symbol: rec.symbol,
+                            priceDate: rec.priceDate,
+                            price: rec.price.amount,
+                          });
+                          setIsAddPriceModalOpen(true);
                         }}
                       >
-                        Override
+                        Edit Price
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -524,11 +557,15 @@ export const PriceManagement: React.FC<PriceManagementProps> = ({ onNotify }) =>
         </>
       )}
 
-      <PriceOverrideModal
-        isOpen={isOverrideModalOpen}
-        onClose={() => setIsOverrideModalOpen(false)}
-        defaultSymbol={selectedSymbolForOverride}
-        onSubmit={handleApplyOverride}
+      <AddAssetPriceModal
+        isOpen={isAddPriceModalOpen}
+        onClose={() => setIsAddPriceModalOpen(false)}
+        instruments={availableInstruments}
+        defaultSymbol={targetPriceModalData.symbol}
+        defaultDate={targetPriceModalData.priceDate}
+        defaultPrice={targetPriceModalData.price}
+        existingPrices={existingPriceChecks}
+        onSubmit={handleRecordPrice}
       />
 
       <BackfillModal
