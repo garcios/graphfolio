@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { client } from '@graphfolio/api-client';
 import { formatMoney } from '@graphfolio/ui';
 import './CashFlowReport.css';
@@ -6,6 +6,19 @@ import './CashFlowReport.css';
 type CashFlowTimeframe = 'MTD' | 'YTD' | 'M1' | 'M3' | 'M6' | 'Y1' | 'ALL' | 'CUSTOM';
 type SortField = 'date' | 'amount' | 'type';
 type SortDirection = 'asc' | 'desc';
+
+export const CATEGORY_OPTIONS = [
+  { id: 'CAPITAL_DEPOSITS', label: 'Capital Deposits', shortLabel: 'Deposits' },
+  { id: 'DIVIDENDS', label: 'Dividends Received', shortLabel: 'Dividends' },
+  { id: 'INTEREST', label: 'Interest Earned', shortLabel: 'Interest' },
+  { id: 'SALE_PROCEEDS', label: 'Stock Sale Proceeds', shortLabel: 'Sales' },
+  { id: 'CAPITAL_WITHDRAWALS', label: 'Capital Withdrawals', shortLabel: 'Withdrawals' },
+  { id: 'PURCHASES', label: 'Security Purchases', shortLabel: 'Purchases' },
+  { id: 'FEES', label: 'Brokerage & Fees', shortLabel: 'Fees' },
+  { id: 'TAXES', label: 'Taxes & Withholding', shortLabel: 'Taxes' },
+] as const;
+
+export const ALL_CATEGORY_IDS = CATEGORY_OPTIONS.map((c) => c.id);
 
 interface CashFlowReportProps {
   preferredCurrency?: string;
@@ -20,7 +33,9 @@ export const CashFlowReport: React.FC<CashFlowReportProps> = ({ preferredCurrenc
   const [error, setError] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([...ALL_CATEGORY_IDS]);
+  const [isCategoryMenuOpen, setIsCategoryMenuOpen] = useState<boolean>(false);
+  const categoryMenuRef = useRef<HTMLDivElement>(null);
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
 
@@ -94,11 +109,83 @@ export const CashFlowReport: React.FC<CashFlowReportProps> = ({ preferredCurrenc
     fetchReport();
   }, [timeframe, customFromDate, customToDate, preferredCurrency]);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (categoryMenuRef.current && !categoryMenuRef.current.contains(event.target as Node)) {
+        setIsCategoryMenuOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsCategoryMenuOpen(false);
+      }
+    };
+
+    if (isCategoryMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isCategoryMenuOpen]);
+
   const items = reportData?.items || [];
+
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const item of items) {
+      if (item.category) {
+        counts[item.category] = (counts[item.category] || 0) + 1;
+      }
+    }
+    return counts;
+  }, [items]);
+
+  const handleToggleCategory = (catId: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(catId) ? prev.filter((id) => id !== catId) : [...prev, catId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    setSelectedCategories([...ALL_CATEGORY_IDS]);
+  };
+
+  const handleClearAll = () => {
+    setSelectedCategories([]);
+  };
+
+  const getSelectionLabel = () => {
+    if (selectedCategories.length === 0) {
+      return 'No Categories';
+    }
+    if (selectedCategories.length === ALL_CATEGORY_IDS.length) {
+      return 'All Categories';
+    }
+    if (selectedCategories.length === 1) {
+      const match = CATEGORY_OPTIONS.find((c) => c.id === selectedCategories[0]);
+      return match ? match.shortLabel : '1 Category';
+    }
+    if (selectedCategories.length === 2) {
+      const cat1 = CATEGORY_OPTIONS.find((c) => c.id === selectedCategories[0]);
+      const cat2 = CATEGORY_OPTIONS.find((c) => c.id === selectedCategories[1]);
+      if (cat1 && cat2) {
+        return `${cat1.shortLabel}, ${cat2.shortLabel}`;
+      }
+    }
+    return `${selectedCategories.length} Categories`;
+  };
 
   const filteredItems = useMemo(() => {
     return items.filter((item: any) => {
-      if (categoryFilter !== 'ALL' && item.category !== categoryFilter) {
+      if (selectedCategories.length === 0) {
+        return false;
+      }
+      if (!selectedCategories.includes(item.category)) {
         return false;
       }
       if (searchQuery.trim()) {
@@ -110,7 +197,7 @@ export const CashFlowReport: React.FC<CashFlowReportProps> = ({ preferredCurrenc
       }
       return true;
     });
-  }, [items, categoryFilter, searchQuery]);
+  }, [items, selectedCategories, searchQuery]);
 
   const sortedItems = useMemo(() => {
     return [...filteredItems].sort((a: any, b: any) => {
@@ -434,21 +521,82 @@ export const CashFlowReport: React.FC<CashFlowReportProps> = ({ preferredCurrenc
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
 
-                <select
-                  className="cfr-filter-select"
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                >
-                  <option value="ALL">All Categories</option>
-                  <option value="CAPITAL_DEPOSITS">Deposits</option>
-                  <option value="DIVIDENDS">Dividends</option>
-                  <option value="INTEREST">Interest</option>
-                  <option value="SALE_PROCEEDS">Sale Proceeds</option>
-                  <option value="CAPITAL_WITHDRAWALS">Withdrawals</option>
-                  <option value="PURCHASES">Purchases</option>
-                  <option value="FEES">Fees</option>
-                  <option value="TAXES">Taxes</option>
-                </select>
+                <div className="cfr-multiselect" ref={categoryMenuRef}>
+                  <button
+                    type="button"
+                    className={`cfr-multiselect-trigger ${isCategoryMenuOpen ? 'open' : ''} ${
+                      selectedCategories.length < ALL_CATEGORY_IDS.length ? 'filtered' : ''
+                    }`}
+                    onClick={() => setIsCategoryMenuOpen((prev) => !prev)}
+                    aria-haspopup="listbox"
+                    aria-expanded={isCategoryMenuOpen}
+                    title="Filter by categories"
+                  >
+                    <span className="cfr-multiselect-label">{getSelectionLabel()}</span>
+                    {selectedCategories.length > 0 && selectedCategories.length < ALL_CATEGORY_IDS.length && (
+                      <span className="cfr-multiselect-badge">{selectedCategories.length}</span>
+                    )}
+                    <span className="cfr-multiselect-caret">{isCategoryMenuOpen ? '▲' : '▼'}</span>
+                  </button>
+
+                  {isCategoryMenuOpen && (
+                    <div className="cfr-multiselect-popover" role="listbox">
+                      <div className="cfr-multiselect-actions">
+                        <button
+                          type="button"
+                          className="cfr-multiselect-action-btn"
+                          onClick={handleSelectAll}
+                          disabled={selectedCategories.length === ALL_CATEGORY_IDS.length}
+                        >
+                          Select All
+                        </button>
+                        <span className="cfr-multiselect-action-divider">•</span>
+                        <button
+                          type="button"
+                          className="cfr-multiselect-action-btn"
+                          onClick={handleClearAll}
+                          disabled={selectedCategories.length === 0}
+                        >
+                          Clear All
+                        </button>
+                      </div>
+
+                      <div className="cfr-multiselect-list">
+                        {CATEGORY_OPTIONS.map((cat) => {
+                          const isChecked = selectedCategories.includes(cat.id);
+                          const count = categoryCounts[cat.id] || 0;
+                          return (
+                            <label
+                              key={cat.id}
+                              className={`cfr-multiselect-item ${isChecked ? 'selected' : ''}`}
+                            >
+                              <input
+                                type="checkbox"
+                                className="cfr-multiselect-checkbox"
+                                checked={isChecked}
+                                onChange={() => handleToggleCategory(cat.id)}
+                              />
+                              <span className="cfr-multiselect-item-text">{cat.label}</span>
+                              <button
+                                type="button"
+                                className="cfr-multiselect-only-btn"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setSelectedCategories([cat.id]);
+                                }}
+                                title={`Show only ${cat.label}`}
+                              >
+                                Only
+                              </button>
+                              <span className="cfr-multiselect-item-count">{count}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -474,7 +622,23 @@ export const CashFlowReport: React.FC<CashFlowReportProps> = ({ preferredCurrenc
                   {sortedItems.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="cfr-empty-state">
-                        No cash events recorded for this timeframe.
+                        {selectedCategories.length === 0 ? (
+                          <div className="cfr-empty-state-content">
+                            <p>No categories selected.</p>
+                            <button
+                              type="button"
+                              className="cfr-pill-btn active"
+                              onClick={handleSelectAll}
+                              style={{ marginTop: '0.75rem' }}
+                            >
+                              Select All Categories
+                            </button>
+                          </div>
+                        ) : searchQuery.trim() ? (
+                          'No cash events match the search query.'
+                        ) : (
+                          'No cash events recorded for this timeframe.'
+                        )}
                       </td>
                     </tr>
                   ) : (
