@@ -288,3 +288,192 @@ func TestCalculatePortfolioHistory(t *testing.T) {
 		}
 	})
 }
+
+func TestCalculateInvestment_ReturnAttribution(t *testing.T) {
+	t.Run("domestic holding without currency exposure", func(t *testing.T) {
+		// BHP in AUD portfolio:
+		// Q = 100, Latest = 45.00, CostBasis = 4000.00, CostBasisBase = 4000.00
+		// TotalValue = 4500.00 AUD
+		// CapGainLocal = 500.00, CapGainBase = 500.00, CapGain% = 12.50%
+		// CurrencyGain = 0.00, CurrencyGain% = 0.00%, IsInternational = false
+		// DividendsBase = 120.00, YieldOnCost = 120 / 4000 = 3.00%
+		h := domain.HoldingWithPrice{
+			PortfolioID:        uuid.New(),
+			InstrumentID:       uuid.New(),
+			Ticker:             "BHP",
+			Name:               "BHP Group Limited",
+			InstrumentCurrency: "AUD",
+			Quantity:           decimal.RequireFromString("100"),
+			CostBasis:          decimal.RequireFromString("4000.00"),
+			CostBasisBase:      decimal.RequireFromString("4000.00"),
+			RealizedPnLBase:    decimal.Zero,
+			DividendsBase:      decimal.RequireFromString("120.00"),
+			LatestPrice:        decimal.RequireFromString("45.00"),
+			PrevPrice:          decimal.RequireFromString("44.50"),
+			FXRateToBase:       decimal.NewFromInt(1),
+		}
+
+		inv := domain.CalculateInvestment(h, "AUD")
+
+		if inv.IsInternational {
+			t.Errorf("expected IsInternational to be false for domestic holding")
+		}
+		if !inv.CapitalGainAmount.Amount.Equal(decimal.RequireFromString("500.00")) {
+			t.Errorf("got CapGain %s, want 500.00", inv.CapitalGainAmount.Amount)
+		}
+		if !inv.CapitalGainPercent.Equal(decimal.RequireFromString("12.50")) {
+			t.Errorf("got CapGain%% %s, want 12.50", inv.CapitalGainPercent)
+		}
+		if !inv.CurrencyGainAmount.Amount.IsZero() {
+			t.Errorf("got CurrencyGain %s, want 0.00", inv.CurrencyGainAmount.Amount)
+		}
+		if !inv.CurrencyGainPercent.IsZero() {
+			t.Errorf("got CurrencyGain%% %s, want 0.00", inv.CurrencyGainPercent)
+		}
+		if !inv.IncomeAmount.Amount.Equal(decimal.RequireFromString("120.00")) {
+			t.Errorf("got Income %s, want 120.00", inv.IncomeAmount.Amount)
+		}
+		if !inv.IncomeYieldPercent.Equal(decimal.RequireFromString("3.00")) {
+			t.Errorf("got IncomeYield%% %s, want 3.00", inv.IncomeYieldPercent)
+		}
+
+		// Mathematical attribution reconciliation
+		unrealizedBase := inv.TotalValue.Amount.Sub(h.CostBasisBase)
+		sumAttribution := inv.CapitalGainAmount.Amount.Add(inv.CurrencyGainAmount.Amount)
+		if !unrealizedBase.Equal(sumAttribution) {
+			t.Errorf("attribution reconciliation failed: unrealizedBase %s != sumAttribution %s", unrealizedBase, sumAttribution)
+		}
+	})
+
+	t.Run("international holding with price gain and currency tailwind", func(t *testing.T) {
+		// MSFT in AUD portfolio:
+		// Q = 10, Latest = 400.00 USD, CostBasis = 3500.00 USD (350.00/share)
+		// Initial FX = 1.40 (CostBasisBase = 3500 * 1.40 = 4900.00 AUD)
+		// Current FX = 1.50 AUD per USD (USD appreciated vs AUD -> currency tailwind)
+		// TotalValueLocal = 4000.00 USD
+		// TotalValueBase = 4000 * 1.50 = 6000.00 AUD
+		// CapGainLocal = 4000 - 3500 = 500.00 USD
+		// CapGainBase = 500 * 1.40 = 700.00 AUD (price gain at acquisition FX)
+		// CapGain% = 500 / 3500 = 14.29%
+		// CurrencyGainBase = 4000 * (1.50 - 1.40) = 400.00 AUD
+		// CurrencyGain% = (1.50 - 1.40) / 1.40 = 7.14%
+		// DividendsBase = 50.00 AUD
+		h := domain.HoldingWithPrice{
+			PortfolioID:        uuid.New(),
+			InstrumentID:       uuid.New(),
+			Ticker:             "MSFT",
+			Name:               "Microsoft Corp",
+			InstrumentCurrency: "USD",
+			Quantity:           decimal.RequireFromString("10"),
+			CostBasis:          decimal.RequireFromString("3500.00"),
+			CostBasisBase:      decimal.RequireFromString("4900.00"),
+			RealizedPnLBase:    decimal.Zero,
+			DividendsBase:      decimal.RequireFromString("50.00"),
+			LatestPrice:        decimal.RequireFromString("400.00"),
+			PrevPrice:          decimal.RequireFromString("395.00"),
+			FXRateToBase:       decimal.RequireFromString("1.50"),
+		}
+
+		inv := domain.CalculateInvestment(h, "AUD")
+
+		if !inv.IsInternational {
+			t.Errorf("expected IsInternational to be true for foreign holding")
+		}
+		if !inv.CapitalGainAmount.Amount.Equal(decimal.RequireFromString("700.00")) {
+			t.Errorf("got CapGain %s, want 700.00", inv.CapitalGainAmount.Amount)
+		}
+		if !inv.CapitalGainPercent.Equal(decimal.RequireFromString("14.29")) {
+			t.Errorf("got CapGain%% %s, want 14.29", inv.CapitalGainPercent)
+		}
+		if !inv.CurrencyGainAmount.Amount.Equal(decimal.RequireFromString("400.00")) {
+			t.Errorf("got CurrencyGain %s, want 400.00", inv.CurrencyGainAmount.Amount)
+		}
+		if !inv.CurrencyGainPercent.Equal(decimal.RequireFromString("7.14")) {
+			t.Errorf("got CurrencyGain%% %s, want 7.14", inv.CurrencyGainPercent)
+		}
+		if !inv.IncomeAmount.Amount.Equal(decimal.RequireFromString("50.00")) {
+			t.Errorf("got Income %s, want 50.00", inv.IncomeAmount.Amount)
+		}
+
+		// Exact identity verification:
+		// CapGainBase (700) + CurrencyGainBase (400) = 1100 AUD = TotalValueBase (6000) - CostBasisBase (4900)
+		unrealizedBase := inv.TotalValue.Amount.Sub(h.CostBasisBase)
+		sumAttribution := inv.CapitalGainAmount.Amount.Add(inv.CurrencyGainAmount.Amount)
+		if !unrealizedBase.Equal(sumAttribution) {
+			t.Errorf("attribution identity failed: unrealizedBase %s != sumAttribution %s", unrealizedBase, sumAttribution)
+		}
+	})
+
+	t.Run("international holding with price gain but currency headwind (drag)", func(t *testing.T) {
+		// NVDA in AUD portfolio:
+		// Q = 10, Latest = 120.00 USD, CostBasis = 1000.00 USD
+		// Initial FX = 1.60 (CostBasisBase = 1600.00 AUD)
+		// Current FX = 1.45 (USD depreciated vs AUD -> currency drag)
+		// TotalValueLocal = 1200.00 USD
+		// TotalValueBase = 1200 * 1.45 = 1740.00 AUD
+		// CapGainLocal = 1200 - 1000 = 200.00 USD
+		// CapGainBase = 200 * 1.60 = 320.00 AUD
+		// CurrencyGainBase = 1200 * (1.45 - 1.60) = -180.00 AUD
+		// Total unrealized = 1740 - 1600 = +140.00 AUD = 320 - 180!
+		h := domain.HoldingWithPrice{
+			PortfolioID:        uuid.New(),
+			InstrumentID:       uuid.New(),
+			Ticker:             "NVDA",
+			Name:               "Nvidia Corp",
+			InstrumentCurrency: "USD",
+			Quantity:           decimal.RequireFromString("10"),
+			CostBasis:          decimal.RequireFromString("1000.00"),
+			CostBasisBase:      decimal.RequireFromString("1600.00"),
+			RealizedPnLBase:    decimal.Zero,
+			DividendsBase:      decimal.Zero,
+			LatestPrice:        decimal.RequireFromString("120.00"),
+			PrevPrice:          decimal.RequireFromString("118.00"),
+			FXRateToBase:       decimal.RequireFromString("1.45"),
+		}
+
+		inv := domain.CalculateInvestment(h, "AUD")
+
+		if !inv.CapitalGainAmount.Amount.Equal(decimal.RequireFromString("320.00")) {
+			t.Errorf("got CapGain %s, want 320.00", inv.CapitalGainAmount.Amount)
+		}
+		if !inv.CurrencyGainAmount.Amount.Equal(decimal.RequireFromString("-180.00")) {
+			t.Errorf("got CurrencyGain %s, want -180.00", inv.CurrencyGainAmount.Amount)
+		}
+
+		unrealizedBase := inv.TotalValue.Amount.Sub(h.CostBasisBase)
+		sumAttribution := inv.CapitalGainAmount.Amount.Add(inv.CurrencyGainAmount.Amount)
+		if !unrealizedBase.Equal(sumAttribution) {
+			t.Errorf("attribution identity failed: unrealizedBase %s != sumAttribution %s", unrealizedBase, sumAttribution)
+		}
+	})
+
+	t.Run("zero cost basis handles cleanly without division by zero", func(t *testing.T) {
+		h := domain.HoldingWithPrice{
+			PortfolioID:        uuid.New(),
+			InstrumentID:       uuid.New(),
+			Ticker:             "FREE",
+			Name:               "Gift Shares",
+			InstrumentCurrency: "USD",
+			Quantity:           decimal.RequireFromString("10"),
+			CostBasis:          decimal.Zero,
+			CostBasisBase:      decimal.Zero,
+			RealizedPnLBase:    decimal.Zero,
+			DividendsBase:      decimal.Zero,
+			LatestPrice:        decimal.RequireFromString("10.00"),
+			PrevPrice:          decimal.RequireFromString("10.00"),
+			FXRateToBase:       decimal.RequireFromString("1.50"),
+		}
+
+		inv := domain.CalculateInvestment(h, "AUD")
+
+		if !inv.CapitalGainPercent.IsZero() {
+			t.Errorf("expected zero CapGain%%, got %s", inv.CapitalGainPercent)
+		}
+		if !inv.CurrencyGainPercent.IsZero() {
+			t.Errorf("expected zero CurrencyGain%%, got %s", inv.CurrencyGainPercent)
+		}
+		if !inv.IncomeYieldPercent.IsZero() {
+			t.Errorf("expected zero IncomeYield%%, got %s", inv.IncomeYieldPercent)
+		}
+	})
+}

@@ -320,6 +320,15 @@ type Investment {
   todayReturnPercent: Decimal!
   totalReturnAmount: Money!
   totalReturnPercent: Decimal!
+
+  # Multi-Currency Return Attribution
+  capitalGainAmount: Money!
+  capitalGainPercent: Decimal!
+  incomeAmount: Money!
+  incomeYieldPercent: Decimal!
+  currencyGainAmount: Money!
+  currencyGainPercent: Decimal!
+  isInternational: Boolean!
 }
 
 type UserPreferences {

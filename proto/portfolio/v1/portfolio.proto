@@ -134,16 +134,23 @@ message Portfolio {
 }
 
 message Investment {
-  string            id                   = 1;
-  string            ticker               = 2;
-  string            name                 = 3;
-  common.v1.Money   price                = 4;
-  common.v1.Decimal quantity             = 5;
-  common.v1.Money   total_value          = 6;
-  common.v1.Money   today_return_amount  = 7;
-  common.v1.Decimal today_return_percent = 8;
-  common.v1.Money   total_return_amount  = 9;
-  common.v1.Decimal total_return_percent = 10;
+  string            id                     = 1;
+  string            ticker                 = 2;
+  string            name                   = 3;
+  common.v1.Money   price                  = 4;
+  common.v1.Decimal quantity               = 5;
+  common.v1.Money   total_value            = 6;
+  common.v1.Money   today_return_amount    = 7;
+  common.v1.Decimal today_return_percent   = 8;
+  common.v1.Money   total_return_amount    = 9;
+  common.v1.Decimal total_return_percent   = 10;
+  common.v1.Money   capital_gain_amount    = 11;
+  common.v1.Decimal capital_gain_percent   = 12;
+  common.v1.Money   income_amount          = 13;
+  common.v1.Decimal income_yield_percent   = 14;
+  common.v1.Money   currency_gain_amount   = 15;
+  common.v1.Decimal currency_gain_percent  = 16;
+  bool              is_international       = 17;
 }
 
 enum HistoryTimeframe {

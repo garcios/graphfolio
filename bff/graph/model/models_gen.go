@@ -192,16 +192,23 @@ type InstrumentPricesConnection struct {
 }
 
 type Investment struct {
-	ID                 string  `json:"id"`
-	Ticker             string  `json:"ticker"`
-	Name               string  `json:"name"`
-	Price              *Money  `json:"price"`
-	Quantity           Decimal `json:"quantity"`
-	TotalValue         *Money  `json:"totalValue"`
-	TodayReturnAmount  *Money  `json:"todayReturnAmount"`
-	TodayReturnPercent Decimal `json:"todayReturnPercent"`
-	TotalReturnAmount  *Money  `json:"totalReturnAmount"`
-	TotalReturnPercent Decimal `json:"totalReturnPercent"`
+	ID                  string  `json:"id"`
+	Ticker              string  `json:"ticker"`
+	Name                string  `json:"name"`
+	Price               *Money  `json:"price"`
+	Quantity            Decimal `json:"quantity"`
+	TotalValue          *Money  `json:"totalValue"`
+	TodayReturnAmount   *Money  `json:"todayReturnAmount"`
+	TodayReturnPercent  Decimal `json:"todayReturnPercent"`
+	TotalReturnAmount   *Money  `json:"totalReturnAmount"`
+	TotalReturnPercent  Decimal `json:"totalReturnPercent"`
+	CapitalGainAmount   *Money  `json:"capitalGainAmount"`
+	CapitalGainPercent  Decimal `json:"capitalGainPercent"`
+	IncomeAmount        *Money  `json:"incomeAmount"`
+	IncomeYieldPercent  Decimal `json:"incomeYieldPercent"`
+	CurrencyGainAmount  *Money  `json:"currencyGainAmount"`
+	CurrencyGainPercent Decimal `json:"currencyGainPercent"`
+	IsInternational     bool    `json:"isInternational"`
 }
 
 type MarketSyncPayload struct {
