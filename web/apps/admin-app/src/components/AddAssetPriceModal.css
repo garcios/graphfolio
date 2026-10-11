@@ -1,0 +1,85 @@
+.add-price-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.add-price-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.add-price-form__notice {
+  padding: 0.75rem 1rem;
+  background: rgba(99, 102, 241, 0.12);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  border-radius: var(--radius-sm, 6px);
+  color: #c7d2fe;
+  font-size: 0.825rem;
+  line-height: 1.4;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.add-price-form__price-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.add-price-form__price-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.add-price-form__currency-badge {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted, #94a3b8);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+}
+
+.add-price-form__error {
+  padding: 0.75rem 1rem;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-sm, 6px);
+  color: #fca5a5;
+  font-size: 0.825rem;
+}
+
+.add-price-form__checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.add-price-form__checkbox-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  cursor: pointer;
+}
+
+.add-price-form__checkbox-title {
+  font-size: 0.85rem;
+  color: var(--text-primary, #f8fafc);
+  font-weight: 500;
+}
+
+.add-price-form__checkbox-desc {
+  font-size: 0.775rem;
+  color: var(--text-secondary, #94a3b8);
+  line-height: 1.3;
+}
