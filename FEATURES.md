@@ -33,6 +33,7 @@ This document catalogs all implemented features, in-progress components, and pla
 | **23** | **Dividend Calendar & Yield Analytics** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
 | **24** | **Real-Time Market Data & WebSocket Price Ticker** | **ROADMAP** | Market Data, Svc, Web | *(Future Plan)* |
 | **25** | **Investment Holding Return Attribution (Capital Gain, Income & Currency Gain/Loss)** | **DONE** | Proto, Svc, BFF, Web | [holding-return-attribution-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/holding-return-attribution-implementation-plan.md) |
+| **26** | **Average Buy Price Holdings Column** | **DONE** | Proto, Svc, BFF, Web | [average-buy-price-column-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/average-buy-price-column-implementation-plan.md) |
 
 ---
 
@@ -311,6 +312,24 @@ This document catalogs all implemented features, in-progress components, and pla
   - [server.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server.go)
   - [schema.graphqls](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls)
   - [helpers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/helpers.go)
+  - [Dashboard.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.tsx)
+  - [Dashboard.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.css)
+
+### 2.26 Average Buy Price Holdings Column
+- **Status**: **DONE**
+- **Plan Reference**: [average-buy-price-column-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/average-buy-price-column-implementation-plan.md)
+- **User Story**: [user_story_average_buy_price_column.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/user_story_average_buy_price_column.md)
+- **Scope**: `proto/portfolio/v1/`, `services/portfolio-api`, `bff/`, `web/apps/main-app`
+- **Description**: Displays the volume-weighted average purchase price across all open lots directly alongside the market Price column in the investments table. Denominated in the instrument trading currency to allow direct 1-to-1 comparison against current execution prices. Incorporates stock splits seamlessly through deterministic ledger replay, supports interactive column sorting with informational tooltip, renders empty placeholders (`—`) for unpriced holdings, and adjusts table footer spans (`colSpan={4}`).
+- **Key Files**:
+  - [portfolio.proto](file:///Users/oscargarcia/workspace/graphfolio/proto/portfolio/v1/portfolio.proto)
+  - [holding.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/domain/holding.go)
+  - [calculator.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/domain/calculator.go)
+  - [calculator_test.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/domain/calculator_test.go)
+  - [server.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server.go)
+  - [schema.graphqls](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls)
+  - [helpers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/helpers.go)
+  - [schema.resolvers_test.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers_test.go)
   - [Dashboard.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.tsx)
   - [Dashboard.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.css)
 

@@ -269,6 +269,81 @@ func TestQueryResolver_Portfolio(t *testing.T) {
 	}
 }
 
+func TestQueryResolver_Portfolio_AverageBuyPrice(t *testing.T) {
+	ctx := context.Background()
+
+	fakeClient := &fakePortfolioClient{
+		getPortfolioFn: func(ctx context.Context, in *pb.GetPortfolioRequest) (*pb.GetPortfolioResponse, error) {
+			return &pb.GetPortfolioResponse{
+				Portfolio: &pb.Portfolio{
+					TotalValue: &commonpb.Money{
+						Amount:       &commonpb.Decimal{Value: "150000.00"},
+						CurrencyCode: "USD",
+					},
+					CashBalance: &commonpb.Money{
+						Amount:       &commonpb.Decimal{Value: "5000.00"},
+						CurrencyCode: "USD",
+					},
+					Investments: []*pb.Investment{
+						{
+							Id:     "inv-1",
+							Ticker: "AAPL",
+							Name:   "Apple Inc.",
+							Price: &commonpb.Money{
+								Amount:       &commonpb.Decimal{Value: "185.92"},
+								CurrencyCode: "USD",
+							},
+							AverageBuyPrice: &commonpb.Money{
+								Amount:       &commonpb.Decimal{Value: "156.24"},
+								CurrencyCode: "USD",
+							},
+							Quantity: &commonpb.Decimal{Value: "100"},
+						},
+						{
+							Id:     "inv-2",
+							Ticker: "GIFT",
+							Name:   "Free Gift",
+							Price: &commonpb.Money{
+								Amount:       &commonpb.Decimal{Value: "10.00"},
+								CurrencyCode: "USD",
+							},
+							AverageBuyPrice: nil,
+							Quantity:        &commonpb.Decimal{Value: "10"},
+						},
+					},
+				},
+			}, nil
+		},
+	}
+
+	resolver := &Resolver{PortfolioClient: fakeClient}
+	qResolver := resolver.Query()
+
+	result, err := qResolver.Portfolio(ctx)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(result.Investments) != 2 {
+		t.Fatalf("expected 2 investments, got %d", len(result.Investments))
+	}
+
+	inv1 := result.Investments[0]
+	if inv1.AverageBuyPrice == nil {
+		t.Fatalf("expected non-nil averageBuyPrice for inv1")
+	}
+	if inv1.AverageBuyPrice.Amount.String() != "156.24" {
+		t.Errorf("expected 156.24, got %s", inv1.AverageBuyPrice.Amount.String())
+	}
+	if inv1.AverageBuyPrice.CurrencyCode != "USD" {
+		t.Errorf("expected currency USD, got %s", inv1.AverageBuyPrice.CurrencyCode)
+	}
+
+	inv2 := result.Investments[1]
+	if inv2.AverageBuyPrice != nil {
+		t.Errorf("expected nil averageBuyPrice for inv2, got %v", inv2.AverageBuyPrice)
+	}
+}
+
 func TestQueryResolver_Instruments(t *testing.T) {
 	ctx := context.Background()
 

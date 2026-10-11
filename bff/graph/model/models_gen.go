@@ -196,6 +196,7 @@ type Investment struct {
 	Ticker              string  `json:"ticker"`
 	Name                string  `json:"name"`
 	Price               *Money  `json:"price"`
+	AverageBuyPrice     *Money  `json:"averageBuyPrice,omitempty"`
 	Quantity            Decimal `json:"quantity"`
 	TotalValue          *Money  `json:"totalValue"`
 	TodayReturnAmount   *Money  `json:"todayReturnAmount"`

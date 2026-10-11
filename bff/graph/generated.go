@@ -177,6 +177,7 @@ type ComplexityRoot struct {
 	}
 
 	Investment struct {
+		AverageBuyPrice     func(childComplexity int) int
 		CapitalGainAmount   func(childComplexity int) int
 		CapitalGainPercent  func(childComplexity int) int
 		CurrencyGainAmount  func(childComplexity int) int
@@ -909,6 +910,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.InstrumentPricesConnection.TotalCount(childComplexity), true
 
+	case "Investment.averageBuyPrice":
+		if e.ComplexityRoot.Investment.AverageBuyPrice == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Investment.AverageBuyPrice(childComplexity), true
 	case "Investment.capitalGainAmount":
 		if e.ComplexityRoot.Investment.CapitalGainAmount == nil {
 			break
@@ -1971,6 +1978,8 @@ func (ec *executionContext) childFields_Investment(ctx context.Context, field gr
 		return ec.fieldContext_Investment_name(ctx, field)
 	case "price":
 		return ec.fieldContext_Investment_price(ctx, field)
+	case "averageBuyPrice":
+		return ec.fieldContext_Investment_averageBuyPrice(ctx, field)
 	case "quantity":
 		return ec.fieldContext_Investment_quantity(ctx, field)
 	case "totalValue":
@@ -4924,6 +4933,38 @@ func (ec *executionContext) _Investment_price(ctx context.Context, field graphql
 	)
 }
 func (ec *executionContext) fieldContext_Investment_price(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Investment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Investment_averageBuyPrice(ctx context.Context, field graphql.CollectedField, obj *model.Investment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Investment_averageBuyPrice(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.AverageBuyPrice, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalOMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Investment_averageBuyPrice(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Investment",
 		Field:      field,
@@ -10419,6 +10460,11 @@ func (ec *executionContext) _Investment(ctx context.Context, sel ast.SelectionSe
 		case "price":
 			out.Values[i] = ec._Investment_price(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "averageBuyPrice":
+			out.Values[i] = ec._Investment_averageBuyPrice(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
 				out.Invalids++
 			}
 		case "quantity":

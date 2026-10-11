@@ -77,11 +77,17 @@ func CalculateInvestment(h HoldingWithPrice, baseCurrency string) InvestmentSumm
 		totalReturnPercent = totalReturnAmountBase.DivRound(h.CostBasisBase, 6).Mul(oneHundred).Round(1)
 	}
 
+	var avgBuyPrice decimal.Decimal
+	if h.Quantity.IsPositive() && h.CostBasis.IsPositive() {
+		avgBuyPrice = h.CostBasis.DivRound(h.Quantity, 4)
+	}
+
 	return InvestmentSummary{
 		ID:                  h.InstrumentID.String(),
 		Ticker:              h.Ticker,
 		Name:                h.Name,
 		Price:               NewMoney(h.LatestPrice.Round(2), h.InstrumentCurrency),
+		AverageBuyPrice:     NewMoney(avgBuyPrice.Round(2), h.InstrumentCurrency),
 		Quantity:            h.Quantity,
 		TotalValue:          NewMoney(totalValueBase.Round(2), baseCurrency),
 		TodayReturnAmount:   NewMoney(todayReturnAmountBase.Round(2), baseCurrency),

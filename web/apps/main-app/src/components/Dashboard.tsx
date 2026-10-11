@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { client } from '@graphfolio/api-client';
 import { formatMoney, formatPercent, isPositive, Button } from '@graphfolio/ui';
 import './Dashboard.css';
@@ -7,6 +7,9 @@ import { ImportTransactionsModal } from './ImportTransactionsModal';
 import { PerformanceChart } from './PerformanceChart';
 import { TransactionLedger } from './TransactionLedger';
 import { UserPreferencesModal, type UserPreferencesData, type CurrencyItem } from './UserPreferencesModal';
+
+type SortField = 'ticker' | 'price' | 'averageBuyPrice' | 'quantity' | 'totalValue' | 'capitalGain' | 'income' | 'currencyGain' | 'totalReturn' | 'todayReturn';
+type SortDirection = 'asc' | 'desc';
 
 export const Dashboard = () => {
   const [data, setData] = useState<any>(null);
@@ -19,6 +22,54 @@ export const Dashboard = () => {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'ledger'>('overview');
   const [ledgerRefreshKey, setLedgerRefreshKey] = useState(0);
+  const [sortField, setSortField] = useState<SortField | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+
+  const investments = data?.investments || [];
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const sortedInvestments = useMemo(() => {
+    if (!sortField) return investments;
+    return [...investments].sort((a: any, b: any) => {
+      let aVal = 0;
+      let bVal = 0;
+      if (sortField === 'averageBuyPrice') {
+        const aNum = parseFloat(a.averageBuyPrice?.amount);
+        const bNum = parseFloat(b.averageBuyPrice?.amount);
+        const aValid = !isNaN(aNum) && aNum > 0;
+        const bValid = !isNaN(bNum) && bNum > 0;
+        if (!aValid && !bValid) return 0;
+        if (!aValid) return 1;
+        if (!bValid) return -1;
+        aVal = aNum;
+        bVal = bNum;
+      } else if (sortField === 'price') {
+        aVal = parseFloat(a.price?.amount) || 0;
+        bVal = parseFloat(b.price?.amount) || 0;
+      } else if (sortField === 'quantity') {
+        aVal = parseFloat(a.quantity) || 0;
+        bVal = parseFloat(b.quantity) || 0;
+      } else if (sortField === 'totalValue') {
+        aVal = parseFloat(a.totalValue?.amount) || 0;
+        bVal = parseFloat(b.totalValue?.amount) || 0;
+      } else if (sortField === 'ticker') {
+        return sortDirection === 'asc'
+          ? (a.ticker || '').localeCompare(b.ticker || '')
+          : (b.ticker || '').localeCompare(a.ticker || '');
+      }
+      if (aVal < bVal) return sortDirection === 'asc' ? -1 : 1;
+      if (aVal > bVal) return sortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [investments, sortField, sortDirection]);
 
   const getInitials = (name: string): string => {
     const parts = name.trim().split(/\s+/);
@@ -41,6 +92,7 @@ export const Dashboard = () => {
           ticker: true,
           name: true,
           price: { amount: true, currencyCode: true },
+          averageBuyPrice: { amount: true, currencyCode: true },
           quantity: true,
           totalValue: { amount: true, currencyCode: true },
           todayReturnAmount: { amount: true, currencyCode: true },
@@ -93,6 +145,7 @@ export const Dashboard = () => {
             ticker: true,
             name: true,
             price: { amount: true, currencyCode: true },
+            averageBuyPrice: { amount: true, currencyCode: true },
             quantity: true,
             totalValue: { amount: true, currencyCode: true },
             todayReturnAmount: { amount: true, currencyCode: true },
@@ -127,7 +180,6 @@ export const Dashboard = () => {
   const todayReturnPositive = isPositive(data.todayReturnAmount);
   const annualizedPositive = isPositive(data.annualizedReturnPercent);
 
-  const investments = data.investments || [];
   const currencyCode = data.totalValue?.currencyCode || userPrefs?.displayCurrency || 'USD';
 
   const investedAssetsTotal = investments.reduce(
@@ -262,9 +314,21 @@ export const Dashboard = () => {
                   <thead>
                     <tr>
                       <th>Asset</th>
-                      <th>Price</th>
-                      <th>Quantity</th>
-                      <th>Total Value</th>
+                      <th className="num-col">Price</th>
+                      <th
+                        className="num-col sortable-th"
+                        onClick={() => handleSort('averageBuyPrice')}
+                        title="The weighted average price paid per share/unit across all open lots."
+                      >
+                        <div className="th-content">
+                          <span>Avg Buy Price</span>
+                          <span className="sort-icon">
+                            {sortField === 'averageBuyPrice' ? (sortDirection === 'asc' ? ' ▲' : ' ▼') : ' ↕'}
+                          </span>
+                        </div>
+                      </th>
+                      <th className="num-col">Quantity</th>
+                      <th className="num-col">Total Value</th>
                       <th>Capital Gain</th>
                       <th>Income</th>
                       <th>Currency Gain</th>
@@ -273,7 +337,7 @@ export const Dashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {investments.map((inv: any) => {
+                    {sortedInvestments.map((inv: any) => {
                       const todayPos = isPositive(inv.todayReturnAmount);
                       const totalPos = isPositive(inv.totalReturnAmount);
                       const capGainPos = isPositive(inv.capitalGainAmount);
@@ -293,9 +357,16 @@ export const Dashboard = () => {
                               <span className="name">{inv.name}</span>
                             </div>
                           </td>
-                          <td>{formatMoney(inv.price)}</td>
-                          <td>{inv.quantity}</td>
-                          <td>{formatMoney(inv.totalValue)}</td>
+                          <td className="num-col">{formatMoney(inv.price)}</td>
+                          <td className="num-col">
+                            {inv.averageBuyPrice && parseFloat(inv.averageBuyPrice.amount) > 0 ? (
+                              <span className="avg-buy-price-val">{formatMoney(inv.averageBuyPrice)}</span>
+                            ) : (
+                              <span className="neutral-dash" title="Cost basis unavailable">—</span>
+                            )}
+                          </td>
+                          <td className="num-col">{inv.quantity}</td>
+                          <td className="num-col">{formatMoney(inv.totalValue)}</td>
                           <td>
                             <div className={`return-info ${capGainPos ? 'positive' : 'negative'}`}>
                               <span className="amount">{capGainPos ? '+' : ''}{formatMoney(inv.capitalGainAmount)}</span>
@@ -336,7 +407,7 @@ export const Dashboard = () => {
                   </tbody>
                   <tfoot>
                     <tr className="table-footer-subtotal">
-                      <td colSpan={3}>
+                      <td colSpan={4}>
                         <div className="footer-title-cell">
                           <span className="footer-title">Invested Assets Subtotal</span>
                           <span className="footer-count">{investments.length} {investments.length === 1 ? 'asset' : 'assets'}</span>
@@ -382,7 +453,7 @@ export const Dashboard = () => {
                       </td>
                     </tr>
                     <tr className="table-footer-cash">
-                      <td colSpan={3}>
+                      <td colSpan={4}>
                         <div className="footer-title-cell">
                           <span className="footer-title">Cash Balance</span>
                           <span className="cash-pill">Liquid</span>
@@ -398,7 +469,7 @@ export const Dashboard = () => {
                       <td className="footer-muted">—</td>
                     </tr>
                     <tr className="table-footer-total">
-                      <td colSpan={3}>
+                      <td colSpan={4}>
                         <div className="footer-title-cell">
                           <span className="footer-title-total">Total Portfolio Value</span>
                           <span className="footer-formula">Assets + Cash</span>
