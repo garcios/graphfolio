@@ -177,16 +177,23 @@ type ComplexityRoot struct {
 	}
 
 	Investment struct {
-		ID                 func(childComplexity int) int
-		Name               func(childComplexity int) int
-		Price              func(childComplexity int) int
-		Quantity           func(childComplexity int) int
-		Ticker             func(childComplexity int) int
-		TodayReturnAmount  func(childComplexity int) int
-		TodayReturnPercent func(childComplexity int) int
-		TotalReturnAmount  func(childComplexity int) int
-		TotalReturnPercent func(childComplexity int) int
-		TotalValue         func(childComplexity int) int
+		CapitalGainAmount   func(childComplexity int) int
+		CapitalGainPercent  func(childComplexity int) int
+		CurrencyGainAmount  func(childComplexity int) int
+		CurrencyGainPercent func(childComplexity int) int
+		ID                  func(childComplexity int) int
+		IncomeAmount        func(childComplexity int) int
+		IncomeYieldPercent  func(childComplexity int) int
+		IsInternational     func(childComplexity int) int
+		Name                func(childComplexity int) int
+		Price               func(childComplexity int) int
+		Quantity            func(childComplexity int) int
+		Ticker              func(childComplexity int) int
+		TodayReturnAmount   func(childComplexity int) int
+		TodayReturnPercent  func(childComplexity int) int
+		TotalReturnAmount   func(childComplexity int) int
+		TotalReturnPercent  func(childComplexity int) int
+		TotalValue          func(childComplexity int) int
 	}
 
 	MarketSyncPayload struct {
@@ -902,12 +909,54 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.InstrumentPricesConnection.TotalCount(childComplexity), true
 
+	case "Investment.capitalGainAmount":
+		if e.ComplexityRoot.Investment.CapitalGainAmount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Investment.CapitalGainAmount(childComplexity), true
+	case "Investment.capitalGainPercent":
+		if e.ComplexityRoot.Investment.CapitalGainPercent == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Investment.CapitalGainPercent(childComplexity), true
+	case "Investment.currencyGainAmount":
+		if e.ComplexityRoot.Investment.CurrencyGainAmount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Investment.CurrencyGainAmount(childComplexity), true
+	case "Investment.currencyGainPercent":
+		if e.ComplexityRoot.Investment.CurrencyGainPercent == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Investment.CurrencyGainPercent(childComplexity), true
 	case "Investment.id":
 		if e.ComplexityRoot.Investment.ID == nil {
 			break
 		}
 
 		return e.ComplexityRoot.Investment.ID(childComplexity), true
+	case "Investment.incomeAmount":
+		if e.ComplexityRoot.Investment.IncomeAmount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Investment.IncomeAmount(childComplexity), true
+	case "Investment.incomeYieldPercent":
+		if e.ComplexityRoot.Investment.IncomeYieldPercent == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Investment.IncomeYieldPercent(childComplexity), true
+	case "Investment.isInternational":
+		if e.ComplexityRoot.Investment.IsInternational == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Investment.IsInternational(childComplexity), true
 	case "Investment.name":
 		if e.ComplexityRoot.Investment.Name == nil {
 			break
@@ -1934,6 +1983,20 @@ func (ec *executionContext) childFields_Investment(ctx context.Context, field gr
 		return ec.fieldContext_Investment_totalReturnAmount(ctx, field)
 	case "totalReturnPercent":
 		return ec.fieldContext_Investment_totalReturnPercent(ctx, field)
+	case "capitalGainAmount":
+		return ec.fieldContext_Investment_capitalGainAmount(ctx, field)
+	case "capitalGainPercent":
+		return ec.fieldContext_Investment_capitalGainPercent(ctx, field)
+	case "incomeAmount":
+		return ec.fieldContext_Investment_incomeAmount(ctx, field)
+	case "incomeYieldPercent":
+		return ec.fieldContext_Investment_incomeYieldPercent(ctx, field)
+	case "currencyGainAmount":
+		return ec.fieldContext_Investment_currencyGainAmount(ctx, field)
+	case "currencyGainPercent":
+		return ec.fieldContext_Investment_currencyGainPercent(ctx, field)
+	case "isInternational":
+		return ec.fieldContext_Investment_isInternational(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Investment", field.Name)
 }
@@ -5036,6 +5099,194 @@ func (ec *executionContext) _Investment_totalReturnPercent(ctx context.Context, 
 }
 func (ec *executionContext) fieldContext_Investment_totalReturnPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("Investment", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _Investment_capitalGainAmount(ctx context.Context, field graphql.CollectedField, obj *model.Investment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Investment_capitalGainAmount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CapitalGainAmount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Investment_capitalGainAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Investment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Investment_capitalGainPercent(ctx context.Context, field graphql.CollectedField, obj *model.Investment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Investment_capitalGainPercent(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CapitalGainPercent, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Investment_capitalGainPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Investment", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _Investment_incomeAmount(ctx context.Context, field graphql.CollectedField, obj *model.Investment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Investment_incomeAmount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.IncomeAmount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Investment_incomeAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Investment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Investment_incomeYieldPercent(ctx context.Context, field graphql.CollectedField, obj *model.Investment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Investment_incomeYieldPercent(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.IncomeYieldPercent, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Investment_incomeYieldPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Investment", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _Investment_currencyGainAmount(ctx context.Context, field graphql.CollectedField, obj *model.Investment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Investment_currencyGainAmount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CurrencyGainAmount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Investment_currencyGainAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Investment",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Investment_currencyGainPercent(ctx context.Context, field graphql.CollectedField, obj *model.Investment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Investment_currencyGainPercent(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CurrencyGainPercent, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Investment_currencyGainPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Investment", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _Investment_isInternational(ctx context.Context, field graphql.CollectedField, obj *model.Investment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Investment_isInternational(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.IsInternational, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Investment_isInternational(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Investment", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
 func (ec *executionContext) _MarketSyncPayload_success(ctx context.Context, field graphql.CollectedField, obj *model.MarketSyncPayload) (ret graphql.Marshaler) {
@@ -10197,6 +10448,41 @@ func (ec *executionContext) _Investment(ctx context.Context, sel ast.SelectionSe
 			}
 		case "totalReturnPercent":
 			out.Values[i] = ec._Investment_totalReturnPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "capitalGainAmount":
+			out.Values[i] = ec._Investment_capitalGainAmount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "capitalGainPercent":
+			out.Values[i] = ec._Investment_capitalGainPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "incomeAmount":
+			out.Values[i] = ec._Investment_incomeAmount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "incomeYieldPercent":
+			out.Values[i] = ec._Investment_incomeYieldPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currencyGainAmount":
+			out.Values[i] = ec._Investment_currencyGainAmount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currencyGainPercent":
+			out.Values[i] = ec._Investment_currencyGainPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isInternational":
+			out.Values[i] = ec._Investment_isInternational(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

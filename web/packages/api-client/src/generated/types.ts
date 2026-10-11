@@ -824,6 +824,27 @@ export default {
             "totalReturnPercent": [
                 0
             ],
+            "capitalGainAmount": [
+                1
+            ],
+            "capitalGainPercent": [
+                0
+            ],
+            "incomeAmount": [
+                1
+            ],
+            "incomeYieldPercent": [
+                0
+            ],
+            "currencyGainAmount": [
+                1
+            ],
+            "currencyGainPercent": [
+                0
+            ],
+            "isInternational": [
+                8
+            ],
             "__typename": [
                 2
             ]

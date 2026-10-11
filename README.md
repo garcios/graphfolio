@@ -22,6 +22,12 @@ A modern portfolio tracker built for serious investors. GraphFolio accurately me
 - **Admin Historical Market Data Backfill**: Operators can backfill daily closing prices and ECB FX fixings over custom date ranges (up to ~5 years) from the Admin Portal's `BackfillModal`. Offers date presets (`30D`, `90D`, `YTD`, `1Y`, `ALL`), All-Active vs. Specific symbol/pair scopes, API token budget impact projections, and optional retroactive valuation recompute for affected portfolios. Available from the Ingestion Pipeline console and the Price and FX management toolbars. Per-asset provider failures are reported as non-fatal warnings and do not abort the batch.
 - **Multi-Broker CSV Ingestion & Cash Account Statement Parsing**: Seamless batch statement ingestion supporting leading Australian retail brokers (CommSec and nabtrade). Features automated header signature detection with manual override, dialect parsing for Australian dates (`DD/MM/YYYY`) and currency formatting, domestic and international cash account trade matching with native brokerage fee derivation, full cash account statement ingestion (capturing `DEPOSIT`, `WITHDRAWAL`, `INTEREST`, and domestic ETF/stock dividends while ignoring informational interest rate updates to eliminate negative cash balances), idempotent deduplication via pre-flight external reference checking, and an interactive glassmorphic preview modal (`ImportTransactionsModal`) with validation diagnostics. Backend microservices support flexible ticker suffix matching (`IVV` ↔ `IVV.AX` ↔ `IVV.ASX`), unmapped instrument auto-provisioning, atomic batch persistence, single-pass projection rebuilds, and retroactive valuation backfills.
 - **User Preferences & Dynamic Multi-Currency Re-anchoring**: Manage investor profile display name, UI theme (`DARK`, `LIGHT`, `SYSTEM`), and base display currency (`USD`, `EUR`, `GBP`, `AUD`, `CAD`, `JPY`, `CHF`). Changing preferred currency automatically triggers atomic base currency re-anchoring on `portfolio-api`, re-scaling valuations and holdings cost bases via live FX triangulation without data drift.
+- **Investment Holding Return Attribution (Capital Gain, Income & Currency Gain/Loss)**: Full 3-pillar return decomposition for every investment holding using exact fixed-point decimal arithmetic:
+  - **Capital Gain/Loss**: Local asset price movement converted at the effective weighted-average acquisition exchange rate: $\text{CapGain}_{\text{base}} = (V_{\text{local}} - C_{\text{local}}) \times \overline{\text{FX}}_0$.
+  - **Income (Dividends & Distributions)**: Cumulative gross dividends received in base currency, accompanied by Yield on Cost ($\text{YOC}\%$).
+  - **Currency Gain/Loss**: Foreign exchange rate fluctuation between the acquisition rate and current market rate: $\text{FXGain}_{\text{base}} = V_{\text{local}} \times (\text{FX}_t - \overline{\text{FX}}_0)$ for international assets, with a clean neutral indicator (`—`) for domestic assets.
+  - **Verified Mathematical Identity**: $\text{CapGain}_{\text{base}} + \text{FXGain}_{\text{base}} \equiv V_{\text{base}} - C_{\text{base}}$ invariant preserved across all multi-currency assets.
+  - **Expanded Desktop Layout**: Widened dashboard layout (`max-width: 1520px`) with 9 columns (`Asset`, `Price`, `Quantity`, `Total Value`, `Capital Gain`, `Income`, `Currency Gain`, `Total Return`, `Today's Return`), `INTL` badges, itemized subtotal footer row, and responsive card views on mobile.
 - **Clean Microservice Monorepo**: Contract-first gRPC services with a Go GraphQL Backend-for-Frontend (BFF) and strongly-typed frontend queries.
 - **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, Vite, modal transaction entry (`AddTransactionModal`), statement import (`ImportTransactionsModal`), investor preferences dialog (`UserPreferencesModal`), and instant reactive state refresh.
 
@@ -240,8 +246,11 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── exchange-dropdown-implementation-plan.md
 │   │   ├── ingestion-job-history-implementation-plan.md
 │   │   ├── multi-broker-csv-ingestion-implementation-plan.md
+│   │   ├── cash-statement-csv-ingestion-implementation-plan.md
+│   │   ├── holding-return-attribution-implementation-plan.md
 │   │   └── web-workspace-refactoring-plan.md
 │   ├── user-stories/             # Product specifications & acceptance criteria
+│   │   └── investment-holding-capital-gain-income-currency.md
 │   ├── competitive-analysis.md
 │   └── genql-usage.md
 ├── FEATURES.md                   # Master features matrix & roadmap (completed & planned)
@@ -325,6 +334,8 @@ make generate
 - **Ingestion Job History Plan**: [`docs/plans/ingestion-job-history-implementation-plan.md`](./docs/plans/ingestion-job-history-implementation-plan.md)
 - **Multi-Broker CSV Ingestion Plan**: [`docs/plans/multi-broker-csv-ingestion-implementation-plan.md`](./docs/plans/multi-broker-csv-ingestion-implementation-plan.md)
 - **Cash Statement CSV Ingestion Plan**: [`docs/plans/cash-statement-csv-ingestion-implementation-plan.md`](./docs/plans/cash-statement-csv-ingestion-implementation-plan.md)
+- **Holding Return Attribution Implementation Plan**: [`docs/plans/holding-return-attribution-implementation-plan.md`](./docs/plans/holding-return-attribution-implementation-plan.md)
+- **Holding Return Attribution User Story**: [`docs/user-stories/investment-holding-capital-gain-income-currency.md`](./docs/user-stories/investment-holding-capital-gain-income-currency.md)
 - **Negative Cash Balance Investigation Report**: [`docs/negative-cash-balance-investigation-report.md`](./docs/negative-cash-balance-investigation-report.md)
 - **Competitive Strategy Analysis**: [`docs/competitive-analysis.md`](./docs/competitive-analysis.md)
 - **Frontend GraphQL Setup**: [`docs/genql-usage.md`](./docs/genql-usage.md)

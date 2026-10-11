@@ -47,6 +47,13 @@ export const Dashboard = () => {
           todayReturnPercent: true,
           totalReturnAmount: { amount: true, currencyCode: true },
           totalReturnPercent: true,
+          capitalGainAmount: { amount: true, currencyCode: true },
+          capitalGainPercent: true,
+          incomeAmount: { amount: true, currencyCode: true },
+          incomeYieldPercent: true,
+          currencyGainAmount: { amount: true, currencyCode: true },
+          currencyGainPercent: true,
+          isInternational: true,
         }
       },
       userPreferences: {
@@ -92,6 +99,13 @@ export const Dashboard = () => {
             todayReturnPercent: true,
             totalReturnAmount: { amount: true, currencyCode: true },
             totalReturnPercent: true,
+            capitalGainAmount: { amount: true, currencyCode: true },
+            capitalGainPercent: true,
+            incomeAmount: { amount: true, currencyCode: true },
+            incomeYieldPercent: true,
+            currencyGainAmount: { amount: true, currencyCode: true },
+            currencyGainPercent: true,
+            isInternational: true,
           }
         }
       })
@@ -128,9 +142,24 @@ export const Dashboard = () => {
     (sum: number, inv: any) => sum + (parseFloat(inv.totalReturnAmount?.amount) || 0),
     0
   );
+  const subtotalCapitalGain = investments.reduce(
+    (sum: number, inv: any) => sum + (parseFloat(inv.capitalGainAmount?.amount) || 0),
+    0
+  );
+  const subtotalIncome = investments.reduce(
+    (sum: number, inv: any) => sum + (parseFloat(inv.incomeAmount?.amount) || 0),
+    0
+  );
+  const subtotalCurrencyGain = investments.reduce(
+    (sum: number, inv: any) => sum + (parseFloat(inv.currencyGainAmount?.amount) || 0),
+    0
+  );
 
   const subtotalTodayPos = subtotalTodayReturn >= 0;
   const subtotalTotalPos = subtotalTotalReturn >= 0;
+  const subtotalCapGainPos = subtotalCapitalGain >= 0;
+  const subtotalIncomePos = subtotalIncome >= 0;
+  const subtotalCurrencyPos = subtotalCurrencyGain >= 0;
 
   return (
     <div className="dashboard">
@@ -236,20 +265,31 @@ export const Dashboard = () => {
                       <th>Price</th>
                       <th>Quantity</th>
                       <th>Total Value</th>
-                      <th>Today's Return</th>
+                      <th>Capital Gain</th>
+                      <th>Income</th>
+                      <th>Currency Gain</th>
                       <th>Total Return</th>
+                      <th>Today's Return</th>
                     </tr>
                   </thead>
                   <tbody>
                     {investments.map((inv: any) => {
                       const todayPos = isPositive(inv.todayReturnAmount);
                       const totalPos = isPositive(inv.totalReturnAmount);
+                      const capGainPos = isPositive(inv.capitalGainAmount);
+                      const incomePos = isPositive(inv.incomeAmount);
+                      const currencyPos = isPositive(inv.currencyGainAmount);
 
                       return (
                         <tr key={inv.id}>
                           <td>
                             <div className="asset-info">
-                              <span className="ticker">{inv.ticker}</span>
+                              <div className="ticker-wrapper">
+                                <span className="ticker">{inv.ticker}</span>
+                                {inv.isInternational && (
+                                  <span className="intl-badge" title={`International holding denominated in ${inv.price?.currencyCode || 'foreign currency'}`}>INTL</span>
+                                )}
+                              </div>
                               <span className="name">{inv.name}</span>
                             </div>
                           </td>
@@ -257,15 +297,37 @@ export const Dashboard = () => {
                           <td>{inv.quantity}</td>
                           <td>{formatMoney(inv.totalValue)}</td>
                           <td>
-                            <div className={`return-info ${todayPos ? 'positive' : 'negative'}`}>
-                              <span className="amount">{todayPos ? '+' : ''}{formatMoney(inv.todayReturnAmount)}</span>
-                              <span className="percent">{formatPercent(inv.todayReturnPercent, 2)}</span>
+                            <div className={`return-info ${capGainPos ? 'positive' : 'negative'}`}>
+                              <span className="amount">{capGainPos ? '+' : ''}{formatMoney(inv.capitalGainAmount)}</span>
+                              <span className="percent">{formatPercent(inv.capitalGainPercent, 2)}</span>
                             </div>
+                          </td>
+                          <td>
+                            <div className={`return-info ${incomePos ? 'positive' : 'neutral'}`}>
+                              <span className="amount">{incomePos ? '+' : ''}{formatMoney(inv.incomeAmount)}</span>
+                              <span className="percent">{formatPercent(inv.incomeYieldPercent, 2)} YOC</span>
+                            </div>
+                          </td>
+                          <td>
+                            {inv.isInternational ? (
+                              <div className={`return-info ${currencyPos ? 'positive' : 'negative'}`}>
+                                <span className="amount">{currencyPos ? '+' : ''}{formatMoney(inv.currencyGainAmount)}</span>
+                                <span className="percent">{formatPercent(inv.currencyGainPercent, 2)}</span>
+                              </div>
+                            ) : (
+                              <span className="neutral-dash" title="Domestic holding — zero currency exposure">—</span>
+                            )}
                           </td>
                           <td>
                             <div className={`return-info ${totalPos ? 'positive' : 'negative'}`}>
                               <span className="amount">{totalPos ? '+' : ''}{formatMoney(inv.totalReturnAmount)}</span>
                               <span className="percent">{formatPercent(inv.totalReturnPercent, 1)}</span>
+                            </div>
+                          </td>
+                          <td>
+                            <div className={`return-info ${todayPos ? 'positive' : 'negative'}`}>
+                              <span className="amount">{todayPos ? '+' : ''}{formatMoney(inv.todayReturnAmount)}</span>
+                              <span className="percent">{formatPercent(inv.todayReturnPercent, 2)}</span>
                             </div>
                           </td>
                         </tr>
@@ -284,9 +346,23 @@ export const Dashboard = () => {
                         {formatMoney({ amount: investedAssetsTotal.toFixed(2), currencyCode })}
                       </td>
                       <td>
-                        <div className={`return-info ${subtotalTodayPos ? 'positive' : 'negative'}`}>
+                        <div className={`return-info ${subtotalCapGainPos ? 'positive' : 'negative'}`}>
                           <span className="amount">
-                            {subtotalTodayPos ? '+' : ''}{formatMoney({ amount: subtotalTodayReturn.toFixed(2), currencyCode })}
+                            {subtotalCapGainPos ? '+' : ''}{formatMoney({ amount: subtotalCapitalGain.toFixed(2), currencyCode })}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className={`return-info ${subtotalIncomePos ? 'positive' : 'neutral'}`}>
+                          <span className="amount">
+                            {subtotalIncomePos ? '+' : ''}{formatMoney({ amount: subtotalIncome.toFixed(2), currencyCode })}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className={`return-info ${subtotalCurrencyPos ? 'positive' : 'negative'}`}>
+                          <span className="amount">
+                            {subtotalCurrencyPos ? '+' : ''}{formatMoney({ amount: subtotalCurrencyGain.toFixed(2), currencyCode })}
                           </span>
                         </div>
                       </td>
@@ -294,6 +370,13 @@ export const Dashboard = () => {
                         <div className={`return-info ${subtotalTotalPos ? 'positive' : 'negative'}`}>
                           <span className="amount">
                             {subtotalTotalPos ? '+' : ''}{formatMoney({ amount: subtotalTotalReturn.toFixed(2), currencyCode })}
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className={`return-info ${subtotalTodayPos ? 'positive' : 'negative'}`}>
+                          <span className="amount">
+                            {subtotalTodayPos ? '+' : ''}{formatMoney({ amount: subtotalTodayReturn.toFixed(2), currencyCode })}
                           </span>
                         </div>
                       </td>
@@ -310,6 +393,9 @@ export const Dashboard = () => {
                       </td>
                       <td className="footer-muted">—</td>
                       <td className="footer-muted">—</td>
+                      <td className="footer-muted">—</td>
+                      <td className="footer-muted">—</td>
+                      <td className="footer-muted">—</td>
                     </tr>
                     <tr className="table-footer-total">
                       <td colSpan={3}>
@@ -321,6 +407,10 @@ export const Dashboard = () => {
                       <td className="footer-amount-total">
                         {formatMoney(data.totalValue)}
                       </td>
+                      <td className="footer-muted">—</td>
+                      <td className="footer-muted">—</td>
+                      <td className="footer-muted">—</td>
+                      <td className="footer-muted">—</td>
                       <td>
                         <div className={`return-info ${todayReturnPositive ? 'positive' : 'negative'}`}>
                           <span className="amount">
@@ -329,7 +419,6 @@ export const Dashboard = () => {
                           <span className="percent">{formatPercent(data.todayReturnPercent, 2)}</span>
                         </div>
                       </td>
-                      <td className="footer-muted">—</td>
                     </tr>
                   </tfoot>
                 </table>

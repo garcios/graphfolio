@@ -48,16 +48,23 @@ func toModelPortfolio(p *pb.Portfolio) *model.Portfolio {
 	investments := make([]*model.Investment, len(p.Investments))
 	for i, inv := range p.Investments {
 		investments[i] = &model.Investment{
-			ID:                 inv.Id,
-			Ticker:             inv.Ticker,
-			Name:               inv.Name,
-			Price:              toModelMoney(inv.Price),
-			Quantity:           toModelDecimal(inv.Quantity),
-			TotalValue:         toModelMoney(inv.TotalValue),
-			TodayReturnAmount:  toModelMoney(inv.TodayReturnAmount),
-			TodayReturnPercent: toModelDecimal(inv.TodayReturnPercent),
-			TotalReturnAmount:  toModelMoney(inv.TotalReturnAmount),
-			TotalReturnPercent: toModelDecimal(inv.TotalReturnPercent),
+			ID:                  inv.Id,
+			Ticker:              inv.Ticker,
+			Name:                inv.Name,
+			Price:               toModelMoney(inv.Price),
+			Quantity:            toModelDecimal(inv.Quantity),
+			TotalValue:          toModelMoney(inv.TotalValue),
+			TodayReturnAmount:   toModelMoney(inv.TodayReturnAmount),
+			TodayReturnPercent:  toModelDecimal(inv.TodayReturnPercent),
+			TotalReturnAmount:   toModelMoney(inv.TotalReturnAmount),
+			TotalReturnPercent:  toModelDecimal(inv.TotalReturnPercent),
+			CapitalGainAmount:   toModelMoney(inv.CapitalGainAmount),
+			CapitalGainPercent:  toModelDecimal(inv.CapitalGainPercent),
+			IncomeAmount:        toModelMoney(inv.IncomeAmount),
+			IncomeYieldPercent:  toModelDecimal(inv.IncomeYieldPercent),
+			CurrencyGainAmount:  toModelMoney(inv.CurrencyGainAmount),
+			CurrencyGainPercent: toModelDecimal(inv.CurrencyGainPercent),
+			IsInternational:     inv.IsInternational,
 		}
 	}
 

@@ -281,6 +281,13 @@ type Investment {
   todayReturnPercent: Decimal!
   totalReturnAmount: Money!
   totalReturnPercent: Decimal!
+  capitalGainAmount: Money!
+  capitalGainPercent: Decimal!
+  incomeAmount: Money!
+  incomeYieldPercent: Decimal!
+  currencyGainAmount: Money!
+  currencyGainPercent: Decimal!
+  isInternational: Boolean!
 }
 
 type UserPreferences {

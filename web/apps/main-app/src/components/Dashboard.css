@@ -236,7 +236,7 @@
   background: var(--card-bg);
   border: 1px solid var(--card-border);
   border-radius: 16px;
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   backdrop-filter: blur(10px);
 }
 
@@ -248,6 +248,7 @@
 
 .table-responsive {
   overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .investments-table {
@@ -257,19 +258,21 @@
 }
 
 .investments-table th {
-  padding: 1rem 0.5rem;
+  padding: 0.85rem 0.6rem;
   color: var(--text-secondary);
   font-weight: 500;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   border-bottom: 1px solid var(--card-border);
+  white-space: nowrap;
 }
 
 .investments-table td {
-  padding: 1rem 0.5rem;
+  padding: 0.85rem 0.6rem;
   border-bottom: 1px solid rgba(255,255,255,0.03);
   vertical-align: middle;
+  white-space: nowrap;
 }
 
 .investments-table tr:last-child td {
@@ -289,8 +292,37 @@
   flex-direction: column;
 }
 
+.ticker-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
 .asset-info .ticker { font-weight: 600; }
 .asset-info .name { color: var(--text-secondary); font-size: 0.85rem; }
+
+.intl-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  padding: 0.08rem 0.35rem;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.2;
+}
+
+.neutral-dash {
+  color: var(--text-secondary);
+  opacity: 0.45;
+  font-size: 0.95rem;
+  font-weight: 500;
+  display: inline-block;
+}
 
 .return-info {
   display: flex;

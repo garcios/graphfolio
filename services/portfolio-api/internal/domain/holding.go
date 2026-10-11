@@ -22,14 +22,21 @@ type HoldingWithPrice struct {
 }
 
 type InvestmentSummary struct {
-	ID                 string
-	Ticker             string
-	Name               string
-	Price              Money
-	Quantity           decimal.Decimal
-	TotalValue         Money
-	TodayReturnAmount  Money
-	TodayReturnPercent decimal.Decimal
-	TotalReturnAmount  Money
-	TotalReturnPercent decimal.Decimal
+	ID                  string
+	Ticker              string
+	Name                string
+	Price               Money
+	Quantity            decimal.Decimal
+	TotalValue          Money
+	TodayReturnAmount   Money
+	TodayReturnPercent  decimal.Decimal
+	TotalReturnAmount   Money
+	TotalReturnPercent  decimal.Decimal
+	CapitalGainAmount   Money
+	CapitalGainPercent  decimal.Decimal
+	IncomeAmount        Money
+	IncomeYieldPercent  decimal.Decimal
+	CurrencyGainAmount  Money
+	CurrencyGainPercent decimal.Decimal
+	IsInternational     bool
 }

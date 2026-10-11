@@ -32,6 +32,7 @@ This document catalogs all implemented features, in-progress components, and pla
 | **22** | **Tax Lot Inspector & Capital Gains Reports** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
 | **23** | **Dividend Calendar & Yield Analytics** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
 | **24** | **Real-Time Market Data & WebSocket Price Ticker** | **ROADMAP** | Market Data, Svc, Web | *(Future Plan)* |
+| **25** | **Investment Holding Return Attribution (Capital Gain, Income & Currency Gain/Loss)** | **DONE** | Proto, Svc, BFF, Web | [holding-return-attribution-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/holding-return-attribution-implementation-plan.md) |
 
 ---
 
@@ -295,6 +296,23 @@ This document catalogs all implemented features, in-progress components, and pla
   - [ImportTransactionsModal.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/ImportTransactionsModal.css)
   - [TransactionLedger.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/TransactionLedger.tsx)
   - [Dashboard.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.tsx)
+
+### 2.25 Investment Holding Return Attribution (Capital Gain, Income & Currency Gain/Loss)
+- **Status**: **DONE**
+- **Plan Reference**: [holding-return-attribution-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/holding-return-attribution-implementation-plan.md)
+- **User Story**: [investment-holding-capital-gain-income-currency.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/investment-holding-capital-gain-income-currency.md)
+- **Scope**: `proto/portfolio/v1/`, `services/portfolio-api`, `bff/`, `web/apps/main-app`
+- **Description**: Robust 3-pillar multi-currency return attribution engine decomposing holding performance into Capital Gain/Loss (pure asset price movement), Income (cumulative dividends and cash interest net of withholding tax), and Currency Gain/Loss (FX fluctuations on foreign denominated assets relative to portfolio base currency). Features exact historical acquisition exchange rate weighting ($\overline{\text{FX}}_0 = \frac{C_{\text{base}}}{C_{\text{local}}}$) cleanly separating equity appreciation from FX currency tailwinds/headwinds, while preserving the mathematical attribution identity $\text{CapGain}_{\text{base}} + \text{FXGain}_{\text{base}} \equiv V_{\text{base}} - C_{\text{base}}$. Domestic equities automatically display a neutral em-dash (`—`) with zero currency risk. The primary investor table in `Dashboard.tsx` expands to 9 responsive columns with an `INTL` asset badge for foreign holdings, Yield on Cost (YOC%), and an itemized subtotal footer row reconciling the sum of Capital Gain, Income, and Currency Gain against Total Portfolio Return.
+- **Key Files**:
+  - [portfolio.proto](file:///Users/oscargarcia/workspace/graphfolio/proto/portfolio/v1/portfolio.proto)
+  - [holding.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/domain/holding.go)
+  - [calculator.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/domain/calculator.go)
+  - [calculator_test.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/domain/calculator_test.go)
+  - [server.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server.go)
+  - [schema.graphqls](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls)
+  - [helpers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/helpers.go)
+  - [Dashboard.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.tsx)
+  - [Dashboard.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.css)
 
 ---
 

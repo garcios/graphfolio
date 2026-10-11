@@ -227,6 +227,13 @@ export interface Investment {
     todayReturnPercent: Scalars['Decimal']
     totalReturnAmount: Money
     totalReturnPercent: Scalars['Decimal']
+    capitalGainAmount: Money
+    capitalGainPercent: Scalars['Decimal']
+    incomeAmount: Money
+    incomeYieldPercent: Scalars['Decimal']
+    currencyGainAmount: Money
+    currencyGainPercent: Scalars['Decimal']
+    isInternational: Scalars['Boolean']
     __typename: 'Investment'
 }
 
@@ -562,6 +569,13 @@ export interface InvestmentGenqlSelection{
     todayReturnPercent?: boolean | number
     totalReturnAmount?: MoneyGenqlSelection
     totalReturnPercent?: boolean | number
+    capitalGainAmount?: MoneyGenqlSelection
+    capitalGainPercent?: boolean | number
+    incomeAmount?: MoneyGenqlSelection
+    incomeYieldPercent?: boolean | number
+    currencyGainAmount?: MoneyGenqlSelection
+    currencyGainPercent?: boolean | number
+    isInternational?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
