@@ -180,4 +180,91 @@ describe('nabtrade CSV Parser', () => {
     expect(sell?.settleDate).toBe('2025-08-13');
     expect(sell?.externalRef).toBe('nabtrade:164863911');
   });
+
+  it('parses cash account deposits, withdrawals, interest, and domestic dividends', async () => {
+    const lines = [
+      'Date,Type,Description,Debit,Credit,Balance',
+      '2026-10-09,Credit,FUNDS TRANSFER DIVIDEND - IVV PAYMENT OCT26/00877665,,258.57,5572.18',
+      '2026-09-30,Interest,INTEREST,,0.54,5174.45',
+      '2026-05-15,InterestChange,Please note from 15/05/2026 the interest rate on your account is  0.50%p.a.,,,44.15',
+      '2026-05-01,Credit,nabtrade: 24461797 FUNDS TRANSFER 083543 200538980 deposit Oscar,,300.00,908.58',
+      '2024-09-18,Debit,nabtrade: 19114270 FUNDS TRANSFER 083543 786570266 transfer Oscar,4300.00,,14.52',
+      '2024-04-10,Credit,FUNDS TRANSFER DIVIDEND - GENESIS ENERGY L 93605/772,,61.97,252.01',
+      '2025-11-13,Credit,FUNDS TRANSFER - REMEDIATIONPAYME REM PAYMENT,,0.07,49.41',
+    ];
+
+    const res = await parseNabtradeCSV(lines, 0);
+    expect(res.broker).toBe('nabtrade');
+    expect(res.errors.length).toBe(0);
+    expect(res.validRows.length).toBe(6);
+
+    // 1. DEPOSIT
+    const deposit = res.validRows.find((r) => r.type === 'DEPOSIT');
+    expect(deposit).toBeDefined();
+    expect(deposit?.amount).toBe('300.00');
+    expect(deposit?.currencyCode).toBe('AUD');
+    expect(deposit?.externalRef).toBe('nabtrade:cash:24461797');
+    expect(deposit?.tradeDate).toBe('2026-05-01');
+
+    // 2. WITHDRAWAL
+    const withdrawal = res.validRows.find((r) => r.type === 'WITHDRAWAL');
+    expect(withdrawal).toBeDefined();
+    expect(withdrawal?.amount).toBe('4300.00');
+    expect(withdrawal?.currencyCode).toBe('AUD');
+    expect(withdrawal?.externalRef).toBe('nabtrade:cash:19114270');
+    expect(withdrawal?.tradeDate).toBe('2024-09-18');
+
+    // 3. INTEREST
+    const interest = res.validRows.find((r) => r.type === 'INTEREST' && r.tradeDate === '2026-09-30');
+    expect(interest).toBeDefined();
+    expect(interest?.amount).toBe('0.54');
+    expect(interest?.currencyCode).toBe('AUD');
+    expect(interest?.externalRef).toMatch(/^nt_int_/);
+
+    // 4. Domestic Dividend IVV
+    const ivvDiv = res.validRows.find((r) => r.symbol === 'IVV');
+    expect(ivvDiv).toBeDefined();
+    expect(ivvDiv?.type).toBe('DIVIDEND');
+    expect(ivvDiv?.amount).toBe('258.57');
+    expect(ivvDiv?.currencyCode).toBe('AUD');
+
+    // 5. Domestic Dividend GENESIS ENERGY (mapped to GNE)
+    const gneDiv = res.validRows.find((r) => r.symbol === 'GNE');
+    expect(gneDiv).toBeDefined();
+    expect(gneDiv?.type).toBe('DIVIDEND');
+    expect(gneDiv?.amount).toBe('61.97');
+    expect(gneDiv?.currencyCode).toBe('AUD');
+
+    // 6. Remediation Payment
+    const rem = res.validRows.find((r) => r.tradeDate === '2025-11-13');
+    expect(rem).toBeDefined();
+    expect(rem?.amount).toBe('0.07');
+    expect(rem?.currencyCode).toBe('AUD');
+  });
+
+  it('parses realistic multi-type statement batch from user statement with zero errors', async () => {
+    const lines = [
+      'Date,Type,Description,Debit,Credit,Balance',
+      '2026-10-09,Credit,FUNDS TRANSFER DIVIDEND - IVV PAYMENT OCT26/00877665,,258.57,5572.18',
+      '2026-10-09,Credit,DIVIDEND on GOOGL.US (WHT of USD -4.09) - USD to AUD @ 1.4248,,33.04,5313.61',
+      '2026-10-09,Credit,DIVIDEND on AVGO.US (WHT of USD -3.61) - USD to AUD @ 1.4247,,29.12,5280.57',
+      '2026-09-30,Interest,INTEREST,,0.54,5174.45',
+      '2026-09-23,Credit,SELL AMD.NAS 6 USD 615.94 189411314 NT2678442-004 0.7147,,5150.74,5173.91',
+      '2026-09-03,Debit,BUY IVV.ASX 12 AUD 71.43 188373640 NT2678442-002,867.11,,23.17',
+      '2026-05-15,InterestChange,Please note from 15/05/2026 the interest rate on your account is  0.50%p.a.,,,44.15',
+      '2026-05-01,Debit,BUY META.NAS 1 USD 613.6 181109809 NT2678442-004 0.7113,872.56,,36.02',
+      '2026-05-01,Credit,nabtrade: 24461797 FUNDS TRANSFER 083543 200538980 deposit Oscar,,300.00,908.58',
+      '2024-09-18,Debit,nabtrade: 19114270 FUNDS TRANSFER 083543 786570266 transfer Oscar,4300.00,,14.52',
+      '2024-08-28,Debit,nabtrade: 18962607 FUNDS TRANSFER 083543 786570266 transfer Oscar,10000.00,,1375.02',
+      '2024-08-01,Credit,nabtrade: 18792775 FUNDS TRANSFER 083543 786570266 Deposit Oscar,,5000.00,5387.75',
+      '2024-03-28,Credit,FUNDS TRANSFER DIVIDEND - CBA DIV 001312807160,,30.10,1058.48',
+      '2024-03-27,Credit,FUNDS TRANSFER DIVIDEND - WESFARMERS LTD INT24/01162150,,34.58,373.69',
+      '2023-05-10,Credit,nabtrade: 15485611 FUNDS TRANSFER 083543 200538980 deposit Oscar,,5000.00,5000.00',
+    ];
+
+    const res = await parseNabtradeCSV(lines, 0);
+    expect(res.broker).toBe('nabtrade');
+    expect(res.errors.length).toBe(0);
+    expect(res.validRows.length).toBe(14);
+  });
 });

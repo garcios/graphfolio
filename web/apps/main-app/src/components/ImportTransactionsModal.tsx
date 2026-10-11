@@ -399,9 +399,9 @@ export const ImportTransactionsModal: React.FC<ImportTransactionsModalProps> = (
                                   {row.type}
                                 </span>
                               </td>
-                              <td style={{ fontWeight: 600 }}>{row.symbol}</td>
-                              <td>{row.quantity}</td>
-                              <td>${row.price}</td>
+                              <td style={{ fontWeight: 600 }}>{row.symbol || '—'}</td>
+                              <td>{row.symbol ? row.quantity : '—'}</td>
+                              <td>{row.symbol ? `$${row.price}` : '—'}</td>
                               <td>${row.fee}</td>
                               <td style={{ fontWeight: 600 }}>${row.amount}</td>
                             </tr>

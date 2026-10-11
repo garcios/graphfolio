@@ -182,8 +182,11 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   │   ├── admin-historical-backfill-implementation-plan.md
 │   │   ├── asset-prices-date-range-filter-implementation-plan.md
 │   │   ├── ingestion-job-history-implementation-plan.md
+│   │   ├── multi-broker-csv-ingestion-implementation-plan.md
+│   │   ├── cash-statement-csv-ingestion-implementation-plan.md
 │   │   └── web-workspace-refactoring-plan.md
 │   ├── user-stories/             # Agile user stories & acceptance criteria
+│   ├── negative-cash-balance-investigation-report.md # Cash ledger overdraft root cause & remediation report
 │   ├── competitive-analysis.md
 │   └── genql-usage.md
 │
@@ -296,11 +299,12 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 
 ### 4.13 Multi-Broker CSV Ingestion & Flexible Symbol Resolution Standards
 - **Multi-Broker Dialect Parsing**: Client-side parsers (`CommSec` and `nabtrade` in `apps/main-app/src/services/csv/`) support leading Australian retail brokers. Automatically detects format via header signature matching (`detectBrokerFormat`), normalizes Australian date formats (`DD/MM/YYYY`), strips non-numeric currency characters and accounting negative parentheses, matches nabtrade international and domestic cash account trade debits/credits with native AUD fee derivation, and isolates legal metadata headers/footers.
+- **Cash Account Statement Parsing**: Ingests full nabtrade cash account statements (`Date,Type,Description,Debit,Credit,Balance`). Automatically maps cash deposits (`DEPOSIT` from `FUNDS TRANSFER ... deposit {name}` with confirmation ref `nabtrade:cash:{ref}`), cash withdrawals (`WITHDRAWAL` from `... transfer {name}` on debit), monthly interest credits (`INTEREST` from `INTEREST` on credit), and domestic ETF/stock dividends (`DIVIDEND` from `FUNDS TRANSFER DIVIDEND - {TICKER}` with ticker extraction and company-name alias matching). Informational policy rows (`InterestChange`, `Please note from...`) are silently skipped without raising parse errors.
 - **Idempotency & Deduplication**: Trade confirmation numbers and SHA-256 hashed transaction attributes are stored in `portfolio.transactions.external_ref`. The UI performs pre-flight batch deduplication queries (`CheckTransactionDuplicates` gRPC / `checkTransactionDuplicates` GraphQL) to visually flag existing items. The persistence layer enforces idempotent insertion via `pgx.Batch` with `ON CONFLICT (portfolio_id, external_ref) DO NOTHING`.
 - **Flexible Instrument Suffix Resolution**: Database query `findInstrumentBySymbolSQL` and transaction filtering `listTransactionsSQL` resolve tickers whether queried by base root symbol, market provider `.AX` suffix, or Australian broker `.ASX` notation (`WHERE UPPER(symbol) = UPPER($1) OR UPPER(symbol) = UPPER($1) || '.AX' OR (UPPER($1) LIKE '%.AX' AND UPPER(symbol) = UPPER(REPLACE($1, '.AX', ''))) ...`), giving precedence to exact symbol matches.
-- **Auto-Provisioning Unmapped Instruments**: In `BatchImportTransactions`, when an imported transaction specifies an unknown ticker (`ErrInstrumentNotFound`), the service automatically provisions the instrument (e.g. `SYMBOL.AX`, exchange `XASX`, currency `AUD`, asset class `EQUITY`) so importing statements containing unseeded equities proceeds without aborting the batch.
+- **Auto-Provisioning Unmapped Instruments & Empty Symbol Cash Ingestion**: In `BatchImportTransactions`, when an imported transaction specifies an unknown ticker (`ErrInstrumentNotFound`), the service automatically provisions the instrument (e.g. `SYMBOL.AX`, exchange `XASX`, currency `AUD`, asset class `EQUITY`). When an imported row specifies an empty symbol (`item.Symbol == ""` for `DEPOSIT`, `WITHDRAWAL`, or `INTEREST`), the service skips instrument catalog lookups, assigns `instID = nil`, preserves custom currency codes (`AUD`), and updates cash balances upon ledger replay.
 - **Single-Pass Projection Rebuild & Valuation Hooks**: Multi-transaction imports execute ledger replay (`RebuildProjections`) once under an exclusive portfolio lock (`SELECT ... FOR UPDATE`), followed by retroactive historical valuation backfills (`BackfillPortfolioValuations`) starting from the earliest imported trade date.
-- **Interactive Ingestion UI**: `ImportTransactionsModal` (`apps/main-app`) provides drag-and-drop file upload, broker format selector, KPI metrics cards (total rows, net buy/sell amount, total fees), tabbed preview of valid and duplicate rows with inline error diagnostics, and direct ledger integration.
+- **Interactive Ingestion UI**: `ImportTransactionsModal` (`apps/main-app`) provides drag-and-drop file upload, broker format selector, KPI metrics cards (total rows, net buy/sell amount, total fees), tabbed preview of valid and duplicate rows with inline error diagnostics, custom status pills (`deposit`, `withdrawal`, `interest`), placeholder dashes for cash movements, and direct ledger integration.
 
 ---
 

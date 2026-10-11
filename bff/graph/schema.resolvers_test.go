@@ -67,7 +67,7 @@ type fakePortfolioClient struct {
 	getCurrencyPairHistoryFn      func(ctx context.Context, in *pb.GetCurrencyPairHistoryRequest) (*pb.GetCurrencyPairHistoryResponse, error)
 	recordFXRateOverrideFn        func(ctx context.Context, in *pb.RecordFXRateOverrideRequest) (*pb.RecordFXRateOverrideResponse, error)
 	checkTransactionDuplicatesFn  func(ctx context.Context, in *pb.CheckTransactionDuplicatesRequest) (*pb.CheckTransactionDuplicatesResponse, error)
-	batchImportTransactionsFn    func(ctx context.Context, in *pb.BatchImportTransactionsRequest) (*pb.BatchImportTransactionsResponse, error)
+	batchImportTransactionsFn     func(ctx context.Context, in *pb.BatchImportTransactionsRequest) (*pb.BatchImportTransactionsResponse, error)
 }
 
 func (f *fakePortfolioClient) GetPortfolio(ctx context.Context, in *pb.GetPortfolioRequest, opts ...grpc.CallOption) (*pb.GetPortfolioResponse, error) {
@@ -421,7 +421,6 @@ func TestMutationResolver_AddTransaction_FeeCurrencyCode(t *testing.T) {
 		t.Errorf("expected fee amount 5, got %s", receivedFee.GetAmount().GetValue())
 	}
 }
-
 
 func TestMutationResolver_AddTransaction_Split(t *testing.T) {
 	ctx := context.Background()

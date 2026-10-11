@@ -47,6 +47,17 @@ describe('BrokerFormatDetector', () => {
     expect(res.headerIndex).toBe(0);
   });
 
+  it('detects nabtrade cash account CSV format with Type column and funds transfer rows', () => {
+    const lines = [
+      'Date,Type,Description,Debit,Credit,Balance',
+      '2026-05-01,Credit,nabtrade: 24461797 FUNDS TRANSFER 083543 200538980 deposit Oscar,,300.00,908.58',
+      '2026-04-30,Interest,INTEREST,,0.15,608.58',
+    ];
+    const res = detectBrokerFormat(lines);
+    expect(res.detected).toBe('nabtrade');
+    expect(res.headerIndex).toBe(0);
+  });
+
   it('returns null when headers are unrecognized or generic', () => {
     const lines = [
       'Date,Description,Debit,Credit,Balance',

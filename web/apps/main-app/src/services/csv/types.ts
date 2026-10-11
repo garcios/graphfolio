@@ -1,6 +1,12 @@
 export type SupportedBroker = 'commsec' | 'nabtrade' | 'auto';
 
-export type NormalizedTxType = 'BUY' | 'SELL' | 'DIVIDEND';
+export type NormalizedTxType =
+  | 'BUY'
+  | 'SELL'
+  | 'DIVIDEND'
+  | 'DEPOSIT'
+  | 'WITHDRAWAL'
+  | 'INTEREST';
 
 export interface NormalizedTransactionRow {
   rowNumber: number;
