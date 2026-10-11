@@ -806,6 +806,9 @@ export default {
             "price": [
                 1
             ],
+            "averageBuyPrice": [
+                1
+            ],
             "quantity": [
                 0
             ],

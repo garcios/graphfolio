@@ -1303,11 +1303,17 @@ func mapDomainTxTypeToProto(t domain.TransactionType) pb.TransactionType {
 func mapSummaryToProto(summary *domain.PortfolioSummary) *pb.Portfolio {
 	investments := make([]*pb.Investment, len(summary.Investments))
 	for i, inv := range summary.Investments {
+		var avgBuyPriceProto *commonpb.Money
+		if inv.AverageBuyPrice.Amount.IsPositive() {
+			avgBuyPriceProto = decimalpb.MoneyToProto(inv.AverageBuyPrice.Amount, inv.AverageBuyPrice.CurrencyCode)
+		}
+
 		investments[i] = &pb.Investment{
 			Id:                  inv.ID,
 			Ticker:              inv.Ticker,
 			Name:                inv.Name,
 			Price:               decimalpb.MoneyToProto(inv.Price.Amount, inv.Price.CurrencyCode),
+			AverageBuyPrice:     avgBuyPriceProto,
 			Quantity:            decimalpb.ToProto(inv.Quantity),
 			TotalValue:          decimalpb.MoneyToProto(inv.TotalValue.Amount, inv.TotalValue.CurrencyCode),
 			TodayReturnAmount:   decimalpb.MoneyToProto(inv.TodayReturnAmount.Amount, inv.TodayReturnAmount.CurrencyCode),
@@ -1357,6 +1363,7 @@ func fallbackMock() *pb.Portfolio {
 				Ticker:              "AAPL",
 				Name:                "Apple Inc.",
 				Price:               money("185.92", "USD"),
+				AverageBuyPrice:     money("156.24", "USD"),
 				Quantity:            dec("142.5"),
 				TotalValue:          money("26493.60", "USD"),
 				TodayReturnAmount:   money("555.75", "USD"),

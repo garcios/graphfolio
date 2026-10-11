@@ -64,6 +64,14 @@ func TestCalculateInvestment(t *testing.T) {
 		if inv.TotalReturnPercent.String() != "19" {
 			t.Errorf("got TotalReturnPercent %s, want 19", inv.TotalReturnPercent)
 		}
+
+		expectedAvgBuyPrice := decimal.RequireFromString("156.24")
+		if !inv.AverageBuyPrice.Amount.Equal(expectedAvgBuyPrice) {
+			t.Errorf("got AverageBuyPrice %s, want %s", inv.AverageBuyPrice.Amount, expectedAvgBuyPrice)
+		}
+		if inv.AverageBuyPrice.CurrencyCode != "USD" {
+			t.Errorf("got AverageBuyPrice currency %s, want USD", inv.AverageBuyPrice.CurrencyCode)
+		}
 	})
 
 	t.Run("foreign currency conversion (USD holding in AUD portfolio)", func(t *testing.T) {
@@ -123,6 +131,14 @@ func TestCalculateInvestment(t *testing.T) {
 		}
 		if inv.TotalReturnAmount.CurrencyCode != "AUD" {
 			t.Errorf("got TotalReturnAmount currency %s, want AUD", inv.TotalReturnAmount.CurrencyCode)
+		}
+
+		expectedAvgBuyPrice := decimal.RequireFromString("156.24")
+		if !inv.AverageBuyPrice.Amount.Equal(expectedAvgBuyPrice) {
+			t.Errorf("got AverageBuyPrice %s, want %s", inv.AverageBuyPrice.Amount, expectedAvgBuyPrice)
+		}
+		if inv.AverageBuyPrice.CurrencyCode != "USD" {
+			t.Errorf("got AverageBuyPrice currency %s, want USD", inv.AverageBuyPrice.CurrencyCode)
 		}
 	})
 }
@@ -474,6 +490,56 @@ func TestCalculateInvestment_ReturnAttribution(t *testing.T) {
 		}
 		if !inv.IncomeYieldPercent.IsZero() {
 			t.Errorf("expected zero IncomeYield%%, got %s", inv.IncomeYieldPercent)
+		}
+		if !inv.AverageBuyPrice.Amount.IsZero() {
+			t.Errorf("expected zero AverageBuyPrice for zero cost basis, got %s", inv.AverageBuyPrice.Amount)
+		}
+	})
+
+	t.Run("post-split holding calculates correct split-adjusted average buy price", func(t *testing.T) {
+		// e.g. Pre-split 100 shares @ $50 ($5,000 cost basis), 2-for-1 split -> 200 shares @ $25 avg buy price
+		h := domain.HoldingWithPrice{
+			PortfolioID:        uuid.New(),
+			InstrumentID:       uuid.New(),
+			Ticker:             "SPLT",
+			Name:               "Split Corp",
+			InstrumentCurrency: "USD",
+			Quantity:           decimal.RequireFromString("200"),
+			CostBasis:          decimal.RequireFromString("5000.00"),
+			CostBasisBase:      decimal.RequireFromString("5000.00"),
+			LatestPrice:        decimal.RequireFromString("30.00"),
+			PrevPrice:          decimal.RequireFromString("30.00"),
+			FXRateToBase:       decimal.NewFromInt(1),
+		}
+
+		inv := domain.CalculateInvestment(h, "USD")
+		expectedAvgBuy := decimal.RequireFromString("25")
+		if !inv.AverageBuyPrice.Amount.Equal(expectedAvgBuy) {
+			t.Errorf("got AverageBuyPrice %s, want %s", inv.AverageBuyPrice.Amount, expectedAvgBuy)
+		}
+		if inv.AverageBuyPrice.CurrencyCode != "USD" {
+			t.Errorf("got AverageBuyPrice currency %s, want USD", inv.AverageBuyPrice.CurrencyCode)
+		}
+	})
+
+	t.Run("zero quantity holding returns zero AverageBuyPrice without panic", func(t *testing.T) {
+		h := domain.HoldingWithPrice{
+			PortfolioID:        uuid.New(),
+			InstrumentID:       uuid.New(),
+			Ticker:             "ZERO",
+			Name:               "Zero Shares",
+			InstrumentCurrency: "USD",
+			Quantity:           decimal.Zero,
+			CostBasis:          decimal.Zero,
+			CostBasisBase:      decimal.Zero,
+			LatestPrice:        decimal.RequireFromString("10.00"),
+			PrevPrice:          decimal.RequireFromString("10.00"),
+			FXRateToBase:       decimal.NewFromInt(1),
+		}
+
+		inv := domain.CalculateInvestment(h, "USD")
+		if !inv.AverageBuyPrice.Amount.IsZero() {
+			t.Errorf("expected zero AverageBuyPrice for zero quantity, got %s", inv.AverageBuyPrice.Amount)
 		}
 	})
 }

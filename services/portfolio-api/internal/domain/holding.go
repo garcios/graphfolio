@@ -26,6 +26,7 @@ type InvestmentSummary struct {
 	Ticker              string
 	Name                string
 	Price               Money
+	AverageBuyPrice     Money
 	Quantity            decimal.Decimal
 	TotalValue          Money
 	TodayReturnAmount   Money

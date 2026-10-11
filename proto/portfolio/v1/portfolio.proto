@@ -151,6 +151,7 @@ message Investment {
   common.v1.Money   currency_gain_amount   = 15;
   common.v1.Decimal currency_gain_percent  = 16;
   bool              is_international       = 17;
+  common.v1.Money   average_buy_price      = 18;
 }
 
 enum HistoryTimeframe {

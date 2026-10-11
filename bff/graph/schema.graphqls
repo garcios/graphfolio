@@ -314,6 +314,7 @@ type Investment {
   ticker: String!
   name: String!
   price: Money!
+  averageBuyPrice: Money
   quantity: Decimal!
   totalValue: Money!
   todayReturnAmount: Money!

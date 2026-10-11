@@ -29,6 +29,20 @@ func toModelMoney(m *commonpb.Money) *model.Money {
 	}
 }
 
+func toNullableModelMoney(m *commonpb.Money) *model.Money {
+	if m == nil || m.Amount == nil {
+		return nil
+	}
+	d, err := decimal.NewFromString(m.GetAmount().GetValue())
+	if err != nil || !d.IsPositive() {
+		return nil
+	}
+	return &model.Money{
+		Amount:       model.Decimal(d),
+		CurrencyCode: m.GetCurrencyCode(),
+	}
+}
+
 func toModelDecimal(p *commonpb.Decimal) model.Decimal {
 	if p == nil {
 		return model.Decimal(decimal.Zero)
@@ -52,6 +66,7 @@ func toModelPortfolio(p *pb.Portfolio) *model.Portfolio {
 			Ticker:              inv.Ticker,
 			Name:                inv.Name,
 			Price:               toModelMoney(inv.Price),
+			AverageBuyPrice:     toNullableModelMoney(inv.AverageBuyPrice),
 			Quantity:            toModelDecimal(inv.Quantity),
 			TotalValue:          toModelMoney(inv.TotalValue),
 			TodayReturnAmount:   toModelMoney(inv.TodayReturnAmount),

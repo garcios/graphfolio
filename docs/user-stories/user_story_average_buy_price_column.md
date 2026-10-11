@@ -2,7 +2,9 @@
 
 **Story ID:** US-INV-104  
 **Epic:** Portfolio Holdings Management  
-**Status:** Ready for Refinement  
+**Status:** Done  
+**Implementation Plan:** [average-buy-price-column-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/average-buy-price-column-implementation-plan.md)  
+**Target Layers:** Protobuf (`proto/portfolio/v1/`), Domain Microservice (`services/portfolio-api`), BFF (`bff/`), Web Monorepo (`web/apps/main-app`)  
 
 ---
 
@@ -40,5 +42,5 @@
 
 ## 3. Technical & Implementation Notes
 
-* **API Payload:** Verify that the holdings API endpoint (`GET /api/v1/portfolio/holdings`) exposes `average_buy_price` / `cost_basis_per_share` directly to avoid computationally expensive client-side calculations over extensive order histories.
+* **API Payload:** Verify that the holdings API endpoint exposes `average_buy_price` / `cost_basis_per_share` directly to avoid computationally expensive client-side calculations over extensive order histories.
 * **Corporate Actions:** Ensure backend calculations adjust the average cost basis appropriately following events like stock splits or reverse splits.

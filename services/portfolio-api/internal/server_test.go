@@ -56,6 +56,10 @@ func TestPortfolioServer_GetPortfolio(t *testing.T) {
 					Amount:       decimal.RequireFromString("180.50"),
 					CurrencyCode: "USD",
 				},
+				AverageBuyPrice: domain.Money{
+					Amount:       decimal.RequireFromString("150.00"),
+					CurrencyCode: "USD",
+				},
 				Quantity: decimal.NewFromInt(100),
 				TotalValue: domain.Money{
 					Amount:       decimal.RequireFromString("18050.00"),
@@ -99,6 +103,9 @@ func TestPortfolioServer_GetPortfolio(t *testing.T) {
 		}
 		if p.Investments[0].Ticker != "AAPL" {
 			t.Errorf("expected ticker AAPL, got %s", p.Investments[0].Ticker)
+		}
+		if p.Investments[0].AverageBuyPrice == nil || p.Investments[0].AverageBuyPrice.Amount.Value != "150" {
+			t.Errorf("expected AverageBuyPrice 150, got %v", p.Investments[0].AverageBuyPrice)
 		}
 	})
 

@@ -221,6 +221,7 @@ export interface Investment {
     ticker: Scalars['String']
     name: Scalars['String']
     price: Money
+    averageBuyPrice: (Money | null)
     quantity: Scalars['Decimal']
     totalValue: Money
     todayReturnAmount: Money
@@ -563,6 +564,7 @@ export interface InvestmentGenqlSelection{
     ticker?: boolean | number
     name?: boolean | number
     price?: MoneyGenqlSelection
+    averageBuyPrice?: MoneyGenqlSelection
     quantity?: boolean | number
     totalValue?: MoneyGenqlSelection
     todayReturnAmount?: MoneyGenqlSelection
