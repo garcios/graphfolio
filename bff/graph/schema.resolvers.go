@@ -598,6 +598,29 @@ func (r *queryResolver) CheckTransactionDuplicates(ctx context.Context, external
 	return resp.ExistingExternalRefs, nil
 }
 
+// CashFlowReport is the resolver for the cashFlowReport field.
+func (r *queryResolver) CashFlowReport(ctx context.Context, filter model.CashFlowFilterInput) (*model.CashFlowReport, error) {
+	req := &pb.GetCashFlowReportRequest{
+		UserId:    "1",
+		Timeframe: toProtoCashFlowTimeframe(filter.Timeframe),
+	}
+	if filter.FromDate != nil {
+		req.FromDate = *filter.FromDate
+	}
+	if filter.ToDate != nil {
+		req.ToDate = *filter.ToDate
+	}
+	if filter.Currency != nil {
+		req.Currency = *filter.Currency
+	}
+
+	resp, err := r.PortfolioClient.GetCashFlowReport(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return toModelCashFlowReport(resp), nil
+}
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 

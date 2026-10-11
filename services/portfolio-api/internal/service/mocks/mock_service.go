@@ -133,6 +133,21 @@ func (mr *MockPortfolioServiceMockRecorder) DeleteTransaction(ctx, userID, trans
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTransaction", reflect.TypeOf((*MockPortfolioService)(nil).DeleteTransaction), ctx, userID, transactionID)
 }
 
+// GetCashFlowReport mocks base method.
+func (m *MockPortfolioService) GetCashFlowReport(ctx context.Context, input domain.CashFlowFilter) (*domain.CashFlowReport, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetCashFlowReport", ctx, input)
+	ret0, _ := ret[0].(*domain.CashFlowReport)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetCashFlowReport indicates an expected call of GetCashFlowReport.
+func (mr *MockPortfolioServiceMockRecorder) GetCashFlowReport(ctx, input any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCashFlowReport", reflect.TypeOf((*MockPortfolioService)(nil).GetCashFlowReport), ctx, input)
+}
+
 // GetCurrencyPairHistory mocks base method.
 func (m *MockPortfolioService) GetCurrencyPairHistory(ctx context.Context, baseCurrency, quoteCurrency string, timeframe domain.HistoryTimeframe) (*domain.CurrencyPairHistory, error) {
 	m.ctrl.T.Helper()

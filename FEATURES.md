@@ -34,6 +34,7 @@ This document catalogs all implemented features, in-progress components, and pla
 | **24** | **Real-Time Market Data & WebSocket Price Ticker** | **ROADMAP** | Market Data, Svc, Web | *(Future Plan)* |
 | **25** | **Investment Holding Return Attribution (Capital Gain, Income & Currency Gain/Loss)** | **DONE** | Proto, Svc, BFF, Web | [holding-return-attribution-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/holding-return-attribution-implementation-plan.md) |
 | **26** | **Average Buy Price Holdings Column** | **DONE** | Proto, Svc, BFF, Web | [average-buy-price-column-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/average-buy-price-column-implementation-plan.md) |
+| **27** | **Portfolio Cash Flow Report Generation** | **DONE** | Proto, Svc, BFF, Web | [portfolio-cash-flow-report-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/portfolio-cash-flow-report-implementation-plan.md) |
 
 ---
 
@@ -332,6 +333,33 @@ This document catalogs all implemented features, in-progress components, and pla
   - [schema.resolvers_test.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers_test.go)
   - [Dashboard.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.tsx)
   - [Dashboard.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.css)
+
+### 2.27 Portfolio Cash Flow Report Generation
+- **Status**: **DONE**
+- **Plan Reference**: [portfolio-cash-flow-report-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/portfolio-cash-flow-report-implementation-plan.md)
+- **Scope**: `proto/portfolio/v1/`, `services/portfolio-api`, `bff/`, `web/apps/main-app`
+- **Highlights**:
+  - GIPS, US GAAP ASC 946, and IFRS 9 trade settlement accounting for complete portfolio cash flows.
+  - Multi-timeframe filters: MTD, YTD, Trailing 12M, 6M, 3M, Inception, and Custom date ranges.
+  - High-precision cash reconciliation: $\text{Starting Cash Balance} + \text{Total Inflows} - \text{Total Outflows} \equiv \text{Ending Cash Balance}$.
+  - KPI summary cards and category subtotals for capital deposits, dividends, interest, sales proceeds, withdrawals, purchases, fees, and taxes.
+  - Itemized transaction ledger with sequential running cash balances and multi-column sorting.
+  - Unified **Reports** tab hub (`ReportsView.tsx`) in the investor dashboard housing the Cash Flow Report (`CashFlowReport.tsx`) alongside upcoming reporting modules.
+  - One-click formatted CSV report export for tax accounting and reconciliation audits.
+- **Key Files**:
+  - [portfolio.proto](file:///Users/oscargarcia/workspace/graphfolio/proto/portfolio/v1/portfolio.proto)
+  - [cash_flow.go (domain)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/domain/cash_flow.go)
+  - [cash_flow.go (service)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/cash_flow.go)
+  - [cash_flow_test.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/cash_flow_test.go)
+  - [server.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server.go)
+  - [schema.graphqls](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls)
+  - [helpers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/helpers.go)
+  - [schema.resolvers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers.go)
+  - [schema.resolvers_test.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers_test.go)
+  - [Dashboard.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.tsx)
+  - [ReportsView.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/ReportsView.tsx)
+  - [CashFlowReport.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/CashFlowReport.tsx)
+  - [CashFlowReport.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/CashFlowReport.css)
 
 ---
 

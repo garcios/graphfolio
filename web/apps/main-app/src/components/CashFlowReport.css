@@ -1,0 +1,424 @@
+.cash-flow-report {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Control Toolbar */
+.cfr-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: var(--glass-blur);
+}
+
+.cfr-timeframe-group {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.cfr-pill-btn {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.cfr-pill-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.cfr-pill-btn.active {
+  color: #000;
+  background: #fff;
+  border-color: #fff;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
+}
+
+.cfr-custom-dates {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 0.5rem;
+}
+
+.cfr-date-input {
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--card-border);
+  color: var(--text-primary);
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  outline: none;
+  font-family: var(--font-family);
+}
+
+.cfr-date-input:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 2px var(--input-focus-glow);
+}
+
+.cfr-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.btn-export-csv {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--card-border);
+  color: var(--text-primary);
+  padding: 0.45rem 1rem;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-export-csv:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: var(--card-border-active);
+  transform: translateY(-1px);
+}
+
+/* KPI Summary Cards Grid */
+.cfr-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1rem;
+}
+
+.cfr-kpi-card {
+  padding: 1.25rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: var(--glass-blur);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.cfr-kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--card-border-active);
+}
+
+.cfr-kpi-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cfr-kpi-value {
+  font-size: 1.45rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-feature-settings: "tnum";
+}
+
+.cfr-kpi-value.positive {
+  color: var(--accent-green);
+}
+
+.cfr-kpi-value.negative {
+  color: var(--accent-red);
+}
+
+.cfr-kpi-subtext {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.cfr-kpi-card.reconciled {
+  border-color: rgba(16, 185, 129, 0.3);
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(255, 255, 255, 0.02));
+}
+
+.reconciled-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--accent-green);
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+/* Category Breakdown Panels */
+.cfr-breakdown-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+@media (max-width: 900px) {
+  .cfr-breakdown-section {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cfr-breakdown-card {
+  padding: 1.25rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: var(--glass-blur);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cfr-breakdown-card h4 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cfr-breakdown-card.inflows h4 {
+  color: var(--accent-green);
+}
+
+.cfr-breakdown-card.outflows h4 {
+  color: var(--accent-red);
+}
+
+.cfr-breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.cfr-breakdown-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cfr-breakdown-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+}
+
+.cfr-category-name {
+  color: var(--text-secondary);
+}
+
+.cfr-category-amt {
+  font-weight: 600;
+  font-feature-settings: "tnum";
+}
+
+.cfr-progress-track {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.cfr-progress-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease-out;
+}
+
+.cfr-breakdown-card.inflows .cfr-progress-fill {
+  background: linear-gradient(90deg, #059669, var(--accent-green));
+}
+
+.cfr-breakdown-card.outflows .cfr-progress-fill {
+  background: linear-gradient(90deg, #dc2626, var(--accent-red));
+}
+
+/* Itemized Ledger Table Card */
+.cfr-ledger-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: var(--glass-blur);
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.cfr-ledger-header {
+  padding: 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.cfr-ledger-header h3 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.cfr-ledger-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.cfr-search-input {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--card-border);
+  color: var(--text-primary);
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  outline: none;
+  min-width: 200px;
+}
+
+.cfr-search-input:focus {
+  border-color: var(--accent-blue);
+  box-shadow: 0 0 0 2px var(--input-focus-glow);
+}
+
+.cfr-filter-select {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--card-border);
+  color: var(--text-primary);
+  padding: 0.4rem 0.8rem;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  outline: none;
+  cursor: pointer;
+}
+
+.cfr-table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.cfr-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.875rem;
+}
+
+.cfr-table th {
+  padding: 0.85rem 1.25rem;
+  color: var(--text-secondary);
+  font-weight: 600;
+  border-bottom: 1px solid var(--card-border);
+  background: rgba(255, 255, 255, 0.02);
+  white-space: nowrap;
+}
+
+.cfr-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.2s ease;
+}
+
+.cfr-table th.sortable:hover {
+  color: var(--text-primary);
+}
+
+.cfr-table th.text-right,
+.cfr-table td.text-right {
+  text-align: right;
+}
+
+.cfr-table td {
+  padding: 0.95rem 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+
+.cfr-table tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.cfr-type-badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-xs);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cfr-type-badge.inflow {
+  background: rgba(16, 185, 129, 0.15);
+  color: var(--accent-green);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.cfr-type-badge.outflow {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--accent-red);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.cfr-flow-amt {
+  font-weight: 700;
+  font-feature-settings: "tnum";
+}
+
+.cfr-flow-amt.positive {
+  color: var(--accent-green);
+}
+
+.cfr-flow-amt.negative {
+  color: var(--accent-red);
+}
+
+.cfr-running-bal {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cfr-empty-state {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.cfr-loading {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: var(--text-secondary);
+}

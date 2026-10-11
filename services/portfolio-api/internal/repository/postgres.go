@@ -561,6 +561,57 @@ func (r *PostgresRepository) ListTransactions(ctx context.Context, portfolioID u
 	return items, totalCount, rows.Err()
 }
 
+func (r *PostgresRepository) GetCashFlowTransactions(ctx context.Context, portfolioID uuid.UUID, toDate time.Time) ([]domain.TransactionWithInstrument, error) {
+	var toDateParam *time.Time
+	if !toDate.IsZero() {
+		toDateParam = &toDate
+	}
+
+	rows, err := r.pool.Query(ctx, getCashFlowTransactionsSQL, portfolioID, toDateParam)
+	if err != nil {
+		return nil, fmt.Errorf("repository: get cash flow transactions failed: %w", err)
+	}
+	defer rows.Close()
+
+	var items []domain.TransactionWithInstrument
+	for rows.Next() {
+		var item domain.TransactionWithInstrument
+		var txType string
+		err := rows.Scan(
+			&item.ID,
+			&item.PortfolioID,
+			&item.InstrumentID,
+			&txType,
+			&item.TradeDate,
+			&item.SettleDate,
+			&item.Quantity,
+			&item.Price,
+			&item.Amount,
+			&item.CurrencyCode,
+			&item.Fee,
+			&item.WithholdingTax,
+			&item.FXRateToBase,
+			&item.ExternalRef,
+			&item.Notes,
+			&item.FeeCurrencyCode,
+			&item.CreatedAt,
+			&item.Symbol,
+			&item.InstrumentName,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("repository: scan cash flow transaction failed: %w", err)
+		}
+		item.Type = domain.TransactionType(txType)
+		items = append(items, item)
+	}
+
+	if items == nil {
+		items = []domain.TransactionWithInstrument{}
+	}
+
+	return items, rows.Err()
+}
+
 func (r *PostgresRepository) DeleteTransaction(ctx context.Context, portfolioID uuid.UUID, transactionID uuid.UUID) error {
 	cmdTag, err := r.pool.Exec(ctx, deleteTransactionSQL, transactionID, portfolioID)
 	if err != nil {

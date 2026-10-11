@@ -103,6 +103,9 @@ type Query {
 
   # Multi-Broker CSV Ingestion Queries
   checkTransactionDuplicates(externalRefs: [String!]!): [String!]!
+
+  # Portfolio Cash Flow Report Query
+  cashFlowReport(filter: CashFlowFilterInput!): CashFlowReport!
 }
 
 enum HistoryTimeframe {
@@ -422,4 +425,83 @@ type RecordFXRateOverridePayload {
   rate: FXRate!
   valuationsRecomputed: Boolean!
 }
+
+enum CashFlowTimeframe {
+  MTD
+  YTD
+  M1
+  M3
+  M6
+  Y1
+  ALL
+  CUSTOM
+}
+
+enum CashFlowDirection {
+  INFLOW
+  OUTFLOW
+}
+
+enum CashFlowCategory {
+  CAPITAL_DEPOSITS
+  DIVIDENDS
+  INTEREST
+  SALE_PROCEEDS
+  CAPITAL_WITHDRAWALS
+  PURCHASES
+  FEES
+  TAXES
+}
+
+input CashFlowFilterInput {
+  timeframe: CashFlowTimeframe!
+  fromDate: String       # YYYY-MM-DD
+  toDate: String         # YYYY-MM-DD
+  currency: String       # Optional target currency
+}
+
+type CashFlowSummary {
+  startingCashBalance: Money!
+  totalInflows: Money!
+  totalOutflows: Money!
+  netCashFlow: Money!
+  endingCashBalance: Money!
+}
+
+type CashFlowCategoryBreakdown {
+  deposits: Money!
+  dividends: Money!
+  interest: Money!
+  salesProceeds: Money!
+  withdrawals: Money!
+  purchases: Money!
+  fees: Money!
+  taxes: Money!
+}
+
+type CashFlowItem {
+  id: ID!
+  eventDate: String!
+  type: TransactionType!
+  flowDirection: CashFlowDirection!
+  category: CashFlowCategory!
+  symbol: String
+  instrumentName: String
+  description: String!
+  netAmount: Money!
+  runningBalance: Money!
+  localAmount: Money!
+  fee: Money!
+  withholdingTax: Money!
+}
+
+type CashFlowReport {
+  summary: CashFlowSummary!
+  breakdown: CashFlowCategoryBreakdown!
+  items: [CashFlowItem!]!
+  baseCurrency: String!
+  fromDate: String!
+  toDate: String!
+}
+
 

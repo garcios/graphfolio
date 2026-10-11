@@ -48,6 +48,57 @@ type BatchImportTransactionsPayload struct {
 	Message       string     `json:"message"`
 }
 
+type CashFlowCategoryBreakdown struct {
+	Deposits      *Money `json:"deposits"`
+	Dividends     *Money `json:"dividends"`
+	Interest      *Money `json:"interest"`
+	SalesProceeds *Money `json:"salesProceeds"`
+	Withdrawals   *Money `json:"withdrawals"`
+	Purchases     *Money `json:"purchases"`
+	Fees          *Money `json:"fees"`
+	Taxes         *Money `json:"taxes"`
+}
+
+type CashFlowFilterInput struct {
+	Timeframe CashFlowTimeframe `json:"timeframe"`
+	FromDate  *string           `json:"fromDate,omitempty"`
+	ToDate    *string           `json:"toDate,omitempty"`
+	Currency  *string           `json:"currency,omitempty"`
+}
+
+type CashFlowItem struct {
+	ID             string            `json:"id"`
+	EventDate      string            `json:"eventDate"`
+	Type           TransactionType   `json:"type"`
+	FlowDirection  CashFlowDirection `json:"flowDirection"`
+	Category       CashFlowCategory  `json:"category"`
+	Symbol         *string           `json:"symbol,omitempty"`
+	InstrumentName *string           `json:"instrumentName,omitempty"`
+	Description    string            `json:"description"`
+	NetAmount      *Money            `json:"netAmount"`
+	RunningBalance *Money            `json:"runningBalance"`
+	LocalAmount    *Money            `json:"localAmount"`
+	Fee            *Money            `json:"fee"`
+	WithholdingTax *Money            `json:"withholdingTax"`
+}
+
+type CashFlowReport struct {
+	Summary      *CashFlowSummary           `json:"summary"`
+	Breakdown    *CashFlowCategoryBreakdown `json:"breakdown"`
+	Items        []*CashFlowItem            `json:"items"`
+	BaseCurrency string                     `json:"baseCurrency"`
+	FromDate     string                     `json:"fromDate"`
+	ToDate       string                     `json:"toDate"`
+}
+
+type CashFlowSummary struct {
+	StartingCashBalance *Money `json:"startingCashBalance"`
+	TotalInflows        *Money `json:"totalInflows"`
+	TotalOutflows       *Money `json:"totalOutflows"`
+	NetCashFlow         *Money `json:"netCashFlow"`
+	EndingCashBalance   *Money `json:"endingCashBalance"`
+}
+
 type CreateInstrumentInput struct {
 	Symbol       string  `json:"symbol"`
 	ExchangeCode string  `json:"exchangeCode"`
@@ -340,6 +391,195 @@ type ValuationPoint struct {
 	CashValue   *Money   `json:"cashValue"`
 	TwrIndex    Decimal  `json:"twrIndex"`
 	DailyReturn *Decimal `json:"dailyReturn,omitempty"`
+}
+
+type CashFlowCategory string
+
+const (
+	CashFlowCategoryCapitalDeposits    CashFlowCategory = "CAPITAL_DEPOSITS"
+	CashFlowCategoryDividends          CashFlowCategory = "DIVIDENDS"
+	CashFlowCategoryInterest           CashFlowCategory = "INTEREST"
+	CashFlowCategorySaleProceeds       CashFlowCategory = "SALE_PROCEEDS"
+	CashFlowCategoryCapitalWithdrawals CashFlowCategory = "CAPITAL_WITHDRAWALS"
+	CashFlowCategoryPurchases          CashFlowCategory = "PURCHASES"
+	CashFlowCategoryFees               CashFlowCategory = "FEES"
+	CashFlowCategoryTaxes              CashFlowCategory = "TAXES"
+)
+
+var AllCashFlowCategory = []CashFlowCategory{
+	CashFlowCategoryCapitalDeposits,
+	CashFlowCategoryDividends,
+	CashFlowCategoryInterest,
+	CashFlowCategorySaleProceeds,
+	CashFlowCategoryCapitalWithdrawals,
+	CashFlowCategoryPurchases,
+	CashFlowCategoryFees,
+	CashFlowCategoryTaxes,
+}
+
+func (e CashFlowCategory) IsValid() bool {
+	switch e {
+	case CashFlowCategoryCapitalDeposits, CashFlowCategoryDividends, CashFlowCategoryInterest, CashFlowCategorySaleProceeds, CashFlowCategoryCapitalWithdrawals, CashFlowCategoryPurchases, CashFlowCategoryFees, CashFlowCategoryTaxes:
+		return true
+	}
+	return false
+}
+
+func (e CashFlowCategory) String() string {
+	return string(e)
+}
+
+func (e *CashFlowCategory) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = CashFlowCategory(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid CashFlowCategory", str)
+	}
+	return nil
+}
+
+func (e CashFlowCategory) MarshalGQL(w io.Writer) {
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *CashFlowCategory) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e CashFlowCategory) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type CashFlowDirection string
+
+const (
+	CashFlowDirectionInflow  CashFlowDirection = "INFLOW"
+	CashFlowDirectionOutflow CashFlowDirection = "OUTFLOW"
+)
+
+var AllCashFlowDirection = []CashFlowDirection{
+	CashFlowDirectionInflow,
+	CashFlowDirectionOutflow,
+}
+
+func (e CashFlowDirection) IsValid() bool {
+	switch e {
+	case CashFlowDirectionInflow, CashFlowDirectionOutflow:
+		return true
+	}
+	return false
+}
+
+func (e CashFlowDirection) String() string {
+	return string(e)
+}
+
+func (e *CashFlowDirection) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = CashFlowDirection(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid CashFlowDirection", str)
+	}
+	return nil
+}
+
+func (e CashFlowDirection) MarshalGQL(w io.Writer) {
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *CashFlowDirection) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e CashFlowDirection) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type CashFlowTimeframe string
+
+const (
+	CashFlowTimeframeMtd    CashFlowTimeframe = "MTD"
+	CashFlowTimeframeYtd    CashFlowTimeframe = "YTD"
+	CashFlowTimeframeM1     CashFlowTimeframe = "M1"
+	CashFlowTimeframeM3     CashFlowTimeframe = "M3"
+	CashFlowTimeframeM6     CashFlowTimeframe = "M6"
+	CashFlowTimeframeY1     CashFlowTimeframe = "Y1"
+	CashFlowTimeframeAll    CashFlowTimeframe = "ALL"
+	CashFlowTimeframeCustom CashFlowTimeframe = "CUSTOM"
+)
+
+var AllCashFlowTimeframe = []CashFlowTimeframe{
+	CashFlowTimeframeMtd,
+	CashFlowTimeframeYtd,
+	CashFlowTimeframeM1,
+	CashFlowTimeframeM3,
+	CashFlowTimeframeM6,
+	CashFlowTimeframeY1,
+	CashFlowTimeframeAll,
+	CashFlowTimeframeCustom,
+}
+
+func (e CashFlowTimeframe) IsValid() bool {
+	switch e {
+	case CashFlowTimeframeMtd, CashFlowTimeframeYtd, CashFlowTimeframeM1, CashFlowTimeframeM3, CashFlowTimeframeM6, CashFlowTimeframeY1, CashFlowTimeframeAll, CashFlowTimeframeCustom:
+		return true
+	}
+	return false
+}
+
+func (e CashFlowTimeframe) String() string {
+	return string(e)
+}
+
+func (e *CashFlowTimeframe) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = CashFlowTimeframe(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid CashFlowTimeframe", str)
+	}
+	return nil
+}
+
+func (e CashFlowTimeframe) MarshalGQL(w io.Writer) {
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *CashFlowTimeframe) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e CashFlowTimeframe) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }
 
 type HistoryTimeframe string

@@ -62,6 +62,7 @@ export interface Query {
     currencyPairHistory: CurrencyPairHistory
     fxRates: FXRatesConnection
     checkTransactionDuplicates: Scalars['String'][]
+    cashFlowReport: CashFlowReport
     __typename: 'Query'
 }
 
@@ -323,6 +324,60 @@ export interface RecordFXRateOverridePayload {
     __typename: 'RecordFXRateOverridePayload'
 }
 
+export type CashFlowTimeframe = 'MTD' | 'YTD' | 'M1' | 'M3' | 'M6' | 'Y1' | 'ALL' | 'CUSTOM'
+
+export type CashFlowDirection = 'INFLOW' | 'OUTFLOW'
+
+export type CashFlowCategory = 'CAPITAL_DEPOSITS' | 'DIVIDENDS' | 'INTEREST' | 'SALE_PROCEEDS' | 'CAPITAL_WITHDRAWALS' | 'PURCHASES' | 'FEES' | 'TAXES'
+
+export interface CashFlowSummary {
+    startingCashBalance: Money
+    totalInflows: Money
+    totalOutflows: Money
+    netCashFlow: Money
+    endingCashBalance: Money
+    __typename: 'CashFlowSummary'
+}
+
+export interface CashFlowCategoryBreakdown {
+    deposits: Money
+    dividends: Money
+    interest: Money
+    salesProceeds: Money
+    withdrawals: Money
+    purchases: Money
+    fees: Money
+    taxes: Money
+    __typename: 'CashFlowCategoryBreakdown'
+}
+
+export interface CashFlowItem {
+    id: Scalars['ID']
+    eventDate: Scalars['String']
+    type: TransactionType
+    flowDirection: CashFlowDirection
+    category: CashFlowCategory
+    symbol: (Scalars['String'] | null)
+    instrumentName: (Scalars['String'] | null)
+    description: Scalars['String']
+    netAmount: Money
+    runningBalance: Money
+    localAmount: Money
+    fee: Money
+    withholdingTax: Money
+    __typename: 'CashFlowItem'
+}
+
+export interface CashFlowReport {
+    summary: CashFlowSummary
+    breakdown: CashFlowCategoryBreakdown
+    items: CashFlowItem[]
+    baseCurrency: Scalars['String']
+    fromDate: Scalars['String']
+    toDate: Scalars['String']
+    __typename: 'CashFlowReport'
+}
+
 export interface MoneyGenqlSelection{
     amount?: boolean | number
     currencyCode?: boolean | number
@@ -378,6 +433,7 @@ export interface QueryGenqlSelection{
     currencyPairHistory?: (CurrencyPairHistoryGenqlSelection & { __args: {baseCurrency: Scalars['String'], quoteCurrency: Scalars['String'], timeframe: HistoryTimeframe} })
     fxRates?: (FXRatesConnectionGenqlSelection & { __args?: {baseCurrency?: (Scalars['String'] | null), quoteCurrency?: (Scalars['String'] | null), fromDate?: (Scalars['String'] | null), toDate?: (Scalars['String'] | null), limit?: (Scalars['Int'] | null), offset?: (Scalars['Int'] | null)} })
     checkTransactionDuplicates?: { __args: {externalRefs: Scalars['String'][]} }
+    cashFlowReport?: (CashFlowReportGenqlSelection & { __args: {filter: CashFlowFilterInput} })
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -680,6 +736,60 @@ export interface RecordFXRateOverridePayloadGenqlSelection{
     __scalar?: boolean | number
 }
 
+export interface CashFlowFilterInput {timeframe: CashFlowTimeframe,fromDate?: (Scalars['String'] | null),toDate?: (Scalars['String'] | null),currency?: (Scalars['String'] | null)}
+
+export interface CashFlowSummaryGenqlSelection{
+    startingCashBalance?: MoneyGenqlSelection
+    totalInflows?: MoneyGenqlSelection
+    totalOutflows?: MoneyGenqlSelection
+    netCashFlow?: MoneyGenqlSelection
+    endingCashBalance?: MoneyGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface CashFlowCategoryBreakdownGenqlSelection{
+    deposits?: MoneyGenqlSelection
+    dividends?: MoneyGenqlSelection
+    interest?: MoneyGenqlSelection
+    salesProceeds?: MoneyGenqlSelection
+    withdrawals?: MoneyGenqlSelection
+    purchases?: MoneyGenqlSelection
+    fees?: MoneyGenqlSelection
+    taxes?: MoneyGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface CashFlowItemGenqlSelection{
+    id?: boolean | number
+    eventDate?: boolean | number
+    type?: boolean | number
+    flowDirection?: boolean | number
+    category?: boolean | number
+    symbol?: boolean | number
+    instrumentName?: boolean | number
+    description?: boolean | number
+    netAmount?: MoneyGenqlSelection
+    runningBalance?: MoneyGenqlSelection
+    localAmount?: MoneyGenqlSelection
+    fee?: MoneyGenqlSelection
+    withholdingTax?: MoneyGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface CashFlowReportGenqlSelection{
+    summary?: CashFlowSummaryGenqlSelection
+    breakdown?: CashFlowCategoryBreakdownGenqlSelection
+    items?: CashFlowItemGenqlSelection
+    baseCurrency?: boolean | number
+    fromDate?: boolean | number
+    toDate?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
 
     const Money_possibleTypes: string[] = ['Money']
     export const isMoney = (obj?: { __typename?: any } | null): obj is Money => {
@@ -928,6 +1038,38 @@ export interface RecordFXRateOverridePayloadGenqlSelection{
     }
     
 
+
+    const CashFlowSummary_possibleTypes: string[] = ['CashFlowSummary']
+    export const isCashFlowSummary = (obj?: { __typename?: any } | null): obj is CashFlowSummary => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isCashFlowSummary"')
+      return CashFlowSummary_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const CashFlowCategoryBreakdown_possibleTypes: string[] = ['CashFlowCategoryBreakdown']
+    export const isCashFlowCategoryBreakdown = (obj?: { __typename?: any } | null): obj is CashFlowCategoryBreakdown => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isCashFlowCategoryBreakdown"')
+      return CashFlowCategoryBreakdown_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const CashFlowItem_possibleTypes: string[] = ['CashFlowItem']
+    export const isCashFlowItem = (obj?: { __typename?: any } | null): obj is CashFlowItem => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isCashFlowItem"')
+      return CashFlowItem_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const CashFlowReport_possibleTypes: string[] = ['CashFlowReport']
+    export const isCashFlowReport = (obj?: { __typename?: any } | null): obj is CashFlowReport => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isCashFlowReport"')
+      return CashFlowReport_possibleTypes.includes(obj.__typename)
+    }
+    
+
 export const enumTransactionType = {
    BUY: 'BUY' as const,
    SELL: 'SELL' as const,
@@ -949,4 +1091,31 @@ export const enumHistoryTimeframe = {
    TIMEFRAME_1M: 'TIMEFRAME_1M' as const,
    TIMEFRAME_1Y: 'TIMEFRAME_1Y' as const,
    TIMEFRAME_ALL: 'TIMEFRAME_ALL' as const
+}
+
+export const enumCashFlowTimeframe = {
+   MTD: 'MTD' as const,
+   YTD: 'YTD' as const,
+   M1: 'M1' as const,
+   M3: 'M3' as const,
+   M6: 'M6' as const,
+   Y1: 'Y1' as const,
+   ALL: 'ALL' as const,
+   CUSTOM: 'CUSTOM' as const
+}
+
+export const enumCashFlowDirection = {
+   INFLOW: 'INFLOW' as const,
+   OUTFLOW: 'OUTFLOW' as const
+}
+
+export const enumCashFlowCategory = {
+   CAPITAL_DEPOSITS: 'CAPITAL_DEPOSITS' as const,
+   DIVIDENDS: 'DIVIDENDS' as const,
+   INTEREST: 'INTEREST' as const,
+   SALE_PROCEEDS: 'SALE_PROCEEDS' as const,
+   CAPITAL_WITHDRAWALS: 'CAPITAL_WITHDRAWALS' as const,
+   PURCHASES: 'PURCHASES' as const,
+   FEES: 'FEES' as const,
+   TAXES: 'TAXES' as const
 }

@@ -513,4 +513,17 @@ VALUES ($1, $2, $3, $4, $5)
 ON CONFLICT (base_currency, quote_currency, rate_date)
 DO UPDATE SET rate = EXCLUDED.rate, source = EXCLUDED.source
 RETURNING base_currency, quote_currency, rate_date, rate, source;`
+
+	getCashFlowTransactionsSQL = `
+SELECT 
+    t.id, t.portfolio_id, t.instrument_id, t.type, t.trade_date, t.settle_date,
+    t.quantity, t.price, t.amount, t.currency_code, t.fee, t.withholding_tax,
+    t.fx_rate_to_base, t.external_ref, t.notes, t.fee_currency_code, t.created_at,
+    i.symbol, i.name AS instrument_name
+FROM portfolio.transactions t
+LEFT JOIN portfolio.instruments i ON i.id = t.instrument_id
+WHERE t.portfolio_id = $1
+  AND ($2::date IS NULL OR COALESCE(t.settle_date, t.trade_date) <= $2)
+ORDER BY COALESCE(t.settle_date, t.trade_date) ASC, t.created_at ASC, t.id ASC;`
 )
+

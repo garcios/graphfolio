@@ -58,6 +58,50 @@ type ComplexityRoot struct {
 		Success       func(childComplexity int) int
 	}
 
+	CashFlowCategoryBreakdown struct {
+		Deposits      func(childComplexity int) int
+		Dividends     func(childComplexity int) int
+		Fees          func(childComplexity int) int
+		Interest      func(childComplexity int) int
+		Purchases     func(childComplexity int) int
+		SalesProceeds func(childComplexity int) int
+		Taxes         func(childComplexity int) int
+		Withdrawals   func(childComplexity int) int
+	}
+
+	CashFlowItem struct {
+		Category       func(childComplexity int) int
+		Description    func(childComplexity int) int
+		EventDate      func(childComplexity int) int
+		Fee            func(childComplexity int) int
+		FlowDirection  func(childComplexity int) int
+		ID             func(childComplexity int) int
+		InstrumentName func(childComplexity int) int
+		LocalAmount    func(childComplexity int) int
+		NetAmount      func(childComplexity int) int
+		RunningBalance func(childComplexity int) int
+		Symbol         func(childComplexity int) int
+		Type           func(childComplexity int) int
+		WithholdingTax func(childComplexity int) int
+	}
+
+	CashFlowReport struct {
+		BaseCurrency func(childComplexity int) int
+		Breakdown    func(childComplexity int) int
+		FromDate     func(childComplexity int) int
+		Items        func(childComplexity int) int
+		Summary      func(childComplexity int) int
+		ToDate       func(childComplexity int) int
+	}
+
+	CashFlowSummary struct {
+		EndingCashBalance   func(childComplexity int) int
+		NetCashFlow         func(childComplexity int) int
+		StartingCashBalance func(childComplexity int) int
+		TotalInflows        func(childComplexity int) int
+		TotalOutflows       func(childComplexity int) int
+	}
+
 	Currency struct {
 		Code   func(childComplexity int) int
 		Name   func(childComplexity int) int
@@ -242,6 +286,7 @@ type ComplexityRoot struct {
 
 	Query struct {
 		AllInstruments             func(childComplexity int, isActive *bool, search *string) int
+		CashFlowReport             func(childComplexity int, filter model.CashFlowFilterInput) int
 		CheckTransactionDuplicates func(childComplexity int, externalRefs []string) int
 		CurrencyPairHistory        func(childComplexity int, baseCurrency string, quoteCurrency string, timeframe model.HistoryTimeframe) int
 		CurrencyPairs              func(childComplexity int) int
@@ -345,6 +390,7 @@ type QueryResolver interface {
 	CurrencyPairHistory(ctx context.Context, baseCurrency string, quoteCurrency string, timeframe model.HistoryTimeframe) (*model.CurrencyPairHistory, error)
 	FxRates(ctx context.Context, baseCurrency *string, quoteCurrency *string, fromDate *string, toDate *string, limit *int, offset *int) (*model.FXRatesConnection, error)
 	CheckTransactionDuplicates(ctx context.Context, externalRefs []string) ([]string, error)
+	CashFlowReport(ctx context.Context, filter model.CashFlowFilterInput) (*model.CashFlowReport, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -439,6 +485,202 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.BatchImportTransactionsPayload.Success(childComplexity), true
+
+	case "CashFlowCategoryBreakdown.deposits":
+		if e.ComplexityRoot.CashFlowCategoryBreakdown.Deposits == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowCategoryBreakdown.Deposits(childComplexity), true
+	case "CashFlowCategoryBreakdown.dividends":
+		if e.ComplexityRoot.CashFlowCategoryBreakdown.Dividends == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowCategoryBreakdown.Dividends(childComplexity), true
+	case "CashFlowCategoryBreakdown.fees":
+		if e.ComplexityRoot.CashFlowCategoryBreakdown.Fees == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowCategoryBreakdown.Fees(childComplexity), true
+	case "CashFlowCategoryBreakdown.interest":
+		if e.ComplexityRoot.CashFlowCategoryBreakdown.Interest == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowCategoryBreakdown.Interest(childComplexity), true
+	case "CashFlowCategoryBreakdown.purchases":
+		if e.ComplexityRoot.CashFlowCategoryBreakdown.Purchases == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowCategoryBreakdown.Purchases(childComplexity), true
+	case "CashFlowCategoryBreakdown.salesProceeds":
+		if e.ComplexityRoot.CashFlowCategoryBreakdown.SalesProceeds == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowCategoryBreakdown.SalesProceeds(childComplexity), true
+	case "CashFlowCategoryBreakdown.taxes":
+		if e.ComplexityRoot.CashFlowCategoryBreakdown.Taxes == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowCategoryBreakdown.Taxes(childComplexity), true
+	case "CashFlowCategoryBreakdown.withdrawals":
+		if e.ComplexityRoot.CashFlowCategoryBreakdown.Withdrawals == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowCategoryBreakdown.Withdrawals(childComplexity), true
+
+	case "CashFlowItem.category":
+		if e.ComplexityRoot.CashFlowItem.Category == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowItem.Category(childComplexity), true
+	case "CashFlowItem.description":
+		if e.ComplexityRoot.CashFlowItem.Description == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowItem.Description(childComplexity), true
+	case "CashFlowItem.eventDate":
+		if e.ComplexityRoot.CashFlowItem.EventDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowItem.EventDate(childComplexity), true
+	case "CashFlowItem.fee":
+		if e.ComplexityRoot.CashFlowItem.Fee == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowItem.Fee(childComplexity), true
+	case "CashFlowItem.flowDirection":
+		if e.ComplexityRoot.CashFlowItem.FlowDirection == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowItem.FlowDirection(childComplexity), true
+	case "CashFlowItem.id":
+		if e.ComplexityRoot.CashFlowItem.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowItem.ID(childComplexity), true
+	case "CashFlowItem.instrumentName":
+		if e.ComplexityRoot.CashFlowItem.InstrumentName == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowItem.InstrumentName(childComplexity), true
+	case "CashFlowItem.localAmount":
+		if e.ComplexityRoot.CashFlowItem.LocalAmount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowItem.LocalAmount(childComplexity), true
+	case "CashFlowItem.netAmount":
+		if e.ComplexityRoot.CashFlowItem.NetAmount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowItem.NetAmount(childComplexity), true
+	case "CashFlowItem.runningBalance":
+		if e.ComplexityRoot.CashFlowItem.RunningBalance == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowItem.RunningBalance(childComplexity), true
+	case "CashFlowItem.symbol":
+		if e.ComplexityRoot.CashFlowItem.Symbol == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowItem.Symbol(childComplexity), true
+	case "CashFlowItem.type":
+		if e.ComplexityRoot.CashFlowItem.Type == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowItem.Type(childComplexity), true
+	case "CashFlowItem.withholdingTax":
+		if e.ComplexityRoot.CashFlowItem.WithholdingTax == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowItem.WithholdingTax(childComplexity), true
+
+	case "CashFlowReport.baseCurrency":
+		if e.ComplexityRoot.CashFlowReport.BaseCurrency == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowReport.BaseCurrency(childComplexity), true
+	case "CashFlowReport.breakdown":
+		if e.ComplexityRoot.CashFlowReport.Breakdown == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowReport.Breakdown(childComplexity), true
+	case "CashFlowReport.fromDate":
+		if e.ComplexityRoot.CashFlowReport.FromDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowReport.FromDate(childComplexity), true
+	case "CashFlowReport.items":
+		if e.ComplexityRoot.CashFlowReport.Items == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowReport.Items(childComplexity), true
+	case "CashFlowReport.summary":
+		if e.ComplexityRoot.CashFlowReport.Summary == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowReport.Summary(childComplexity), true
+	case "CashFlowReport.toDate":
+		if e.ComplexityRoot.CashFlowReport.ToDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowReport.ToDate(childComplexity), true
+
+	case "CashFlowSummary.endingCashBalance":
+		if e.ComplexityRoot.CashFlowSummary.EndingCashBalance == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowSummary.EndingCashBalance(childComplexity), true
+	case "CashFlowSummary.netCashFlow":
+		if e.ComplexityRoot.CashFlowSummary.NetCashFlow == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowSummary.NetCashFlow(childComplexity), true
+	case "CashFlowSummary.startingCashBalance":
+		if e.ComplexityRoot.CashFlowSummary.StartingCashBalance == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowSummary.StartingCashBalance(childComplexity), true
+	case "CashFlowSummary.totalInflows":
+		if e.ComplexityRoot.CashFlowSummary.TotalInflows == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowSummary.TotalInflows(childComplexity), true
+	case "CashFlowSummary.totalOutflows":
+		if e.ComplexityRoot.CashFlowSummary.TotalOutflows == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowSummary.TotalOutflows(childComplexity), true
 
 	case "Currency.code":
 		if e.ComplexityRoot.Currency.Code == nil {
@@ -1258,6 +1500,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.AllInstruments(childComplexity, args["isActive"].(*bool), args["search"].(*string)), true
+	case "Query.cashFlowReport":
+		if e.ComplexityRoot.Query.CashFlowReport == nil {
+			break
+		}
+
+		args, err := ec.field_Query_cashFlowReport_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.CashFlowReport(childComplexity, args["filter"].(model.CashFlowFilterInput)), true
 	case "Query.checkTransactionDuplicates":
 		if e.ComplexityRoot.Query.CheckTransactionDuplicates == nil {
 			break
@@ -1589,6 +1842,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
 		ec.unmarshalInputAddTransactionInput,
 		ec.unmarshalInputBatchImportTransactionsInput,
+		ec.unmarshalInputCashFlowFilterInput,
 		ec.unmarshalInputCreateInstrumentInput,
 		ec.unmarshalInputImportTransactionInput,
 		ec.unmarshalInputRecordFXRateOverrideInput,
@@ -1730,6 +1984,94 @@ func (ec *executionContext) childFields_BatchImportTransactionsPayload(ctx conte
 		return ec.fieldContext_BatchImportTransactionsPayload_message(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type BatchImportTransactionsPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_CashFlowCategoryBreakdown(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "deposits":
+		return ec.fieldContext_CashFlowCategoryBreakdown_deposits(ctx, field)
+	case "dividends":
+		return ec.fieldContext_CashFlowCategoryBreakdown_dividends(ctx, field)
+	case "interest":
+		return ec.fieldContext_CashFlowCategoryBreakdown_interest(ctx, field)
+	case "salesProceeds":
+		return ec.fieldContext_CashFlowCategoryBreakdown_salesProceeds(ctx, field)
+	case "withdrawals":
+		return ec.fieldContext_CashFlowCategoryBreakdown_withdrawals(ctx, field)
+	case "purchases":
+		return ec.fieldContext_CashFlowCategoryBreakdown_purchases(ctx, field)
+	case "fees":
+		return ec.fieldContext_CashFlowCategoryBreakdown_fees(ctx, field)
+	case "taxes":
+		return ec.fieldContext_CashFlowCategoryBreakdown_taxes(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type CashFlowCategoryBreakdown", field.Name)
+}
+
+func (ec *executionContext) childFields_CashFlowItem(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_CashFlowItem_id(ctx, field)
+	case "eventDate":
+		return ec.fieldContext_CashFlowItem_eventDate(ctx, field)
+	case "type":
+		return ec.fieldContext_CashFlowItem_type(ctx, field)
+	case "flowDirection":
+		return ec.fieldContext_CashFlowItem_flowDirection(ctx, field)
+	case "category":
+		return ec.fieldContext_CashFlowItem_category(ctx, field)
+	case "symbol":
+		return ec.fieldContext_CashFlowItem_symbol(ctx, field)
+	case "instrumentName":
+		return ec.fieldContext_CashFlowItem_instrumentName(ctx, field)
+	case "description":
+		return ec.fieldContext_CashFlowItem_description(ctx, field)
+	case "netAmount":
+		return ec.fieldContext_CashFlowItem_netAmount(ctx, field)
+	case "runningBalance":
+		return ec.fieldContext_CashFlowItem_runningBalance(ctx, field)
+	case "localAmount":
+		return ec.fieldContext_CashFlowItem_localAmount(ctx, field)
+	case "fee":
+		return ec.fieldContext_CashFlowItem_fee(ctx, field)
+	case "withholdingTax":
+		return ec.fieldContext_CashFlowItem_withholdingTax(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type CashFlowItem", field.Name)
+}
+
+func (ec *executionContext) childFields_CashFlowReport(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "summary":
+		return ec.fieldContext_CashFlowReport_summary(ctx, field)
+	case "breakdown":
+		return ec.fieldContext_CashFlowReport_breakdown(ctx, field)
+	case "items":
+		return ec.fieldContext_CashFlowReport_items(ctx, field)
+	case "baseCurrency":
+		return ec.fieldContext_CashFlowReport_baseCurrency(ctx, field)
+	case "fromDate":
+		return ec.fieldContext_CashFlowReport_fromDate(ctx, field)
+	case "toDate":
+		return ec.fieldContext_CashFlowReport_toDate(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type CashFlowReport", field.Name)
+}
+
+func (ec *executionContext) childFields_CashFlowSummary(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "startingCashBalance":
+		return ec.fieldContext_CashFlowSummary_startingCashBalance(ctx, field)
+	case "totalInflows":
+		return ec.fieldContext_CashFlowSummary_totalInflows(ctx, field)
+	case "totalOutflows":
+		return ec.fieldContext_CashFlowSummary_totalOutflows(ctx, field)
+	case "netCashFlow":
+		return ec.fieldContext_CashFlowSummary_netCashFlow(ctx, field)
+	case "endingCashBalance":
+		return ec.fieldContext_CashFlowSummary_endingCashBalance(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type CashFlowSummary", field.Name)
 }
 
 func (ec *executionContext) childFields_Currency(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -2492,6 +2834,20 @@ func (ec *executionContext) field_Query_allInstruments_args(ctx context.Context,
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_cashFlowReport_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "filter",
+		func(ctx context.Context, v any) (model.CashFlowFilterInput, error) {
+			return ec.unmarshalNCashFlowFilterInput2bffᚋgraphᚋmodelᚐCashFlowFilterInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["filter"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_checkTransactionDuplicates_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -3040,6 +3396,931 @@ func (ec *executionContext) _BatchImportTransactionsPayload_message(ctx context.
 }
 func (ec *executionContext) fieldContext_BatchImportTransactionsPayload_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("BatchImportTransactionsPayload", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _CashFlowCategoryBreakdown_deposits(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowCategoryBreakdown) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowCategoryBreakdown_deposits(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Deposits, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowCategoryBreakdown_deposits(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowCategoryBreakdown",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CashFlowCategoryBreakdown_dividends(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowCategoryBreakdown) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowCategoryBreakdown_dividends(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Dividends, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowCategoryBreakdown_dividends(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowCategoryBreakdown",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CashFlowCategoryBreakdown_interest(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowCategoryBreakdown) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowCategoryBreakdown_interest(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Interest, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowCategoryBreakdown_interest(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowCategoryBreakdown",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CashFlowCategoryBreakdown_salesProceeds(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowCategoryBreakdown) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowCategoryBreakdown_salesProceeds(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.SalesProceeds, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowCategoryBreakdown_salesProceeds(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowCategoryBreakdown",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CashFlowCategoryBreakdown_withdrawals(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowCategoryBreakdown) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowCategoryBreakdown_withdrawals(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Withdrawals, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowCategoryBreakdown_withdrawals(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowCategoryBreakdown",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CashFlowCategoryBreakdown_purchases(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowCategoryBreakdown) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowCategoryBreakdown_purchases(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Purchases, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowCategoryBreakdown_purchases(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowCategoryBreakdown",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CashFlowCategoryBreakdown_fees(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowCategoryBreakdown) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowCategoryBreakdown_fees(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Fees, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowCategoryBreakdown_fees(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowCategoryBreakdown",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CashFlowCategoryBreakdown_taxes(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowCategoryBreakdown) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowCategoryBreakdown_taxes(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Taxes, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowCategoryBreakdown_taxes(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowCategoryBreakdown",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CashFlowItem_id(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowItem_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowItem_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CashFlowItem", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _CashFlowItem_eventDate(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowItem_eventDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.EventDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowItem_eventDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CashFlowItem", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _CashFlowItem_type(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowItem_type(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Type, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.TransactionType) graphql.Marshaler {
+			return ec.marshalNTransactionType2bffᚋgraphᚋmodelᚐTransactionType(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowItem_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CashFlowItem", field, false, false, errors.New("field of type TransactionType does not have child fields"))
+}
+
+func (ec *executionContext) _CashFlowItem_flowDirection(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowItem_flowDirection(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FlowDirection, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.CashFlowDirection) graphql.Marshaler {
+			return ec.marshalNCashFlowDirection2bffᚋgraphᚋmodelᚐCashFlowDirection(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowItem_flowDirection(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CashFlowItem", field, false, false, errors.New("field of type CashFlowDirection does not have child fields"))
+}
+
+func (ec *executionContext) _CashFlowItem_category(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowItem_category(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Category, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.CashFlowCategory) graphql.Marshaler {
+			return ec.marshalNCashFlowCategory2bffᚋgraphᚋmodelᚐCashFlowCategory(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowItem_category(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CashFlowItem", field, false, false, errors.New("field of type CashFlowCategory does not have child fields"))
+}
+
+func (ec *executionContext) _CashFlowItem_symbol(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowItem_symbol(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Symbol, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowItem_symbol(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CashFlowItem", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _CashFlowItem_instrumentName(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowItem_instrumentName(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.InstrumentName, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowItem_instrumentName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CashFlowItem", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _CashFlowItem_description(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowItem_description(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Description, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowItem_description(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CashFlowItem", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _CashFlowItem_netAmount(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowItem_netAmount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.NetAmount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowItem_netAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CashFlowItem_runningBalance(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowItem_runningBalance(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.RunningBalance, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowItem_runningBalance(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CashFlowItem_localAmount(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowItem_localAmount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LocalAmount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowItem_localAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CashFlowItem_fee(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowItem_fee(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Fee, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowItem_fee(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CashFlowItem_withholdingTax(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowItem_withholdingTax(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.WithholdingTax, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowItem_withholdingTax(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CashFlowReport_summary(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowReport_summary(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Summary, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.CashFlowSummary) graphql.Marshaler {
+			return ec.marshalNCashFlowSummary2ᚖbffᚋgraphᚋmodelᚐCashFlowSummary(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowReport_summary(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_CashFlowSummary(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CashFlowReport_breakdown(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowReport_breakdown(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Breakdown, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.CashFlowCategoryBreakdown) graphql.Marshaler {
+			return ec.marshalNCashFlowCategoryBreakdown2ᚖbffᚋgraphᚋmodelᚐCashFlowCategoryBreakdown(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowReport_breakdown(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_CashFlowCategoryBreakdown(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CashFlowReport_items(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowReport_items(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Items, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.CashFlowItem) graphql.Marshaler {
+			return ec.marshalNCashFlowItem2ᚕᚖbffᚋgraphᚋmodelᚐCashFlowItemᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowReport_items(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_CashFlowItem(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CashFlowReport_baseCurrency(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowReport_baseCurrency(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.BaseCurrency, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowReport_baseCurrency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CashFlowReport", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _CashFlowReport_fromDate(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowReport_fromDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FromDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowReport_fromDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CashFlowReport", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _CashFlowReport_toDate(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowReport_toDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ToDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowReport_toDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CashFlowReport", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _CashFlowSummary_startingCashBalance(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowSummary_startingCashBalance(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.StartingCashBalance, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowSummary_startingCashBalance(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CashFlowSummary_totalInflows(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowSummary_totalInflows(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TotalInflows, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowSummary_totalInflows(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CashFlowSummary_totalOutflows(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowSummary_totalOutflows(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TotalOutflows, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowSummary_totalOutflows(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CashFlowSummary_netCashFlow(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowSummary_netCashFlow(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.NetCashFlow, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowSummary_netCashFlow(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CashFlowSummary_endingCashBalance(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowSummary_endingCashBalance(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.EndingCashBalance, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowSummary_endingCashBalance(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
 }
 
 func (ec *executionContext) _Currency_code(ctx context.Context, field graphql.CollectedField, obj *model.Currency) (ret graphql.Marshaler) {
@@ -6809,6 +8090,50 @@ func (ec *executionContext) fieldContext_Query_checkTransactionDuplicates(ctx co
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_cashFlowReport(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_cashFlowReport(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().CashFlowReport(ctx, fc.Args["filter"].(model.CashFlowFilterInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.CashFlowReport) graphql.Marshaler {
+			return ec.marshalNCashFlowReport2ᚖbffᚋgraphᚋmodelᚐCashFlowReport(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_cashFlowReport(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_CashFlowReport(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_cashFlowReport_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -8959,6 +10284,57 @@ func (ec *executionContext) unmarshalInputBatchImportTransactionsInput(ctx conte
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputCashFlowFilterInput(ctx context.Context, obj any) (model.CashFlowFilterInput, error) {
+	var it model.CashFlowFilterInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"timeframe", "fromDate", "toDate", "currency"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "timeframe":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("timeframe"))
+			data, err := ec.unmarshalNCashFlowTimeframe2bffᚋgraphᚋmodelᚐCashFlowTimeframe(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Timeframe = data
+		case "fromDate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fromDate"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FromDate = data
+		case "toDate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("toDate"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ToDate = data
+		case "currency":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currency"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Currency = data
+		}
+	}
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreateInstrumentInput(ctx context.Context, obj any) (model.CreateInstrumentInput, error) {
 	var it model.CreateInstrumentInput
 	if obj == nil {
@@ -9564,6 +10940,298 @@ func (ec *executionContext) _BatchImportTransactionsPayload(ctx context.Context,
 			}
 		case "message":
 			out.Values[i] = ec._BatchImportTransactionsPayload_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var cashFlowCategoryBreakdownImplementors = []string{"CashFlowCategoryBreakdown"}
+
+func (ec *executionContext) _CashFlowCategoryBreakdown(ctx context.Context, sel ast.SelectionSet, obj *model.CashFlowCategoryBreakdown) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, cashFlowCategoryBreakdownImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CashFlowCategoryBreakdown")
+		case "deposits":
+			out.Values[i] = ec._CashFlowCategoryBreakdown_deposits(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "dividends":
+			out.Values[i] = ec._CashFlowCategoryBreakdown_dividends(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "interest":
+			out.Values[i] = ec._CashFlowCategoryBreakdown_interest(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "salesProceeds":
+			out.Values[i] = ec._CashFlowCategoryBreakdown_salesProceeds(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "withdrawals":
+			out.Values[i] = ec._CashFlowCategoryBreakdown_withdrawals(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "purchases":
+			out.Values[i] = ec._CashFlowCategoryBreakdown_purchases(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fees":
+			out.Values[i] = ec._CashFlowCategoryBreakdown_fees(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "taxes":
+			out.Values[i] = ec._CashFlowCategoryBreakdown_taxes(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var cashFlowItemImplementors = []string{"CashFlowItem"}
+
+func (ec *executionContext) _CashFlowItem(ctx context.Context, sel ast.SelectionSet, obj *model.CashFlowItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, cashFlowItemImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CashFlowItem")
+		case "id":
+			out.Values[i] = ec._CashFlowItem_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "eventDate":
+			out.Values[i] = ec._CashFlowItem_eventDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "type":
+			out.Values[i] = ec._CashFlowItem_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "flowDirection":
+			out.Values[i] = ec._CashFlowItem_flowDirection(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "category":
+			out.Values[i] = ec._CashFlowItem_category(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "symbol":
+			out.Values[i] = ec._CashFlowItem_symbol(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "instrumentName":
+			out.Values[i] = ec._CashFlowItem_instrumentName(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "description":
+			out.Values[i] = ec._CashFlowItem_description(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "netAmount":
+			out.Values[i] = ec._CashFlowItem_netAmount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "runningBalance":
+			out.Values[i] = ec._CashFlowItem_runningBalance(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "localAmount":
+			out.Values[i] = ec._CashFlowItem_localAmount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fee":
+			out.Values[i] = ec._CashFlowItem_fee(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "withholdingTax":
+			out.Values[i] = ec._CashFlowItem_withholdingTax(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var cashFlowReportImplementors = []string{"CashFlowReport"}
+
+func (ec *executionContext) _CashFlowReport(ctx context.Context, sel ast.SelectionSet, obj *model.CashFlowReport) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, cashFlowReportImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CashFlowReport")
+		case "summary":
+			out.Values[i] = ec._CashFlowReport_summary(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "breakdown":
+			out.Values[i] = ec._CashFlowReport_breakdown(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "items":
+			out.Values[i] = ec._CashFlowReport_items(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "baseCurrency":
+			out.Values[i] = ec._CashFlowReport_baseCurrency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fromDate":
+			out.Values[i] = ec._CashFlowReport_fromDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "toDate":
+			out.Values[i] = ec._CashFlowReport_toDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var cashFlowSummaryImplementors = []string{"CashFlowSummary"}
+
+func (ec *executionContext) _CashFlowSummary(ctx context.Context, sel ast.SelectionSet, obj *model.CashFlowSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, cashFlowSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CashFlowSummary")
+		case "startingCashBalance":
+			out.Values[i] = ec._CashFlowSummary_startingCashBalance(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalInflows":
+			out.Values[i] = ec._CashFlowSummary_totalInflows(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalOutflows":
+			out.Values[i] = ec._CashFlowSummary_totalOutflows(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "netCashFlow":
+			out.Values[i] = ec._CashFlowSummary_netCashFlow(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "endingCashBalance":
+			out.Values[i] = ec._CashFlowSummary_endingCashBalance(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -11216,6 +12884,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "cashFlowReport":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_cashFlowReport(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -12098,6 +13788,97 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNCashFlowCategory2bffᚋgraphᚋmodelᚐCashFlowCategory(ctx context.Context, v any) (model.CashFlowCategory, error) {
+	var res model.CashFlowCategory
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNCashFlowCategory2bffᚋgraphᚋmodelᚐCashFlowCategory(ctx context.Context, sel ast.SelectionSet, v model.CashFlowCategory) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNCashFlowCategoryBreakdown2ᚖbffᚋgraphᚋmodelᚐCashFlowCategoryBreakdown(ctx context.Context, sel ast.SelectionSet, v *model.CashFlowCategoryBreakdown) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CashFlowCategoryBreakdown(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNCashFlowDirection2bffᚋgraphᚋmodelᚐCashFlowDirection(ctx context.Context, v any) (model.CashFlowDirection, error) {
+	var res model.CashFlowDirection
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNCashFlowDirection2bffᚋgraphᚋmodelᚐCashFlowDirection(ctx context.Context, sel ast.SelectionSet, v model.CashFlowDirection) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNCashFlowFilterInput2bffᚋgraphᚋmodelᚐCashFlowFilterInput(ctx context.Context, v any) (model.CashFlowFilterInput, error) {
+	res, err := ec.unmarshalInputCashFlowFilterInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNCashFlowItem2ᚕᚖbffᚋgraphᚋmodelᚐCashFlowItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.CashFlowItem) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNCashFlowItem2ᚖbffᚋgraphᚋmodelᚐCashFlowItem(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNCashFlowItem2ᚖbffᚋgraphᚋmodelᚐCashFlowItem(ctx context.Context, sel ast.SelectionSet, v *model.CashFlowItem) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CashFlowItem(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCashFlowReport2ᚖbffᚋgraphᚋmodelᚐCashFlowReport(ctx context.Context, sel ast.SelectionSet, v *model.CashFlowReport) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CashFlowReport(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNCashFlowSummary2ᚖbffᚋgraphᚋmodelᚐCashFlowSummary(ctx context.Context, sel ast.SelectionSet, v *model.CashFlowSummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CashFlowSummary(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNCashFlowTimeframe2bffᚋgraphᚋmodelᚐCashFlowTimeframe(ctx context.Context, v any) (model.CashFlowTimeframe, error) {
+	var res model.CashFlowTimeframe
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNCashFlowTimeframe2bffᚋgraphᚋmodelᚐCashFlowTimeframe(ctx context.Context, sel ast.SelectionSet, v model.CashFlowTimeframe) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNCreateInstrumentInput2bffᚋgraphᚋmodelᚐCreateInstrumentInput(ctx context.Context, v any) (model.CreateInstrumentInput, error) {
