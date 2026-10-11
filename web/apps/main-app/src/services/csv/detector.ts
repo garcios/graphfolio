@@ -51,9 +51,13 @@ export function detectBrokerFormat(lines: string[]): DetectionResult {
         return (
           upper.includes('BUY ') ||
           upper.includes('SELL ') ||
-          upper.includes('DIVIDEND ON ') ||
+          upper.includes('DIVIDEND') ||
+          upper.includes('FUNDS TRANSFER') ||
+          upper.includes('INTEREST') ||
+          upper.includes('NABTRADE') ||
           upper.includes('.NAS') ||
-          upper.includes('.NYS')
+          upper.includes('.NYS') ||
+          upper.includes('.ASX')
         );
       });
 

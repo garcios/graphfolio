@@ -25,14 +25,14 @@ const (
 )
 
 type Transaction struct {
-	ID             uuid.UUID
-	PortfolioID    uuid.UUID
-	InstrumentID   *uuid.UUID
-	Type           TransactionType
-	TradeDate      time.Time
-	SettleDate     *time.Time
-	Quantity       *decimal.Decimal
-	Price          *decimal.Decimal
+	ID              uuid.UUID
+	PortfolioID     uuid.UUID
+	InstrumentID    *uuid.UUID
+	Type            TransactionType
+	TradeDate       time.Time
+	SettleDate      *time.Time
+	Quantity        *decimal.Decimal
+	Price           *decimal.Decimal
 	Amount          decimal.Decimal
 	CurrencyCode    string
 	Fee             decimal.Decimal

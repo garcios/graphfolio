@@ -296,6 +296,36 @@
   color: #ef4444;
 }
 
+.status-pill.buy {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+.status-pill.sell {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+}
+
+.status-pill.dividend {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.status-pill.deposit {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.status-pill.withdrawal {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+}
+
+.status-pill.interest {
+  background: rgba(6, 182, 212, 0.15);
+  color: #22d3ee;
+}
+
 /* Errors List */
 .error-list-container {
   display: flex;

@@ -492,6 +492,14 @@ func (s *portfolioService) BatchImportTransactions(ctx context.Context, input do
 					fxRate = &rate
 				}
 			}
+		} else if item.CurrencyCode != "" {
+			currencyCode = strings.ToUpper(strings.TrimSpace(item.CurrencyCode))
+			if currencyCode != portfolio.BaseCurrency {
+				rate, err := s.repo.GetFXRate(ctx, currencyCode, portfolio.BaseCurrency)
+				if err == nil && rate.IsPositive() {
+					fxRate = &rate
+				}
+			}
 		}
 
 		qty := item.Quantity

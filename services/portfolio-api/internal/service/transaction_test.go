@@ -1122,4 +1122,74 @@ func TestPortfolioService_BatchImportTransactions(t *testing.T) {
 			t.Fatal("expected error, got nil")
 		}
 	})
+
+	t.Run("successfully imports cash transactions (deposit, withdrawal, interest) without symbol", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		mockValuation := serviceMocks.NewMockValuationService(ctrl)
+		svc := service.NewPortfolioService(mockRepo, service.WithValuationService(mockValuation))
+
+		cashDate := time.Date(2026, 5, 1, 0, 0, 0, 0, time.UTC)
+		items := []domain.ImportTransactionItem{
+			{
+				Type:         domain.TxTypeDeposit,
+				Symbol:       "",
+				TradeDate:    cashDate,
+				Amount:       decimal.RequireFromString("300.00"),
+				CurrencyCode: "AUD",
+				ExternalRef:  "nabtrade:cash:24461797",
+				Notes:        "Imported from nabtrade Cash Account (Deposit: 24461797)",
+			},
+			{
+				Type:         domain.TxTypeWithdrawal,
+				Symbol:       "",
+				TradeDate:    cashDate,
+				Amount:       decimal.RequireFromString("100.00"),
+				CurrencyCode: "AUD",
+				ExternalRef:  "nabtrade:cash:19114270",
+				Notes:        "Imported from nabtrade Cash Account (Withdrawal: 19114270)",
+			},
+			{
+				Type:         domain.TxTypeInterest,
+				Symbol:       "",
+				TradeDate:    cashDate,
+				Amount:       decimal.RequireFromString("0.54"),
+				CurrencyCode: "AUD",
+				ExternalRef:  "nt_int_12345",
+				Notes:        "Imported from nabtrade Cash Account (Interest)",
+			},
+		}
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().FindExistingExternalRefs(ctx, portfolioID, []string{"nabtrade:cash:24461797", "nabtrade:cash:19114270", "nt_int_12345"}).Return(nil, nil)
+		mockRepo.EXPECT().BatchInsertTransactions(ctx, gomock.Len(3)).Return(3, nil)
+
+		// Rebuild projections
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetTransactions(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetCorporateActions(ctx, gomock.Any()).Return([]domain.CorporateAction{}, nil)
+		mockRepo.EXPECT().SaveProjectionsTx(ctx, portfolioID, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+		// Valuation backfill
+		mockValuation.EXPECT().BackfillPortfolioValuations(ctx, portfolioID, cashDate).Return(nil)
+
+		// Summary
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetHoldingsWithMarketData(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetCashBalances(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetLatestValuation(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetCashFXRates(ctx, "AUD").Return(map[string]decimal.Decimal{}, nil)
+
+		res, err := svc.BatchImportTransactions(ctx, domain.BatchImportInput{
+			UserID:         userID,
+			Transactions:   items,
+			SkipDuplicates: true,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res.ImportedCount != 3 {
+			t.Fatalf("expected 3 imported, got %d", res.ImportedCount)
+		}
+	})
 }

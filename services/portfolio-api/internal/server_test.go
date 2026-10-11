@@ -2375,9 +2375,9 @@ func TestPortfolioServer_BatchImportTransactions(t *testing.T) {
 			UserId: "user-123",
 			Transactions: []*pb.ImportTransactionItem{
 				{
-					Type:       pb.TransactionType_TRANSACTION_TYPE_BUY,
-					Symbol:     "BHP",
-					TradeDate:  "2025-05-10",
+					Type:        pb.TransactionType_TRANSACTION_TYPE_BUY,
+					Symbol:      "BHP",
+					TradeDate:   "2025-05-10",
 					Quantity:    &commonpb.Decimal{Value: "100"},
 					Price:       &commonpb.Money{Amount: &commonpb.Decimal{Value: "45.00"}, CurrencyCode: "AUD"},
 					Amount:      &commonpb.Money{Amount: &commonpb.Decimal{Value: "4519.95"}, CurrencyCode: "AUD"},

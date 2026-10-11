@@ -432,5 +432,3 @@ func TestProcessLedgerMultiCurrencyBrokerageFee(t *testing.T) {
 		t.Errorf("expected RealizedPnLBase 720, got %s", disposals[0].RealizedPnLBase)
 	}
 }
-
-
