@@ -468,3 +468,126 @@ func TestValuationService_RunDailyValuationJob(t *testing.T) {
 		}
 	})
 }
+
+func TestRebuildValuations_MissingPrices_FallbackToCostBasis(t *testing.T) {
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := repoMocks.NewMockRepository(ctrl)
+
+	portfolioID := uuid.New()
+	instID := uuid.New()
+
+	d1 := time.Date(2023, 5, 10, 0, 0, 0, 0, time.UTC)
+	d2 := time.Date(2023, 5, 11, 0, 0, 0, 0, time.UTC)
+
+	portfolio := &domain.Portfolio{
+		ID:              portfolioID,
+		UserID:          uuid.New(),
+		Name:            "Test Portfolio",
+		BaseCurrency:    "AUD",
+		CostBasisMethod: domain.CostBasisMethodFIFO,
+	}
+
+	qty := decimal.NewFromInt(10)
+	price := decimal.RequireFromString("50.00")
+	amount := decimal.RequireFromString("500.00")
+
+	txs := []domain.Transaction{
+		// Day 1: Deposit $1,000
+		{
+			ID:           uuid.New(),
+			PortfolioID:  portfolioID,
+			Type:         domain.TxTypeDeposit,
+			TradeDate:    d1,
+			Amount:       decimal.RequireFromString("1000.00"),
+			CurrencyCode: "AUD",
+		},
+		// Day 2: Deposit $2,000 + Buy 10 shares @ $50 ($500 consideration)
+		{
+			ID:           uuid.New(),
+			PortfolioID:  portfolioID,
+			Type:         domain.TxTypeDeposit,
+			TradeDate:    d2,
+			Amount:       decimal.RequireFromString("2000.00"),
+			CurrencyCode: "AUD",
+		},
+		{
+			ID:           uuid.New(),
+			PortfolioID:  portfolioID,
+			InstrumentID: &instID,
+			Type:         domain.TxTypeBuy,
+			TradeDate:    d2,
+			Quantity:     &qty,
+			Price:        &price,
+			Amount:       amount,
+			CurrencyCode: "AUD",
+		},
+	}
+
+	mockRepo.EXPECT().FindPortfolioByUser(ctx, portfolioID.String()).Return(portfolio, nil)
+	mockRepo.EXPECT().GetTransactions(ctx, portfolioID).Return(txs, nil)
+	mockRepo.EXPECT().DeleteValuationsFromDate(ctx, portfolioID, d1).Return(nil)
+	mockRepo.EXPECT().GetLatestValuationBefore(ctx, portfolioID, d1).Return(nil, nil)
+	mockRepo.EXPECT().GetCorporateActions(ctx, gomock.Any()).Return([]domain.CorporateAction{}, nil)
+
+	// Price matrix returns EMPTY prices for instID (simulating missing historical quotes)
+	mockRepo.EXPECT().GetHistoricalPriceMatrix(ctx, gomock.Any(), d1, d2).Return(
+		map[uuid.UUID]map[string]decimal.Decimal{
+			instID: {},
+		},
+		nil,
+	)
+	mockRepo.EXPECT().GetHistoricalFXMatrix(ctx, gomock.Any(), "AUD", d1, d2).Return(
+		map[string]map[string]decimal.Decimal{},
+		nil,
+	)
+
+	mockRepo.EXPECT().UpsertValuationsBatch(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, batch []domain.PortfolioValuation) error {
+		if len(batch) != 2 {
+			t.Fatalf("expected 2 valuation points, got %d", len(batch))
+		}
+
+		// Day 1: Cash = 1000. Market = 0. Total = 1000. Net flow = 1000.
+		v1 := batch[0]
+		if !v1.MarketValueBase.IsZero() {
+			t.Errorf("day 1: expected 0 market value, got %s", v1.MarketValueBase)
+		}
+		if !v1.CashValueBase.Equal(decimal.RequireFromString("1000.00")) {
+			t.Errorf("day 1: expected 1000 cash, got %s", v1.CashValueBase)
+		}
+		if !v1.TWRIndex.Equal(domain.TWRInceptionBaseline) {
+			t.Errorf("day 1: expected TWR 1.0, got %s", v1.TWRIndex)
+		}
+
+		// Day 2:
+		// Cash = 1000 (day 1) + 2000 (deposit) - 500 (buy) = 2500 cash.
+		// Market Value: price is missing, but cost basis is $500 -> holding evaluated at $500!
+		// Total Value = 2500 cash + 500 market = 3000!
+		// Net Flow = +2000. Prior total = 1000.
+		// (3000 - 2000) - 1000 = 0.
+		// Daily return must be 0 (no false write-off)!
+		// TWR index must remain 1.000000000000!
+		v2 := batch[1]
+		if !v2.CashValueBase.Equal(decimal.RequireFromString("2500.00")) {
+			t.Errorf("day 2: got cash %s, want 2500.00", v2.CashValueBase)
+		}
+		if !v2.MarketValueBase.Equal(decimal.RequireFromString("500.00")) {
+			t.Errorf("day 2: got market value %s, want 500.00 (from cost basis fallback)", v2.MarketValueBase)
+		}
+		if !v2.DailyReturn.IsZero() {
+			t.Errorf("day 2: got daily return %s, want 0.0000 (no phantom loss)", v2.DailyReturn)
+		}
+		if !v2.TWRIndex.Equal(domain.TWRInceptionBaseline) {
+			t.Errorf("day 2: got TWR %s, want 1.000000000000", v2.TWRIndex)
+		}
+
+		return nil
+	})
+
+	svc := service.NewValuationService(mockRepo, service.WithValuationNowFunc(func() time.Time { return d2 }))
+	if err := svc.BackfillPortfolioValuations(ctx, portfolioID, d1); err != nil {
+		t.Fatalf("BackfillPortfolioValuations failed: %v", err)
+	}
+}

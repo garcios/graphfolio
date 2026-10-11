@@ -265,6 +265,21 @@ func (mr *MockRepositoryMockRecorder) GetCorporateActions(ctx, instrumentIDs any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCorporateActions", reflect.TypeOf((*MockRepository)(nil).GetCorporateActions), ctx, instrumentIDs)
 }
 
+// GetEarliestValuation mocks base method.
+func (m *MockRepository) GetEarliestValuation(ctx context.Context, portfolioID uuid.UUID) (*domain.PortfolioValuation, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEarliestValuation", ctx, portfolioID)
+	ret0, _ := ret[0].(*domain.PortfolioValuation)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEarliestValuation indicates an expected call of GetEarliestValuation.
+func (mr *MockRepositoryMockRecorder) GetEarliestValuation(ctx, portfolioID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEarliestValuation", reflect.TypeOf((*MockRepository)(nil).GetEarliestValuation), ctx, portfolioID)
+}
+
 // GetFXRate mocks base method.
 func (m *MockRepository) GetFXRate(ctx context.Context, fromCurrency, toCurrency string) (decimal.Decimal, error) {
 	m.ctrl.T.Helper()

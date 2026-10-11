@@ -196,10 +196,51 @@ func TestCalculatePortfolioSummary(t *testing.T) {
 		t.Errorf("got TodayReturnAmount %s, want 1000", summary.TodayReturnAmount.Amount)
 	}
 
-	// Annualized return = (1.1420 - 1) * 100 = 14.2%
+	// Annualized return without earliest valuation defaults to cumulative period return
 	if summary.AnnualizedReturnPercent.String() != "14.2" {
 		t.Errorf("got AnnualizedReturnPercent %s, want 14.2", summary.AnnualizedReturnPercent)
 	}
+
+	t.Run("calculates geometric CAGR over multi-year period", func(t *testing.T) {
+		startDate := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+		endDate := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC) // 731 days ~ 2 years
+		earlyVal := &domain.PortfolioValuation{
+			PortfolioID:   portfolio.ID,
+			ValuationDate: startDate,
+			TWRIndex:      decimal.NewFromInt(1),
+		}
+		latestVal := &domain.PortfolioValuation{
+			PortfolioID:   portfolio.ID,
+			ValuationDate: endDate,
+			// 1.10 ^ 2 = 1.21 -> 10.0% annualized
+			TWRIndex: decimal.RequireFromString("1.21"),
+		}
+		summaryCAGR := domain.CalculatePortfolioSummary(portfolio, holdings, cash, latestVal, nil, earlyVal)
+		// Annualized return should be ~10.0%
+		if summaryCAGR.AnnualizedReturnPercent.String() != "10" && summaryCAGR.AnnualizedReturnPercent.String() != "10.0" {
+			t.Errorf("got CAGR %s, want 10.0", summaryCAGR.AnnualizedReturnPercent)
+		}
+	})
+
+	t.Run("returns non-annualized period return for periods under 365 days", func(t *testing.T) {
+		startDate := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+		endDate := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC) // 151 days < 365
+		earlyVal := &domain.PortfolioValuation{
+			PortfolioID:   portfolio.ID,
+			ValuationDate: startDate,
+			TWRIndex:      decimal.NewFromInt(1),
+		}
+		latestVal := &domain.PortfolioValuation{
+			PortfolioID:   portfolio.ID,
+			ValuationDate: endDate,
+			TWRIndex:      decimal.RequireFromString("1.08"),
+		}
+		summaryShort := domain.CalculatePortfolioSummary(portfolio, holdings, cash, latestVal, nil, earlyVal)
+		// Under 365 days -> cumulative return = (1.08 - 1) * 100 = 8.0%
+		if summaryShort.AnnualizedReturnPercent.String() != "8" && summaryShort.AnnualizedReturnPercent.String() != "8.0" {
+			t.Errorf("got Period Return %s, want 8.0", summaryShort.AnnualizedReturnPercent)
+		}
+	})
 }
 
 func TestCalculatePortfolioHistory(t *testing.T) {

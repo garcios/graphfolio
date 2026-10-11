@@ -178,6 +178,29 @@ func (r *PostgresRepository) GetLatestValuation(ctx context.Context, portfolioID
 	return &v, nil
 }
 
+func (r *PostgresRepository) GetEarliestValuation(ctx context.Context, portfolioID uuid.UUID) (*domain.PortfolioValuation, error) {
+	row := r.pool.QueryRow(ctx, getEarliestValuationSQL, portfolioID)
+
+	var v domain.PortfolioValuation
+	err := row.Scan(
+		&v.PortfolioID,
+		&v.ValuationDate,
+		&v.MarketValueBase,
+		&v.CashValueBase,
+		&v.NetFlowBase,
+		&v.DailyReturn,
+		&v.TWRIndex,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil // non-fatal: portfolio may not have valuation history yet
+		}
+		return nil, fmt.Errorf("repository: query earliest valuation failed: %w", err)
+	}
+
+	return &v, nil
+}
+
 func (r *PostgresRepository) GetPortfolioValuations(ctx context.Context, portfolioID uuid.UUID, fromDate time.Time) ([]domain.PortfolioValuation, error) {
 	queryDate := fromDate
 	if queryDate.IsZero() {

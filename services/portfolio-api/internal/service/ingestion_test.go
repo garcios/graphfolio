@@ -212,9 +212,11 @@ func TestPortfolioService_AddTransaction_TriggersIngestionHook(t *testing.T) {
 	}, nil)
 	mockRepo.EXPECT().GetCashBalances(gomock.Any(), portfolioID).Return(nil, nil)
 	mockRepo.EXPECT().GetCashFXRates(gomock.Any(), "USD").Return(map[string]decimal.Decimal{"USD": decimal.NewFromInt(1)}, nil)
-	mockRepo.EXPECT().GetLatestValuation(gomock.Any(), portfolioID).Return(&domain.PortfolioValuation{
+	mockVal := &domain.PortfolioValuation{
 		MarketValueBase: qty.Mul(price),
-	}, nil)
+	}
+	mockRepo.EXPECT().GetLatestValuation(gomock.Any(), portfolioID).Return(mockVal, nil)
+	mockRepo.EXPECT().GetEarliestValuation(gomock.Any(), portfolioID).Return(mockVal, nil)
 
 	ingestionSvc := service.NewIngestionService(mockRepo, priceMock, nil, nil)
 	svc := service.NewPortfolioService(mockRepo, service.WithIngestionService(ingestionSvc))

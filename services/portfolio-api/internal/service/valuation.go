@@ -161,7 +161,16 @@ func (s *valuationService) SnapshotValuation(ctx context.Context, portfolioID uu
 					fx = rates[asOfStr]
 				}
 			}
-			holdingVal := domain.CalculateHoldingMarketValue(h.Quantity, price, fx)
+			var holdingVal decimal.Decimal
+			if price.IsPositive() {
+				holdingVal = domain.CalculateHoldingMarketValue(h.Quantity, price, fx)
+			} else if h.CostBasisBase.IsPositive() {
+				// Level 2/3 Fair Value Fallback (US GAAP ASC 820):
+				// When Level 1 market quotes are missing, fall back to cost basis in base currency.
+				holdingVal = h.CostBasisBase
+			} else if h.CostBasis.IsPositive() {
+				holdingVal = domain.CalculateHoldingMarketValue(h.Quantity, h.CostBasis.Div(h.Quantity), fx)
+			}
 			marketValBase = marketValBase.Add(holdingVal)
 		}
 	}
@@ -381,7 +390,16 @@ func (s *valuationService) BackfillPortfolioValuations(ctx context.Context, port
 						fx = rates[dateStr]
 					}
 				}
-				holdingVal := domain.CalculateHoldingMarketValue(h.Quantity, price, fx)
+				var holdingVal decimal.Decimal
+				if price.IsPositive() {
+					holdingVal = domain.CalculateHoldingMarketValue(h.Quantity, price, fx)
+				} else if h.CostBasisBase.IsPositive() {
+					// Level 2/3 Fair Value Fallback (US GAAP ASC 820):
+					// When Level 1 market quotes are missing, fall back to cost basis in base currency.
+					holdingVal = h.CostBasisBase
+				} else if h.CostBasis.IsPositive() {
+					holdingVal = domain.CalculateHoldingMarketValue(h.Quantity, h.CostBasis.Div(h.Quantity), fx)
+				}
 				marketValBase = marketValBase.Add(holdingVal)
 			}
 		}

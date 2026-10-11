@@ -21,6 +21,7 @@ type Repository interface {
 	GetHoldingsWithMarketData(ctx context.Context, portfolioID uuid.UUID) ([]domain.HoldingWithPrice, error)
 	GetCashBalances(ctx context.Context, portfolioID uuid.UUID) ([]domain.CashBalance, error)
 	GetLatestValuation(ctx context.Context, portfolioID uuid.UUID) (*domain.PortfolioValuation, error)
+	GetEarliestValuation(ctx context.Context, portfolioID uuid.UUID) (*domain.PortfolioValuation, error)
 	GetPortfolioValuations(ctx context.Context, portfolioID uuid.UUID, fromDate time.Time) ([]domain.PortfolioValuation, error)
 	GetCashFXRates(ctx context.Context, baseCurrency string) (map[string]decimal.Decimal, error)
 

@@ -86,6 +86,7 @@ func TestPortfolioService_GetPortfolioSummary(t *testing.T) {
 		mockRepo.EXPECT().GetHoldingsWithMarketData(ctx, portfolioID).Return(mockHoldings, nil)
 		mockRepo.EXPECT().GetCashBalances(ctx, portfolioID).Return(mockCash, nil)
 		mockRepo.EXPECT().GetLatestValuation(ctx, portfolioID).Return(mockValuation, nil)
+		mockRepo.EXPECT().GetEarliestValuation(ctx, portfolioID).Return(mockValuation, nil)
 		mockRepo.EXPECT().GetCashFXRates(ctx, "USD").Return(mockFXRates, nil)
 
 		summary, err := svc.GetPortfolioSummary(ctx, userID)
@@ -227,6 +228,7 @@ func TestPortfolioService_GetPortfolioSummary(t *testing.T) {
 		mockRepo.EXPECT().GetHoldingsWithMarketData(ctx, portfolioID).Return(mockHoldings, nil)
 		mockRepo.EXPECT().GetCashBalances(ctx, portfolioID).Return(mockCash, nil)
 		mockRepo.EXPECT().GetLatestValuation(ctx, portfolioID).Return(mockValuation, nil)
+		mockRepo.EXPECT().GetEarliestValuation(ctx, portfolioID).Return(mockValuation, nil)
 		mockRepo.EXPECT().GetCashFXRates(ctx, "USD").Return(nil, errors.New("fx service unavailable"))
 
 		summary, err := svc.GetPortfolioSummary(ctx, userID)

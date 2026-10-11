@@ -115,13 +115,15 @@ func TestPortfolioService_AddTransaction(t *testing.T) {
 		mockRepo.EXPECT().GetCashBalances(ctx, portfolioID).Return([]domain.CashBalance{
 			{PortfolioID: portfolioID, CurrencyCode: "USD", Balance: decimal.RequireFromString("8495.00")},
 		}, nil)
-		mockRepo.EXPECT().GetLatestValuation(ctx, portfolioID).Return(&domain.PortfolioValuation{
+		mockVal := &domain.PortfolioValuation{
 			PortfolioID:     portfolioID,
 			ValuationDate:   time.Now().UTC(),
 			MarketValueBase: decimal.RequireFromString("1600.00"),
 			CashValueBase:   decimal.RequireFromString("8495.00"),
 			TWRIndex:        decimal.NewFromInt(1),
-		}, nil)
+		}
+		mockRepo.EXPECT().GetLatestValuation(ctx, portfolioID).Return(mockVal, nil)
+		mockRepo.EXPECT().GetEarliestValuation(ctx, portfolioID).Return(mockVal, nil)
 		mockRepo.EXPECT().GetCashFXRates(ctx, "USD").Return(map[string]decimal.Decimal{"USD": decimal.NewFromInt(1)}, nil)
 
 		tx, summary, err := svc.AddTransaction(ctx, input)
