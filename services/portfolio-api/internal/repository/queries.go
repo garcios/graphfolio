@@ -322,6 +322,51 @@ SELECT DISTINCT portfolio_id
 FROM portfolio.holdings
 WHERE instrument_id = $1 AND quantity > 0;`
 
+	countMissingPriceTransactionsSQL = `
+SELECT 
+    COUNT(*)::int AS total_count,
+    COUNT(DISTINCT t.instrument_id)::int AS unique_instruments_count,
+    MIN(t.trade_date) AS earliest_trade_date,
+    MAX(t.trade_date) AS latest_trade_date
+FROM portfolio.transactions t
+JOIN portfolio.instruments i ON t.instrument_id = i.id
+LEFT JOIN portfolio.instrument_prices p 
+    ON t.instrument_id = p.instrument_id 
+    AND t.trade_date = p.price_date
+WHERE t.instrument_id IS NOT NULL
+  AND t.type <> 'DIVIDEND'
+  AND p.close IS NULL
+  AND ($1::text IS NULL OR UPPER(i.symbol) = UPPER($1))
+  AND ($2::date IS NULL OR t.trade_date >= $2)
+  AND ($3::date IS NULL OR t.trade_date <= $3);`
+
+	listMissingPriceTransactionsSQL = `
+SELECT 
+    t.id AS transaction_id,
+    t.portfolio_id,
+    t.instrument_id,
+    i.symbol,
+    i.name AS asset_name,
+    COALESCE(i.exchange_code, '') AS exchange_mic,
+    t.trade_date,
+    t.type,
+    COALESCE(t.quantity, 0) AS quantity,
+    COALESCE(t.price, 0) AS price,
+    t.currency_code
+FROM portfolio.transactions t
+JOIN portfolio.instruments i ON t.instrument_id = i.id
+LEFT JOIN portfolio.instrument_prices p 
+    ON t.instrument_id = p.instrument_id 
+    AND t.trade_date = p.price_date
+WHERE t.instrument_id IS NOT NULL
+  AND t.type <> 'DIVIDEND'
+  AND p.close IS NULL
+  AND ($1::text IS NULL OR UPPER(i.symbol) = UPPER($1))
+  AND ($2::date IS NULL OR t.trade_date >= $2)
+  AND ($3::date IS NULL OR t.trade_date <= $3)
+ORDER BY t.trade_date DESC, i.symbol ASC
+LIMIT $4 OFFSET $5;`
+
 	countActiveInstrumentsSQL = `
 SELECT COUNT(*) FROM portfolio.instruments WHERE is_active = true;`
 

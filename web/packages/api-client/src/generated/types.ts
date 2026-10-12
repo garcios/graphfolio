@@ -257,6 +257,26 @@ export default {
                     ]
                 }
             ],
+            "missingPriceTransactions": [
+                56,
+                {
+                    "symbol": [
+                        2
+                    ],
+                    "fromDate": [
+                        2
+                    ],
+                    "toDate": [
+                        2
+                    ],
+                    "limit": [
+                        11
+                    ],
+                    "offset": [
+                        11
+                    ]
+                }
+            ],
             "__typename": [
                 2
             ]
@@ -1223,6 +1243,64 @@ export default {
                 2
             ],
             "toDate": [
+                2
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "MissingPriceTransactionItem": {
+            "transactionId": [
+                7
+            ],
+            "portfolioId": [
+                7
+            ],
+            "instrumentId": [
+                7
+            ],
+            "symbol": [
+                2
+            ],
+            "assetName": [
+                2
+            ],
+            "exchangeMic": [
+                2
+            ],
+            "tradeDate": [
+                2
+            ],
+            "type": [
+                3
+            ],
+            "quantity": [
+                0
+            ],
+            "executionPrice": [
+                1
+            ],
+            "currencyCode": [
+                2
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "MissingPriceReport": {
+            "items": [
+                55
+            ],
+            "totalCount": [
+                11
+            ],
+            "uniqueInstrumentsCount": [
+                11
+            ],
+            "earliestTradeDate": [
+                2
+            ],
+            "latestTradeDate": [
                 2
             ],
             "__typename": [

@@ -985,6 +985,90 @@ func (r *PostgresRepository) FindPortfoliosHoldingInstrument(ctx context.Context
 	return pIDs, rows.Err()
 }
 
+func (r *PostgresRepository) ListMissingPriceTransactions(ctx context.Context, filter domain.MissingPriceFilter) (*domain.MissingPriceReport, error) {
+	limit := filter.Limit
+	if limit <= 0 {
+		limit = 50
+	}
+	offset := filter.Offset
+	if offset < 0 {
+		offset = 0
+	}
+
+	// 1. Query summary counts & date bounds
+	var totalCount int
+	var uniqueInstruments int
+	var earliestDate *time.Time
+	var latestDate *time.Time
+
+	row := r.pool.QueryRow(ctx, countMissingPriceTransactionsSQL,
+		filter.Symbol,
+		filter.FromDate,
+		filter.ToDate,
+	)
+	if err := row.Scan(&totalCount, &uniqueInstruments, &earliestDate, &latestDate); err != nil {
+		return nil, fmt.Errorf("repository: count missing price transactions failed: %w", err)
+	}
+
+	report := &domain.MissingPriceReport{
+		Items:                  []domain.MissingPriceItem{},
+		TotalCount:             totalCount,
+		UniqueInstrumentsCount: uniqueInstruments,
+		EarliestTradeDate:      earliestDate,
+		LatestTradeDate:        latestDate,
+	}
+
+	if totalCount == 0 {
+		return report, nil
+	}
+
+	// 2. Query paginated item rows
+	rows, err := r.pool.Query(ctx, listMissingPriceTransactionsSQL,
+		filter.Symbol,
+		filter.FromDate,
+		filter.ToDate,
+		limit,
+		offset,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("repository: list missing price transactions failed: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var item domain.MissingPriceItem
+		var rawType string
+		var rawPrice decimal.Decimal
+
+		err := rows.Scan(
+			&item.TransactionID,
+			&item.PortfolioID,
+			&item.InstrumentID,
+			&item.Symbol,
+			&item.AssetName,
+			&item.ExchangeMIC,
+			&item.TradeDate,
+			&rawType,
+			&item.Quantity,
+			&rawPrice,
+			&item.CurrencyCode,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("repository: scan missing price transaction failed: %w", err)
+		}
+
+		item.Type = domain.TransactionType(rawType)
+		item.ExecutionPrice = domain.NewMoney(rawPrice, item.CurrencyCode)
+		report.Items = append(report.Items, item)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("repository: rows iteration failed: %w", err)
+	}
+
+	return report, nil
+}
+
 func (r *PostgresRepository) GetIngestionMetrics(ctx context.Context) (*domain.IngestionStatus, error) {
 	var trackedInsts int
 	if err := r.pool.QueryRow(ctx, countActiveInstrumentsSQL).Scan(&trackedInsts); err != nil {

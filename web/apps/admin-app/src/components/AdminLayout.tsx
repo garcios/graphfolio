@@ -2,17 +2,19 @@ import React from 'react';
 import { Badge } from '@graphfolio/ui';
 import './AdminLayout.css';
 
-export type AdminTab = 'assets' | 'prices' | 'fx' | 'ingestion';
+export type AdminTab = 'assets' | 'prices' | 'missing-prices' | 'fx' | 'ingestion';
 
 interface AdminLayoutProps {
   currentTab: AdminTab;
   onTabChange: (tab: AdminTab) => void;
+  missingPriceCount?: number;
   children: React.ReactNode;
 }
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({
   currentTab,
   onTabChange,
+  missingPriceCount,
   children,
 }) => {
   return (
@@ -42,6 +44,18 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           >
             <span>📈</span>
             <span>Market Prices</span>
+          </button>
+
+          <button
+            type="button"
+            className={`admin-nav-item ${currentTab === 'missing-prices' ? 'admin-nav-item--active' : ''}`}
+            onClick={() => onTabChange('missing-prices')}
+          >
+            <span>⚠️</span>
+            <span>Missing Prices</span>
+            {typeof missingPriceCount === 'number' && missingPriceCount > 0 && (
+              <Badge variant="warning">{missingPriceCount}</Badge>
+            )}
           </button>
 
           <button
@@ -80,6 +94,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           <h2 className="admin-topbar__title">
             {currentTab === 'assets' && 'Tradable Asset & Instrument Directory'}
             {currentTab === 'prices' && 'Market Data, Closing Prices & Overrides'}
+            {currentTab === 'missing-prices' && 'Diagnostic Report: Unpriced Transactions on Trade Date'}
             {currentTab === 'fx' && 'Foreign Exchange (FX) & Currency Pair History'}
             {currentTab === 'ingestion' && 'Market Ingestion Pipeline & FX Monitor'}
           </h2>

@@ -106,6 +106,15 @@ type Query {
 
   # Portfolio Cash Flow Report Query
   cashFlowReport(filter: CashFlowFilterInput!): CashFlowReport!
+
+  # Admin: Missing Prices Diagnostic Report
+  missingPriceTransactions(
+    symbol: String
+    fromDate: String
+    toDate: String
+    limit: Int = 50
+    offset: Int = 0
+  ): MissingPriceReport!
 }
 
 enum HistoryTimeframe {
@@ -502,6 +511,32 @@ type CashFlowReport {
   baseCurrency: String!
   fromDate: String!
   toDate: String!
+}
+
+# ------------------------------------------------------------------
+# Admin: Missing Prices Diagnostic Report Types
+# ------------------------------------------------------------------
+
+type MissingPriceTransactionItem {
+  transactionId: ID!
+  portfolioId: ID!
+  instrumentId: ID!
+  symbol: String!
+  assetName: String!
+  exchangeMic: String!
+  tradeDate: String!
+  type: TransactionType!
+  quantity: Decimal!
+  executionPrice: Money!
+  currencyCode: String!
+}
+
+type MissingPriceReport {
+  items: [MissingPriceTransactionItem!]!
+  totalCount: Int!
+  uniqueInstrumentsCount: Int!
+  earliestTradeDate: String
+  latestTradeDate: String
 }
 
 

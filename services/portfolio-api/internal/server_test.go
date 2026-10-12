@@ -2440,3 +2440,118 @@ func TestPortfolioServer_BatchImportTransactions(t *testing.T) {
 		}
 	})
 }
+
+func TestPortfolioServer_ListMissingPriceTransactions(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success returns proto response", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		fromDate := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+		toDate := time.Date(2024, 10, 1, 0, 0, 0, 0, time.UTC)
+		sym := "NVDA"
+		fromDateStr := "2024-01-01"
+		toDateStr := "2024-10-01"
+
+		expectedReport := &domain.MissingPriceReport{
+			Items: []domain.MissingPriceItem{
+				{
+					TransactionID:  uuid.MustParse("018f0000-0000-7000-8000-000000000001"),
+					PortfolioID:    uuid.MustParse("018f0000-0000-7000-8000-000000000002"),
+					InstrumentID:   uuid.MustParse("018f0000-0000-7000-8000-000000000003"),
+					Symbol:         "NVDA",
+					AssetName:      "Nvidia Corp",
+					ExchangeMIC:    "XNAS",
+					TradeDate:      time.Date(2024, 3, 15, 0, 0, 0, 0, time.UTC),
+					Type:           domain.TxTypeBuy,
+					Quantity:       decimal.NewFromInt(10),
+					ExecutionPrice: domain.NewMoney(decimal.NewFromInt(880), "USD"),
+					CurrencyCode:   "USD",
+				},
+			},
+			TotalCount:             1,
+			UniqueInstrumentsCount: 1,
+			EarliestTradeDate:      &fromDate,
+			LatestTradeDate:        &toDate,
+		}
+
+		mockSvc.EXPECT().
+			ListMissingPriceTransactions(ctx, domain.MissingPriceFilter{
+				Symbol:   &sym,
+				FromDate: &fromDate,
+				ToDate:   &toDate,
+				Limit:    50,
+				Offset:   0,
+			}).
+			Return(expectedReport, nil)
+
+		resp, err := server.ListMissingPriceTransactions(ctx, &pb.ListMissingPriceTransactionsRequest{
+			Symbol:   &sym,
+			FromDate: &fromDateStr,
+			ToDate:   &toDateStr,
+			Limit:    50,
+			Offset:   0,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if resp.TotalCount != 1 {
+			t.Errorf("expected TotalCount 1, got %d", resp.TotalCount)
+		}
+		if resp.UniqueInstrumentsCount != 1 {
+			t.Errorf("expected UniqueInstrumentsCount 1, got %d", resp.UniqueInstrumentsCount)
+		}
+		if len(resp.Items) != 1 {
+			t.Fatalf("expected 1 item, got %d", len(resp.Items))
+		}
+		item := resp.Items[0]
+		if item.Symbol != "NVDA" {
+			t.Errorf("expected symbol NVDA, got %s", item.Symbol)
+		}
+		if item.Type != pb.TransactionType_TRANSACTION_TYPE_BUY {
+			t.Errorf("expected BUY, got %v", item.Type)
+		}
+		if resp.GetEarliestTradeDate() != "2024-01-01" {
+			t.Errorf("expected earliest 2024-01-01, got %s", resp.GetEarliestTradeDate())
+		}
+		if resp.GetLatestTradeDate() != "2024-10-01" {
+			t.Errorf("expected latest 2024-10-01, got %s", resp.GetLatestTradeDate())
+		}
+	})
+
+	t.Run("invalid from_date returns InvalidArgument", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		badDate := "not-a-date"
+		_, err := server.ListMissingPriceTransactions(ctx, &pb.ListMissingPriceTransactionsRequest{
+			FromDate: &badDate,
+		})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", err)
+		}
+	})
+
+	t.Run("nil service returns Unavailable", func(t *testing.T) {
+		server := NewPortfolioServer(nil)
+		_, err := server.ListMissingPriceTransactions(ctx, &pb.ListMissingPriceTransactionsRequest{})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.Unavailable {
+			t.Errorf("expected Unavailable, got %v", err)
+		}
+	})
+}

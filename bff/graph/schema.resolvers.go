@@ -621,6 +621,27 @@ func (r *queryResolver) CashFlowReport(ctx context.Context, filter model.CashFlo
 	return toModelCashFlowReport(resp), nil
 }
 
+// MissingPriceTransactions is the resolver for the missingPriceTransactions field.
+func (r *queryResolver) MissingPriceTransactions(ctx context.Context, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) (*model.MissingPriceReport, error) {
+	req := &pb.ListMissingPriceTransactionsRequest{
+		Symbol:   symbol,
+		FromDate: fromDate,
+		ToDate:   toDate,
+	}
+	if limit != nil {
+		req.Limit = int32(*limit)
+	}
+	if offset != nil {
+		req.Offset = int32(*offset)
+	}
+
+	resp, err := r.PortfolioClient.ListMissingPriceTransactions(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return toModelMissingPriceReport(resp), nil
+}
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 

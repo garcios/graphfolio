@@ -51,6 +51,9 @@ type PortfolioService interface {
 
 	// Admin: Historical Market Data Backfill
 	TriggerBackfill(ctx context.Context, input domain.BackfillInput) (*domain.BackfillResult, error)
+
+	// Admin: Missing Prices Diagnostic Report
+	ListMissingPriceTransactions(ctx context.Context, filter domain.MissingPriceFilter) (*domain.MissingPriceReport, error)
 }
 
 type ServiceOption func(*portfolioService)

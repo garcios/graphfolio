@@ -36,6 +36,7 @@ This document catalogs all implemented features, in-progress components, and pla
 | **26** | **Average Buy Price Holdings Column** | **DONE** | Proto, Svc, BFF, Web | [average-buy-price-column-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/average-buy-price-column-implementation-plan.md) |
 | **27** | **Portfolio Cash Flow Report Generation** | **DONE** | Proto, Svc, BFF, Web | [portfolio-cash-flow-report-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/portfolio-cash-flow-report-implementation-plan.md) |
 | **28** | **GIPS CAGR Annualized Return & Valuation Cost-Basis Resiliency** | **DONE** | Database, Svc, Domain, Worker | [annualized-return-twr-fix-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/annualized-return-twr-fix-implementation-plan.md) |
+| **29** | **Missing Prices Report & Date Range Backfill (Admin Portal)** | **DONE** | Proto, Svc, BFF, Web | [admin-missing-prices-report-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-missing-prices-report-implementation-plan.md) |
 
 ---
 
@@ -373,7 +374,24 @@ This document catalogs all implemented features, in-progress components, and pla
   - [calculator_test.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/domain/calculator_test.go)
   - [service.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/service.go)
   - [repository.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/repository/repository.go)
+### 2.29 Missing Prices Report & Date Range Backfill (Admin Portal)
+- **Status**: **DONE**
+- **Plan Reference**: [admin-missing-prices-report-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-missing-prices-report-implementation-plan.md)
+- **User Story**: [admin-missing-prices-report.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/admin-missing-prices-report.md)
+- **Description**: Comprehensive diagnostic report in the internal Admin Portal detecting historical pricing anomalies where transactions (`BUY`, `SELL`, `DIVIDEND`, `SPLIT`) lack matching EOD closing marks in `portfolio.instrument_prices` on their execution `trade_date`. Features top-level KPI cards (Unpriced Trades, Affected Assets, Earliest Missing Date, Date Span Coverage), dual-input date range filtering with fast presets (`30D`, `90D`, `YTD`, `1Y`, `ALL`), symbol and transaction type filters, and direct one-click remediation actions. Operators can launch `BackfillModal` pre-populated with affected symbols and date bounds to trigger targeted provider syncs and valuation recomputations, or use `AddAssetPriceModal` for manual price marks.
+- **Key Files**:
+  - [portfolio.proto](file:///Users/oscargarcia/workspace/graphfolio/proto/portfolio/v1/portfolio.proto)
+  - [missing_price.go (domain)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/domain/missing_price.go)
+  - [queries.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/repository/queries.go)
   - [postgres.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/repository/postgres.go)
+  - [admin.go (service)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/admin.go)
+  - [server.go (gRPC)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server.go)
+  - [schema.graphqls](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls)
+  - [schema.resolvers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers.go)
+  - [MissingPricesReport.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/MissingPricesReport.tsx)
+  - [MissingPricesReport.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/MissingPricesReport.css)
+  - [AdminLayout.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/AdminLayout.tsx)
+  - [App.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/App.tsx)
 
 ---
 
@@ -410,7 +428,7 @@ This document catalogs all implemented features, in-progress components, and pla
   - Exact UTC timestamps for execution start, finish, and computed elapsed duration (e.g. `4.2s`, `1m 24s`, or `"Running (15s)..."`).
   - Multi-state visual badges: `SUCCESS` (green), `FAILED` (red), `PARTIAL_SUCCESS` (amber), and `IN_PROGRESS` (pulsing blue).
   - Granular record split metrics displaying successful vs failed rows (`420 ok / 12 fail`).
-  - Server-side sorting by start date (newest first by default) with single-pass `COUNT(*) OVER()` pagination.
+  - Single-pass `COUNT(*) OVER()` pagination with server-side sorting by start date.
   - Interactive drawer/modal to inspect error diagnostics, stack traces, and execution parameters for failed imports.
 
 ---

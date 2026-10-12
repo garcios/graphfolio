@@ -408,3 +408,31 @@ func parseCurrencyPair(raw string) (string, string, error) {
 	}
 	return "", "", fmt.Errorf("invalid currency pair format %q (expected 'BASE/QUOTE')", raw)
 }
+
+func (s *portfolioService) ListMissingPriceTransactions(ctx context.Context, filter domain.MissingPriceFilter) (*domain.MissingPriceReport, error) {
+	if filter.FromDate != nil && filter.ToDate != nil && filter.FromDate.After(*filter.ToDate) {
+		return nil, ErrInvalidDateRange
+	}
+	if filter.Limit <= 0 {
+		filter.Limit = 50
+	} else if filter.Limit > 200 {
+		filter.Limit = 200
+	}
+	if filter.Offset < 0 {
+		filter.Offset = 0
+	}
+	if filter.Symbol != nil {
+		sym := strings.ToUpper(strings.TrimSpace(*filter.Symbol))
+		if sym == "" || sym == "ALL" {
+			filter.Symbol = nil
+		} else {
+			filter.Symbol = &sym
+		}
+	}
+
+	report, err := s.repo.ListMissingPriceTransactions(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("service: list missing price transactions: %w", err)
+	}
+	return report, nil
+}

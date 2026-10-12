@@ -1,0 +1,150 @@
+.missing-prices-report {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.missing-prices-report__stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.missing-price-stat-card {
+  padding: 1.15rem 1.25rem;
+  background: var(--card-bg, rgba(20, 24, 33, 0.7));
+  border: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+  border-radius: var(--radius-md, 10px);
+  backdrop-filter: blur(12px);
+}
+
+.missing-price-stat-card .stat-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #a1a1aa);
+  margin-bottom: 0.35rem;
+}
+
+.missing-price-stat-card .stat-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.missing-price-stat-card .stat-value--alert {
+  color: #f59e0b;
+}
+
+.missing-prices-report__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.missing-prices-report__filters {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.missing-prices-report__symbol-filter {
+  width: 160px;
+}
+
+.missing-prices-report__type-filter {
+  width: 150px;
+}
+
+.missing-prices-report__date-input-group {
+  min-width: 145px;
+}
+
+.missing-prices-report__date-input {
+  width: 150px;
+}
+
+.missing-prices-report__presets {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.missing-prices-report__date-error {
+  font-size: 0.8rem;
+  color: var(--danger, #ef4444);
+  font-weight: 500;
+}
+
+.missing-prices-report__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.missing-prices-report__actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.missing-prices-report__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3.5rem 2rem;
+  text-align: center;
+  gap: 1rem;
+}
+
+.missing-prices-report__empty-icon {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.missing-prices-report__empty-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.missing-prices-report__empty-text {
+  font-size: 0.9rem;
+  color: var(--text-secondary, #a1a1aa);
+  max-width: 520px;
+  line-height: 1.5;
+}
+
+.missing-prices-report__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1rem;
+  border-top: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.missing-prices-report__pagination-info {
+  font-size: 0.85rem;
+  color: var(--text-muted, #71717a);
+}
+
+.missing-prices-report__pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.missing-prices-report__page-indicator {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #a1a1aa);
+  font-variant-numeric: tabular-nums;
+}

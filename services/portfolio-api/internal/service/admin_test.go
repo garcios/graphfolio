@@ -1043,3 +1043,114 @@ func TestPortfolioService_TriggerBackfill_RecomputeValuations(t *testing.T) {
 		t.Errorf("expected 0 warnings, got %d", len(res.Warnings))
 	}
 }
+
+func TestPortfolioService_ListMissingPriceTransactions(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success returns report with items and bounds", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		fromDate := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+		toDate := time.Date(2024, 10, 1, 0, 0, 0, 0, time.UTC)
+		sym := "NVDA"
+
+		expectedReport := &domain.MissingPriceReport{
+			Items: []domain.MissingPriceItem{
+				{
+					TransactionID:  uuid.New(),
+					PortfolioID:    uuid.New(),
+					InstrumentID:   uuid.New(),
+					Symbol:         "NVDA",
+					AssetName:      "Nvidia Corp",
+					ExchangeMIC:    "XNAS",
+					TradeDate:      time.Date(2024, 3, 15, 0, 0, 0, 0, time.UTC),
+					Type:           domain.TxTypeBuy,
+					Quantity:       decimal.NewFromInt(10),
+					ExecutionPrice: domain.NewMoney(decimal.NewFromInt(880), "USD"),
+					CurrencyCode:   "USD",
+				},
+			},
+			TotalCount:             1,
+			UniqueInstrumentsCount: 1,
+			EarliestTradeDate:      &fromDate,
+			LatestTradeDate:        &toDate,
+		}
+
+		mockRepo.EXPECT().
+			ListMissingPriceTransactions(ctx, domain.MissingPriceFilter{
+				Symbol:   &sym,
+				FromDate: &fromDate,
+				ToDate:   &toDate,
+				Limit:    50,
+				Offset:   0,
+			}).
+			Return(expectedReport, nil)
+
+		res, err := svc.ListMissingPriceTransactions(ctx, domain.MissingPriceFilter{
+			Symbol:   &sym,
+			FromDate: &fromDate,
+			ToDate:   &toDate,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if res.TotalCount != 1 {
+			t.Errorf("expected total count 1, got %d", res.TotalCount)
+		}
+		if len(res.Items) != 1 {
+			t.Fatalf("expected 1 item, got %d", len(res.Items))
+		}
+		if res.Items[0].Symbol != "NVDA" {
+			t.Errorf("expected NVDA, got %s", res.Items[0].Symbol)
+		}
+	})
+
+	t.Run("normalizes ALL symbol and clamps limits", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		sym := "ALL"
+		mockRepo.EXPECT().
+			ListMissingPriceTransactions(ctx, domain.MissingPriceFilter{
+				Symbol: nil,
+				Limit:  200,
+				Offset: 0,
+			}).
+			Return(&domain.MissingPriceReport{Items: []domain.MissingPriceItem{}}, nil)
+
+		_, err := svc.ListMissingPriceTransactions(ctx, domain.MissingPriceFilter{
+			Symbol: &sym,
+			Limit:  500, // should clamp to 200
+			Offset: -5,  // should clamp to 0
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+	})
+
+	t.Run("invalid date range returns error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		fromDate := time.Date(2024, 10, 1, 0, 0, 0, 0, time.UTC)
+		toDate := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+
+		_, err := svc.ListMissingPriceTransactions(ctx, domain.MissingPriceFilter{
+			FromDate: &fromDate,
+			ToDate:   &toDate,
+		})
+		if !errors.Is(err, service.ErrInvalidDateRange) {
+			t.Errorf("expected ErrInvalidDateRange, got %v", err)
+		}
+	})
+}
