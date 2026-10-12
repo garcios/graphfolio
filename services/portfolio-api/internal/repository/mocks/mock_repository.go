@@ -582,6 +582,21 @@ func (mr *MockRepositoryMockRecorder) ListInstrumentPrices(ctx, filter any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListInstrumentPrices", reflect.TypeOf((*MockRepository)(nil).ListInstrumentPrices), ctx, filter)
 }
 
+// ListMissingPriceTransactions mocks base method.
+func (m *MockRepository) ListMissingPriceTransactions(ctx context.Context, filter domain.MissingPriceFilter) (*domain.MissingPriceReport, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListMissingPriceTransactions", ctx, filter)
+	ret0, _ := ret[0].(*domain.MissingPriceReport)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListMissingPriceTransactions indicates an expected call of ListMissingPriceTransactions.
+func (mr *MockRepositoryMockRecorder) ListMissingPriceTransactions(ctx, filter any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMissingPriceTransactions", reflect.TypeOf((*MockRepository)(nil).ListMissingPriceTransactions), ctx, filter)
+}
+
 // ListTransactions mocks base method.
 func (m *MockRepository) ListTransactions(ctx context.Context, portfolioID uuid.UUID, filter domain.TransactionFilter) ([]domain.TransactionWithInstrument, int, error) {
 	m.ctrl.T.Helper()

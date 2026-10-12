@@ -63,6 +63,7 @@ export interface Query {
     fxRates: FXRatesConnection
     checkTransactionDuplicates: Scalars['String'][]
     cashFlowReport: CashFlowReport
+    missingPriceTransactions: MissingPriceReport
     __typename: 'Query'
 }
 
@@ -378,6 +379,30 @@ export interface CashFlowReport {
     __typename: 'CashFlowReport'
 }
 
+export interface MissingPriceTransactionItem {
+    transactionId: Scalars['ID']
+    portfolioId: Scalars['ID']
+    instrumentId: Scalars['ID']
+    symbol: Scalars['String']
+    assetName: Scalars['String']
+    exchangeMic: Scalars['String']
+    tradeDate: Scalars['String']
+    type: TransactionType
+    quantity: Scalars['Decimal']
+    executionPrice: Money
+    currencyCode: Scalars['String']
+    __typename: 'MissingPriceTransactionItem'
+}
+
+export interface MissingPriceReport {
+    items: MissingPriceTransactionItem[]
+    totalCount: Scalars['Int']
+    uniqueInstrumentsCount: Scalars['Int']
+    earliestTradeDate: (Scalars['String'] | null)
+    latestTradeDate: (Scalars['String'] | null)
+    __typename: 'MissingPriceReport'
+}
+
 export interface MoneyGenqlSelection{
     amount?: boolean | number
     currencyCode?: boolean | number
@@ -434,6 +459,7 @@ export interface QueryGenqlSelection{
     fxRates?: (FXRatesConnectionGenqlSelection & { __args?: {baseCurrency?: (Scalars['String'] | null), quoteCurrency?: (Scalars['String'] | null), fromDate?: (Scalars['String'] | null), toDate?: (Scalars['String'] | null), limit?: (Scalars['Int'] | null), offset?: (Scalars['Int'] | null)} })
     checkTransactionDuplicates?: { __args: {externalRefs: Scalars['String'][]} }
     cashFlowReport?: (CashFlowReportGenqlSelection & { __args: {filter: CashFlowFilterInput} })
+    missingPriceTransactions?: (MissingPriceReportGenqlSelection & { __args?: {symbol?: (Scalars['String'] | null), fromDate?: (Scalars['String'] | null), toDate?: (Scalars['String'] | null), limit?: (Scalars['Int'] | null), offset?: (Scalars['Int'] | null)} })
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -790,6 +816,32 @@ export interface CashFlowReportGenqlSelection{
     __scalar?: boolean | number
 }
 
+export interface MissingPriceTransactionItemGenqlSelection{
+    transactionId?: boolean | number
+    portfolioId?: boolean | number
+    instrumentId?: boolean | number
+    symbol?: boolean | number
+    assetName?: boolean | number
+    exchangeMic?: boolean | number
+    tradeDate?: boolean | number
+    type?: boolean | number
+    quantity?: boolean | number
+    executionPrice?: MoneyGenqlSelection
+    currencyCode?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface MissingPriceReportGenqlSelection{
+    items?: MissingPriceTransactionItemGenqlSelection
+    totalCount?: boolean | number
+    uniqueInstrumentsCount?: boolean | number
+    earliestTradeDate?: boolean | number
+    latestTradeDate?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
 
     const Money_possibleTypes: string[] = ['Money']
     export const isMoney = (obj?: { __typename?: any } | null): obj is Money => {
@@ -1067,6 +1119,22 @@ export interface CashFlowReportGenqlSelection{
     export const isCashFlowReport = (obj?: { __typename?: any } | null): obj is CashFlowReport => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isCashFlowReport"')
       return CashFlowReport_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const MissingPriceTransactionItem_possibleTypes: string[] = ['MissingPriceTransactionItem']
+    export const isMissingPriceTransactionItem = (obj?: { __typename?: any } | null): obj is MissingPriceTransactionItem => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isMissingPriceTransactionItem"')
+      return MissingPriceTransactionItem_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const MissingPriceReport_possibleTypes: string[] = ['MissingPriceReport']
+    export const isMissingPriceReport = (obj?: { __typename?: any } | null): obj is MissingPriceReport => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isMissingPriceReport"')
+      return MissingPriceReport_possibleTypes.includes(obj.__typename)
     }
     
 

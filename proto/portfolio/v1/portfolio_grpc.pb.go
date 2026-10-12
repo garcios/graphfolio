@@ -19,31 +19,32 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	PortfolioService_GetPortfolio_FullMethodName                = "/portfolio.v1.PortfolioService/GetPortfolio"
-	PortfolioService_UpdatePortfolioBaseCurrency_FullMethodName = "/portfolio.v1.PortfolioService/UpdatePortfolioBaseCurrency"
-	PortfolioService_AddTransaction_FullMethodName              = "/portfolio.v1.PortfolioService/AddTransaction"
-	PortfolioService_ListInstruments_FullMethodName             = "/portfolio.v1.PortfolioService/ListInstruments"
-	PortfolioService_GetPortfolioHistory_FullMethodName         = "/portfolio.v1.PortfolioService/GetPortfolioHistory"
-	PortfolioService_ListTransactions_FullMethodName            = "/portfolio.v1.PortfolioService/ListTransactions"
-	PortfolioService_DeleteTransaction_FullMethodName           = "/portfolio.v1.PortfolioService/DeleteTransaction"
-	PortfolioService_CheckTransactionDuplicates_FullMethodName  = "/portfolio.v1.PortfolioService/CheckTransactionDuplicates"
-	PortfolioService_BatchImportTransactions_FullMethodName     = "/portfolio.v1.PortfolioService/BatchImportTransactions"
-	PortfolioService_ListAllInstruments_FullMethodName          = "/portfolio.v1.PortfolioService/ListAllInstruments"
-	PortfolioService_CreateInstrument_FullMethodName            = "/portfolio.v1.PortfolioService/CreateInstrument"
-	PortfolioService_UpdateInstrument_FullMethodName            = "/portfolio.v1.PortfolioService/UpdateInstrument"
-	PortfolioService_DeleteInstrument_FullMethodName            = "/portfolio.v1.PortfolioService/DeleteInstrument"
-	PortfolioService_ListExchanges_FullMethodName               = "/portfolio.v1.PortfolioService/ListExchanges"
-	PortfolioService_ListInstrumentPrices_FullMethodName        = "/portfolio.v1.PortfolioService/ListInstrumentPrices"
-	PortfolioService_RecordPriceOverride_FullMethodName         = "/portfolio.v1.PortfolioService/RecordPriceOverride"
-	PortfolioService_GetIngestionStatus_FullMethodName          = "/portfolio.v1.PortfolioService/GetIngestionStatus"
-	PortfolioService_TriggerMarketSync_FullMethodName           = "/portfolio.v1.PortfolioService/TriggerMarketSync"
-	PortfolioService_ListCurrencyPairs_FullMethodName           = "/portfolio.v1.PortfolioService/ListCurrencyPairs"
-	PortfolioService_ListFXRates_FullMethodName                 = "/portfolio.v1.PortfolioService/ListFXRates"
-	PortfolioService_GetCurrencyPairHistory_FullMethodName      = "/portfolio.v1.PortfolioService/GetCurrencyPairHistory"
-	PortfolioService_RecordFXRateOverride_FullMethodName        = "/portfolio.v1.PortfolioService/RecordFXRateOverride"
-	PortfolioService_TriggerBackfill_FullMethodName             = "/portfolio.v1.PortfolioService/TriggerBackfill"
-	PortfolioService_RebuildValuations_FullMethodName           = "/portfolio.v1.PortfolioService/RebuildValuations"
-	PortfolioService_GetCashFlowReport_FullMethodName           = "/portfolio.v1.PortfolioService/GetCashFlowReport"
+	PortfolioService_GetPortfolio_FullMethodName                 = "/portfolio.v1.PortfolioService/GetPortfolio"
+	PortfolioService_UpdatePortfolioBaseCurrency_FullMethodName  = "/portfolio.v1.PortfolioService/UpdatePortfolioBaseCurrency"
+	PortfolioService_AddTransaction_FullMethodName               = "/portfolio.v1.PortfolioService/AddTransaction"
+	PortfolioService_ListInstruments_FullMethodName              = "/portfolio.v1.PortfolioService/ListInstruments"
+	PortfolioService_GetPortfolioHistory_FullMethodName          = "/portfolio.v1.PortfolioService/GetPortfolioHistory"
+	PortfolioService_ListTransactions_FullMethodName             = "/portfolio.v1.PortfolioService/ListTransactions"
+	PortfolioService_DeleteTransaction_FullMethodName            = "/portfolio.v1.PortfolioService/DeleteTransaction"
+	PortfolioService_CheckTransactionDuplicates_FullMethodName   = "/portfolio.v1.PortfolioService/CheckTransactionDuplicates"
+	PortfolioService_BatchImportTransactions_FullMethodName      = "/portfolio.v1.PortfolioService/BatchImportTransactions"
+	PortfolioService_ListAllInstruments_FullMethodName           = "/portfolio.v1.PortfolioService/ListAllInstruments"
+	PortfolioService_CreateInstrument_FullMethodName             = "/portfolio.v1.PortfolioService/CreateInstrument"
+	PortfolioService_UpdateInstrument_FullMethodName             = "/portfolio.v1.PortfolioService/UpdateInstrument"
+	PortfolioService_DeleteInstrument_FullMethodName             = "/portfolio.v1.PortfolioService/DeleteInstrument"
+	PortfolioService_ListExchanges_FullMethodName                = "/portfolio.v1.PortfolioService/ListExchanges"
+	PortfolioService_ListInstrumentPrices_FullMethodName         = "/portfolio.v1.PortfolioService/ListInstrumentPrices"
+	PortfolioService_RecordPriceOverride_FullMethodName          = "/portfolio.v1.PortfolioService/RecordPriceOverride"
+	PortfolioService_GetIngestionStatus_FullMethodName           = "/portfolio.v1.PortfolioService/GetIngestionStatus"
+	PortfolioService_TriggerMarketSync_FullMethodName            = "/portfolio.v1.PortfolioService/TriggerMarketSync"
+	PortfolioService_ListCurrencyPairs_FullMethodName            = "/portfolio.v1.PortfolioService/ListCurrencyPairs"
+	PortfolioService_ListFXRates_FullMethodName                  = "/portfolio.v1.PortfolioService/ListFXRates"
+	PortfolioService_GetCurrencyPairHistory_FullMethodName       = "/portfolio.v1.PortfolioService/GetCurrencyPairHistory"
+	PortfolioService_RecordFXRateOverride_FullMethodName         = "/portfolio.v1.PortfolioService/RecordFXRateOverride"
+	PortfolioService_TriggerBackfill_FullMethodName              = "/portfolio.v1.PortfolioService/TriggerBackfill"
+	PortfolioService_ListMissingPriceTransactions_FullMethodName = "/portfolio.v1.PortfolioService/ListMissingPriceTransactions"
+	PortfolioService_RebuildValuations_FullMethodName            = "/portfolio.v1.PortfolioService/RebuildValuations"
+	PortfolioService_GetCashFlowReport_FullMethodName            = "/portfolio.v1.PortfolioService/GetCashFlowReport"
 )
 
 // PortfolioServiceClient is the client API for PortfolioService service.
@@ -79,6 +80,8 @@ type PortfolioServiceClient interface {
 	RecordFXRateOverride(ctx context.Context, in *RecordFXRateOverrideRequest, opts ...grpc.CallOption) (*RecordFXRateOverrideResponse, error)
 	// Admin: Historical Market Data Backfill
 	TriggerBackfill(ctx context.Context, in *TriggerBackfillRequest, opts ...grpc.CallOption) (*TriggerBackfillResponse, error)
+	// Admin: Missing Prices Diagnostic Report
+	ListMissingPriceTransactions(ctx context.Context, in *ListMissingPriceTransactionsRequest, opts ...grpc.CallOption) (*ListMissingPriceTransactionsResponse, error)
 	// Historical Valuation Engine & Replay
 	RebuildValuations(ctx context.Context, in *RebuildValuationsRequest, opts ...grpc.CallOption) (*RebuildValuationsResponse, error)
 	// Portfolio Cash Flow Report
@@ -300,6 +303,15 @@ func (c *portfolioServiceClient) TriggerBackfill(ctx context.Context, in *Trigge
 	return out, nil
 }
 
+func (c *portfolioServiceClient) ListMissingPriceTransactions(ctx context.Context, in *ListMissingPriceTransactionsRequest, opts ...grpc.CallOption) (*ListMissingPriceTransactionsResponse, error) {
+	out := new(ListMissingPriceTransactionsResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_ListMissingPriceTransactions_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *portfolioServiceClient) RebuildValuations(ctx context.Context, in *RebuildValuationsRequest, opts ...grpc.CallOption) (*RebuildValuationsResponse, error) {
 	out := new(RebuildValuationsResponse)
 	err := c.cc.Invoke(ctx, PortfolioService_RebuildValuations_FullMethodName, in, out, opts...)
@@ -351,6 +363,8 @@ type PortfolioServiceServer interface {
 	RecordFXRateOverride(context.Context, *RecordFXRateOverrideRequest) (*RecordFXRateOverrideResponse, error)
 	// Admin: Historical Market Data Backfill
 	TriggerBackfill(context.Context, *TriggerBackfillRequest) (*TriggerBackfillResponse, error)
+	// Admin: Missing Prices Diagnostic Report
+	ListMissingPriceTransactions(context.Context, *ListMissingPriceTransactionsRequest) (*ListMissingPriceTransactionsResponse, error)
 	// Historical Valuation Engine & Replay
 	RebuildValuations(context.Context, *RebuildValuationsRequest) (*RebuildValuationsResponse, error)
 	// Portfolio Cash Flow Report
@@ -430,6 +444,9 @@ func (UnimplementedPortfolioServiceServer) RecordFXRateOverride(context.Context,
 }
 func (UnimplementedPortfolioServiceServer) TriggerBackfill(context.Context, *TriggerBackfillRequest) (*TriggerBackfillResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TriggerBackfill not implemented")
+}
+func (UnimplementedPortfolioServiceServer) ListMissingPriceTransactions(context.Context, *ListMissingPriceTransactionsRequest) (*ListMissingPriceTransactionsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListMissingPriceTransactions not implemented")
 }
 func (UnimplementedPortfolioServiceServer) RebuildValuations(context.Context, *RebuildValuationsRequest) (*RebuildValuationsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RebuildValuations not implemented")
@@ -864,6 +881,24 @@ func _PortfolioService_TriggerBackfill_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortfolioService_ListMissingPriceTransactions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListMissingPriceTransactionsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).ListMissingPriceTransactions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_ListMissingPriceTransactions_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).ListMissingPriceTransactions(ctx, req.(*ListMissingPriceTransactionsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _PortfolioService_RebuildValuations_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(RebuildValuationsRequest)
 	if err := dec(in); err != nil {
@@ -998,6 +1033,10 @@ var PortfolioService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "TriggerBackfill",
 			Handler:    _PortfolioService_TriggerBackfill_Handler,
+		},
+		{
+			MethodName: "ListMissingPriceTransactions",
+			Handler:    _PortfolioService_ListMissingPriceTransactions_Handler,
 		},
 		{
 			MethodName: "RebuildValuations",

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AdminLayout, type AdminTab } from './components/AdminLayout';
 import { AssetManagement } from './components/AssetManagement';
 import { PriceManagement } from './components/PriceManagement';
+import { MissingPricesReport } from './components/MissingPricesReport';
 import { FXManagement } from './components/FXManagement';
 import { IngestionPipeline } from './components/IngestionPipeline';
 import './App.css';
@@ -9,6 +10,7 @@ import './App.css';
 export default function App() {
   const [currentTab, setCurrentTab] = useState<AdminTab>('assets');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [missingPriceCount, setMissingPriceCount] = useState<number>(0);
 
   const notify = (msg: string) => {
     setToastMessage(msg);
@@ -19,9 +21,16 @@ export default function App() {
 
   return (
     <div className="admin-app-root">
-      <AdminLayout currentTab={currentTab} onTabChange={setCurrentTab}>
+      <AdminLayout
+        currentTab={currentTab}
+        onTabChange={setCurrentTab}
+        missingPriceCount={missingPriceCount}
+      >
         {currentTab === 'assets' && <AssetManagement onNotify={notify} />}
         {currentTab === 'prices' && <PriceManagement onNotify={notify} />}
+        {currentTab === 'missing-prices' && (
+          <MissingPricesReport onNotify={notify} onUpdateCount={setMissingPriceCount} />
+        )}
         {currentTab === 'fx' && <FXManagement onNotify={notify} />}
         {currentTab === 'ingestion' && <IngestionPipeline onNotify={notify} />}
       </AdminLayout>

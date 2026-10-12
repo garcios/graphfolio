@@ -612,3 +612,38 @@ func toModelCashFlowReport(resp *pb.GetCashFlowReportResponse) *model.CashFlowRe
 	}
 }
 
+func toModelMissingPriceReport(resp *pb.ListMissingPriceTransactionsResponse) *model.MissingPriceReport {
+	if resp == nil {
+		return &model.MissingPriceReport{
+			Items:                  []*model.MissingPriceTransactionItem{},
+			TotalCount:             0,
+			UniqueInstrumentsCount: 0,
+		}
+	}
+
+	items := make([]*model.MissingPriceTransactionItem, len(resp.Items))
+	for i, item := range resp.Items {
+		items[i] = &model.MissingPriceTransactionItem{
+			TransactionID:  item.GetTransactionId(),
+			PortfolioID:    item.GetPortfolioId(),
+			InstrumentID:   item.GetInstrumentId(),
+			Symbol:         item.GetSymbol(),
+			AssetName:      item.GetAssetName(),
+			ExchangeMic:    item.GetExchangeMic(),
+			TradeDate:      item.GetTradeDate(),
+			Type:           toModelTransactionType(item.GetType()),
+			Quantity:       toModelDecimal(item.GetQuantity()),
+			ExecutionPrice: toModelMoney(item.GetExecutionPrice()),
+			CurrencyCode:   item.GetCurrencyCode(),
+		}
+	}
+
+	return &model.MissingPriceReport{
+		Items:                  items,
+		TotalCount:             int(resp.GetTotalCount()),
+		UniqueInstrumentsCount: int(resp.GetUniqueInstrumentsCount()),
+		EarliestTradeDate:      resp.EarliestTradeDate,
+		LatestTradeDate:        resp.LatestTradeDate,
+	}
+}
+

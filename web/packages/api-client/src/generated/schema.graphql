@@ -74,6 +74,7 @@ type Query {
   fxRates(baseCurrency: String, quoteCurrency: String, fromDate: String, toDate: String, limit: Int = 50, offset: Int = 0): FXRatesConnection!
   checkTransactionDuplicates(externalRefs: [String!]!): [String!]!
   cashFlowReport(filter: CashFlowFilterInput!): CashFlowReport!
+  missingPriceTransactions(symbol: String, fromDate: String, toDate: String, limit: Int = 50, offset: Int = 0): MissingPriceReport!
 }
 
 enum HistoryTimeframe {
@@ -459,4 +460,26 @@ type CashFlowReport {
   baseCurrency: String!
   fromDate: String!
   toDate: String!
+}
+
+type MissingPriceTransactionItem {
+  transactionId: ID!
+  portfolioId: ID!
+  instrumentId: ID!
+  symbol: String!
+  assetName: String!
+  exchangeMic: String!
+  tradeDate: String!
+  type: TransactionType!
+  quantity: Decimal!
+  executionPrice: Money!
+  currencyCode: String!
+}
+
+type MissingPriceReport {
+  items: [MissingPriceTransactionItem!]!
+  totalCount: Int!
+  uniqueInstrumentsCount: Int!
+  earliestTradeDate: String
+  latestTradeDate: String
 }

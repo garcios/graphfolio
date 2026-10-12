@@ -300,6 +300,21 @@ func (mr *MockPortfolioServiceMockRecorder) ListInstruments(ctx any) *gomock.Cal
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListInstruments", reflect.TypeOf((*MockPortfolioService)(nil).ListInstruments), ctx)
 }
 
+// ListMissingPriceTransactions mocks base method.
+func (m *MockPortfolioService) ListMissingPriceTransactions(ctx context.Context, filter domain.MissingPriceFilter) (*domain.MissingPriceReport, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListMissingPriceTransactions", ctx, filter)
+	ret0, _ := ret[0].(*domain.MissingPriceReport)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListMissingPriceTransactions indicates an expected call of ListMissingPriceTransactions.
+func (mr *MockPortfolioServiceMockRecorder) ListMissingPriceTransactions(ctx, filter any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMissingPriceTransactions", reflect.TypeOf((*MockPortfolioService)(nil).ListMissingPriceTransactions), ctx, filter)
+}
+
 // ListTransactions mocks base method.
 func (m *MockPortfolioService) ListTransactions(ctx context.Context, userID string, filter domain.TransactionFilter) ([]domain.TransactionWithInstrument, int, error) {
 	m.ctrl.T.Helper()

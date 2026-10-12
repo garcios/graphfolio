@@ -1343,6 +1343,83 @@ func (s *PortfolioServer) TriggerBackfill(ctx context.Context, req *pb.TriggerBa
 	}, nil
 }
 
+func (s *PortfolioServer) ListMissingPriceTransactions(ctx context.Context, req *pb.ListMissingPriceTransactionsRequest) (*pb.ListMissingPriceTransactionsResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	var symbol *string
+	if req.Symbol != nil && *req.Symbol != "" {
+		symbol = req.Symbol
+	}
+
+	var fromDate *time.Time
+	if req.FromDate != nil && *req.FromDate != "" {
+		d, err := time.Parse("2006-01-02", *req.FromDate)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid from_date format (must be YYYY-MM-DD): %v", err)
+		}
+		fromDate = &d
+	}
+
+	var toDate *time.Time
+	if req.ToDate != nil && *req.ToDate != "" {
+		d, err := time.Parse("2006-01-02", *req.ToDate)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid to_date format (must be YYYY-MM-DD): %v", err)
+		}
+		toDate = &d
+	}
+
+	report, err := s.svc.ListMissingPriceTransactions(ctx, domain.MissingPriceFilter{
+		Symbol:   symbol,
+		FromDate: fromDate,
+		ToDate:   toDate,
+		Limit:    int(req.GetLimit()),
+		Offset:   int(req.GetOffset()),
+	})
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidDateRange) {
+			return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to list missing price transactions: %v", err)
+	}
+
+	protoItems := make([]*pb.MissingPriceTransactionItem, len(report.Items))
+	for i, item := range report.Items {
+		protoItems[i] = &pb.MissingPriceTransactionItem{
+			TransactionId:  item.TransactionID.String(),
+			PortfolioId:    item.PortfolioID.String(),
+			InstrumentId:   item.InstrumentID.String(),
+			Symbol:         item.Symbol,
+			AssetName:      item.AssetName,
+			ExchangeMic:    item.ExchangeMIC,
+			TradeDate:      item.TradeDate.Format("2006-01-02"),
+			Type:           mapDomainTxTypeToProto(item.Type),
+			Quantity:       decimalpb.ToProto(item.Quantity),
+			ExecutionPrice: decimalpb.MoneyToProto(item.ExecutionPrice.Amount, item.ExecutionPrice.CurrencyCode),
+			CurrencyCode:   item.CurrencyCode,
+		}
+	}
+
+	resp := &pb.ListMissingPriceTransactionsResponse{
+		Items:                  protoItems,
+		TotalCount:             int32(report.TotalCount),
+		UniqueInstrumentsCount: int32(report.UniqueInstrumentsCount),
+	}
+
+	if report.EarliestTradeDate != nil {
+		earliestStr := report.EarliestTradeDate.Format("2006-01-02")
+		resp.EarliestTradeDate = &earliestStr
+	}
+	if report.LatestTradeDate != nil {
+		latestStr := report.LatestTradeDate.Format("2006-01-02")
+		resp.LatestTradeDate = &latestStr
+	}
+
+	return resp, nil
+}
+
 func mapFXRateToProto(r domain.FXRate) *pb.FXRateItem {
 	var inverted decimal.Decimal
 	if r.Rate.IsPositive() {

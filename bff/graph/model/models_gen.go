@@ -270,6 +270,28 @@ type MarketSyncPayload struct {
 	Message       string `json:"message"`
 }
 
+type MissingPriceReport struct {
+	Items                  []*MissingPriceTransactionItem `json:"items"`
+	TotalCount             int                            `json:"totalCount"`
+	UniqueInstrumentsCount int                            `json:"uniqueInstrumentsCount"`
+	EarliestTradeDate      *string                        `json:"earliestTradeDate,omitempty"`
+	LatestTradeDate        *string                        `json:"latestTradeDate,omitempty"`
+}
+
+type MissingPriceTransactionItem struct {
+	TransactionID  string          `json:"transactionId"`
+	PortfolioID    string          `json:"portfolioId"`
+	InstrumentID   string          `json:"instrumentId"`
+	Symbol         string          `json:"symbol"`
+	AssetName      string          `json:"assetName"`
+	ExchangeMic    string          `json:"exchangeMic"`
+	TradeDate      string          `json:"tradeDate"`
+	Type           TransactionType `json:"type"`
+	Quantity       Decimal         `json:"quantity"`
+	ExecutionPrice *Money          `json:"executionPrice"`
+	CurrencyCode   string          `json:"currencyCode"`
+}
+
 type Money struct {
 	Amount       Decimal `json:"amount"`
 	CurrencyCode string  `json:"currencyCode"`

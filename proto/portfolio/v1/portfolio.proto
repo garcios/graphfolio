@@ -43,6 +43,9 @@ service PortfolioService {
   // Admin: Historical Market Data Backfill
   rpc TriggerBackfill(TriggerBackfillRequest) returns (TriggerBackfillResponse) {}
 
+  // Admin: Missing Prices Diagnostic Report
+  rpc ListMissingPriceTransactions(ListMissingPriceTransactionsRequest) returns (ListMissingPriceTransactionsResponse) {}
+
   // Historical Valuation Engine & Replay
   rpc RebuildValuations(RebuildValuationsRequest) returns (RebuildValuationsResponse) {}
 
@@ -569,6 +572,40 @@ message GetCashFlowReportResponse {
   string                    base_currency  = 4;
   string                    from_date      = 5;
   string                    to_date        = 6;
+}
+
+// ------------------------------------------------------------------
+// Admin: Missing Prices Diagnostic Report Messages
+// ------------------------------------------------------------------
+
+message MissingPriceTransactionItem {
+  string            transaction_id  = 1;
+  string            portfolio_id    = 2;
+  string            instrument_id   = 3;
+  string            symbol          = 4;
+  string            asset_name      = 5;
+  string            exchange_mic    = 6;
+  string            trade_date      = 7; // YYYY-MM-DD
+  TransactionType   type            = 8;
+  common.v1.Decimal quantity        = 9;
+  common.v1.Money   execution_price = 10;
+  string            currency_code   = 11;
+}
+
+message ListMissingPriceTransactionsRequest {
+  optional string symbol    = 1;
+  optional string from_date = 2; // YYYY-MM-DD
+  optional string to_date   = 3; // YYYY-MM-DD
+  int32           limit     = 4; // Default 50, max 200
+  int32           offset    = 5;
+}
+
+message ListMissingPriceTransactionsResponse {
+  repeated MissingPriceTransactionItem items                    = 1;
+  int32                                total_count              = 2;
+  int32                                unique_instruments_count  = 3;
+  optional string                      earliest_trade_date      = 4; // YYYY-MM-DD
+  optional string                      latest_trade_date        = 5; // YYYY-MM-DD
 }
 
 

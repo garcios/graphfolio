@@ -69,6 +69,7 @@ type fakePortfolioClient struct {
 	checkTransactionDuplicatesFn  func(ctx context.Context, in *pb.CheckTransactionDuplicatesRequest) (*pb.CheckTransactionDuplicatesResponse, error)
 	batchImportTransactionsFn     func(ctx context.Context, in *pb.BatchImportTransactionsRequest) (*pb.BatchImportTransactionsResponse, error)
 	getCashFlowReportFn           func(ctx context.Context, in *pb.GetCashFlowReportRequest) (*pb.GetCashFlowReportResponse, error)
+	listMissingPriceTransactionsFn func(ctx context.Context, in *pb.ListMissingPriceTransactionsRequest) (*pb.ListMissingPriceTransactionsResponse, error)
 }
 
 func (f *fakePortfolioClient) GetPortfolio(ctx context.Context, in *pb.GetPortfolioRequest, opts ...grpc.CallOption) (*pb.GetPortfolioResponse, error) {
@@ -235,6 +236,13 @@ func (f *fakePortfolioClient) BatchImportTransactions(ctx context.Context, in *p
 func (f *fakePortfolioClient) GetCashFlowReport(ctx context.Context, in *pb.GetCashFlowReportRequest, opts ...grpc.CallOption) (*pb.GetCashFlowReportResponse, error) {
 	if f.getCashFlowReportFn != nil {
 		return f.getCashFlowReportFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakePortfolioClient) ListMissingPriceTransactions(ctx context.Context, in *pb.ListMissingPriceTransactionsRequest, opts ...grpc.CallOption) (*pb.ListMissingPriceTransactionsResponse, error) {
+	if f.listMissingPriceTransactionsFn != nil {
+		return f.listMissingPriceTransactionsFn(ctx, in)
 	}
 	return nil, nil
 }
@@ -2138,6 +2146,94 @@ func TestQueryResolver_CashFlowReport(t *testing.T) {
 		_, err := qResolver.CashFlowReport(ctx, model.CashFlowFilterInput{
 			Timeframe: model.CashFlowTimeframeMtd,
 		})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+	})
+}
+
+func TestQueryResolver_MissingPriceTransactions(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully resolves missing price report", func(t *testing.T) {
+		sym := "NVDA"
+		fromDate := "2024-01-01"
+		toDate := "2024-10-01"
+		limit := 50
+		offset := 0
+
+		fakeClient := &fakePortfolioClient{
+			listMissingPriceTransactionsFn: func(ctx context.Context, in *pb.ListMissingPriceTransactionsRequest) (*pb.ListMissingPriceTransactionsResponse, error) {
+				if in.GetSymbol() != "NVDA" {
+					t.Errorf("expected symbol NVDA, got %s", in.GetSymbol())
+				}
+				earliest := "2024-03-15"
+				latest := "2024-06-20"
+				return &pb.ListMissingPriceTransactionsResponse{
+					Items: []*pb.MissingPriceTransactionItem{
+						{
+							TransactionId:  "tx-1",
+							PortfolioId:    "port-1",
+							InstrumentId:   "inst-1",
+							Symbol:         "NVDA",
+							AssetName:      "Nvidia Corp",
+							ExchangeMic:    "XNAS",
+							TradeDate:      "2024-03-15",
+							Type:           pb.TransactionType_TRANSACTION_TYPE_BUY,
+							Quantity:       &commonpb.Decimal{Value: "10.00"},
+							ExecutionPrice: &commonpb.Money{Amount: &commonpb.Decimal{Value: "880.00"}, CurrencyCode: "USD"},
+							CurrencyCode:   "USD",
+						},
+					},
+					TotalCount:             1,
+					UniqueInstrumentsCount: 1,
+					EarliestTradeDate:      &earliest,
+					LatestTradeDate:        &latest,
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		res, err := qResolver.MissingPriceTransactions(ctx, &sym, &fromDate, &toDate, &limit, &offset)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res == nil {
+			t.Fatalf("expected result, got nil")
+		}
+		if res.TotalCount != 1 {
+			t.Errorf("expected total count 1, got %d", res.TotalCount)
+		}
+		if res.UniqueInstrumentsCount != 1 {
+			t.Errorf("expected unique instruments count 1, got %d", res.UniqueInstrumentsCount)
+		}
+		if len(res.Items) != 1 {
+			t.Fatalf("expected 1 item, got %d", len(res.Items))
+		}
+		if res.Items[0].Symbol != "NVDA" {
+			t.Errorf("expected symbol NVDA, got %s", res.Items[0].Symbol)
+		}
+		if res.Items[0].Type != model.TransactionTypeBuy {
+			t.Errorf("expected type BUY, got %v", res.Items[0].Type)
+		}
+		if *res.EarliestTradeDate != "2024-03-15" {
+			t.Errorf("expected earliest trade date 2024-03-15, got %s", *res.EarliestTradeDate)
+		}
+	})
+
+	t.Run("handles error from portfolio service", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			listMissingPriceTransactionsFn: func(ctx context.Context, in *pb.ListMissingPriceTransactionsRequest) (*pb.ListMissingPriceTransactionsResponse, error) {
+				return nil, errors.New("service unavailable")
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		_, err := qResolver.MissingPriceTransactions(ctx, nil, nil, nil, nil, nil)
 		if err == nil {
 			t.Fatal("expected error, got nil")
 		}
