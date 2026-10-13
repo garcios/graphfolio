@@ -36,6 +36,71 @@ SET cost_basis_base   = ROUND((cost_basis_base * $2)::numeric, 10),
 WHERE portfolio_id = $1;`
 
 	getHoldingsWithMarketDataSQL = `
+WITH combined_holdings AS (
+    -- 1. Active open holdings from portfolio.holdings
+    SELECT 
+        h.portfolio_id,
+        h.instrument_id,
+        h.quantity,
+        h.cost_basis,
+        h.cost_basis_base,
+        h.realized_pnl_base,
+        h.dividends_base
+    FROM portfolio.holdings h
+    WHERE h.portfolio_id = $1 AND h.quantity > 0
+
+    UNION ALL
+
+    -- 2. Closed holdings (only when $2 is true): instruments with historical activity but zero open quantity
+    SELECT 
+        p.id AS portfolio_id,
+        tl.instrument_id,
+        0::numeric(28,10) AS quantity,
+        0::numeric(20,6) AS cost_basis,
+        0::numeric(20,6) AS cost_basis_base,
+        COALESCE(disp.realized_pnl_base, 0)::numeric(20,6) AS realized_pnl_base,
+        COALESCE(divs.dividends_base, 0)::numeric(20,6) AS dividends_base
+    FROM (SELECT $1::uuid AS id) p
+    CROSS JOIN (
+        SELECT DISTINCT instrument_id 
+        FROM portfolio.tax_lots 
+        WHERE portfolio_id = $1
+    ) tl
+    LEFT JOIN LATERAL (
+        SELECT SUM(ld.realized_pnl_base) AS realized_pnl_base
+        FROM portfolio.lot_disposals ld
+        JOIN portfolio.tax_lots t ON t.id = ld.tax_lot_id
+        WHERE t.portfolio_id = $1 AND t.instrument_id = tl.instrument_id
+    ) disp ON true
+    LEFT JOIN LATERAL (
+        SELECT SUM(tx.amount * COALESCE(
+            direct_div_fx.rate,
+            CASE WHEN inv_div_fx.rate > 0 THEN 1.0 / inv_div_fx.rate ELSE NULL END,
+            1.0
+        )) AS dividends_base
+        FROM portfolio.transactions tx
+        JOIN portfolio.instruments i ON i.id = tx.instrument_id
+        JOIN portfolio.portfolios port ON port.id = tx.portfolio_id
+        LEFT JOIN LATERAL (
+            SELECT rate FROM portfolio.fx_rates 
+            WHERE base_currency = i.currency_code AND quote_currency = port.base_currency AND rate_date <= tx.trade_date 
+            ORDER BY rate_date DESC LIMIT 1
+        ) direct_div_fx ON (i.currency_code <> port.base_currency)
+        LEFT JOIN LATERAL (
+            SELECT rate FROM portfolio.fx_rates 
+            WHERE base_currency = port.base_currency AND quote_currency = i.currency_code AND rate_date <= tx.trade_date 
+            ORDER BY rate_date DESC LIMIT 1
+        ) inv_div_fx ON (i.currency_code <> port.base_currency)
+        WHERE tx.portfolio_id = $1 
+          AND tx.instrument_id = tl.instrument_id 
+          AND tx.type = 'DIVIDEND'
+    ) divs ON true
+    WHERE $2::boolean IS TRUE
+      AND NOT EXISTS (
+          SELECT 1 FROM portfolio.holdings act 
+          WHERE act.portfolio_id = $1 AND act.instrument_id = tl.instrument_id AND act.quantity > 0
+      )
+)
 SELECT 
     h.portfolio_id,
     h.instrument_id,
@@ -54,8 +119,11 @@ SELECT
         CASE WHEN inverse_fx.rate > 0 THEN 1.0 / inverse_fx.rate ELSE NULL END,
         triangulated_fx.rate,
         1.0
-    ) AS fx_rate_to_base
-FROM portfolio.holdings h
+    ) AS fx_rate_to_base,
+    COALESCE(hist_lots.historical_quantity, 0) AS historical_quantity,
+    COALESCE(hist_lots.historical_cost_basis, 0) AS historical_cost_basis,
+    COALESCE(hist_lots.historical_cost_basis_base, 0) AS historical_cost_basis_base
+FROM combined_holdings h
 JOIN portfolio.instruments i ON i.id = h.instrument_id
 JOIN portfolio.portfolios p ON p.id = h.portfolio_id
 -- Latest price (most recent trading day)
@@ -104,8 +172,23 @@ LEFT JOIN LATERAL (
     ) usd_inst
     WHERE usd_inst.rate > 0
 ) triangulated_fx ON (i.currency_code <> p.base_currency AND direct_fx.rate IS NULL AND inverse_fx.rate IS NULL)
-WHERE h.portfolio_id = $1 AND h.quantity > 0
-ORDER BY (h.quantity * COALESCE(curr_p.close, 0)) DESC;`
+-- Historical tax lots totals (including released cost basis from lot disposals)
+LEFT JOIN LATERAL (
+    SELECT 
+        COALESCE(SUM(tl.original_quantity), 0) AS historical_quantity,
+        COALESCE(SUM(tl.cost_basis + COALESCE(ld.cost_basis_released, 0)), 0) AS historical_cost_basis,
+        COALESCE(SUM(tl.cost_basis_base + COALESCE(ld.cost_basis_released_base, 0)), 0) AS historical_cost_basis_base
+    FROM portfolio.tax_lots tl
+    LEFT JOIN (
+        SELECT tax_lot_id, 
+               SUM(cost_basis_released) AS cost_basis_released,
+               SUM(cost_basis_released_base) AS cost_basis_released_base
+        FROM portfolio.lot_disposals
+        GROUP BY tax_lot_id
+    ) ld ON ld.tax_lot_id = tl.id
+    WHERE tl.portfolio_id = h.portfolio_id AND tl.instrument_id = h.instrument_id
+) hist_lots ON true
+ORDER BY (h.quantity * COALESCE(curr_p.close, 0)) DESC, h.realized_pnl_base DESC;`
 
 	getCashBalancesSQL = `
 SELECT 
@@ -579,4 +662,3 @@ WHERE t.portfolio_id = $1
   AND ($2::date IS NULL OR COALESCE(t.settle_date, t.trade_date) <= $2)
 ORDER BY COALESCE(t.settle_date, t.trade_date) ASC, t.created_at ASC, t.id ASC;`
 )
-

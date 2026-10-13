@@ -341,18 +341,23 @@ func (mr *MockRepositoryMockRecorder) GetHistoricalPriceMatrix(ctx, instrumentID
 }
 
 // GetHoldingsWithMarketData mocks base method.
-func (m *MockRepository) GetHoldingsWithMarketData(ctx context.Context, portfolioID uuid.UUID) ([]domain.HoldingWithPrice, error) {
+func (m *MockRepository) GetHoldingsWithMarketData(ctx context.Context, portfolioID uuid.UUID, includeClosed ...bool) ([]domain.HoldingWithPrice, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetHoldingsWithMarketData", ctx, portfolioID)
+	varargs := []any{ctx, portfolioID}
+	for _, a := range includeClosed {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetHoldingsWithMarketData", varargs...)
 	ret0, _ := ret[0].([]domain.HoldingWithPrice)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetHoldingsWithMarketData indicates an expected call of GetHoldingsWithMarketData.
-func (mr *MockRepositoryMockRecorder) GetHoldingsWithMarketData(ctx, portfolioID any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) GetHoldingsWithMarketData(ctx, portfolioID any, includeClosed ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHoldingsWithMarketData", reflect.TypeOf((*MockRepository)(nil).GetHoldingsWithMarketData), ctx, portfolioID)
+	varargs := append([]any{ctx, portfolioID}, includeClosed...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetHoldingsWithMarketData", reflect.TypeOf((*MockRepository)(nil).GetHoldingsWithMarketData), varargs...)
 }
 
 // GetIngestionMetrics mocks base method.

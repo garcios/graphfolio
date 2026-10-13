@@ -98,8 +98,12 @@ func (r *PostgresRepository) UpdatePortfolioBaseCurrency(ctx context.Context, po
 	return tx.Commit(ctx)
 }
 
-func (r *PostgresRepository) GetHoldingsWithMarketData(ctx context.Context, portfolioID uuid.UUID) ([]domain.HoldingWithPrice, error) {
-	rows, err := r.pool.Query(ctx, getHoldingsWithMarketDataSQL, portfolioID)
+func (r *PostgresRepository) GetHoldingsWithMarketData(ctx context.Context, portfolioID uuid.UUID, includeClosed ...bool) ([]domain.HoldingWithPrice, error) {
+	incClosed := false
+	if len(includeClosed) > 0 {
+		incClosed = includeClosed[0]
+	}
+	rows, err := r.pool.Query(ctx, getHoldingsWithMarketDataSQL, portfolioID, incClosed)
 	if err != nil {
 		return nil, fmt.Errorf("repository: query holdings failed: %w", err)
 	}
@@ -122,6 +126,9 @@ func (r *PostgresRepository) GetHoldingsWithMarketData(ctx context.Context, port
 			&h.LatestPrice,
 			&h.PrevPrice,
 			&h.FXRateToBase,
+			&h.HistoricalQuantity,
+			&h.HistoricalCostBasis,
+			&h.HistoricalCostBasisBase,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("repository: scan holding failed: %w", err)

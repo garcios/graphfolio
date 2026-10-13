@@ -45,30 +45,30 @@ func (f *fakeUserClient) ListSupportedCurrencies(ctx context.Context, in *userpb
 
 type fakePortfolioClient struct {
 	pb.PortfolioServiceClient
-	getPortfolioFn                func(ctx context.Context, in *pb.GetPortfolioRequest) (*pb.GetPortfolioResponse, error)
-	updatePortfolioBaseCurrencyFn func(ctx context.Context, in *pb.UpdatePortfolioBaseCurrencyRequest) (*pb.UpdatePortfolioBaseCurrencyResponse, error)
-	addTransactionFn              func(ctx context.Context, in *pb.AddTransactionRequest) (*pb.AddTransactionResponse, error)
-	listInstrumentsFn             func(ctx context.Context, in *pb.ListInstrumentsRequest) (*pb.ListInstrumentsResponse, error)
-	getPortfolioHistoryFn         func(ctx context.Context, in *pb.GetPortfolioHistoryRequest) (*pb.GetPortfolioHistoryResponse, error)
-	listTransactionsFn            func(ctx context.Context, in *pb.ListTransactionsRequest) (*pb.ListTransactionsResponse, error)
-	deleteTransactionFn           func(ctx context.Context, in *pb.DeleteTransactionRequest) (*pb.DeleteTransactionResponse, error)
-	listAllInstrumentsFn          func(ctx context.Context, in *pb.ListAllInstrumentsRequest) (*pb.ListAllInstrumentsResponse, error)
-	createInstrumentFn            func(ctx context.Context, in *pb.CreateInstrumentRequest) (*pb.CreateInstrumentResponse, error)
-	updateInstrumentFn            func(ctx context.Context, in *pb.UpdateInstrumentRequest) (*pb.UpdateInstrumentResponse, error)
-	deleteInstrumentFn            func(ctx context.Context, in *pb.DeleteInstrumentRequest) (*pb.DeleteInstrumentResponse, error)
-	listExchangesFn               func(ctx context.Context, in *pb.ListExchangesRequest) (*pb.ListExchangesResponse, error)
-	listInstrumentPricesFn        func(ctx context.Context, in *pb.ListInstrumentPricesRequest) (*pb.ListInstrumentPricesResponse, error)
-	recordPriceOverrideFn         func(ctx context.Context, in *pb.RecordPriceOverrideRequest) (*pb.RecordPriceOverrideResponse, error)
-	getIngestionStatusFn          func(ctx context.Context, in *pb.GetIngestionStatusRequest) (*pb.GetIngestionStatusResponse, error)
-	triggerMarketSyncFn           func(ctx context.Context, in *pb.TriggerMarketSyncRequest) (*pb.TriggerMarketSyncResponse, error)
-	triggerBackfillFn             func(ctx context.Context, in *pb.TriggerBackfillRequest) (*pb.TriggerBackfillResponse, error)
-	listCurrencyPairsFn           func(ctx context.Context, in *pb.ListCurrencyPairsRequest) (*pb.ListCurrencyPairsResponse, error)
-	listFXRatesFn                 func(ctx context.Context, in *pb.ListFXRatesRequest) (*pb.ListFXRatesResponse, error)
-	getCurrencyPairHistoryFn      func(ctx context.Context, in *pb.GetCurrencyPairHistoryRequest) (*pb.GetCurrencyPairHistoryResponse, error)
-	recordFXRateOverrideFn        func(ctx context.Context, in *pb.RecordFXRateOverrideRequest) (*pb.RecordFXRateOverrideResponse, error)
-	checkTransactionDuplicatesFn  func(ctx context.Context, in *pb.CheckTransactionDuplicatesRequest) (*pb.CheckTransactionDuplicatesResponse, error)
-	batchImportTransactionsFn     func(ctx context.Context, in *pb.BatchImportTransactionsRequest) (*pb.BatchImportTransactionsResponse, error)
-	getCashFlowReportFn           func(ctx context.Context, in *pb.GetCashFlowReportRequest) (*pb.GetCashFlowReportResponse, error)
+	getPortfolioFn                 func(ctx context.Context, in *pb.GetPortfolioRequest) (*pb.GetPortfolioResponse, error)
+	updatePortfolioBaseCurrencyFn  func(ctx context.Context, in *pb.UpdatePortfolioBaseCurrencyRequest) (*pb.UpdatePortfolioBaseCurrencyResponse, error)
+	addTransactionFn               func(ctx context.Context, in *pb.AddTransactionRequest) (*pb.AddTransactionResponse, error)
+	listInstrumentsFn              func(ctx context.Context, in *pb.ListInstrumentsRequest) (*pb.ListInstrumentsResponse, error)
+	getPortfolioHistoryFn          func(ctx context.Context, in *pb.GetPortfolioHistoryRequest) (*pb.GetPortfolioHistoryResponse, error)
+	listTransactionsFn             func(ctx context.Context, in *pb.ListTransactionsRequest) (*pb.ListTransactionsResponse, error)
+	deleteTransactionFn            func(ctx context.Context, in *pb.DeleteTransactionRequest) (*pb.DeleteTransactionResponse, error)
+	listAllInstrumentsFn           func(ctx context.Context, in *pb.ListAllInstrumentsRequest) (*pb.ListAllInstrumentsResponse, error)
+	createInstrumentFn             func(ctx context.Context, in *pb.CreateInstrumentRequest) (*pb.CreateInstrumentResponse, error)
+	updateInstrumentFn             func(ctx context.Context, in *pb.UpdateInstrumentRequest) (*pb.UpdateInstrumentResponse, error)
+	deleteInstrumentFn             func(ctx context.Context, in *pb.DeleteInstrumentRequest) (*pb.DeleteInstrumentResponse, error)
+	listExchangesFn                func(ctx context.Context, in *pb.ListExchangesRequest) (*pb.ListExchangesResponse, error)
+	listInstrumentPricesFn         func(ctx context.Context, in *pb.ListInstrumentPricesRequest) (*pb.ListInstrumentPricesResponse, error)
+	recordPriceOverrideFn          func(ctx context.Context, in *pb.RecordPriceOverrideRequest) (*pb.RecordPriceOverrideResponse, error)
+	getIngestionStatusFn           func(ctx context.Context, in *pb.GetIngestionStatusRequest) (*pb.GetIngestionStatusResponse, error)
+	triggerMarketSyncFn            func(ctx context.Context, in *pb.TriggerMarketSyncRequest) (*pb.TriggerMarketSyncResponse, error)
+	triggerBackfillFn              func(ctx context.Context, in *pb.TriggerBackfillRequest) (*pb.TriggerBackfillResponse, error)
+	listCurrencyPairsFn            func(ctx context.Context, in *pb.ListCurrencyPairsRequest) (*pb.ListCurrencyPairsResponse, error)
+	listFXRatesFn                  func(ctx context.Context, in *pb.ListFXRatesRequest) (*pb.ListFXRatesResponse, error)
+	getCurrencyPairHistoryFn       func(ctx context.Context, in *pb.GetCurrencyPairHistoryRequest) (*pb.GetCurrencyPairHistoryResponse, error)
+	recordFXRateOverrideFn         func(ctx context.Context, in *pb.RecordFXRateOverrideRequest) (*pb.RecordFXRateOverrideResponse, error)
+	checkTransactionDuplicatesFn   func(ctx context.Context, in *pb.CheckTransactionDuplicatesRequest) (*pb.CheckTransactionDuplicatesResponse, error)
+	batchImportTransactionsFn      func(ctx context.Context, in *pb.BatchImportTransactionsRequest) (*pb.BatchImportTransactionsResponse, error)
+	getCashFlowReportFn            func(ctx context.Context, in *pb.GetCashFlowReportRequest) (*pb.GetCashFlowReportResponse, error)
 	listMissingPriceTransactionsFn func(ctx context.Context, in *pb.ListMissingPriceTransactionsRequest) (*pb.ListMissingPriceTransactionsResponse, error)
 }
 
@@ -273,7 +273,7 @@ func TestQueryResolver_Portfolio(t *testing.T) {
 	resolver := &Resolver{PortfolioClient: fakeClient}
 	qResolver := resolver.Query()
 
-	result, err := qResolver.Portfolio(ctx)
+	result, err := qResolver.Portfolio(ctx, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -335,7 +335,7 @@ func TestQueryResolver_Portfolio_AverageBuyPrice(t *testing.T) {
 	resolver := &Resolver{PortfolioClient: fakeClient}
 	qResolver := resolver.Query()
 
-	result, err := qResolver.Portfolio(ctx)
+	result, err := qResolver.Portfolio(ctx, nil)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -357,6 +357,61 @@ func TestQueryResolver_Portfolio_AverageBuyPrice(t *testing.T) {
 	inv2 := result.Investments[1]
 	if inv2.AverageBuyPrice != nil {
 		t.Errorf("expected nil averageBuyPrice for inv2, got %v", inv2.AverageBuyPrice)
+	}
+}
+
+func TestQueryResolver_Portfolio_IncludeClosed(t *testing.T) {
+	ctx := context.Background()
+
+	var receivedIncludeClosed bool
+	fakeClient := &fakePortfolioClient{
+		getPortfolioFn: func(ctx context.Context, in *pb.GetPortfolioRequest) (*pb.GetPortfolioResponse, error) {
+			receivedIncludeClosed = in.IncludeClosedPositions
+			return &pb.GetPortfolioResponse{
+				Portfolio: &pb.Portfolio{
+					TotalValue: &commonpb.Money{
+						Amount:       &commonpb.Decimal{Value: "0.00"},
+						CurrencyCode: "USD",
+					},
+					Investments: []*pb.Investment{
+						{
+							Id:                 "inv-closed",
+							Ticker:             "TSLA",
+							Name:               "Tesla Inc",
+							Price:              &commonpb.Money{Amount: &commonpb.Decimal{Value: "210.00"}, CurrencyCode: "USD"},
+							Quantity:           &commonpb.Decimal{Value: "0"},
+							TotalValue:         &commonpb.Money{Amount: &commonpb.Decimal{Value: "0.00"}, CurrencyCode: "USD"},
+							CapitalGainAmount:  &commonpb.Money{Amount: &commonpb.Decimal{Value: "500.00"}, CurrencyCode: "USD"},
+							CapitalGainPercent: &commonpb.Decimal{Value: "25.00"},
+							TotalReturnAmount:  &commonpb.Money{Amount: &commonpb.Decimal{Value: "500.00"}, CurrencyCode: "USD"},
+							TotalReturnPercent: &commonpb.Decimal{Value: "25.0"},
+							IsClosed:           true,
+						},
+					},
+				},
+			}, nil
+		},
+	}
+
+	resolver := &Resolver{PortfolioClient: fakeClient}
+	qResolver := resolver.Query()
+
+	inc := true
+	result, err := qResolver.Portfolio(ctx, &inc)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !receivedIncludeClosed {
+		t.Errorf("expected gRPC request to have IncludeClosedPositions = true")
+	}
+	if len(result.Investments) != 1 {
+		t.Fatalf("expected 1 investment, got %d", len(result.Investments))
+	}
+	if !result.Investments[0].IsClosed {
+		t.Errorf("expected IsClosed to be true")
+	}
+	if result.Investments[0].Ticker != "TSLA" {
+		t.Errorf("expected ticker TSLA, got %s", result.Investments[0].Ticker)
 	}
 }
 
@@ -2239,4 +2294,3 @@ func TestQueryResolver_MissingPriceTransactions(t *testing.T) {
 		}
 	})
 }
-

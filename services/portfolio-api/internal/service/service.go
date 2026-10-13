@@ -15,7 +15,7 @@ import (
 
 //go:generate go run go.uber.org/mock/mockgen -destination=mocks/mock_service.go -package=mocks portfolio-api/internal/service PortfolioService
 type PortfolioService interface {
-	GetPortfolioSummary(ctx context.Context, userID string) (*domain.PortfolioSummary, error)
+	GetPortfolioSummary(ctx context.Context, userID string, includeClosed ...bool) (*domain.PortfolioSummary, error)
 	UpdatePortfolioBaseCurrency(ctx context.Context, userID string, baseCurrency string) (*domain.PortfolioSummary, error)
 	RebuildProjections(ctx context.Context, userID string) error
 	AddTransaction(ctx context.Context, input domain.AddTransactionInput) (*domain.Transaction, *domain.PortfolioSummary, error)
@@ -94,13 +94,23 @@ func NewPortfolioService(repo repository.Repository, opts ...ServiceOption) Port
 	return s
 }
 
-func (s *portfolioService) GetPortfolioSummary(ctx context.Context, userID string) (*domain.PortfolioSummary, error) {
+func (s *portfolioService) GetPortfolioSummary(ctx context.Context, userID string, includeClosed ...bool) (*domain.PortfolioSummary, error) {
 	portfolio, err := s.repo.FindPortfolioByUser(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	holdings, err := s.repo.GetHoldingsWithMarketData(ctx, portfolio.ID)
+	incClosed := false
+	if len(includeClosed) > 0 {
+		incClosed = includeClosed[0]
+	}
+
+	var holdings []domain.HoldingWithPrice
+	if incClosed {
+		holdings, err = s.repo.GetHoldingsWithMarketData(ctx, portfolio.ID, true)
+	} else {
+		holdings, err = s.repo.GetHoldingsWithMarketData(ctx, portfolio.ID)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("service: failed to get holdings: %w", err)
 	}

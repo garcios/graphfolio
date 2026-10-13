@@ -261,6 +261,7 @@ type Investment struct {
 	CurrencyGainAmount  *Money  `json:"currencyGainAmount"`
 	CurrencyGainPercent Decimal `json:"currencyGainPercent"`
 	IsInternational     bool    `json:"isInternational"`
+	IsClosed            bool    `json:"isClosed"`
 }
 
 type MarketSyncPayload struct {

@@ -237,6 +237,7 @@ export interface Investment {
     currencyGainAmount: Money
     currencyGainPercent: Scalars['Decimal']
     isInternational: Scalars['Boolean']
+    isClosed: Scalars['Boolean']
     __typename: 'Investment'
 }
 
@@ -444,7 +445,7 @@ export interface ExchangeGenqlSelection{
 }
 
 export interface QueryGenqlSelection{
-    portfolio?: PortfolioGenqlSelection
+    portfolio?: (PortfolioGenqlSelection & { __args?: {includeClosed?: (Scalars['Boolean'] | null)} })
     instruments?: InstrumentGenqlSelection
     portfolioHistory?: (PortfolioHistoryGenqlSelection & { __args: {timeframe: HistoryTimeframe} })
     transactions?: (TransactionsConnectionGenqlSelection & { __args?: {type?: (TransactionType | null), symbol?: (Scalars['String'] | null), page?: (Scalars['Int'] | null), pageSize?: (Scalars['Int'] | null)} })
@@ -660,6 +661,7 @@ export interface InvestmentGenqlSelection{
     currencyGainAmount?: MoneyGenqlSelection
     currencyGainPercent?: boolean | number
     isInternational?: boolean | number
+    isClosed?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }

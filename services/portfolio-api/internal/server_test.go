@@ -107,6 +107,56 @@ func TestPortfolioServer_GetPortfolio(t *testing.T) {
 		if p.Investments[0].AverageBuyPrice == nil || p.Investments[0].AverageBuyPrice.Amount.Value != "150" {
 			t.Errorf("expected AverageBuyPrice 150, got %v", p.Investments[0].AverageBuyPrice)
 		}
+		if p.Investments[0].IsClosed {
+			t.Errorf("expected IsClosed to be false for open position")
+		}
+	})
+
+	t.Run("passes include_closed_positions to service and maps IsClosed to proto", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		closedSummary := &domain.PortfolioSummary{
+			Portfolio: domain.Portfolio{
+				ID:           uuid.New(),
+				UserID:       uuid.New(),
+				BaseCurrency: "USD",
+			},
+			TotalValue: domain.NewMoney(decimal.Zero, "USD"),
+			Investments: []domain.InvestmentSummary{
+				{
+					ID:                "closed-inv-1",
+					Ticker:            "TSLA",
+					Name:              "Tesla Inc",
+					Price:             domain.NewMoney(decimal.RequireFromString("200.00"), "USD"),
+					Quantity:          decimal.Zero,
+					TotalValue:        domain.NewMoney(decimal.Zero, "USD"),
+					CapitalGainAmount: domain.NewMoney(decimal.RequireFromString("500.00"), "USD"),
+					TotalReturnAmount: domain.NewMoney(decimal.RequireFromString("500.00"), "USD"),
+					IsClosed:          true,
+				},
+			},
+		}
+
+		mockSvc.EXPECT().GetPortfolioSummary(ctx, "user-closed", true).Return(closedSummary, nil)
+
+		res, err := server.GetPortfolio(ctx, &pb.GetPortfolioRequest{
+			UserId:                 "user-closed",
+			IncludeClosedPositions: true,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res == nil || res.Portfolio == nil || len(res.Portfolio.Investments) != 1 {
+			t.Fatalf("expected 1 closed investment")
+		}
+		if !res.Portfolio.Investments[0].IsClosed {
+			t.Errorf("expected IsClosed to be true in proto response")
+		}
+		if res.Portfolio.Investments[0].Ticker != "TSLA" {
+			t.Errorf("expected ticker TSLA, got %s", res.Portfolio.Investments[0].Ticker)
+		}
 	})
 
 	t.Run("defaults user id to 1 when empty", func(t *testing.T) {

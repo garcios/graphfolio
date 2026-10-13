@@ -194,18 +194,23 @@ func (mr *MockPortfolioServiceMockRecorder) GetPortfolioHistory(ctx, userID, tim
 }
 
 // GetPortfolioSummary mocks base method.
-func (m *MockPortfolioService) GetPortfolioSummary(ctx context.Context, userID string) (*domain.PortfolioSummary, error) {
+func (m *MockPortfolioService) GetPortfolioSummary(ctx context.Context, userID string, includeClosed ...bool) (*domain.PortfolioSummary, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetPortfolioSummary", ctx, userID)
+	varargs := []any{ctx, userID}
+	for _, a := range includeClosed {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetPortfolioSummary", varargs...)
 	ret0, _ := ret[0].(*domain.PortfolioSummary)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetPortfolioSummary indicates an expected call of GetPortfolioSummary.
-func (mr *MockPortfolioServiceMockRecorder) GetPortfolioSummary(ctx, userID any) *gomock.Call {
+func (mr *MockPortfolioServiceMockRecorder) GetPortfolioSummary(ctx, userID any, includeClosed ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPortfolioSummary", reflect.TypeOf((*MockPortfolioService)(nil).GetPortfolioSummary), ctx, userID)
+	varargs := append([]any{ctx, userID}, includeClosed...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPortfolioSummary", reflect.TypeOf((*MockPortfolioService)(nil).GetPortfolioSummary), varargs...)
 }
 
 // ListAllInstruments mocks base method.

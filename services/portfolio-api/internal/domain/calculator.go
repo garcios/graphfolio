@@ -13,11 +13,63 @@ var (
 // and 3-way multi-currency return attribution (Capital Gain, Income, Currency Gain)
 // for a single instrument holding using exact decimal arithmetic.
 func CalculateInvestment(h HoldingWithPrice, baseCurrency string) InvestmentSummary {
+	isClosed := h.Quantity.IsZero()
 	isInternational := h.InstrumentCurrency != "" && h.InstrumentCurrency != baseCurrency
 
 	fxRate := h.FXRateToBase
 	if !fxRate.IsPositive() {
 		fxRate = one
+	}
+
+	if isClosed {
+		// Average Buy Price from historical tax lots
+		var avgBuyPrice decimal.Decimal
+		if h.HistoricalQuantity.IsPositive() && h.HistoricalCostBasis.IsPositive() {
+			avgBuyPrice = h.HistoricalCostBasis.DivRound(h.HistoricalQuantity, 4)
+		}
+
+		// Capital gain from realized PnL
+		capGainBase := h.RealizedPnLBase
+		var capGainPercent decimal.Decimal
+		if h.HistoricalCostBasisBase.IsPositive() {
+			capGainPercent = capGainBase.DivRound(h.HistoricalCostBasisBase, 6).Mul(oneHundred).Round(2)
+		}
+
+		// Income from cumulative dividends
+		incomeBase := h.DividendsBase
+		var incomeYieldPercent decimal.Decimal
+		if h.HistoricalCostBasisBase.IsPositive() {
+			incomeYieldPercent = incomeBase.DivRound(h.HistoricalCostBasisBase, 6).Mul(oneHundred).Round(2)
+		}
+
+		// Total return = Realized PnL + Dividends
+		totalReturnAmountBase := capGainBase.Add(incomeBase)
+		var totalReturnPercent decimal.Decimal
+		if h.HistoricalCostBasisBase.IsPositive() {
+			totalReturnPercent = totalReturnAmountBase.DivRound(h.HistoricalCostBasisBase, 6).Mul(oneHundred).Round(1)
+		}
+
+		return InvestmentSummary{
+			ID:                  h.InstrumentID.String(),
+			Ticker:              h.Ticker,
+			Name:                h.Name,
+			Price:               NewMoney(h.LatestPrice.Round(2), h.InstrumentCurrency),
+			AverageBuyPrice:     NewMoney(avgBuyPrice.Round(2), h.InstrumentCurrency),
+			Quantity:            decimal.Zero,
+			TotalValue:          NewMoney(decimal.Zero, baseCurrency),
+			TodayReturnAmount:   NewMoney(decimal.Zero, baseCurrency),
+			TodayReturnPercent:  decimal.Zero,
+			TotalReturnAmount:   NewMoney(totalReturnAmountBase.Round(2), baseCurrency),
+			TotalReturnPercent:  totalReturnPercent,
+			CapitalGainAmount:   NewMoney(capGainBase.Round(2), baseCurrency),
+			CapitalGainPercent:  capGainPercent,
+			IncomeAmount:        NewMoney(incomeBase.Round(2), baseCurrency),
+			IncomeYieldPercent:  incomeYieldPercent,
+			CurrencyGainAmount:  NewMoney(decimal.Zero, baseCurrency),
+			CurrencyGainPercent: decimal.Zero,
+			IsInternational:     isInternational,
+			IsClosed:            true,
+		}
 	}
 
 	totalValueInst := h.Quantity.Mul(h.LatestPrice)
@@ -101,6 +153,7 @@ func CalculateInvestment(h HoldingWithPrice, baseCurrency string) InvestmentSumm
 		CurrencyGainAmount:  NewMoney(currencyGainBase.Round(2), baseCurrency),
 		CurrencyGainPercent: currencyGainPercent,
 		IsInternational:     isInternational,
+		IsClosed:            false,
 	}
 }
 

@@ -240,6 +240,72 @@
   backdrop-filter: blur(10px);
 }
 
+.table-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.table-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.table-card-header h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0;
+  color: var(--text-secondary);
+}
+
+.assets-count-badge {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  color: var(--text-secondary);
+}
+
+.table-header-controls {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  user-select: none;
+  transition: color 0.15s ease;
+}
+
+.checkbox-toggle:hover {
+  color: var(--text-primary);
+}
+
+.checkbox-toggle input[type="checkbox"] {
+  accent-color: var(--accent-color, #3b82f6);
+  width: 0.95rem;
+  height: 0.95rem;
+  cursor: pointer;
+}
+
+.closed-position-row {
+  opacity: 0.72;
+}
+
+.closed-position-row:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
 .table-card h3 {
   font-size: 1.1rem;
   margin-bottom: 1rem;
@@ -353,6 +419,21 @@
   color: #60a5fa;
   background: rgba(59, 130, 246, 0.15);
   border: 1px solid rgba(59, 130, 246, 0.3);
+  padding: 0.08rem 0.35rem;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.2;
+}
+
+.closed-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: #94a3b8;
+  background: rgba(148, 163, 184, 0.15);
+  border: 1px solid rgba(148, 163, 184, 0.3);
   padding: 0.08rem 0.35rem;
   border-radius: 4px;
   letter-spacing: 0.5px;

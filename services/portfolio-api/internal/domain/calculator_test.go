@@ -582,5 +582,72 @@ func TestCalculateInvestment_ReturnAttribution(t *testing.T) {
 		if !inv.AverageBuyPrice.Amount.IsZero() {
 			t.Errorf("expected zero AverageBuyPrice for zero quantity, got %s", inv.AverageBuyPrice.Amount)
 		}
+		if !inv.IsClosed {
+			t.Errorf("expected IsClosed to be true for zero quantity holding")
+		}
+	})
+
+	t.Run("closed position calculates realized capital gain, income and historical returns correctly", func(t *testing.T) {
+		h := domain.HoldingWithPrice{
+			PortfolioID:             uuid.New(),
+			InstrumentID:            uuid.New(),
+			Ticker:                  "CLOSED",
+			Name:                    "Closed Corp",
+			InstrumentCurrency:      "USD",
+			Quantity:                decimal.Zero,
+			CostBasis:               decimal.Zero,
+			CostBasisBase:           decimal.Zero,
+			RealizedPnLBase:         decimal.RequireFromString("1500.00"),
+			DividendsBase:           decimal.RequireFromString("250.00"),
+			LatestPrice:             decimal.RequireFromString("65.00"),
+			PrevPrice:               decimal.RequireFromString("64.00"),
+			FXRateToBase:            decimal.NewFromInt(1),
+			HistoricalQuantity:      decimal.RequireFromString("100"),
+			HistoricalCostBasis:     decimal.RequireFromString("5000.00"),
+			HistoricalCostBasisBase: decimal.RequireFromString("5000.00"),
+		}
+
+		inv := domain.CalculateInvestment(h, "USD")
+
+		if !inv.IsClosed {
+			t.Errorf("expected IsClosed to be true")
+		}
+		if !inv.Quantity.IsZero() {
+			t.Errorf("expected quantity 0, got %s", inv.Quantity)
+		}
+		if !inv.TotalValue.Amount.IsZero() {
+			t.Errorf("expected total value 0, got %s", inv.TotalValue.Amount)
+		}
+		if !inv.TodayReturnAmount.Amount.IsZero() {
+			t.Errorf("expected today's return 0, got %s", inv.TodayReturnAmount.Amount)
+		}
+		expectedAvgBuy := decimal.RequireFromString("50.00")
+		if !inv.AverageBuyPrice.Amount.Equal(expectedAvgBuy) {
+			t.Errorf("got average buy price %s, want %s", inv.AverageBuyPrice.Amount, expectedAvgBuy)
+		}
+		expectedCapGain := decimal.RequireFromString("1500.00")
+		if !inv.CapitalGainAmount.Amount.Equal(expectedCapGain) {
+			t.Errorf("got capital gain amount %s, want %s", inv.CapitalGainAmount.Amount, expectedCapGain)
+		}
+		expectedCapGainPct := decimal.RequireFromString("30.00") // 1500 / 5000 * 100
+		if !inv.CapitalGainPercent.Equal(expectedCapGainPct) {
+			t.Errorf("got capital gain percent %s, want %s", inv.CapitalGainPercent, expectedCapGainPct)
+		}
+		expectedIncome := decimal.RequireFromString("250.00")
+		if !inv.IncomeAmount.Amount.Equal(expectedIncome) {
+			t.Errorf("got income amount %s, want %s", inv.IncomeAmount.Amount, expectedIncome)
+		}
+		expectedIncomePct := decimal.RequireFromString("5.00") // 250 / 5000 * 100
+		if !inv.IncomeYieldPercent.Equal(expectedIncomePct) {
+			t.Errorf("got income yield percent %s, want %s", inv.IncomeYieldPercent, expectedIncomePct)
+		}
+		expectedTotalReturn := decimal.RequireFromString("1750.00") // 1500 + 250
+		if !inv.TotalReturnAmount.Amount.Equal(expectedTotalReturn) {
+			t.Errorf("got total return amount %s, want %s", inv.TotalReturnAmount.Amount, expectedTotalReturn)
+		}
+		expectedTotalReturnPct := decimal.RequireFromString("35.0") // 1750 / 5000 * 100
+		if !inv.TotalReturnPercent.Equal(expectedTotalReturnPct) {
+			t.Errorf("got total return percent %s, want %s", inv.TotalReturnPercent, expectedTotalReturnPct)
+		}
 	})
 }

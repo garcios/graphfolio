@@ -229,6 +229,7 @@ type ComplexityRoot struct {
 		ID                  func(childComplexity int) int
 		IncomeAmount        func(childComplexity int) int
 		IncomeYieldPercent  func(childComplexity int) int
+		IsClosed            func(childComplexity int) int
 		IsInternational     func(childComplexity int) int
 		Name                func(childComplexity int) int
 		Price               func(childComplexity int) int
@@ -318,7 +319,7 @@ type ComplexityRoot struct {
 		InstrumentPrices           func(childComplexity int, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) int
 		Instruments                func(childComplexity int) int
 		MissingPriceTransactions   func(childComplexity int, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) int
-		Portfolio                  func(childComplexity int) int
+		Portfolio                  func(childComplexity int, includeClosed *bool) int
 		PortfolioHistory           func(childComplexity int, timeframe model.HistoryTimeframe) int
 		SupportedCurrencies        func(childComplexity int) int
 		Transactions               func(childComplexity int, typeArg *model.TransactionType, symbol *string, page *int, pageSize *int) int
@@ -399,7 +400,7 @@ type MutationResolver interface {
 	ImportTransactions(ctx context.Context, input model.BatchImportTransactionsInput) (*model.BatchImportTransactionsPayload, error)
 }
 type QueryResolver interface {
-	Portfolio(ctx context.Context) (*model.Portfolio, error)
+	Portfolio(ctx context.Context, includeClosed *bool) (*model.Portfolio, error)
 	Instruments(ctx context.Context) ([]*model.Instrument, error)
 	PortfolioHistory(ctx context.Context, timeframe model.HistoryTimeframe) (*model.PortfolioHistory, error)
 	Transactions(ctx context.Context, typeArg *model.TransactionType, symbol *string, page *int, pageSize *int) (*model.TransactionsConnection, error)
@@ -1224,6 +1225,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Investment.IncomeYieldPercent(childComplexity), true
+	case "Investment.isClosed":
+		if e.ComplexityRoot.Investment.IsClosed == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Investment.IsClosed(childComplexity), true
 	case "Investment.isInternational":
 		if e.ComplexityRoot.Investment.IsInternational == nil {
 			break
@@ -1718,7 +1725,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			break
 		}
 
-		return e.ComplexityRoot.Query.Portfolio(childComplexity), true
+		args, err := ec.field_Query_portfolio_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.Portfolio(childComplexity, args["includeClosed"].(*bool)), true
 	case "Query.portfolioHistory":
 		if e.ComplexityRoot.Query.PortfolioHistory == nil {
 			break
@@ -2481,6 +2493,8 @@ func (ec *executionContext) childFields_Investment(ctx context.Context, field gr
 		return ec.fieldContext_Investment_currencyGainPercent(ctx, field)
 	case "isInternational":
 		return ec.fieldContext_Investment_isInternational(ctx, field)
+	case "isClosed":
+		return ec.fieldContext_Investment_isClosed(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Investment", field.Name)
 }
@@ -3226,6 +3240,20 @@ func (ec *executionContext) field_Query_portfolioHistory_args(ctx context.Contex
 		return nil, err
 	}
 	args["timeframe"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_portfolio_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "includeClosed",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["includeClosed"] = arg0
 	return args, nil
 }
 
@@ -6834,6 +6862,29 @@ func (ec *executionContext) fieldContext_Investment_isInternational(_ context.Co
 	return graphql.NewScalarFieldContext("Investment", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
+func (ec *executionContext) _Investment_isClosed(ctx context.Context, field graphql.CollectedField, obj *model.Investment) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Investment_isClosed(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.IsClosed, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Investment_isClosed(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Investment", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
 func (ec *executionContext) _MarketSyncPayload_success(ctx context.Context, field graphql.CollectedField, obj *model.MarketSyncPayload) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -8176,7 +8227,8 @@ func (ec *executionContext) _Query_portfolio(ctx context.Context, field graphql.
 			return ec.fieldContext_Query_portfolio(ctx, field)
 		},
 		func(ctx context.Context) (any, error) {
-			return ec.Resolvers.Query().Portfolio(ctx)
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().Portfolio(ctx, fc.Args["includeClosed"].(*bool))
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.Portfolio) graphql.Marshaler {
@@ -8186,7 +8238,7 @@ func (ec *executionContext) _Query_portfolio(ctx context.Context, field graphql.
 		true,
 	)
 }
-func (ec *executionContext) fieldContext_Query_portfolio(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Query_portfolio(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Query",
 		Field:      field,
@@ -8195,6 +8247,17 @@ func (ec *executionContext) fieldContext_Query_portfolio(_ context.Context, fiel
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return ec.childFields_Portfolio(ctx, field)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_portfolio_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
 	}
 	return fc, nil
 }
@@ -12850,6 +12913,11 @@ func (ec *executionContext) _Investment(ctx context.Context, sel ast.SelectionSe
 			}
 		case "isInternational":
 			out.Values[i] = ec._Investment_isInternational(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isClosed":
+			out.Values[i] = ec._Investment_isClosed(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

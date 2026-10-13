@@ -18,7 +18,7 @@ type Repository interface {
 	FindPortfolioByUser(ctx context.Context, userID string) (*domain.Portfolio, error)
 	ListActivePortfolios(ctx context.Context) ([]uuid.UUID, error)
 	UpdatePortfolioBaseCurrency(ctx context.Context, portfolioID uuid.UUID, baseCurrency string, fxRate decimal.Decimal) error
-	GetHoldingsWithMarketData(ctx context.Context, portfolioID uuid.UUID) ([]domain.HoldingWithPrice, error)
+	GetHoldingsWithMarketData(ctx context.Context, portfolioID uuid.UUID, includeClosed ...bool) ([]domain.HoldingWithPrice, error)
 	GetCashBalances(ctx context.Context, portfolioID uuid.UUID) ([]domain.CashBalance, error)
 	GetLatestValuation(ctx context.Context, portfolioID uuid.UUID) (*domain.PortfolioValuation, error)
 	GetEarliestValuation(ctx context.Context, portfolioID uuid.UUID) (*domain.PortfolioValuation, error)
