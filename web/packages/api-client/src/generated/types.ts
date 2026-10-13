@@ -282,6 +282,22 @@ export default {
                     ]
                 }
             ],
+            "modifiedDietzReturn": [
+                57,
+                {
+                    "startDate": [
+                        2,
+                        "String!"
+                    ],
+                    "endDate": [
+                        2,
+                        "String!"
+                    ],
+                    "useMonthlyLinking": [
+                        8
+                    ]
+                }
+            ],
             "__typename": [
                 2
             ]
@@ -826,6 +842,9 @@ export default {
             "investments": [
                 35
             ],
+            "inceptionDate": [
+                2
+            ],
             "__typename": [
                 2
             ]
@@ -1310,6 +1329,85 @@ export default {
             ],
             "latestTradeDate": [
                 2
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "ModifiedDietzReturnPayload": {
+            "portfolioId": [
+                7
+            ],
+            "baseCurrency": [
+                2
+            ],
+            "startDate": [
+                2
+            ],
+            "endDate": [
+                2
+            ],
+            "elapsedDays": [
+                11
+            ],
+            "startValuation": [
+                1
+            ],
+            "endValuation": [
+                1
+            ],
+            "netExternalFlows": [
+                1
+            ],
+            "netInvestmentGain": [
+                1
+            ],
+            "weightedCapitalEmployed": [
+                1
+            ],
+            "cumulativeReturnPercent": [
+                0
+            ],
+            "annualizedReturnPercent": [
+                0
+            ],
+            "isAnnualized": [
+                8
+            ],
+            "isComputable": [
+                8
+            ],
+            "diagnosticCode": [
+                2
+            ],
+            "cashFlowWeights": [
+                58
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "ExternalCashFlowWeightItem": {
+            "transactionId": [
+                7
+            ],
+            "date": [
+                2
+            ],
+            "type": [
+                3
+            ],
+            "amount": [
+                1
+            ],
+            "weight": [
+                0
+            ],
+            "weightedAmount": [
+                1
+            ],
+            "localAmount": [
+                1
             ],
             "__typename": [
                 2

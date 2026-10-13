@@ -64,6 +64,7 @@ export interface Query {
     checkTransactionDuplicates: Scalars['String'][]
     cashFlowReport: CashFlowReport
     missingPriceTransactions: MissingPriceReport
+    modifiedDietzReturn: ModifiedDietzReturnPayload
     __typename: 'Query'
 }
 
@@ -215,6 +216,7 @@ export interface Portfolio {
     annualizedReturnPercent: Scalars['Decimal']
     cashBalance: Money
     investments: Investment[]
+    inceptionDate: (Scalars['String'] | null)
     __typename: 'Portfolio'
 }
 
@@ -404,6 +406,37 @@ export interface MissingPriceReport {
     __typename: 'MissingPriceReport'
 }
 
+export interface ModifiedDietzReturnPayload {
+    portfolioId: Scalars['ID']
+    baseCurrency: Scalars['String']
+    startDate: Scalars['String']
+    endDate: Scalars['String']
+    elapsedDays: Scalars['Int']
+    startValuation: Money
+    endValuation: Money
+    netExternalFlows: Money
+    netInvestmentGain: Money
+    weightedCapitalEmployed: Money
+    cumulativeReturnPercent: Scalars['Decimal']
+    annualizedReturnPercent: (Scalars['Decimal'] | null)
+    isAnnualized: Scalars['Boolean']
+    isComputable: Scalars['Boolean']
+    diagnosticCode: Scalars['String']
+    cashFlowWeights: ExternalCashFlowWeightItem[]
+    __typename: 'ModifiedDietzReturnPayload'
+}
+
+export interface ExternalCashFlowWeightItem {
+    transactionId: Scalars['ID']
+    date: Scalars['String']
+    type: TransactionType
+    amount: Money
+    weight: Scalars['Decimal']
+    weightedAmount: Money
+    localAmount: Money
+    __typename: 'ExternalCashFlowWeightItem'
+}
+
 export interface MoneyGenqlSelection{
     amount?: boolean | number
     currencyCode?: boolean | number
@@ -461,6 +494,7 @@ export interface QueryGenqlSelection{
     checkTransactionDuplicates?: { __args: {externalRefs: Scalars['String'][]} }
     cashFlowReport?: (CashFlowReportGenqlSelection & { __args: {filter: CashFlowFilterInput} })
     missingPriceTransactions?: (MissingPriceReportGenqlSelection & { __args?: {symbol?: (Scalars['String'] | null), fromDate?: (Scalars['String'] | null), toDate?: (Scalars['String'] | null), limit?: (Scalars['Int'] | null), offset?: (Scalars['Int'] | null)} })
+    modifiedDietzReturn?: (ModifiedDietzReturnPayloadGenqlSelection & { __args: {startDate: Scalars['String'], endDate: Scalars['String'], useMonthlyLinking?: (Scalars['Boolean'] | null)} })
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -638,6 +672,7 @@ export interface PortfolioGenqlSelection{
     annualizedReturnPercent?: boolean | number
     cashBalance?: MoneyGenqlSelection
     investments?: InvestmentGenqlSelection
+    inceptionDate?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -840,6 +875,39 @@ export interface MissingPriceReportGenqlSelection{
     uniqueInstrumentsCount?: boolean | number
     earliestTradeDate?: boolean | number
     latestTradeDate?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface ModifiedDietzReturnPayloadGenqlSelection{
+    portfolioId?: boolean | number
+    baseCurrency?: boolean | number
+    startDate?: boolean | number
+    endDate?: boolean | number
+    elapsedDays?: boolean | number
+    startValuation?: MoneyGenqlSelection
+    endValuation?: MoneyGenqlSelection
+    netExternalFlows?: MoneyGenqlSelection
+    netInvestmentGain?: MoneyGenqlSelection
+    weightedCapitalEmployed?: MoneyGenqlSelection
+    cumulativeReturnPercent?: boolean | number
+    annualizedReturnPercent?: boolean | number
+    isAnnualized?: boolean | number
+    isComputable?: boolean | number
+    diagnosticCode?: boolean | number
+    cashFlowWeights?: ExternalCashFlowWeightItemGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface ExternalCashFlowWeightItemGenqlSelection{
+    transactionId?: boolean | number
+    date?: boolean | number
+    type?: boolean | number
+    amount?: MoneyGenqlSelection
+    weight?: boolean | number
+    weightedAmount?: MoneyGenqlSelection
+    localAmount?: MoneyGenqlSelection
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1137,6 +1205,22 @@ export interface MissingPriceReportGenqlSelection{
     export const isMissingPriceReport = (obj?: { __typename?: any } | null): obj is MissingPriceReport => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isMissingPriceReport"')
       return MissingPriceReport_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const ModifiedDietzReturnPayload_possibleTypes: string[] = ['ModifiedDietzReturnPayload']
+    export const isModifiedDietzReturnPayload = (obj?: { __typename?: any } | null): obj is ModifiedDietzReturnPayload => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isModifiedDietzReturnPayload"')
+      return ModifiedDietzReturnPayload_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const ExternalCashFlowWeightItem_possibleTypes: string[] = ['ExternalCashFlowWeightItem']
+    export const isExternalCashFlowWeightItem = (obj?: { __typename?: any } | null): obj is ExternalCashFlowWeightItem => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isExternalCashFlowWeightItem"')
+      return ExternalCashFlowWeightItem_possibleTypes.includes(obj.__typename)
     }
     
 

@@ -143,6 +143,149 @@
   letter-spacing: 0.5px;
 }
 
+.metric-card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.metric-card.interactive {
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+}
+
+.metric-card.return-card {
+  min-width: 190px;
+}
+
+.metric-card.interactive:hover {
+  border-color: rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.15);
+}
+
+.metric-card.interactive:focus-visible {
+  outline: 2px solid var(--accent-blue, #3b82f6);
+  outline-offset: 2px;
+}
+
+.return-label-group {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.method-indicator-pill {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.method-indicator-pill.twr {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
+.method-indicator-pill.dietz {
+  background: rgba(99, 102, 241, 0.15);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+}
+
+.return-switcher-pills {
+  display: flex;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 2px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 2px;
+}
+
+.return-switcher-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  line-height: 1.2;
+}
+
+.return-switcher-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.return-switcher-btn.active {
+  color: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.return-switcher-btn.active:first-child {
+  background: rgba(59, 130, 246, 0.3);
+  color: #93c5fd;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.return-switcher-btn.active:last-child {
+  background: rgba(99, 102, 241, 0.3);
+  color: #c7d2fe;
+  border: 1px solid rgba(99, 102, 241, 0.4);
+}
+
+.return-metric-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-top: 0.15rem;
+}
+
+.return-method-subtitle {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.dietz-action-hint {
+  cursor: pointer;
+}
+
+.dietz-action-hint .inspect-underline {
+  color: #a5b4fc;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.15s ease;
+}
+
+.dietz-action-hint:hover .inspect-underline {
+  color: #c7d2fe;
+}
+
+.return-loading-shimmer {
+  opacity: 0.6;
+  font-size: 1.1rem !important;
+  animation: pulseReturn 1.5s infinite ease-in-out;
+}
+
+@keyframes pulseReturn {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.85; }
+}
+
 .metric-card .value {
   font-size: 1.25rem;
   font-weight: 600;

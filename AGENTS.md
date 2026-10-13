@@ -16,7 +16,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 - **`proto/` (The Contract)**:
   Protocol Buffers are the single source of truth for microservice RPCs and shared types. Stored at the root to eliminate schema drift between gRPC servers and the BFF client wrappers.
   - `proto/common/v1/decimal.proto`: High-precision fixed-point `Decimal` (value, scale) and `Money` (amount, currency_code) types.
-  - `proto/portfolio/v1/portfolio.proto`: Portfolio service (`GetPortfolio` with `include_closed_positions`, `UpdatePortfolioBaseCurrency`, `AddTransaction`, `ListInstruments`, `GetPortfolioHistory`, `ListTransactions`, `DeleteTransaction`, `GetCashFlowReport`, `ListAllInstruments`, `CreateInstrument`, `UpdateInstrument`, `DeleteInstrument`, `ListExchanges`, `ListInstrumentPrices`, `RecordPriceOverride`, `GetIngestionStatus`, `TriggerMarketSync`, `TriggerBackfill`, `RebuildValuations`, `ListCurrencyPairs`, `ListFXRates`, `GetCurrencyPairHistory`, `RecordFXRateOverride`, `CheckTransactionDuplicates`, `BatchImportTransactions`, `ListMissingPriceTransactions`), investment summary with 3-pillar return attribution (`capital_gain_amount`, `capital_gain_percent`, `income_amount`, `income_yield_percent`, `currency_gain_amount`, `currency_gain_percent`, `is_international`, `is_closed`), cash flow report (`CashFlowReport`, `CashFlowSummary`, `CashFlowCategoryBreakdown`, `CashFlowItem`), missing price diagnostics (`MissingPriceTransactionItem`, `ListMissingPriceTransactionsRequest`, `ListMissingPriceTransactionsResponse`), time-series valuation points, performance metrics, corporate actions (`SPLIT`), and administrative foreign exchange / pricing operations.
+  - `proto/portfolio/v1/portfolio.proto`: Portfolio service (`GetPortfolio` with `include_closed_positions` and `inception_date`, `UpdatePortfolioBaseCurrency`, `AddTransaction`, `ListInstruments`, `GetPortfolioHistory`, `ListTransactions`, `DeleteTransaction`, `GetCashFlowReport`, `GetModifiedDietzReturn`, `ListAllInstruments`, `CreateInstrument`, `UpdateInstrument`, `DeleteInstrument`, `ListExchanges`, `ListInstrumentPrices`, `RecordPriceOverride`, `GetIngestionStatus`, `TriggerMarketSync`, `TriggerBackfill`, `RebuildValuations`, `ListCurrencyPairs`, `ListFXRates`, `GetCurrencyPairHistory`, `RecordFXRateOverride`, `CheckTransactionDuplicates`, `BatchImportTransactions`, `ListMissingPriceTransactions`), investment summary with 3-pillar return attribution (`capital_gain_amount`, `capital_gain_percent`, `income_amount`, `income_yield_percent`, `currency_gain_amount`, `currency_gain_percent`, `is_international`, `is_closed`), cash flow report (`CashFlowReport`, `CashFlowSummary`, `CashFlowCategoryBreakdown`, `CashFlowItem`), Modified Dietz return and sub-period linking contracts (`GetModifiedDietzReturnRequest`, `GetModifiedDietzReturnResponse`, `ExternalCashFlowWeight`, `SubPeriodReturn`), missing price diagnostics (`MissingPriceTransactionItem`, `ListMissingPriceTransactionsRequest`, `ListMissingPriceTransactionsResponse`), time-series valuation points, performance metrics, corporate actions (`SPLIT`), and administrative foreign exchange / pricing operations.
   - `proto/user/v1/user.proto`: User service (`GetUserPreferences`, `UpdateUserPreferences`, `ListSupportedCurrencies`), user profile preferences (`theme`, `display_currency`, `display_name`), and currency reference metadata.
 
 - **`pkg/` (Shared Infrastructure)**:
@@ -29,9 +29,9 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 - **`services/` (The Domain Microservices)**:
   Each microservice is an isolated Go module (`services/portfolio-api`, `services/user-api`):
   - **`services/portfolio-api` (:50051)**:
-    - Domain models and calculators live in `internal/domain/` (`portfolio`, `holding` with `HistoricalQuantity`, `HistoricalCostBasis`, `HistoricalCostBasisBase`, and `IsClosed`, `transaction`, `instrument`, `exchange`, `price`, `missing_price`, `ingestion`, `tax_lot`, `history`, `valuation`, `fx`, `backfill`, `cash_flow`, `calculator` with exact 3-pillar multi-currency return attribution and closed position zero-division safety).
-    - Persistence logic lives in `internal/repository/` with `pgxpool.Pool` queries and transactions (`InsertTransaction`, `ListTransactions`, `DeleteTransaction`, `UpdatePortfolioBaseCurrency`, `FindInstrumentBySymbol`, `SaveProjectionsTx`, `GetPortfolioValuations`, `GetEarliestValuation`, `ListAllInstruments`, `CreateInstrument`, `UpdateInstrument`, `DeleteInstrument`, `ListExchanges`, `ListInstrumentPrices`, `UpsertInstrumentPrice`, `GetIngestionMetrics`, `UpsertValuationsBatch`, `GetLatestValuationBefore`, `GetHistoricalPriceMatrix`, `GetHistoricalFXMatrix`, `DeleteValuationsFromDate`, `ListActivePortfolios`, `ListActiveInstruments`, `ListActiveCurrencies`, `FindPortfoliosHoldingInstrument`, `ListCurrencyPairs`, `GetCurrencyPairHistory`, `ListFXRates`, `UpsertFXRate`, `FindExistingExternalRefs`, `BatchInsertTransactions`, `GetCashFlowTransactions`, `ListMissingPriceTransactions`, `GetHoldingsWithMarketData` supporting `includeClosed` via `combined_holdings` CTE and lot disposal cost reconstruction).
-    - Business logic, calculation services, transaction ingestion (`AddTransaction`), transaction deletion (`DeleteTransaction`), batch statement import (`BatchImportTransactions`), external reference deduplication (`CheckTransactionDuplicates`), ledger replay projections (`RebuildProjections`), dynamic base currency re-anchoring (`UpdatePortfolioBaseCurrency`), paginated ledger queries (`ListTransactions`), cash flow report generation (`GetCashFlowReport`), administrative operations (`CreateInstrument`, `UpdateInstrument`, `DeleteInstrument`, `ListExchanges`, `RecordPriceOverride`, `GetIngestionStatus`, `TriggerMarketSync`, `TriggerBackfill`, `ListMissingPriceTransactions`), foreign exchange management & rate overrides (`ListCurrencyPairs`, `GetCurrencyPairHistory`, `ListFXRates`, `RecordFXRateOverride`), historical valuation time-series retrieval (`GetPortfolioHistory`), and daily valuation snapshots & multi-day historical backfill replay engine (`ValuationService`, `RebuildValuations`) live in `internal/service/`.
+    - Domain models and calculators live in `internal/domain/` (`portfolio` with `InceptionDate`, `holding` with `HistoricalQuantity`, `HistoricalCostBasis`, `HistoricalCostBasisBase`, and `IsClosed`, `transaction`, `instrument`, `exchange`, `price`, `missing_price`, `ingestion`, `tax_lot`, `history`, `valuation`, `fx`, `backfill`, `cash_flow`, `dietz` with `ModifiedDietzInput`, `ModifiedDietzResult`, `ExternalCashFlowWeight`, `SubPeriodReturn`, and sub-period chaining, `calculator` with exact 3-pillar multi-currency return attribution and closed position zero-division safety).
+    - Persistence logic lives in `internal/repository/` with `pgxpool.Pool` queries and transactions (`InsertTransaction`, `ListTransactions`, `DeleteTransaction`, `UpdatePortfolioBaseCurrency`, `FindInstrumentBySymbol`, `SaveProjectionsTx`, `GetPortfolioValuations`, `GetEarliestValuation`, `GetValuationAtOrBefore`, `GetExternalCashFlows`, `ListAllInstruments`, `CreateInstrument`, `UpdateInstrument`, `DeleteInstrument`, `ListExchanges`, `ListInstrumentPrices`, `UpsertInstrumentPrice`, `GetIngestionMetrics`, `UpsertValuationsBatch`, `GetLatestValuationBefore`, `GetHistoricalPriceMatrix`, `GetHistoricalFXMatrix`, `DeleteValuationsFromDate`, `ListActivePortfolios`, `ListActiveInstruments`, `ListActiveCurrencies`, `FindPortfoliosHoldingInstrument`, `ListCurrencyPairs`, `GetCurrencyPairHistory`, `ListFXRates`, `UpsertFXRate`, `FindExistingExternalRefs`, `BatchInsertTransactions`, `GetCashFlowTransactions`, `ListMissingPriceTransactions`, `GetHoldingsWithMarketData` supporting `includeClosed` via `combined_holdings` CTE and lot disposal cost reconstruction).
+    - Business logic, calculation services, transaction ingestion (`AddTransaction`), transaction deletion (`DeleteTransaction`), batch statement import (`BatchImportTransactions`), external reference deduplication (`CheckTransactionDuplicates`), ledger replay projections (`RebuildProjections`), dynamic base currency re-anchoring (`UpdatePortfolioBaseCurrency`), paginated ledger queries (`ListTransactions`), cash flow report generation (`GetCashFlowReport`), Modified Dietz return and sub-period linking calculations (`GetModifiedDietzReturn`), administrative operations (`CreateInstrument`, `UpdateInstrument`, `DeleteInstrument`, `ListExchanges`, `RecordPriceOverride`, `GetIngestionStatus`, `TriggerMarketSync`, `TriggerBackfill`, `ListMissingPriceTransactions`), foreign exchange management & rate overrides (`ListCurrencyPairs`, `GetCurrencyPairHistory`, `ListFXRates`, `RecordFXRateOverride`), historical valuation time-series retrieval (`GetPortfolioHistory`), and daily valuation snapshots & multi-day historical backfill replay engine (`ValuationService`, `RebuildValuations`) live in `internal/service/`.
     - Transport adapters (gRPC servers) live in `internal/` (`server.go`), `cmd/server/main.go`, and scheduled CLI / background valuation worker in `cmd/worker/main.go`.
   - **`services/user-api` (:50052)**:
     - Domain models live in `internal/domain/` (`User`, `CurrencyInfo`, `SupportedCurrencies`).
@@ -41,11 +41,11 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
   - Microservices only interact with their dedicated database schemas and other gRPC APIs. They have zero awareness of GraphQL.
 
 - **`bff/` (The Orchestrator)**:
-  The Backend-for-Frontend is a Go service using `gqlgen` (GraphQL). It translates GraphQL queries (`portfolio(includeClosed: Boolean)`, `instruments`, `portfolioHistory`, `transactions`, `cashFlowReport`, `allInstruments`, `exchanges`, `instrumentPrices`, `missingPriceTransactions`, `ingestionStatus`, `userPreferences`, `supportedCurrencies`, `currencyPairs`, `currencyPairHistory`, `fxRates`, `checkTransactionDuplicates`) and mutations (`addTransaction`, `deleteTransaction`, `importTransactions`, `createInstrument`, `updateInstrument`, `deleteInstrument`, `recordPriceOverride`, `recordFXRateOverride`, `triggerMarketSync`, `triggerBackfill`, `updateUserPreferences`) into gRPC calls across domain microservices, maps exact decimal scalars, exposes investment return attribution fields (`capitalGainAmount`, `incomeAmount`, `currencyGainAmount`, `isInternational`, `isClosed`), orchestrates dynamic currency re-anchoring between `user-api` and `portfolio-api`, and shields the frontend from microservice topology.
+  The Backend-for-Frontend is a Go service using `gqlgen` (GraphQL). It translates GraphQL queries (`portfolio(includeClosed: Boolean)`, `instruments`, `portfolioHistory`, `transactions`, `cashFlowReport`, `modifiedDietzReturn`, `allInstruments`, `exchanges`, `instrumentPrices`, `missingPriceTransactions`, `ingestionStatus`, `userPreferences`, `supportedCurrencies`, `currencyPairs`, `currencyPairHistory`, `fxRates`, `checkTransactionDuplicates`) and mutations (`addTransaction`, `deleteTransaction`, `importTransactions`, `createInstrument`, `updateInstrument`, `deleteInstrument`, `recordPriceOverride`, `recordFXRateOverride`, `triggerMarketSync`, `triggerBackfill`, `updateUserPreferences`) into gRPC calls across domain microservices, maps exact decimal scalars, exposes investment return attribution fields (`capitalGainAmount`, `incomeAmount`, `currencyGainAmount`, `isInternational`, `isClosed`), surfaces `portfolio.inceptionDate`, orchestrates dynamic currency re-anchoring between `user-api` and `portfolio-api`, and shields the frontend from microservice topology.
 
 - **`web/` (The Consumer)**:
   Workspace monorepo containing multiple frontend applications and shared libraries:
-  - `apps/main-app`: Primary investor-facing application (Port 5173). Interactive portfolio dashboard with widened desktop layout (`max-width: 1680px`), 10-column holdings return attribution breakdown (`Asset`, `Price`, `Avg Buy Price`, `Quantity`, `Total Value`, `Capital Gain`, `Income`, `Currency Gain`, `Total Return`, `Today's Return`), interactive closed positions toggle with asset counts (`X active, Y closed`) and `CLOSED` badges, performance chart, transaction ledger, extensible reports hub navigation (`ReportsView`) hosting the Cash Flow Report (`CashFlowReport` with timeframe filtering, category breakdowns, reconciliation check, running balances, and CSV export), trade ingestion modal (`AddTransactionModal` with Buy, Sell, Deposit, Withdrawal, Dividend, and Split support), multi-broker CSV statement import modal (`ImportTransactionsModal`), client-side CSV parsers (`src/services/csv/`), and investor profile preferences modal (`UserPreferencesModal`).
+  - `apps/main-app`: Primary investor-facing application (Port 5173). Interactive portfolio dashboard with widened desktop layout (`max-width: 1680px`), 10-column holdings return attribution breakdown (`Asset`, `Price`, `Avg Buy Price`, `Quantity`, `Total Value`, `Capital Gain`, `Income`, `Currency Gain`, `Total Return`, `Today's Return`), dual return methodology switcher (`[ TWR | DIETZ ]`) with `localStorage` persistence, interactive closed positions toggle with asset counts (`X active, Y closed`) and `CLOSED` badges, performance chart, transaction ledger, extensible reports hub navigation (`ReportsView`) hosting the Cash Flow Report (`CashFlowReport` with timeframe filtering, category breakdowns, reconciliation check, running balances, and CSV export), Modified Dietz Return Calculator modal (`ModifiedDietzModal` with cash-flow weight inspection, monthly sub-period linking, and automatic inception date preselection), trade ingestion modal (`AddTransactionModal` with Buy, Sell, Deposit, Withdrawal, Dividend, and Split support), multi-broker CSV statement import modal (`ImportTransactionsModal`), client-side CSV parsers (`src/services/csv/`), and investor profile preferences modal (`UserPreferencesModal`).
   - `apps/admin-app`: Internal administrative portal (Port 5174). Master instrument directory, closing price ledger with dual date range filtering, presets, and pagination (`PriceManagement`), missing closing price transaction diagnostics and range backfills (`MissingPricesReport`), foreign exchange currency pairs management (`FXManagement`, `FXTrendChart`, `FXOverrideModal`), market ingestion monitoring, and historical market data range backfills (`BackfillModal`).
   - `packages/ui`: Shared design system (`@graphfolio/ui`) with dark glassmorphic design tokens, atomic components (`Button`, `Modal`, `Card`, `Badge`, `Table`, `Input`, `Select`), and precision financial formatters.
   - `packages/api-client`: Shared auto-generated typed GraphQL client (`@graphfolio/api-client`) communicating with the BFF.
@@ -81,10 +81,12 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   │   ├── cmd/server/           # Service entrypoint (gRPC on :50051)
 │   │   ├── cmd/worker/           # Scheduled EOD & on-demand valuation worker (runnable via make run-valuation-job)
 │   │   ├── internal/
-│   │   │   ├── domain/           # Domain entities (Portfolio, Holding, Transaction, Instrument, Price, MissingPrice, Ingestion, TaxLot, Money, History, Valuation, FX, Backfill, CashFlow)
+│   │   │   ├── domain/           # Domain entities (Portfolio, Holding, Transaction, Instrument, Price, MissingPrice, Ingestion, TaxLot, Money, History, Valuation, FX, Backfill, CashFlow, Dietz)
 │   │   │   │   ├── transaction.go# Transaction, TransactionFilter, TransactionPage
 │   │   │   │   ├── missing_price.go# MissingPriceTransactionItem, MissingPriceFilter, MissingPriceTransactionsPage
 │   │   │   │   ├── cash_flow.go  # CashFlowReport, CashFlowSummary, CashFlowCategoryBreakdown, CashFlowItem, CashFlowTimeframe
+│   │   │   │   ├── dietz.go      # ModifiedDietzInput, ModifiedDietzResult, ExternalCashFlowWeight, SubPeriodReturn, CalculateModifiedDietz, ChainModifiedDietzSubPeriods
+│   │   │   │   ├── dietz_test.go # Unit tests for Modified Dietz formula, cash-flow weighting, sub-annual GIPS rule, and sub-period chaining
 │   │   │   │   ├── backfill.go   # BackfillInput, BackfillResult (historical market data backfill jobs)
 │   │   │   │   ├── valuation.go  # PortfolioValuationSnapshot, sub-period return, TWR linking, GIPS CAGR
 │   │   │   │   ├── price.go      # InstrumentPrice, PriceFilter, PriceOverrideInput
@@ -93,12 +95,14 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   │   │   │   ├── history.go    # ValuationPoint, PortfolioHistory, CalculatePortfolioHistory
 │   │   │   │   └── ...
 │   │   │   ├── repository/       # Repository interface & PostgreSQL (pgx) queries
-│   │   │   │   ├── postgres.go   # Queries: ListTransactions, ListAllInstruments, ListMissingPriceTransactions, UpsertValuationsBatch, GetHistoricalPriceMatrix, ListCurrencyPairs, GetCashFlowTransactions, etc.
+│   │   │   │   ├── postgres.go   # Queries: ListTransactions, ListAllInstruments, ListMissingPriceTransactions, UpsertValuationsBatch, GetHistoricalPriceMatrix, ListCurrencyPairs, GetCashFlowTransactions, GetValuationAtOrBefore, GetExternalCashFlows, etc.
 │   │   │   │   └── mocks/        # Uber-go mock repository (MockRepository)
 │   │   │   ├── service/          # PortfolioService, ValuationService, ledger projection engine, transaction & admin manager
 │   │   │   │   ├── transaction.go# AddTransaction, ListTransactions, DeleteTransaction (with RebuildProjections & valuation hooks)
 │   │   │   │   ├── cash_flow.go  # Cash flow report generator (GetCashFlowReport, category grouping, running balance)
 │   │   │   │   ├── cash_flow_test.go # Unit tests for cash flow reconciliation and category attribution
+│   │   │   │   ├── dietz.go      # Modified Dietz service (GetModifiedDietzReturn, monthly sub-period linking, inception date clamping, dormant period pruning)
+│   │   │   │   ├── dietz_test.go # Unit tests for Dietz service and multi-period linking
 │   │   │   │   ├── valuation.go  # ValuationService (SnapshotValuation, BackfillPortfolioValuations, RunDailyValuationJob)
 │   │   │   │   ├── valuation_test.go # Multi-day historical backfill replay and daily job unit tests
 │   │   │   │   ├── fx.go         # Foreign exchange service (ListCurrencyPairs, GetCurrencyPairHistory, ListFXRates, RecordFXRateOverride)
@@ -110,7 +114,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   │   │   │   ├── history.go    # GetPortfolioHistory and timeframe boundary logic
 │   │   │   │   ├── history_test.go# Unit tests for history filtering and period return math
 │   │   │   │   └── mocks/        # Uber-go mocks (MockPortfolioService, MockValuationService, MockIngestionService)
-│   │   │   ├── server.go         # gRPC PortfolioServiceServer implementation (ListTransactions, RecordPriceOverride, ListMissingPriceTransactions, RebuildValuations, ListCurrencyPairs, TriggerBackfill, GetCashFlowReport, etc.)
+│   │   │   ├── server.go         # gRPC PortfolioServiceServer implementation (ListTransactions, RecordPriceOverride, ListMissingPriceTransactions, RebuildValuations, ListCurrencyPairs, TriggerBackfill, GetCashFlowReport, GetModifiedDietzReturn, etc.)
 │   │   │   └── server_test.go    # gRPC server unit tests with MockPortfolioService
 │   │   ├── migrations/           # Schema migrations (000001 to 000009)
 │   │   ├── seeds/                # Development seed data (dev_seed.sql with 365-day history)
@@ -145,7 +149,7 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   ├── apps/
 │   │   ├── main-app/             # Primary Investor Application (:5173)
 │   │   │   ├── src/
-│   │   │   │   ├── components/   # Dashboard, PerformanceChart, TransactionLedger, ReportsView, CashFlowReport, AddTransactionModal, UserPreferencesModal
+│   │   │   │   ├── components/   # Dashboard, PerformanceChart, ModifiedDietzModal, TransactionLedger, ReportsView, CashFlowReport, AddTransactionModal, UserPreferencesModal
 │   │   │   │   ├── App.tsx
 │   │   │   │   └── main.tsx
 │   │   │   ├── vite.config.ts    # Configured with resolve.alias for live package HMR
@@ -194,13 +198,15 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
 │   │   ├── portfolio-cash-flow-report-implementation-plan.md
 │   │   ├── annualized-return-twr-fix-implementation-plan.md
 │   │   ├── include-closed-positions-implementation-plan.md
+│   │   ├── annualized-return-modified-dietz-implementation-plan.md
 │   │   └── web-workspace-refactoring-plan.md
 │   ├── user-stories/             # Agile user stories & acceptance criteria
 │   │   ├── investment-holding-capital-gain-income-currency.md
 │   │   ├── average_buy_price_column.md
 │   │   ├── portfolio-cash-flow-report-generation.md
 │   │   ├── admin-missing-prices-report.md
-│   │   └── include-closed-positions-dashboard.md
+│   │   ├── include-closed-positions-dashboard.md
+│   │   └── annualized-return-modified-dietz.md
 │   ├── annualized-twr-return-investigation-report.md # Annualized return distortion root cause & remediation report
 │   ├── negative-cash-balance-investigation-report.md # Cash ledger overdraft root cause & remediation report
 │   ├── competitive-analysis.md
@@ -411,6 +417,45 @@ A modern portfolio tracker built for serious investors. Move beyond simple price
   - Closed positions receive `.closed-position-row` (muted opacity with hover highlight) and a slate `CLOSED` badge next to the asset ticker.
   - Zero quantity renders as `0`, current value renders as `$0.00`, and today's return displays a neutral dash (`—`).
   - Toggle preference is persisted in browser local storage under `graphfolio:include-closed-positions`.
+
+### 4.18 Modified Dietz Annualized Return & Cash-Flow Weighting Standards
+- **End-to-End Contract & Precision Policy**: gRPC `GetModifiedDietzReturn(GetModifiedDietzReturnRequest)` → GraphQL `modifiedDietzReturn(portfolioId, fromDate, toDate, linkMonthly)`. All capital balances ($V_0, V_1$), net external flows ($F$), weights ($W_i$), effective capital employed, and returns use exact fixed-point `shopspring/decimal.Decimal` arithmetic with zero IEEE 754 float drift.
+- **Single-Period Modified Dietz Formulation**:
+  $$R_{\text{Dietz}} = \frac{V_1 - V_0 - F}{V_0 + \sum_{i=1}^n (F_i \times W_i)}$$
+  where:
+  - $V_0$: Beginning portfolio market value at start date $t_0$ (retrieved via `GetValuationAtOrBefore`).
+  - $V_1$: Ending portfolio market value at end date $t_1$.
+  - $F = \sum_{i=1}^n F_i$: Net external cash flow ($DEPOSIT - WITHDRAWAL$) during the period. Internal portfolio transactions (`BUY`, `SELL`, `DIVIDEND`) are excluded because they do not alter total portfolio equity.
+  - $\sum_{i=1}^n (F_i \times W_i)$: Weighted external cash flows.
+  - $\text{Effective Capital} = V_0 + \sum_{i=1}^n (F_i \times W_i)$. If effective capital is $\le 0$, the calculation returns a clean `ZERO_CAPITAL_EMPLOYED` status code with $0.00\%$ return to avoid negative or infinite denominators.
+- **Actual/Actual Calendar Day-Weighting**:
+  $$W_i = \frac{CD - D_i}{CD}$$
+  where $CD = \text{Date}_1 - \text{Date}_0$ (total calendar days in the measurement interval), and $D_i = \text{Date}_{F_i} - \text{Date}_0$ (calendar days elapsed from start date to transaction date).
+  - Cash flows occurring on the start date have weight $W_i = 1.0$ (available for the entire period).
+  - Cash flows occurring on the end date have weight $W_i = 0.0$.
+  - Inflows increase capital employed; outflows decrease capital employed.
+- **GIPS Standard 2.A.20 Annualization Rule**:
+  - Sub-annual periods ($CD < 365$ days): Compound annualization is prohibited under GIPS 2.A.20 to prevent extreme mathematical distortion of short-term volatility. The reported return is the non-annualized period rate:
+    $$R_{\text{annualized}} = R_{\text{Dietz}}$$
+  - Multi-year periods ($CD \ge 365$ days): Compounded geometrically using Actual/365.25 day count:
+    $$R_{\text{annualized}} = \left((1 + R_{\text{Dietz}})^{\frac{365.25}{CD}} - 1\right) \times 100\%$$
+- **Monthly Sub-Period Linking (`link_monthly = true`)**:
+  - For long multi-year horizons with significant external cash movements, single-period Dietz can dilute return sensitivity. The service segments the requested window into monthly calendar sub-periods $[t_{m-1}, t_m]$.
+  - Each monthly sub-period return $R_m$ is computed via Modified Dietz using the sub-period's start value, end value, and internal cash flows.
+  - Cumulative chained return is linked geometrically across all active months:
+    $$R_{\text{cumulative}} = \left(\prod_{m=1}^M (1 + R_m) - 1\right) \times 100\%$$
+  - Sub-period annualization applies the GIPS $\ge 365$ days rule to the cumulative compounded return over the total linked elapsed days.
+  - **Pre-Inception Clamping & Dormant Period Pruning**: If the requested start date precedes the portfolio's inception date (`earliestVal.ValuationDate`), `startUTC` is clamped to the true inception date. Any dormant sub-periods preceding initial portfolio funding where $V_0 = 0$ and $F = 0$ are pruned from the chain, eliminating false `ZERO_CAPITAL_EMPLOYED` failures.
+- **Dual Methodology Switcher & Interactive UI Integration**:
+  - The dashboard total return card in `web/apps/main-app` (`Dashboard.tsx`) features an interactive toggle: `[ TWR | DIETZ ]`.
+  - Preference is persisted in browser local storage under `graphfolio:return-method`.
+  - Clicking the return metric card opens `ModifiedDietzModal`, displaying:
+    - Quick timeframe presets (`1M`, `3M`, `6M`, `YTD`, `1Y`, `ALL`) and custom date pickers.
+    - Selecting `ALL` automatically pre-selects the portfolio's true inception date (`portfolio.inceptionDate`).
+    - Capital balance decomposition ($V_0$, $V_1$, Net Cash Flows, Net Profit/Loss, Weighted Cash Flows, Effective Capital Employed).
+    - Itemized cash-flow weighting table with dates, types, amounts, day-counts, and exact percentage weights ($W_i\%$).
+    - Monthly sub-period linking toggle and expandable monthly sub-period breakdown table.
+    - GIPS compliance badge and sub-annual annualization status indicators.
 
 ---
 

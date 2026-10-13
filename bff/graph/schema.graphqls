@@ -115,6 +115,13 @@ type Query {
     limit: Int = 50
     offset: Int = 0
   ): MissingPriceReport!
+
+  # Return Analytics: Modified Dietz Method
+  modifiedDietzReturn(
+    startDate: String!
+    endDate: String!
+    useMonthlyLinking: Boolean
+  ): ModifiedDietzReturnPayload!
 }
 
 enum HistoryTimeframe {
@@ -319,6 +326,7 @@ type Portfolio {
   annualizedReturnPercent: Decimal!
   cashBalance: Money!
   investments: [Investment!]!
+  inceptionDate: String
 }
 
 type Investment {
@@ -538,6 +546,39 @@ type MissingPriceReport {
   uniqueInstrumentsCount: Int!
   earliestTradeDate: String
   latestTradeDate: String
+}
+
+# ------------------------------------------------------------------
+# Return Analytics: Modified Dietz Method Types
+# ------------------------------------------------------------------
+
+type ModifiedDietzReturnPayload {
+  portfolioId: ID!
+  baseCurrency: String!
+  startDate: String!
+  endDate: String!
+  elapsedDays: Int!
+  startValuation: Money!
+  endValuation: Money!
+  netExternalFlows: Money!
+  netInvestmentGain: Money!
+  weightedCapitalEmployed: Money!
+  cumulativeReturnPercent: Decimal!
+  annualizedReturnPercent: Decimal
+  isAnnualized: Boolean!
+  isComputable: Boolean!
+  diagnosticCode: String!
+  cashFlowWeights: [ExternalCashFlowWeightItem!]!
+}
+
+type ExternalCashFlowWeightItem {
+  transactionId: ID!
+  date: String!
+  type: TransactionType!
+  amount: Money!
+  weight: Decimal!
+  weightedAmount: Money!
+  localAmount: Money!
 }
 
 

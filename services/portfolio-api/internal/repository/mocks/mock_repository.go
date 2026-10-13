@@ -280,6 +280,21 @@ func (mr *MockRepositoryMockRecorder) GetEarliestValuation(ctx, portfolioID any)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEarliestValuation", reflect.TypeOf((*MockRepository)(nil).GetEarliestValuation), ctx, portfolioID)
 }
 
+// GetExternalCashFlows mocks base method.
+func (m *MockRepository) GetExternalCashFlows(ctx context.Context, portfolioID uuid.UUID, fromDate, toDate time.Time, baseCurrency string) ([]domain.ExternalCashFlow, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetExternalCashFlows", ctx, portfolioID, fromDate, toDate, baseCurrency)
+	ret0, _ := ret[0].([]domain.ExternalCashFlow)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetExternalCashFlows indicates an expected call of GetExternalCashFlows.
+func (mr *MockRepositoryMockRecorder) GetExternalCashFlows(ctx, portfolioID, fromDate, toDate, baseCurrency any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetExternalCashFlows", reflect.TypeOf((*MockRepository)(nil).GetExternalCashFlows), ctx, portfolioID, fromDate, toDate, baseCurrency)
+}
+
 // GetFXRate mocks base method.
 func (m *MockRepository) GetFXRate(ctx context.Context, fromCurrency, toCurrency string) (decimal.Decimal, error) {
 	m.ctrl.T.Helper()
@@ -433,6 +448,21 @@ func (m *MockRepository) GetTransactions(ctx context.Context, portfolioID uuid.U
 func (mr *MockRepositoryMockRecorder) GetTransactions(ctx, portfolioID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTransactions", reflect.TypeOf((*MockRepository)(nil).GetTransactions), ctx, portfolioID)
+}
+
+// GetValuationAtOrBefore mocks base method.
+func (m *MockRepository) GetValuationAtOrBefore(ctx context.Context, portfolioID uuid.UUID, targetDate time.Time) (*domain.PortfolioValuation, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetValuationAtOrBefore", ctx, portfolioID, targetDate)
+	ret0, _ := ret[0].(*domain.PortfolioValuation)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetValuationAtOrBefore indicates an expected call of GetValuationAtOrBefore.
+func (mr *MockRepositoryMockRecorder) GetValuationAtOrBefore(ctx, portfolioID, targetDate any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetValuationAtOrBefore", reflect.TypeOf((*MockRepository)(nil).GetValuationAtOrBefore), ctx, portfolioID, targetDate)
 }
 
 // HasPricesForRange mocks base method.

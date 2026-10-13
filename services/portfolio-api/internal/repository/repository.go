@@ -73,4 +73,8 @@ type Repository interface {
 	ListFXRates(ctx context.Context, filter domain.FXRateFilter) ([]domain.FXRate, int, error)
 	GetHistoricalFXRates(ctx context.Context, baseCurrency, quoteCurrency string, fromDate, toDate *time.Time) ([]domain.FXRate, error)
 	UpsertFXRate(ctx context.Context, baseCurrency, quoteCurrency string, rateDate time.Time, rate decimal.Decimal, source string) (*domain.FXRate, error)
+
+	// Return Analytics: Modified Dietz Method
+	GetValuationAtOrBefore(ctx context.Context, portfolioID uuid.UUID, targetDate time.Time) (*domain.PortfolioValuation, error)
+	GetExternalCashFlows(ctx context.Context, portfolioID uuid.UUID, fromDate, toDate time.Time, baseCurrency string) ([]domain.ExternalCashFlow, error)
 }

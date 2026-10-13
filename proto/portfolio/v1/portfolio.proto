@@ -51,6 +51,9 @@ service PortfolioService {
 
   // Portfolio Cash Flow Report
   rpc GetCashFlowReport(GetCashFlowReportRequest) returns (GetCashFlowReportResponse) {}
+
+  // Return Analytics: Modified Dietz Method
+  rpc GetModifiedDietzReturn(GetModifiedDietzReturnRequest) returns (GetModifiedDietzReturnResponse) {}
 }
 
 message RebuildValuationsRequest {
@@ -138,6 +141,7 @@ message Portfolio {
   common.v1.Decimal annualized_return_percent = 4;
   common.v1.Money   cash_balance              = 5;
   repeated Investment investments             = 6;
+  string            inception_date            = 7;
 }
 
 message Investment {
@@ -608,6 +612,46 @@ message ListMissingPriceTransactionsResponse {
   int32                                unique_instruments_count  = 3;
   optional string                      earliest_trade_date      = 4; // YYYY-MM-DD
   optional string                      latest_trade_date        = 5; // YYYY-MM-DD
+}
+
+// ------------------------------------------------------------------
+// Return Analytics: Modified Dietz Method Messages
+// ------------------------------------------------------------------
+
+message GetModifiedDietzReturnRequest {
+  string user_id             = 1;
+  string start_date          = 2; // YYYY-MM-DD
+  string end_date            = 3; // YYYY-MM-DD
+  bool   use_monthly_linking = 4; // Optional: geometric chaining over monthly intervals
+}
+
+message ExternalCashFlowWeight {
+  string            transaction_id  = 1;
+  string            date            = 2; // YYYY-MM-DD
+  TransactionType   type            = 3; // DEPOSIT or WITHDRAWAL
+  common.v1.Money   amount          = 4; // Converted to base currency
+  common.v1.Decimal weight          = 5; // W_i = (CD - D_i) / CD
+  common.v1.Money   weighted_amount = 6; // W_i * F_i
+  common.v1.Money   local_amount    = 7; // Original transaction currency and amount
+}
+
+message GetModifiedDietzReturnResponse {
+  string                          portfolio_id              = 1;
+  string                          base_currency             = 2;
+  string                          start_date                = 3;
+  string                          end_date                  = 4;
+  int32                           elapsed_days              = 5;
+  common.v1.Money                 start_valuation           = 6;
+  common.v1.Money                 end_valuation             = 7;
+  common.v1.Money                 net_external_flows        = 8;
+  common.v1.Money                 net_investment_gain       = 9;
+  common.v1.Money                 weighted_capital_employed = 10;
+  common.v1.Decimal               cumulative_return_percent = 11;
+  common.v1.Decimal               annualized_return_percent = 12;
+  bool                            is_annualized             = 13;
+  bool                            is_computable             = 14;
+  string                          diagnostic_code           = 15; // OK, ZERO_CAPITAL_EMPLOYED, NEGATIVE_AVERAGE_CAPITAL
+  repeated ExternalCashFlowWeight cash_flow_weights         = 16;
 }
 
 

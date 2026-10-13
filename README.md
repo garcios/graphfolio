@@ -31,8 +31,10 @@ A modern portfolio tracker built for serious investors. GraphFolio accurately me
   - **Expanded Desktop Layout**: Widened dashboard layout (`max-width: 1680px`) with 10 columns (`Asset`, `Price`, `Avg Buy Price`, `Quantity`, `Total Value`, `Capital Gain`, `Income`, `Currency Gain`, `Total Return`, `Today's Return`), `INTL` badges, itemized subtotal footer row, and responsive card views on mobile.
 - **Closed Positions Visibility & Lifetime Return Attribution**: View fully exited or liquidated investments ($Q = 0$) directly in the dashboard "Your Investments" table via an interactive `"Include closed positions"` toggle. Displays a distinct `CLOSED` badge, reconstructs volume-weighted average acquisition buy price from historical tax lots and disposals, surfaces lifetime realized capital gains and historical dividend income, and calculates net return percentages with zero division risk and complete valuation neutrality ($V = \$0.00$). Preference is persisted in browser local storage across sessions.
 - **Portfolio Cash Flow Report & Unified Reports Hub**: Dedicated investor reporting workspace accessible via the dashboard "Reports" tab (`ReportsView`). Features a comprehensive Cash Flow Report (`CashFlowReport`) with dynamic timeframe selection (`MTD`, `QTD`, `YTD`, `Last Year`, `All-Time`, `Custom Date Range`), 4 summary KPI cards (Opening Cash Balance, Total Inflows, Total Outflows, Closing Cash Balance, Net Cash Flow), categorized breakdowns (Inflows: Deposits, Dividends, Asset Sales; Outflows: Withdrawals, Asset Purchases, Brokerage Fees), mathematical reconciliation verification ($\text{Closing Balance} \equiv \text{Opening Balance} + \text{Net Cash Flow}$), chronological transaction ledger with running cash balances, and client-side CSV export. Designed as an extensible hub for upcoming tax and dividend reports.
+- **Modified Dietz Annualized Return & Cash-Flow Weighting**: Accurate, GIPS Standard 2.A.20-compliant money-weighted rate of return calculation ($R_{\text{Dietz}} = \frac{V_1 - V_0 - F}{V_0 + \sum (F_i \times W_i)}$) with Actual/Actual calendar day weighting ($W_i = \frac{CD - D_i}{CD}$). Employs compound geometric annualization for multi-year periods ($\ge 365$ days) with sub-annual protection, optional monthly sub-period linking to prevent cash flow dilution, and an interactive glassmorphic modal (`ModifiedDietzModal`) featuring capital balance decomposition and an itemized cash-flow weight inspection table.
+- **Dual Return Methodology Switcher (`[ TWR | DIETZ ]`)**: Dashboard metric card toggle empowering investors to switch seamlessly between pure investment performance (Time-Weighted Return) and dollar-weighted personal performance (Modified Dietz). Includes `localStorage` persistence, inline methodology badges (`GIPS TWR` vs `MODIFIED DIETZ`), quick inspection launch, and automatic pre-selection of the portfolio's true inception date.
 - **Clean Microservice Monorepo**: Contract-first gRPC services with a Go GraphQL Backend-for-Frontend (BFF) and strongly-typed frontend queries.
-- **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, Vite, modal transaction entry (`AddTransactionModal`), statement import (`ImportTransactionsModal`), investor preferences dialog (`UserPreferencesModal`), reports hub (`ReportsView`), and instant reactive state refresh.
+- **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, Vite, modal transaction entry (`AddTransactionModal`), statement import (`ImportTransactionsModal`), investor preferences dialog (`UserPreferencesModal`), reports hub (`ReportsView`), return calculator (`ModifiedDietzModal`), and instant reactive state refresh.
 
 > 📋 *For a comprehensive list of completed milestones, in-progress components, and planned roadmap items, see [`FEATURES.md`](file:///Users/oscargarcia/workspace/graphfolio/FEATURES.md).*
 
@@ -146,7 +148,7 @@ make run
 GraphFolio enforces a strict separation of concerns across layered boundaries:
 
 ```text
-React Components (Dashboard, PerformanceChart, TransactionLedger, ReportsView, CashFlowReport, UserPreferencesModal)
+React Components (Dashboard, PerformanceChart, ModifiedDietzModal, TransactionLedger, ReportsView, CashFlowReport, UserPreferencesModal)
       │
       ▼  (Typed queries & mutations via GenQL)
 GraphQL Backend-for-Frontend (BFF)  [localhost:8080]
@@ -224,7 +226,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   └── cmd/server/               # BFF entrypoint
 ├── web/                          # Frontend Workspace Monorepo
 │   │   ├── main-app/             # Primary Investor React App (:5173)
-│   │   │   └── src/components/   # Dashboard, PerformanceChart, TransactionLedger, ReportsView, CashFlowReport, AddTransactionModal, ImportTransactionsModal, UserPreferencesModal
+│   │   │   └── src/components/   # Dashboard, PerformanceChart, ModifiedDietzModal, TransactionLedger, ReportsView, CashFlowReport, AddTransactionModal, ImportTransactionsModal, UserPreferencesModal
 │   │   └── admin-app/            # Internal Operations Portal (:5174)
 │   │       └── src/components/   # AssetManagement, DeleteAssetModal, PriceManagement, MissingPricesReport, FXManagement, FXTrendChart, FXOverrideModal, BackfillModal, IngestionPipeline
 │   └── packages/
@@ -254,12 +256,14 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── holding-return-attribution-implementation-plan.md
 │   │   ├── portfolio-cash-flow-report-implementation-plan.md
 │   │   ├── include-closed-positions-implementation-plan.md
+│   │   ├── annualized-return-modified-dietz-implementation-plan.md
 │   │   └── web-workspace-refactoring-plan.md
 │   ├── user-stories/             # Product specifications & acceptance criteria
 │   │   ├── investment-holding-capital-gain-income-currency.md
 │   │   ├── portfolio-cash-flow-report-generation.md
 │   │   ├── admin-missing-prices-report.md
-│   │   └── include-closed-positions-dashboard.md
+│   │   ├── include-closed-positions-dashboard.md
+│   │   └── annualized-return-modified-dietz.md
 │   ├── negative-cash-balance-investigation-report.md # Cash ledger overdraft root cause & remediation report
 │   ├── competitive-analysis.md
 │   └── genql-usage.md
@@ -352,6 +356,8 @@ make generate
 - **Admin Missing Prices Report User Story**: [`docs/user-stories/admin-missing-prices-report.md`](./docs/user-stories/admin-missing-prices-report.md)
 - **Include Closed Positions Implementation Plan**: [`docs/plans/include-closed-positions-implementation-plan.md`](./docs/plans/include-closed-positions-implementation-plan.md)
 - **Include Closed Positions User Story**: [`docs/user-stories/include-closed-positions-dashboard.md`](./docs/user-stories/include-closed-positions-dashboard.md)
+- **Modified Dietz Annualized Return Implementation Plan**: [`docs/plans/annualized-return-modified-dietz-implementation-plan.md`](./docs/plans/annualized-return-modified-dietz-implementation-plan.md)
+- **Modified Dietz Annualized Return User Story**: [`docs/user-stories/annualized-return-modified-dietz.md`](./docs/user-stories/annualized-return-modified-dietz.md)
 - **Negative Cash Balance Investigation Report**: [`docs/negative-cash-balance-investigation-report.md`](./docs/negative-cash-balance-investigation-report.md)
 - **Competitive Strategy Analysis**: [`docs/competitive-analysis.md`](./docs/competitive-analysis.md)
 - **Frontend GraphQL Setup**: [`docs/genql-usage.md`](./docs/genql-usage.md)

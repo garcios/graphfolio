@@ -178,6 +178,22 @@ func (mr *MockPortfolioServiceMockRecorder) GetIngestionStatus(ctx any) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetIngestionStatus", reflect.TypeOf((*MockPortfolioService)(nil).GetIngestionStatus), ctx)
 }
 
+// GetModifiedDietzReturn mocks base method.
+func (m *MockPortfolioService) GetModifiedDietzReturn(ctx context.Context, userID string, startDate, endDate time.Time, useMonthlyLinking bool) (*domain.ModifiedDietzResult, string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetModifiedDietzReturn", ctx, userID, startDate, endDate, useMonthlyLinking)
+	ret0, _ := ret[0].(*domain.ModifiedDietzResult)
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetModifiedDietzReturn indicates an expected call of GetModifiedDietzReturn.
+func (mr *MockPortfolioServiceMockRecorder) GetModifiedDietzReturn(ctx, userID, startDate, endDate, useMonthlyLinking any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetModifiedDietzReturn", reflect.TypeOf((*MockPortfolioService)(nil).GetModifiedDietzReturn), ctx, userID, startDate, endDate, useMonthlyLinking)
+}
+
 // GetPortfolioHistory mocks base method.
 func (m *MockPortfolioService) GetPortfolioHistory(ctx context.Context, userID string, timeframe domain.HistoryTimeframe) (*domain.PortfolioHistory, error) {
 	m.ctrl.T.Helper()

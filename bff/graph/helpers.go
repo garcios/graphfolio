@@ -84,6 +84,11 @@ func toModelPortfolio(p *pb.Portfolio) *model.Portfolio {
 		}
 	}
 
+	var inceptionDate *string
+	if p.InceptionDate != "" {
+		inceptionDate = &p.InceptionDate
+	}
+
 	return &model.Portfolio{
 		TotalValue:              toModelMoney(p.TotalValue),
 		TodayReturnAmount:       toModelMoney(p.TodayReturnAmount),
@@ -91,6 +96,7 @@ func toModelPortfolio(p *pb.Portfolio) *model.Portfolio {
 		AnnualizedReturnPercent: toModelDecimal(p.AnnualizedReturnPercent),
 		CashBalance:             toModelMoney(p.CashBalance),
 		Investments:             investments,
+		InceptionDate:           inceptionDate,
 	}
 }
 
@@ -647,3 +653,48 @@ func toModelMissingPriceReport(resp *pb.ListMissingPriceTransactionsResponse) *m
 		LatestTradeDate:        resp.LatestTradeDate,
 	}
 }
+
+func toModelModifiedDietzReturn(resp *pb.GetModifiedDietzReturnResponse) *model.ModifiedDietzReturnPayload {
+	if resp == nil {
+		return nil
+	}
+
+	weights := make([]*model.ExternalCashFlowWeightItem, len(resp.GetCashFlowWeights()))
+	for i, w := range resp.GetCashFlowWeights() {
+		weights[i] = &model.ExternalCashFlowWeightItem{
+			TransactionID:  w.GetTransactionId(),
+			Date:           w.GetDate(),
+			Type:           toModelTransactionType(w.GetType()),
+			Amount:         toModelMoney(w.GetAmount()),
+			Weight:         toModelDecimal(w.GetWeight()),
+			WeightedAmount: toModelMoney(w.GetWeightedAmount()),
+			LocalAmount:    toModelMoney(w.GetLocalAmount()),
+		}
+	}
+
+	var annReturn *model.Decimal
+	if resp.AnnualizedReturnPercent != nil {
+		d := toModelDecimal(resp.AnnualizedReturnPercent)
+		annReturn = &d
+	}
+
+	return &model.ModifiedDietzReturnPayload{
+		PortfolioID:             resp.GetPortfolioId(),
+		BaseCurrency:            resp.GetBaseCurrency(),
+		StartDate:               resp.GetStartDate(),
+		EndDate:                 resp.GetEndDate(),
+		ElapsedDays:             int(resp.GetElapsedDays()),
+		StartValuation:          toModelMoney(resp.GetStartValuation()),
+		EndValuation:            toModelMoney(resp.GetEndValuation()),
+		NetExternalFlows:        toModelMoney(resp.GetNetExternalFlows()),
+		NetInvestmentGain:       toModelMoney(resp.GetNetInvestmentGain()),
+		WeightedCapitalEmployed: toModelMoney(resp.GetWeightedCapitalEmployed()),
+		CumulativeReturnPercent: toModelDecimal(resp.GetCumulativeReturnPercent()),
+		AnnualizedReturnPercent: annReturn,
+		IsAnnualized:            resp.GetIsAnnualized(),
+		IsComputable:            resp.GetIsComputable(),
+		DiagnosticCode:          resp.GetDiagnosticCode(),
+		CashFlowWeights:         weights,
+	}
+}
+

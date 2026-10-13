@@ -212,14 +212,19 @@ func CalculatePortfolioSummary(
 		todayReturnPercent = todayReturnAmountBase.DivRound(prevValuation, 6).Mul(oneHundred).Round(2)
 	}
 
+	// Portfolio inception date and earliest valuation
+	var earliestVal *PortfolioValuation
+	if len(earliestValuation) > 0 {
+		earliestVal = earliestValuation[0]
+	}
+	inceptionDate := ""
+	if earliestVal != nil && !earliestVal.ValuationDate.IsZero() {
+		inceptionDate = earliestVal.ValuationDate.Format("2006-01-02")
+	}
+
 	// Annualized Return / TWR from latest valuation snapshot
 	var annualizedReturnPercent decimal.Decimal
 	if latestValuation != nil && latestValuation.TWRIndex.IsPositive() {
-		var earliestVal *PortfolioValuation
-		if len(earliestValuation) > 0 {
-			earliestVal = earliestValuation[0]
-		}
-
 		days := 0
 		if earliestVal != nil && !earliestVal.ValuationDate.IsZero() && !latestValuation.ValuationDate.IsZero() {
 			days = int(latestValuation.ValuationDate.Sub(earliestVal.ValuationDate).Hours() / 24)
@@ -245,5 +250,6 @@ func CalculatePortfolioSummary(
 		AnnualizedReturnPercent: annualizedReturnPercent,
 		CashBalance:             NewMoney(totalCashBase.Round(2), baseCurrency),
 		Investments:             investments,
+		InceptionDate:           inceptionDate,
 	}
 }

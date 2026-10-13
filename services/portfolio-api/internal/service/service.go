@@ -27,6 +27,7 @@ type PortfolioService interface {
 	BatchImportTransactions(ctx context.Context, input domain.BatchImportInput) (*domain.BatchImportResult, error)
 	RebuildValuations(ctx context.Context, userID string, fromDate *time.Time) error
 	GetCashFlowReport(ctx context.Context, input domain.CashFlowFilter) (*domain.CashFlowReport, error)
+	GetModifiedDietzReturn(ctx context.Context, userID string, startDate, endDate time.Time, useMonthlyLinking bool) (*domain.ModifiedDietzResult, string, error)
 
 	// Admin: Asset Directory Management
 	ListAllInstruments(ctx context.Context, isActive *bool, search *string) ([]domain.Instrument, error)

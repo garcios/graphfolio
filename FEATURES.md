@@ -38,6 +38,7 @@ This document catalogs all implemented features, in-progress components, and pla
 | **28** | **GIPS CAGR Annualized Return & Valuation Cost-Basis Resiliency** | **DONE** | Database, Svc, Domain, Worker | [annualized-return-twr-fix-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/annualized-return-twr-fix-implementation-plan.md) |
 | **29** | **Missing Prices Report & Date Range Backfill (Admin Portal)** | **DONE** | Proto, Svc, BFF, Web | [admin-missing-prices-report-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-missing-prices-report-implementation-plan.md) |
 | **30** | **Include Closed Positions in Dashboard Investments Table** | **DONE** | Proto, Svc, BFF, Web | [include-closed-positions-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/include-closed-positions-implementation-plan.md) |
+| **31** | **Modified Dietz Annualized Return & Cash-Flow Weighting** | **DONE** | Proto, Svc, BFF, Web | [annualized-return-modified-dietz-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/annualized-return-modified-dietz-implementation-plan.md) |
 
 ---
 
@@ -394,7 +395,7 @@ This document catalogs all implemented features, in-progress components, and pla
   - [AdminLayout.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/AdminLayout.tsx)
   - [App.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/App.tsx)
 
-### 2.20 Include Closed Positions in Dashboard Investments Table
+### 2.30 Include Closed Positions in Dashboard Investments Table
 - **Status**: **DONE**
 - **User Story**: [include-closed-positions-dashboard.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/include-closed-positions-dashboard.md)
 - **Plan Reference**: [include-closed-positions-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/include-closed-positions-implementation-plan.md)
@@ -410,6 +411,31 @@ This document catalogs all implemented features, in-progress components, and pla
   - [server.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server.go)
   - [schema.graphqls](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls)
   - [schema.resolvers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers.go)
+  - [Dashboard.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.tsx)
+  - [Dashboard.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.css)
+
+### 2.31 Modified Dietz Annualized Return & Cash-Flow Weighting
+- **Status**: **DONE**
+- **User Story**: [annualized-return-modified-dietz.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/annualized-return-modified-dietz.md)
+- **Plan Reference**: [annualized-return-modified-dietz-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/annualized-return-modified-dietz-implementation-plan.md)
+- **Scope**: `proto/portfolio/v1/`, `services/portfolio-api`, `bff/`, `web/apps/main-app`
+- **Description**: Accurate, industry-standard money-weighted rate of return calculation using the Modified Dietz Method adhering strictly to GIPS Standard 2.A.20. Weights external cash flows ($DEPOSIT$, $WITHDRAWAL$) on an Actual/Actual day count basis against portfolio start value. Features compound geometric annualization $((1 + R_{\text{Dietz}})^{\frac{365.25}{CD}} - 1) \times 100\%$ for multi-year periods ($\ge 365$ days) with sub-annual period annualization guard, optional multi-year monthly sub-period linking to prevent cash flow dilution, and an interactive glassmorphic modal with complete capital decomposition and itemized cash-flow weight inspection table.
+- **Key Files**:
+  - [portfolio.proto](file:///Users/oscargarcia/workspace/graphfolio/proto/portfolio/v1/portfolio.proto)
+  - [dietz.go (domain)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/domain/dietz.go)
+  - [dietz_test.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/domain/dietz_test.go)
+  - [queries.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/repository/queries.go)
+  - [postgres.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/repository/postgres.go)
+  - [dietz.go (service)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/dietz.go)
+  - [dietz_test.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/dietz_test.go)
+  - [server.go (gRPC)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server.go)
+  - [server_test.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server_test.go)
+  - [schema.graphqls](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls)
+  - [helpers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/helpers.go)
+  - [schema.resolvers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers.go)
+  - [schema.resolvers_test.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers_test.go)
+  - [ModifiedDietzModal.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/ModifiedDietzModal.tsx)
+  - [ModifiedDietzModal.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/ModifiedDietzModal.css)
   - [Dashboard.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.tsx)
   - [Dashboard.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.css)
 
