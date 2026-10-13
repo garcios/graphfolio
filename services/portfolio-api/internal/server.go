@@ -1064,6 +1064,107 @@ func (s *PortfolioServer) GetCashFlowReport(ctx context.Context, req *pb.GetCash
 	}, nil
 }
 
+func (s *PortfolioServer) GetModifiedDietzReturn(ctx context.Context, req *pb.GetModifiedDietzReturnRequest) (*pb.GetModifiedDietzReturnResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	userID := req.GetUserId()
+	if userID == "" {
+		userID = "1"
+	}
+
+	if req.GetStartDate() == "" {
+		return nil, status.Error(codes.InvalidArgument, "start_date cannot be empty")
+	}
+	startDate, err := time.Parse("2006-01-02", req.GetStartDate())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid start_date format (must be YYYY-MM-DD): %v", err)
+	}
+
+	if req.GetEndDate() == "" {
+		return nil, status.Error(codes.InvalidArgument, "end_date cannot be empty")
+	}
+	endDate, err := time.Parse("2006-01-02", req.GetEndDate())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "invalid end_date format (must be YYYY-MM-DD): %v", err)
+	}
+
+	if endDate.Before(startDate) {
+		return nil, status.Errorf(codes.InvalidArgument, "end_date (%s) cannot be before start_date (%s)", req.GetEndDate(), req.GetStartDate())
+	}
+
+	result, baseCurrency, err := s.svc.GetModifiedDietzReturn(ctx, userID, startDate, endDate, req.GetUseMonthlyLinking())
+	if err != nil {
+		if errors.Is(err, repository.ErrPortfolioNotFound) {
+			return nil, status.Errorf(codes.NotFound, "portfolio not found for user: %s", userID)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to compute modified dietz return: %v", err)
+	}
+
+	weightsProto := make([]*pb.ExternalCashFlowWeight, len(result.CashFlowWeights))
+	for i, w := range result.CashFlowWeights {
+		weightsProto[i] = &pb.ExternalCashFlowWeight{
+			TransactionId:  w.TransactionID,
+			Date:           w.Date.Format("2006-01-02"),
+			Type:           mapTxTypeStringToProto(w.Type),
+			Amount:         decimalpb.MoneyToProto(w.AmountBase, baseCurrency),
+			Weight:         decimalpb.ToProto(w.Weight),
+			WeightedAmount: decimalpb.MoneyToProto(w.WeightedAmountBase, baseCurrency),
+			LocalAmount:    decimalpb.MoneyToProto(w.LocalAmount, w.LocalCurrency),
+		}
+	}
+
+	var annReturnProto *commonpb.Decimal
+	if result.AnnualizedReturnPercent != nil {
+		annReturnProto = decimalpb.ToProto(*result.AnnualizedReturnPercent)
+	}
+
+	startDateStr := startDate.Format("2006-01-02")
+	if !result.StartDate.IsZero() {
+		startDateStr = result.StartDate.Format("2006-01-02")
+	}
+	endDateStr := endDate.Format("2006-01-02")
+	if !result.EndDate.IsZero() {
+		endDateStr = result.EndDate.Format("2006-01-02")
+	}
+
+	return &pb.GetModifiedDietzReturnResponse{
+		PortfolioId:             userID,
+		BaseCurrency:            baseCurrency,
+		StartDate:               startDateStr,
+		EndDate:                 endDateStr,
+		ElapsedDays:             result.ElapsedDays,
+		StartValuation:          decimalpb.MoneyToProto(result.StartValuation, baseCurrency),
+		EndValuation:            decimalpb.MoneyToProto(result.EndValuation, baseCurrency),
+		NetExternalFlows:        decimalpb.MoneyToProto(result.NetExternalFlows, baseCurrency),
+		NetInvestmentGain:       decimalpb.MoneyToProto(result.NetInvestmentGain, baseCurrency),
+		WeightedCapitalEmployed: decimalpb.MoneyToProto(result.WeightedCapitalEmployed, baseCurrency),
+		CumulativeReturnPercent: decimalpb.ToProto(result.CumulativeReturnPercent),
+		AnnualizedReturnPercent: annReturnProto,
+		IsAnnualized:            result.IsAnnualized,
+		IsComputable:            result.IsComputable,
+		DiagnosticCode:          result.DiagnosticCode,
+		CashFlowWeights:         weightsProto,
+	}, nil
+}
+
+func mapTxTypeStringToProto(t string) pb.TransactionType {
+	switch strings.ToUpper(t) {
+	case "DEPOSIT":
+		return pb.TransactionType_TRANSACTION_TYPE_DEPOSIT
+	case "WITHDRAWAL":
+		return pb.TransactionType_TRANSACTION_TYPE_WITHDRAWAL
+	case "TRANSFER_IN":
+		return pb.TransactionType_TRANSACTION_TYPE_TRANSFER_IN
+	case "TRANSFER_OUT":
+		return pb.TransactionType_TRANSACTION_TYPE_TRANSFER_OUT
+	default:
+		return pb.TransactionType_TRANSACTION_TYPE_UNSPECIFIED
+	}
+}
+
+
 func mapProtoCashFlowTimeframeToDomain(tf pb.CashFlowTimeframe) domain.CashFlowTimeframe {
 	switch tf {
 	case pb.CashFlowTimeframe_CASH_FLOW_TIMEFRAME_MTD:
@@ -1540,6 +1641,7 @@ func mapSummaryToProto(summary *domain.PortfolioSummary) *pb.Portfolio {
 		AnnualizedReturnPercent: decimalpb.ToProto(summary.AnnualizedReturnPercent),
 		CashBalance:             decimalpb.MoneyToProto(summary.CashBalance.Amount, summary.CashBalance.CurrencyCode),
 		Investments:             investments,
+		InceptionDate:           summary.InceptionDate,
 	}
 }
 
@@ -1560,6 +1662,7 @@ func fallbackMock() *pb.Portfolio {
 		TodayReturnPercent:      dec("1.00"),
 		AnnualizedReturnPercent: dec("14.2"),
 		CashBalance:             money("8450.00", "USD"),
+		InceptionDate:           "2020-07-29",
 		Investments: []*pb.Investment{
 			{
 				Id:                  "1",

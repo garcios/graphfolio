@@ -648,6 +648,24 @@ func (r *queryResolver) MissingPriceTransactions(ctx context.Context, symbol *st
 	return toModelMissingPriceReport(resp), nil
 }
 
+// ModifiedDietzReturn is the resolver for the modifiedDietzReturn field.
+func (r *queryResolver) ModifiedDietzReturn(ctx context.Context, startDate string, endDate string, useMonthlyLinking *bool) (*model.ModifiedDietzReturnPayload, error) {
+	req := &pb.GetModifiedDietzReturnRequest{
+		UserId:    "1",
+		StartDate: startDate,
+		EndDate:   endDate,
+	}
+	if useMonthlyLinking != nil {
+		req.UseMonthlyLinking = *useMonthlyLinking
+	}
+
+	resp, err := r.PortfolioClient.GetModifiedDietzReturn(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return toModelModifiedDietzReturn(resp), nil
+}
+
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 

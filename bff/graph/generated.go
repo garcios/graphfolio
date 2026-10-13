@@ -153,6 +153,16 @@ type ComplexityRoot struct {
 		Timezone func(childComplexity int) int
 	}
 
+	ExternalCashFlowWeightItem struct {
+		Amount         func(childComplexity int) int
+		Date           func(childComplexity int) int
+		LocalAmount    func(childComplexity int) int
+		TransactionID  func(childComplexity int) int
+		Type           func(childComplexity int) int
+		Weight         func(childComplexity int) int
+		WeightedAmount func(childComplexity int) int
+	}
+
 	FXHistoryPoint struct {
 		Date         func(childComplexity int) int
 		InvertedRate func(childComplexity int) int
@@ -271,6 +281,25 @@ type ComplexityRoot struct {
 		Type           func(childComplexity int) int
 	}
 
+	ModifiedDietzReturnPayload struct {
+		AnnualizedReturnPercent func(childComplexity int) int
+		BaseCurrency            func(childComplexity int) int
+		CashFlowWeights         func(childComplexity int) int
+		CumulativeReturnPercent func(childComplexity int) int
+		DiagnosticCode          func(childComplexity int) int
+		ElapsedDays             func(childComplexity int) int
+		EndDate                 func(childComplexity int) int
+		EndValuation            func(childComplexity int) int
+		IsAnnualized            func(childComplexity int) int
+		IsComputable            func(childComplexity int) int
+		NetExternalFlows        func(childComplexity int) int
+		NetInvestmentGain       func(childComplexity int) int
+		PortfolioID             func(childComplexity int) int
+		StartDate               func(childComplexity int) int
+		StartValuation          func(childComplexity int) int
+		WeightedCapitalEmployed func(childComplexity int) int
+	}
+
 	Money struct {
 		Amount       func(childComplexity int) int
 		CurrencyCode func(childComplexity int) int
@@ -293,6 +322,7 @@ type ComplexityRoot struct {
 	Portfolio struct {
 		AnnualizedReturnPercent func(childComplexity int) int
 		CashBalance             func(childComplexity int) int
+		InceptionDate           func(childComplexity int) int
 		Investments             func(childComplexity int) int
 		TodayReturnAmount       func(childComplexity int) int
 		TodayReturnPercent      func(childComplexity int) int
@@ -319,6 +349,7 @@ type ComplexityRoot struct {
 		InstrumentPrices           func(childComplexity int, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) int
 		Instruments                func(childComplexity int) int
 		MissingPriceTransactions   func(childComplexity int, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) int
+		ModifiedDietzReturn        func(childComplexity int, startDate string, endDate string, useMonthlyLinking *bool) int
 		Portfolio                  func(childComplexity int, includeClosed *bool) int
 		PortfolioHistory           func(childComplexity int, timeframe model.HistoryTimeframe) int
 		SupportedCurrencies        func(childComplexity int) int
@@ -416,6 +447,7 @@ type QueryResolver interface {
 	CheckTransactionDuplicates(ctx context.Context, externalRefs []string) ([]string, error)
 	CashFlowReport(ctx context.Context, filter model.CashFlowFilterInput) (*model.CashFlowReport, error)
 	MissingPriceTransactions(ctx context.Context, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) (*model.MissingPriceReport, error)
+	ModifiedDietzReturn(ctx context.Context, startDate string, endDate string, useMonthlyLinking *bool) (*model.ModifiedDietzReturnPayload, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -910,6 +942,49 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Exchange.Timezone(childComplexity), true
+
+	case "ExternalCashFlowWeightItem.amount":
+		if e.ComplexityRoot.ExternalCashFlowWeightItem.Amount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ExternalCashFlowWeightItem.Amount(childComplexity), true
+	case "ExternalCashFlowWeightItem.date":
+		if e.ComplexityRoot.ExternalCashFlowWeightItem.Date == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ExternalCashFlowWeightItem.Date(childComplexity), true
+	case "ExternalCashFlowWeightItem.localAmount":
+		if e.ComplexityRoot.ExternalCashFlowWeightItem.LocalAmount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ExternalCashFlowWeightItem.LocalAmount(childComplexity), true
+	case "ExternalCashFlowWeightItem.transactionId":
+		if e.ComplexityRoot.ExternalCashFlowWeightItem.TransactionID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ExternalCashFlowWeightItem.TransactionID(childComplexity), true
+	case "ExternalCashFlowWeightItem.type":
+		if e.ComplexityRoot.ExternalCashFlowWeightItem.Type == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ExternalCashFlowWeightItem.Type(childComplexity), true
+	case "ExternalCashFlowWeightItem.weight":
+		if e.ComplexityRoot.ExternalCashFlowWeightItem.Weight == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ExternalCashFlowWeightItem.Weight(childComplexity), true
+	case "ExternalCashFlowWeightItem.weightedAmount":
+		if e.ComplexityRoot.ExternalCashFlowWeightItem.WeightedAmount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ExternalCashFlowWeightItem.WeightedAmount(childComplexity), true
 
 	case "FXHistoryPoint.date":
 		if e.ComplexityRoot.FXHistoryPoint.Date == nil {
@@ -1415,6 +1490,103 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.MissingPriceTransactionItem.Type(childComplexity), true
 
+	case "ModifiedDietzReturnPayload.annualizedReturnPercent":
+		if e.ComplexityRoot.ModifiedDietzReturnPayload.AnnualizedReturnPercent == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ModifiedDietzReturnPayload.AnnualizedReturnPercent(childComplexity), true
+	case "ModifiedDietzReturnPayload.baseCurrency":
+		if e.ComplexityRoot.ModifiedDietzReturnPayload.BaseCurrency == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ModifiedDietzReturnPayload.BaseCurrency(childComplexity), true
+	case "ModifiedDietzReturnPayload.cashFlowWeights":
+		if e.ComplexityRoot.ModifiedDietzReturnPayload.CashFlowWeights == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ModifiedDietzReturnPayload.CashFlowWeights(childComplexity), true
+	case "ModifiedDietzReturnPayload.cumulativeReturnPercent":
+		if e.ComplexityRoot.ModifiedDietzReturnPayload.CumulativeReturnPercent == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ModifiedDietzReturnPayload.CumulativeReturnPercent(childComplexity), true
+	case "ModifiedDietzReturnPayload.diagnosticCode":
+		if e.ComplexityRoot.ModifiedDietzReturnPayload.DiagnosticCode == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ModifiedDietzReturnPayload.DiagnosticCode(childComplexity), true
+	case "ModifiedDietzReturnPayload.elapsedDays":
+		if e.ComplexityRoot.ModifiedDietzReturnPayload.ElapsedDays == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ModifiedDietzReturnPayload.ElapsedDays(childComplexity), true
+	case "ModifiedDietzReturnPayload.endDate":
+		if e.ComplexityRoot.ModifiedDietzReturnPayload.EndDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ModifiedDietzReturnPayload.EndDate(childComplexity), true
+	case "ModifiedDietzReturnPayload.endValuation":
+		if e.ComplexityRoot.ModifiedDietzReturnPayload.EndValuation == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ModifiedDietzReturnPayload.EndValuation(childComplexity), true
+	case "ModifiedDietzReturnPayload.isAnnualized":
+		if e.ComplexityRoot.ModifiedDietzReturnPayload.IsAnnualized == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ModifiedDietzReturnPayload.IsAnnualized(childComplexity), true
+	case "ModifiedDietzReturnPayload.isComputable":
+		if e.ComplexityRoot.ModifiedDietzReturnPayload.IsComputable == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ModifiedDietzReturnPayload.IsComputable(childComplexity), true
+	case "ModifiedDietzReturnPayload.netExternalFlows":
+		if e.ComplexityRoot.ModifiedDietzReturnPayload.NetExternalFlows == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ModifiedDietzReturnPayload.NetExternalFlows(childComplexity), true
+	case "ModifiedDietzReturnPayload.netInvestmentGain":
+		if e.ComplexityRoot.ModifiedDietzReturnPayload.NetInvestmentGain == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ModifiedDietzReturnPayload.NetInvestmentGain(childComplexity), true
+	case "ModifiedDietzReturnPayload.portfolioId":
+		if e.ComplexityRoot.ModifiedDietzReturnPayload.PortfolioID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ModifiedDietzReturnPayload.PortfolioID(childComplexity), true
+	case "ModifiedDietzReturnPayload.startDate":
+		if e.ComplexityRoot.ModifiedDietzReturnPayload.StartDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ModifiedDietzReturnPayload.StartDate(childComplexity), true
+	case "ModifiedDietzReturnPayload.startValuation":
+		if e.ComplexityRoot.ModifiedDietzReturnPayload.StartValuation == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ModifiedDietzReturnPayload.StartValuation(childComplexity), true
+	case "ModifiedDietzReturnPayload.weightedCapitalEmployed":
+		if e.ComplexityRoot.ModifiedDietzReturnPayload.WeightedCapitalEmployed == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ModifiedDietzReturnPayload.WeightedCapitalEmployed(childComplexity), true
+
 	case "Money.amount":
 		if e.ComplexityRoot.Money.Amount == nil {
 			break
@@ -1562,6 +1734,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Portfolio.CashBalance(childComplexity), true
+	case "Portfolio.inceptionDate":
+		if e.ComplexityRoot.Portfolio.InceptionDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Portfolio.InceptionDate(childComplexity), true
 	case "Portfolio.investments":
 		if e.ComplexityRoot.Portfolio.Investments == nil {
 			break
@@ -1720,6 +1898,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.MissingPriceTransactions(childComplexity, args["symbol"].(*string), args["fromDate"].(*string), args["toDate"].(*string), args["limit"].(*int), args["offset"].(*int)), true
+	case "Query.modifiedDietzReturn":
+		if e.ComplexityRoot.Query.ModifiedDietzReturn == nil {
+			break
+		}
+
+		args, err := ec.field_Query_modifiedDietzReturn_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.ModifiedDietzReturn(childComplexity, args["startDate"].(string), args["endDate"].(string), args["useMonthlyLinking"].(*bool)), true
 	case "Query.portfolio":
 		if e.ComplexityRoot.Query.Portfolio == nil {
 			break
@@ -2321,6 +2510,26 @@ func (ec *executionContext) childFields_Exchange(ctx context.Context, field grap
 	return nil, fmt.Errorf("no field named %q was found under type Exchange", field.Name)
 }
 
+func (ec *executionContext) childFields_ExternalCashFlowWeightItem(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "transactionId":
+		return ec.fieldContext_ExternalCashFlowWeightItem_transactionId(ctx, field)
+	case "date":
+		return ec.fieldContext_ExternalCashFlowWeightItem_date(ctx, field)
+	case "type":
+		return ec.fieldContext_ExternalCashFlowWeightItem_type(ctx, field)
+	case "amount":
+		return ec.fieldContext_ExternalCashFlowWeightItem_amount(ctx, field)
+	case "weight":
+		return ec.fieldContext_ExternalCashFlowWeightItem_weight(ctx, field)
+	case "weightedAmount":
+		return ec.fieldContext_ExternalCashFlowWeightItem_weightedAmount(ctx, field)
+	case "localAmount":
+		return ec.fieldContext_ExternalCashFlowWeightItem_localAmount(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type ExternalCashFlowWeightItem", field.Name)
+}
+
 func (ec *executionContext) childFields_FXHistoryPoint(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "date":
@@ -2557,6 +2766,44 @@ func (ec *executionContext) childFields_MissingPriceTransactionItem(ctx context.
 	return nil, fmt.Errorf("no field named %q was found under type MissingPriceTransactionItem", field.Name)
 }
 
+func (ec *executionContext) childFields_ModifiedDietzReturnPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "portfolioId":
+		return ec.fieldContext_ModifiedDietzReturnPayload_portfolioId(ctx, field)
+	case "baseCurrency":
+		return ec.fieldContext_ModifiedDietzReturnPayload_baseCurrency(ctx, field)
+	case "startDate":
+		return ec.fieldContext_ModifiedDietzReturnPayload_startDate(ctx, field)
+	case "endDate":
+		return ec.fieldContext_ModifiedDietzReturnPayload_endDate(ctx, field)
+	case "elapsedDays":
+		return ec.fieldContext_ModifiedDietzReturnPayload_elapsedDays(ctx, field)
+	case "startValuation":
+		return ec.fieldContext_ModifiedDietzReturnPayload_startValuation(ctx, field)
+	case "endValuation":
+		return ec.fieldContext_ModifiedDietzReturnPayload_endValuation(ctx, field)
+	case "netExternalFlows":
+		return ec.fieldContext_ModifiedDietzReturnPayload_netExternalFlows(ctx, field)
+	case "netInvestmentGain":
+		return ec.fieldContext_ModifiedDietzReturnPayload_netInvestmentGain(ctx, field)
+	case "weightedCapitalEmployed":
+		return ec.fieldContext_ModifiedDietzReturnPayload_weightedCapitalEmployed(ctx, field)
+	case "cumulativeReturnPercent":
+		return ec.fieldContext_ModifiedDietzReturnPayload_cumulativeReturnPercent(ctx, field)
+	case "annualizedReturnPercent":
+		return ec.fieldContext_ModifiedDietzReturnPayload_annualizedReturnPercent(ctx, field)
+	case "isAnnualized":
+		return ec.fieldContext_ModifiedDietzReturnPayload_isAnnualized(ctx, field)
+	case "isComputable":
+		return ec.fieldContext_ModifiedDietzReturnPayload_isComputable(ctx, field)
+	case "diagnosticCode":
+		return ec.fieldContext_ModifiedDietzReturnPayload_diagnosticCode(ctx, field)
+	case "cashFlowWeights":
+		return ec.fieldContext_ModifiedDietzReturnPayload_cashFlowWeights(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type ModifiedDietzReturnPayload", field.Name)
+}
+
 func (ec *executionContext) childFields_Money(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "amount":
@@ -2581,6 +2828,8 @@ func (ec *executionContext) childFields_Portfolio(ctx context.Context, field gra
 		return ec.fieldContext_Portfolio_cashBalance(ctx, field)
 	case "investments":
 		return ec.fieldContext_Portfolio_investments(ctx, field)
+	case "inceptionDate":
+		return ec.fieldContext_Portfolio_inceptionDate(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Portfolio", field.Name)
 }
@@ -3226,6 +3475,36 @@ func (ec *executionContext) field_Query_missingPriceTransactions_args(ctx contex
 		return nil, err
 	}
 	args["offset"] = arg4
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_modifiedDietzReturn_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "startDate",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["startDate"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "endDate",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNString2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["endDate"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "useMonthlyLinking",
+		func(ctx context.Context, v any) (*bool, error) {
+			return ec.unmarshalOBoolean2ᚖbool(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["useMonthlyLinking"] = arg2
 	return args, nil
 }
 
@@ -5351,6 +5630,194 @@ func (ec *executionContext) fieldContext_Exchange_timezone(_ context.Context, fi
 	return graphql.NewScalarFieldContext("Exchange", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
+func (ec *executionContext) _ExternalCashFlowWeightItem_transactionId(ctx context.Context, field graphql.CollectedField, obj *model.ExternalCashFlowWeightItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ExternalCashFlowWeightItem_transactionId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TransactionID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ExternalCashFlowWeightItem_transactionId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ExternalCashFlowWeightItem", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _ExternalCashFlowWeightItem_date(ctx context.Context, field graphql.CollectedField, obj *model.ExternalCashFlowWeightItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ExternalCashFlowWeightItem_date(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Date, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ExternalCashFlowWeightItem_date(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ExternalCashFlowWeightItem", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _ExternalCashFlowWeightItem_type(ctx context.Context, field graphql.CollectedField, obj *model.ExternalCashFlowWeightItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ExternalCashFlowWeightItem_type(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Type, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.TransactionType) graphql.Marshaler {
+			return ec.marshalNTransactionType2bffᚋgraphᚋmodelᚐTransactionType(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ExternalCashFlowWeightItem_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ExternalCashFlowWeightItem", field, false, false, errors.New("field of type TransactionType does not have child fields"))
+}
+
+func (ec *executionContext) _ExternalCashFlowWeightItem_amount(ctx context.Context, field graphql.CollectedField, obj *model.ExternalCashFlowWeightItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ExternalCashFlowWeightItem_amount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Amount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ExternalCashFlowWeightItem_amount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExternalCashFlowWeightItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExternalCashFlowWeightItem_weight(ctx context.Context, field graphql.CollectedField, obj *model.ExternalCashFlowWeightItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ExternalCashFlowWeightItem_weight(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Weight, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ExternalCashFlowWeightItem_weight(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ExternalCashFlowWeightItem", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _ExternalCashFlowWeightItem_weightedAmount(ctx context.Context, field graphql.CollectedField, obj *model.ExternalCashFlowWeightItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ExternalCashFlowWeightItem_weightedAmount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.WeightedAmount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ExternalCashFlowWeightItem_weightedAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExternalCashFlowWeightItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ExternalCashFlowWeightItem_localAmount(ctx context.Context, field graphql.CollectedField, obj *model.ExternalCashFlowWeightItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ExternalCashFlowWeightItem_localAmount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LocalAmount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ExternalCashFlowWeightItem_localAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ExternalCashFlowWeightItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _FXHistoryPoint_date(ctx context.Context, field graphql.CollectedField, obj *model.FXHistoryPoint) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -7363,6 +7830,428 @@ func (ec *executionContext) fieldContext_MissingPriceTransactionItem_currencyCod
 	return graphql.NewScalarFieldContext("MissingPriceTransactionItem", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
+func (ec *executionContext) _ModifiedDietzReturnPayload_portfolioId(ctx context.Context, field graphql.CollectedField, obj *model.ModifiedDietzReturnPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ModifiedDietzReturnPayload_portfolioId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PortfolioID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ModifiedDietzReturnPayload_portfolioId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ModifiedDietzReturnPayload", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _ModifiedDietzReturnPayload_baseCurrency(ctx context.Context, field graphql.CollectedField, obj *model.ModifiedDietzReturnPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ModifiedDietzReturnPayload_baseCurrency(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.BaseCurrency, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ModifiedDietzReturnPayload_baseCurrency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ModifiedDietzReturnPayload", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _ModifiedDietzReturnPayload_startDate(ctx context.Context, field graphql.CollectedField, obj *model.ModifiedDietzReturnPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ModifiedDietzReturnPayload_startDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.StartDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ModifiedDietzReturnPayload_startDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ModifiedDietzReturnPayload", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _ModifiedDietzReturnPayload_endDate(ctx context.Context, field graphql.CollectedField, obj *model.ModifiedDietzReturnPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ModifiedDietzReturnPayload_endDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.EndDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ModifiedDietzReturnPayload_endDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ModifiedDietzReturnPayload", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _ModifiedDietzReturnPayload_elapsedDays(ctx context.Context, field graphql.CollectedField, obj *model.ModifiedDietzReturnPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ModifiedDietzReturnPayload_elapsedDays(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ElapsedDays, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ModifiedDietzReturnPayload_elapsedDays(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ModifiedDietzReturnPayload", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _ModifiedDietzReturnPayload_startValuation(ctx context.Context, field graphql.CollectedField, obj *model.ModifiedDietzReturnPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ModifiedDietzReturnPayload_startValuation(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.StartValuation, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ModifiedDietzReturnPayload_startValuation(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ModifiedDietzReturnPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ModifiedDietzReturnPayload_endValuation(ctx context.Context, field graphql.CollectedField, obj *model.ModifiedDietzReturnPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ModifiedDietzReturnPayload_endValuation(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.EndValuation, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ModifiedDietzReturnPayload_endValuation(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ModifiedDietzReturnPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ModifiedDietzReturnPayload_netExternalFlows(ctx context.Context, field graphql.CollectedField, obj *model.ModifiedDietzReturnPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ModifiedDietzReturnPayload_netExternalFlows(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.NetExternalFlows, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ModifiedDietzReturnPayload_netExternalFlows(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ModifiedDietzReturnPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ModifiedDietzReturnPayload_netInvestmentGain(ctx context.Context, field graphql.CollectedField, obj *model.ModifiedDietzReturnPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ModifiedDietzReturnPayload_netInvestmentGain(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.NetInvestmentGain, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ModifiedDietzReturnPayload_netInvestmentGain(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ModifiedDietzReturnPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ModifiedDietzReturnPayload_weightedCapitalEmployed(ctx context.Context, field graphql.CollectedField, obj *model.ModifiedDietzReturnPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ModifiedDietzReturnPayload_weightedCapitalEmployed(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.WeightedCapitalEmployed, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ModifiedDietzReturnPayload_weightedCapitalEmployed(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ModifiedDietzReturnPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _ModifiedDietzReturnPayload_cumulativeReturnPercent(ctx context.Context, field graphql.CollectedField, obj *model.ModifiedDietzReturnPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ModifiedDietzReturnPayload_cumulativeReturnPercent(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CumulativeReturnPercent, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ModifiedDietzReturnPayload_cumulativeReturnPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ModifiedDietzReturnPayload", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _ModifiedDietzReturnPayload_annualizedReturnPercent(ctx context.Context, field graphql.CollectedField, obj *model.ModifiedDietzReturnPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ModifiedDietzReturnPayload_annualizedReturnPercent(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.AnnualizedReturnPercent, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Decimal) graphql.Marshaler {
+			return ec.marshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_ModifiedDietzReturnPayload_annualizedReturnPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ModifiedDietzReturnPayload", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _ModifiedDietzReturnPayload_isAnnualized(ctx context.Context, field graphql.CollectedField, obj *model.ModifiedDietzReturnPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ModifiedDietzReturnPayload_isAnnualized(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.IsAnnualized, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ModifiedDietzReturnPayload_isAnnualized(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ModifiedDietzReturnPayload", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _ModifiedDietzReturnPayload_isComputable(ctx context.Context, field graphql.CollectedField, obj *model.ModifiedDietzReturnPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ModifiedDietzReturnPayload_isComputable(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.IsComputable, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ModifiedDietzReturnPayload_isComputable(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ModifiedDietzReturnPayload", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _ModifiedDietzReturnPayload_diagnosticCode(ctx context.Context, field graphql.CollectedField, obj *model.ModifiedDietzReturnPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ModifiedDietzReturnPayload_diagnosticCode(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DiagnosticCode, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ModifiedDietzReturnPayload_diagnosticCode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ModifiedDietzReturnPayload", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _ModifiedDietzReturnPayload_cashFlowWeights(ctx context.Context, field graphql.CollectedField, obj *model.ModifiedDietzReturnPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ModifiedDietzReturnPayload_cashFlowWeights(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CashFlowWeights, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.ExternalCashFlowWeightItem) graphql.Marshaler {
+			return ec.marshalNExternalCashFlowWeightItem2ᚕᚖbffᚋgraphᚋmodelᚐExternalCashFlowWeightItemᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ModifiedDietzReturnPayload_cashFlowWeights(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "ModifiedDietzReturnPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_ExternalCashFlowWeightItem(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Money_amount(ctx context.Context, field graphql.CollectedField, obj *model.Money) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -8065,6 +8954,29 @@ func (ec *executionContext) fieldContext_Portfolio_investments(_ context.Context
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _Portfolio_inceptionDate(ctx context.Context, field graphql.CollectedField, obj *model.Portfolio) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Portfolio_inceptionDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.InceptionDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_Portfolio_inceptionDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Portfolio", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _PortfolioHistory_points(ctx context.Context, field graphql.CollectedField, obj *model.PortfolioHistory) (ret graphql.Marshaler) {
@@ -8844,6 +9756,50 @@ func (ec *executionContext) fieldContext_Query_missingPriceTransactions(ctx cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_missingPriceTransactions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_modifiedDietzReturn(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_modifiedDietzReturn(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().ModifiedDietzReturn(ctx, fc.Args["startDate"].(string), fc.Args["endDate"].(string), fc.Args["useMonthlyLinking"].(*bool))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.ModifiedDietzReturnPayload) graphql.Marshaler {
+			return ec.marshalNModifiedDietzReturnPayload2ᚖbffᚋgraphᚋmodelᚐModifiedDietzReturnPayload(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_modifiedDietzReturn(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_ModifiedDietzReturnPayload(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_modifiedDietzReturn_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -12335,6 +13291,74 @@ func (ec *executionContext) _Exchange(ctx context.Context, sel ast.SelectionSet,
 	return out
 }
 
+var externalCashFlowWeightItemImplementors = []string{"ExternalCashFlowWeightItem"}
+
+func (ec *executionContext) _ExternalCashFlowWeightItem(ctx context.Context, sel ast.SelectionSet, obj *model.ExternalCashFlowWeightItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, externalCashFlowWeightItemImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ExternalCashFlowWeightItem")
+		case "transactionId":
+			out.Values[i] = ec._ExternalCashFlowWeightItem_transactionId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "date":
+			out.Values[i] = ec._ExternalCashFlowWeightItem_date(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "type":
+			out.Values[i] = ec._ExternalCashFlowWeightItem_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "amount":
+			out.Values[i] = ec._ExternalCashFlowWeightItem_amount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "weight":
+			out.Values[i] = ec._ExternalCashFlowWeightItem_weight(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "weightedAmount":
+			out.Values[i] = ec._ExternalCashFlowWeightItem_weightedAmount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "localAmount":
+			out.Values[i] = ec._ExternalCashFlowWeightItem_localAmount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
 var fXHistoryPointImplementors = []string{"FXHistoryPoint"}
 
 func (ec *executionContext) _FXHistoryPoint(ctx context.Context, sel ast.SelectionSet, obj *model.FXHistoryPoint) graphql.Marshaler {
@@ -13141,6 +14165,119 @@ func (ec *executionContext) _MissingPriceTransactionItem(ctx context.Context, se
 	return out
 }
 
+var modifiedDietzReturnPayloadImplementors = []string{"ModifiedDietzReturnPayload"}
+
+func (ec *executionContext) _ModifiedDietzReturnPayload(ctx context.Context, sel ast.SelectionSet, obj *model.ModifiedDietzReturnPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, modifiedDietzReturnPayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ModifiedDietzReturnPayload")
+		case "portfolioId":
+			out.Values[i] = ec._ModifiedDietzReturnPayload_portfolioId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "baseCurrency":
+			out.Values[i] = ec._ModifiedDietzReturnPayload_baseCurrency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "startDate":
+			out.Values[i] = ec._ModifiedDietzReturnPayload_startDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "endDate":
+			out.Values[i] = ec._ModifiedDietzReturnPayload_endDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "elapsedDays":
+			out.Values[i] = ec._ModifiedDietzReturnPayload_elapsedDays(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "startValuation":
+			out.Values[i] = ec._ModifiedDietzReturnPayload_startValuation(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "endValuation":
+			out.Values[i] = ec._ModifiedDietzReturnPayload_endValuation(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "netExternalFlows":
+			out.Values[i] = ec._ModifiedDietzReturnPayload_netExternalFlows(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "netInvestmentGain":
+			out.Values[i] = ec._ModifiedDietzReturnPayload_netInvestmentGain(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "weightedCapitalEmployed":
+			out.Values[i] = ec._ModifiedDietzReturnPayload_weightedCapitalEmployed(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cumulativeReturnPercent":
+			out.Values[i] = ec._ModifiedDietzReturnPayload_cumulativeReturnPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "annualizedReturnPercent":
+			out.Values[i] = ec._ModifiedDietzReturnPayload_annualizedReturnPercent(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "isAnnualized":
+			out.Values[i] = ec._ModifiedDietzReturnPayload_isAnnualized(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isComputable":
+			out.Values[i] = ec._ModifiedDietzReturnPayload_isComputable(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "diagnosticCode":
+			out.Values[i] = ec._ModifiedDietzReturnPayload_diagnosticCode(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cashFlowWeights":
+			out.Values[i] = ec._ModifiedDietzReturnPayload_cashFlowWeights(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
 var moneyImplementors = []string{"Money"}
 
 func (ec *executionContext) _Money(ctx context.Context, sel ast.SelectionSet, obj *model.Money) graphql.Marshaler {
@@ -13342,6 +14479,11 @@ func (ec *executionContext) _Portfolio(ctx context.Context, sel ast.SelectionSet
 		case "investments":
 			out.Values[i] = ec._Portfolio_investments(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "inceptionDate":
+			out.Values[i] = ec._Portfolio_inceptionDate(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
 				out.Invalids++
 			}
 		default:
@@ -13783,6 +14925,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_missingPriceTransactions(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "modifiedDietzReturn":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_modifiedDietzReturn(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -14893,6 +16057,32 @@ func (ec *executionContext) marshalNExchange2ᚖbffᚋgraphᚋmodelᚐExchange(c
 	return ec._Exchange(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNExternalCashFlowWeightItem2ᚕᚖbffᚋgraphᚋmodelᚐExternalCashFlowWeightItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ExternalCashFlowWeightItem) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNExternalCashFlowWeightItem2ᚖbffᚋgraphᚋmodelᚐExternalCashFlowWeightItem(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNExternalCashFlowWeightItem2ᚖbffᚋgraphᚋmodelᚐExternalCashFlowWeightItem(ctx context.Context, sel ast.SelectionSet, v *model.ExternalCashFlowWeightItem) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ExternalCashFlowWeightItem(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNFXHistoryPoint2ᚕᚖbffᚋgraphᚋmodelᚐFXHistoryPointᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FXHistoryPoint) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
@@ -15184,6 +16374,16 @@ func (ec *executionContext) marshalNMissingPriceTransactionItem2ᚖbffᚋgraph�
 		return graphql.Null
 	}
 	return ec._MissingPriceTransactionItem(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNModifiedDietzReturnPayload2ᚖbffᚋgraphᚋmodelᚐModifiedDietzReturnPayload(ctx context.Context, sel ast.SelectionSet, v *model.ModifiedDietzReturnPayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ModifiedDietzReturnPayload(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx context.Context, sel ast.SelectionSet, v *model.Money) graphql.Marshaler {

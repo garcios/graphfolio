@@ -661,4 +661,44 @@ LEFT JOIN portfolio.instruments i ON i.id = t.instrument_id
 WHERE t.portfolio_id = $1
   AND ($2::date IS NULL OR COALESCE(t.settle_date, t.trade_date) <= $2)
 ORDER BY COALESCE(t.settle_date, t.trade_date) ASC, t.created_at ASC, t.id ASC;`
+
+	getValuationAtOrBeforeSQL = `
+SELECT 
+    portfolio_id, valuation_date, market_value_base, cash_value_base,
+    net_flow_base, COALESCE(daily_return, 0) AS daily_return, twr_index
+FROM portfolio.portfolio_valuations
+WHERE portfolio_id = $1 AND valuation_date <= $2
+ORDER BY valuation_date DESC
+LIMIT 1;`
+
+	getExternalCashFlowsSQL = `
+SELECT 
+    t.id, t.portfolio_id, t.instrument_id, t.type, t.trade_date, t.settle_date,
+    t.quantity, t.price, t.amount, t.currency_code, t.fee, t.withholding_tax,
+    COALESCE(
+        t.fx_rate_to_base,
+        direct_fx.rate,
+        CASE WHEN inverse_fx.rate > 0 THEN 1.0 / inverse_fx.rate ELSE NULL END,
+        1.0
+    ) AS fx_rate_to_base,
+    t.external_ref, t.notes, t.fee_currency_code, t.created_at
+FROM portfolio.transactions t
+LEFT JOIN LATERAL (
+    SELECT rate 
+    FROM portfolio.fx_rates 
+    WHERE base_currency = t.currency_code AND quote_currency = $4 
+      AND rate_date <= t.trade_date
+    ORDER BY rate_date DESC LIMIT 1
+) direct_fx ON (t.currency_code <> $4)
+LEFT JOIN LATERAL (
+    SELECT rate 
+    FROM portfolio.fx_rates 
+    WHERE base_currency = $4 AND quote_currency = t.currency_code 
+      AND rate_date <= t.trade_date
+    ORDER BY rate_date DESC LIMIT 1
+) inverse_fx ON (t.currency_code <> $4)
+WHERE t.portfolio_id = $1
+  AND t.type IN ('DEPOSIT', 'WITHDRAWAL', 'TRANSFER_IN', 'TRANSFER_OUT')
+  AND t.trade_date >= $2 AND t.trade_date <= $3
+ORDER BY t.trade_date ASC, t.id ASC;`
 )

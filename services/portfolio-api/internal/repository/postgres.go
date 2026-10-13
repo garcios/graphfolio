@@ -1642,3 +1642,93 @@ func (r *PostgresRepository) UpsertFXRate(ctx context.Context, baseCurrency, quo
 
 	return &fx, nil
 }
+
+func (r *PostgresRepository) GetValuationAtOrBefore(ctx context.Context, portfolioID uuid.UUID, targetDate time.Time) (*domain.PortfolioValuation, error) {
+	row := r.pool.QueryRow(ctx, getValuationAtOrBeforeSQL, portfolioID, targetDate.UTC())
+
+	var v domain.PortfolioValuation
+	err := row.Scan(
+		&v.PortfolioID,
+		&v.ValuationDate,
+		&v.MarketValueBase,
+		&v.CashValueBase,
+		&v.NetFlowBase,
+		&v.DailyReturn,
+		&v.TWRIndex,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("repository: get valuation at or before date failed: %w", err)
+	}
+
+	return &v, nil
+}
+
+func (r *PostgresRepository) GetExternalCashFlows(ctx context.Context, portfolioID uuid.UUID, fromDate, toDate time.Time, baseCurrency string) ([]domain.ExternalCashFlow, error) {
+	from := fromDate.UTC().Truncate(24 * time.Hour)
+	to := toDate.UTC().Truncate(24 * time.Hour)
+
+	rows, err := r.pool.Query(ctx, getExternalCashFlowsSQL, portfolioID, from, to, baseCurrency)
+	if err != nil {
+		return nil, fmt.Errorf("repository: query external cash flows failed: %w", err)
+	}
+	defer rows.Close()
+
+	var flows []domain.ExternalCashFlow
+	for rows.Next() {
+		var tx domain.Transaction
+		var settleDate *time.Time
+		var fxRateToBase *decimal.Decimal
+		var feeCurr *string
+
+		err := rows.Scan(
+			&tx.ID,
+			&tx.PortfolioID,
+			&tx.InstrumentID,
+			&tx.Type,
+			&tx.TradeDate,
+			&settleDate,
+			&tx.Quantity,
+			&tx.Price,
+			&tx.Amount,
+			&tx.CurrencyCode,
+			&tx.Fee,
+			&tx.WithholdingTax,
+			&fxRateToBase,
+			&tx.ExternalRef,
+			&tx.Notes,
+			&feeCurr,
+			&tx.CreatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("repository: scan external transaction failed: %w", err)
+		}
+		tx.SettleDate = settleDate
+		tx.FXRateToBase = fxRateToBase
+		tx.FeeCurrencyCode = feeCurr
+
+		netImpact, _, _, _, _ := domain.CalculateTransactionCashImpact(tx, baseCurrency)
+
+		eventDate := tx.TradeDate
+		if tx.SettleDate != nil && !tx.SettleDate.IsZero() {
+			eventDate = *tx.SettleDate
+		}
+
+		flows = append(flows, domain.ExternalCashFlow{
+			TransactionID: tx.ID.String(),
+			Date:          eventDate.UTC(),
+			Type:          string(tx.Type),
+			AmountBase:    netImpact,
+			LocalAmount:   tx.Amount,
+			LocalCurrency: tx.CurrencyCode,
+		})
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("repository: rows error in external cash flows: %w", err)
+	}
+
+	return flows, nil
+}

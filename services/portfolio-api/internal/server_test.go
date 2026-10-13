@@ -2605,3 +2605,144 @@ func TestPortfolioServer_ListMissingPriceTransactions(t *testing.T) {
 		}
 	})
 }
+
+func TestPortfolioServer_GetModifiedDietzReturn(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successful calculation", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		annVal := decimal.NewFromFloat(23.98)
+		dietzRes := &domain.ModifiedDietzResult{
+			ElapsedDays:             365,
+			StartValuation:          decimal.NewFromInt(100000),
+			EndValuation:            decimal.NewFromInt(180000),
+			NetExternalFlows:        decimal.NewFromInt(50000),
+			NetInvestmentGain:       decimal.NewFromInt(30000),
+			WeightedCapitalEmployed: decimal.NewFromFloat(125205.48),
+			CumulativeReturnPercent: decimal.NewFromFloat(23.96),
+			AnnualizedReturnPercent: &annVal,
+			IsAnnualized:            true,
+			IsComputable:            true,
+			DiagnosticCode:          "OK",
+			CashFlowWeights: []domain.CashFlowWeight{
+				{
+					TransactionID:      "tx-1",
+					Date:               time.Date(2025, 7, 1, 0, 0, 0, 0, time.UTC),
+					Type:               "DEPOSIT",
+					AmountBase:         decimal.NewFromInt(50000),
+					Weight:             decimal.NewFromFloat(0.50410959),
+					WeightedAmountBase: decimal.NewFromFloat(25205.48),
+					LocalAmount:        decimal.NewFromInt(50000),
+					LocalCurrency:      "USD",
+				},
+			},
+		}
+
+		startDate := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+		endDate := time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC)
+
+		mockSvc.EXPECT().
+			GetModifiedDietzReturn(gomock.Any(), "user-1", startDate, endDate, false).
+			Return(dietzRes, "USD", nil)
+
+		resp, err := server.GetModifiedDietzReturn(ctx, &pb.GetModifiedDietzReturnRequest{
+			UserId:             "user-1",
+			StartDate:          "2025-01-01",
+			EndDate:            "2025-12-31",
+			UseMonthlyLinking: false,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if resp.GetBaseCurrency() != "USD" {
+			t.Errorf("expected USD, got %s", resp.GetBaseCurrency())
+		}
+		if resp.GetElapsedDays() != 365 {
+			t.Errorf("expected 365 days, got %d", resp.GetElapsedDays())
+		}
+		if !resp.GetIsAnnualized() {
+			t.Errorf("expected isAnnualized=true")
+		}
+		if len(resp.GetCashFlowWeights()) != 1 {
+			t.Fatalf("expected 1 weight, got %d", len(resp.GetCashFlowWeights()))
+		}
+		if resp.GetCashFlowWeights()[0].GetType() != pb.TransactionType_TRANSACTION_TYPE_DEPOSIT {
+			t.Errorf("expected DEPOSIT type, got %v", resp.GetCashFlowWeights()[0].GetType())
+		}
+	})
+
+	t.Run("empty start_date returns InvalidArgument", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		_, err := server.GetModifiedDietzReturn(ctx, &pb.GetModifiedDietzReturnRequest{
+			StartDate: "",
+			EndDate:   "2025-12-31",
+		})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", err)
+		}
+	})
+
+	t.Run("end_date before start_date returns InvalidArgument", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		_, err := server.GetModifiedDietzReturn(ctx, &pb.GetModifiedDietzReturnRequest{
+			StartDate: "2025-12-31",
+			EndDate:   "2025-01-01",
+		})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", err)
+		}
+	})
+
+	t.Run("portfolio not found returns NotFound", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		startDate := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+		endDate := time.Date(2025, 12, 31, 0, 0, 0, 0, time.UTC)
+
+		mockSvc.EXPECT().
+			GetModifiedDietzReturn(gomock.Any(), "user-unknown", startDate, endDate, false).
+			Return(nil, "", repository.ErrPortfolioNotFound)
+
+		_, err := server.GetModifiedDietzReturn(ctx, &pb.GetModifiedDietzReturnRequest{
+			UserId:    "user-unknown",
+			StartDate: "2025-01-01",
+			EndDate:   "2025-12-31",
+		})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.NotFound {
+			t.Errorf("expected NotFound, got %v", err)
+		}
+	})
+}
+

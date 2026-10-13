@@ -160,6 +160,16 @@ type Exchange struct {
 	Timezone string `json:"timezone"`
 }
 
+type ExternalCashFlowWeightItem struct {
+	TransactionID  string          `json:"transactionId"`
+	Date           string          `json:"date"`
+	Type           TransactionType `json:"type"`
+	Amount         *Money          `json:"amount"`
+	Weight         Decimal         `json:"weight"`
+	WeightedAmount *Money          `json:"weightedAmount"`
+	LocalAmount    *Money          `json:"localAmount"`
+}
+
 type FXHistoryPoint struct {
 	Date         string  `json:"date"`
 	Rate         Decimal `json:"rate"`
@@ -293,6 +303,25 @@ type MissingPriceTransactionItem struct {
 	CurrencyCode   string          `json:"currencyCode"`
 }
 
+type ModifiedDietzReturnPayload struct {
+	PortfolioID             string                        `json:"portfolioId"`
+	BaseCurrency            string                        `json:"baseCurrency"`
+	StartDate               string                        `json:"startDate"`
+	EndDate                 string                        `json:"endDate"`
+	ElapsedDays             int                           `json:"elapsedDays"`
+	StartValuation          *Money                        `json:"startValuation"`
+	EndValuation            *Money                        `json:"endValuation"`
+	NetExternalFlows        *Money                        `json:"netExternalFlows"`
+	NetInvestmentGain       *Money                        `json:"netInvestmentGain"`
+	WeightedCapitalEmployed *Money                        `json:"weightedCapitalEmployed"`
+	CumulativeReturnPercent Decimal                       `json:"cumulativeReturnPercent"`
+	AnnualizedReturnPercent *Decimal                      `json:"annualizedReturnPercent,omitempty"`
+	IsAnnualized            bool                          `json:"isAnnualized"`
+	IsComputable            bool                          `json:"isComputable"`
+	DiagnosticCode          string                        `json:"diagnosticCode"`
+	CashFlowWeights         []*ExternalCashFlowWeightItem `json:"cashFlowWeights"`
+}
+
 type Money struct {
 	Amount       Decimal `json:"amount"`
 	CurrencyCode string  `json:"currencyCode"`
@@ -308,6 +337,7 @@ type Portfolio struct {
 	AnnualizedReturnPercent Decimal       `json:"annualizedReturnPercent"`
 	CashBalance             *Money        `json:"cashBalance"`
 	Investments             []*Investment `json:"investments"`
+	InceptionDate           *string       `json:"inceptionDate,omitempty"`
 }
 
 type PortfolioHistory struct {

@@ -10,6 +10,7 @@ import (
 	commonpb "graphfolio/proto/common/v1"
 	pb "graphfolio/proto/portfolio/v1"
 	userpb "graphfolio/proto/user/v1"
+	"pkg/decimalpb"
 
 	"github.com/shopspring/decimal"
 	"google.golang.org/grpc"
@@ -70,6 +71,7 @@ type fakePortfolioClient struct {
 	batchImportTransactionsFn      func(ctx context.Context, in *pb.BatchImportTransactionsRequest) (*pb.BatchImportTransactionsResponse, error)
 	getCashFlowReportFn            func(ctx context.Context, in *pb.GetCashFlowReportRequest) (*pb.GetCashFlowReportResponse, error)
 	listMissingPriceTransactionsFn func(ctx context.Context, in *pb.ListMissingPriceTransactionsRequest) (*pb.ListMissingPriceTransactionsResponse, error)
+	getModifiedDietzReturnFn       func(ctx context.Context, in *pb.GetModifiedDietzReturnRequest) (*pb.GetModifiedDietzReturnResponse, error)
 }
 
 func (f *fakePortfolioClient) GetPortfolio(ctx context.Context, in *pb.GetPortfolioRequest, opts ...grpc.CallOption) (*pb.GetPortfolioResponse, error) {
@@ -2294,3 +2296,100 @@ func TestQueryResolver_MissingPriceTransactions(t *testing.T) {
 		}
 	})
 }
+
+func (f *fakePortfolioClient) GetModifiedDietzReturn(ctx context.Context, in *pb.GetModifiedDietzReturnRequest, opts ...grpc.CallOption) (*pb.GetModifiedDietzReturnResponse, error) {
+	if f.getModifiedDietzReturnFn != nil {
+		return f.getModifiedDietzReturnFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func TestQueryResolver_ModifiedDietzReturn(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully resolves modified dietz return", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			getModifiedDietzReturnFn: func(ctx context.Context, in *pb.GetModifiedDietzReturnRequest) (*pb.GetModifiedDietzReturnResponse, error) {
+				if in.GetUserId() != "1" {
+					t.Errorf("expected user_id 1, got %s", in.GetUserId())
+				}
+				if in.GetStartDate() != "2025-01-01" {
+					t.Errorf("expected start date 2025-01-01, got %s", in.GetStartDate())
+				}
+				if in.GetEndDate() != "2025-12-31" {
+					t.Errorf("expected end date 2025-12-31, got %s", in.GetEndDate())
+				}
+
+				return &pb.GetModifiedDietzReturnResponse{
+					PortfolioId:             "1",
+					BaseCurrency:            "USD",
+					StartDate:               "2025-01-01",
+					EndDate:                 "2025-12-31",
+					ElapsedDays:             365,
+					StartValuation:          decimalpb.MoneyToProto(decimal.NewFromInt(100000), "USD"),
+					EndValuation:            decimalpb.MoneyToProto(decimal.NewFromInt(180000), "USD"),
+					NetExternalFlows:        decimalpb.MoneyToProto(decimal.NewFromInt(50000), "USD"),
+					NetInvestmentGain:       decimalpb.MoneyToProto(decimal.NewFromInt(30000), "USD"),
+					WeightedCapitalEmployed: decimalpb.MoneyToProto(decimal.NewFromFloat(125205.48), "USD"),
+					CumulativeReturnPercent: decimalpb.ToProto(decimal.NewFromFloat(23.96)),
+					AnnualizedReturnPercent: decimalpb.ToProto(decimal.NewFromFloat(23.98)),
+					IsAnnualized:            true,
+					IsComputable:            true,
+					DiagnosticCode:          "OK",
+					CashFlowWeights: []*pb.ExternalCashFlowWeight{
+						{
+							TransactionId:  "tx-1",
+							Date:           "2025-07-01",
+							Type:           pb.TransactionType_TRANSACTION_TYPE_DEPOSIT,
+							Amount:         decimalpb.MoneyToProto(decimal.NewFromInt(50000), "USD"),
+							Weight:         decimalpb.ToProto(decimal.NewFromFloat(0.50410959)),
+							WeightedAmount: decimalpb.MoneyToProto(decimal.NewFromFloat(25205.48), "USD"),
+							LocalAmount:    decimalpb.MoneyToProto(decimal.NewFromInt(50000), "USD"),
+						},
+					},
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		res, err := qResolver.ModifiedDietzReturn(ctx, "2025-01-01", "2025-12-31", nil)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if res.BaseCurrency != "USD" {
+			t.Errorf("expected USD, got %s", res.BaseCurrency)
+		}
+		if res.ElapsedDays != 365 {
+			t.Errorf("expected 365, got %d", res.ElapsedDays)
+		}
+		if !res.IsAnnualized {
+			t.Errorf("expected isAnnualized=true")
+		}
+		if res.AnnualizedReturnPercent == nil || res.AnnualizedReturnPercent.String() != "23.98" {
+			t.Errorf("expected annualized return 23.98, got %v", res.AnnualizedReturnPercent)
+		}
+		if len(res.CashFlowWeights) != 1 {
+			t.Fatalf("expected 1 weight, got %d", len(res.CashFlowWeights))
+		}
+	})
+
+	t.Run("handles error from portfolio service", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			getModifiedDietzReturnFn: func(ctx context.Context, in *pb.GetModifiedDietzReturnRequest) (*pb.GetModifiedDietzReturnResponse, error) {
+				return nil, errors.New("service unavailable")
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		_, err := qResolver.ModifiedDietzReturn(ctx, "2025-01-01", "2025-12-31", nil)
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+	})
+}
+

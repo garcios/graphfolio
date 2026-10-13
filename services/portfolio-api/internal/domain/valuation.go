@@ -42,6 +42,11 @@ func (s PortfolioValuationSnapshot) TotalValue() decimal.Decimal {
 	return s.MarketValueBase.Add(s.CashValueBase)
 }
 
+// TotalValue computes the consolidated portfolio value (Market Value + Cash Value).
+func (v PortfolioValuation) TotalValue() decimal.Decimal {
+	return v.MarketValueBase.Add(v.CashValueBase)
+}
+
 // ToPortfolioValuation converts the snapshot to the database-compatible domain.PortfolioValuation struct.
 func (s PortfolioValuationSnapshot) ToPortfolioValuation() PortfolioValuation {
 	dailyReturn := decimal.Zero

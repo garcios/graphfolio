@@ -8,6 +8,7 @@ import { PerformanceChart } from './PerformanceChart';
 import { TransactionLedger } from './TransactionLedger';
 import { ReportsView } from './ReportsView';
 import { UserPreferencesModal, type UserPreferencesData, type CurrencyItem } from './UserPreferencesModal';
+import { ModifiedDietzModal } from './ModifiedDietzModal';
 
 type SortField = 'ticker' | 'price' | 'averageBuyPrice' | 'quantity' | 'totalValue' | 'capitalGain' | 'income' | 'currencyGain' | 'totalReturn' | 'todayReturn';
 type SortDirection = 'asc' | 'desc';
@@ -22,6 +23,7 @@ export const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
+  const [isDietzModalOpen, setIsDietzModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'ledger' | 'reports'>('overview');
   const [ledgerRefreshKey, setLedgerRefreshKey] = useState(0);
@@ -30,6 +32,30 @@ export const Dashboard = () => {
   const [includeClosed, setIncludeClosed] = useState<boolean>(() => {
     return localStorage.getItem('graphfolio:include-closed-positions') === 'true';
   });
+
+  type ReturnMethod = 'TWR' | 'DIETZ';
+  const [returnMethod, setReturnMethod] = useState<ReturnMethod>(() => {
+    return (localStorage.getItem('graphfolio:return-method') as ReturnMethod) || 'TWR';
+  });
+
+  const [dietzSummary, setDietzSummary] = useState<{
+    annualizedReturnPercent: any;
+    cumulativeReturnPercent: any;
+    isAnnualized: boolean;
+    loading: boolean;
+    error: string | null;
+  }>({
+    annualizedReturnPercent: null,
+    cumulativeReturnPercent: null,
+    isAnnualized: true,
+    loading: false,
+    error: null,
+  });
+
+  const handleReturnMethodChange = (method: ReturnMethod) => {
+    setReturnMethod(method);
+    localStorage.setItem('graphfolio:return-method', method);
+  };
 
   const handleToggleIncludeClosed = (checked: boolean) => {
     setIncludeClosed(checked);
@@ -152,6 +178,7 @@ export const Dashboard = () => {
         todayReturnPercent: true,
         annualizedReturnPercent: true,
         cashBalance: { amount: true, currencyCode: true },
+        inceptionDate: true,
         investments: {
           id: true,
           ticker: true,
@@ -207,6 +234,7 @@ export const Dashboard = () => {
           todayReturnPercent: true,
           annualizedReturnPercent: true,
           cashBalance: { amount: true, currencyCode: true },
+          inceptionDate: true,
           investments: {
             id: true,
             ticker: true,
@@ -241,12 +269,54 @@ export const Dashboard = () => {
     });
   }, [includeClosed, ledgerRefreshKey]);
 
+  useEffect(() => {
+    if (returnMethod === 'DIETZ') {
+      setDietzSummary(prev => ({ ...prev, loading: true, error: null }));
+      const end = new Date().toISOString().split('T')[0];
+      const start = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      client.query({
+        modifiedDietzReturn: {
+          __args: {
+            startDate: start,
+            endDate: end,
+            useMonthlyLinking: true,
+          },
+          isAnnualized: true,
+          annualizedReturnPercent: true,
+          cumulativeReturnPercent: true,
+        }
+      })
+      .then(res => {
+        setDietzSummary({
+          annualizedReturnPercent: res.modifiedDietzReturn.annualizedReturnPercent,
+          cumulativeReturnPercent: res.modifiedDietzReturn.cumulativeReturnPercent,
+          isAnnualized: res.modifiedDietzReturn.isAnnualized,
+          loading: false,
+          error: null,
+        });
+      })
+      .catch(err => {
+        console.error("Failed to load Modified Dietz summary for dashboard:", err);
+        setDietzSummary(prev => ({
+          ...prev,
+          loading: false,
+          error: 'Calculation failed',
+        }));
+      });
+    }
+  }, [returnMethod, ledgerRefreshKey]);
+
   if (loading || !data) {
     return <div className="dashboard loading">Loading portfolio...</div>;
   }
 
   const todayReturnPositive = isPositive(data.todayReturnAmount);
   const annualizedPositive = isPositive(data.annualizedReturnPercent);
+
+  const dietzDisplayPercent = dietzSummary.isAnnualized
+    ? dietzSummary.annualizedReturnPercent
+    : dietzSummary.cumulativeReturnPercent;
+  const dietzPositive = isPositive(dietzDisplayPercent);
 
   const currencyCode = data.totalValue?.currencyCode || userPrefs?.displayCurrency || 'USD';
 
@@ -368,11 +438,87 @@ export const Dashboard = () => {
             <span className="label">Cash Balance</span>
             <span className="value neutral">{formatMoney(data.cashBalance)}</span>
           </div>
-          <div className="metric-card">
-            <span className="label">Annualized Return (TWR)</span>
-            <span className={`value ${annualizedPositive ? 'positive' : 'negative'}`}>
-              {formatPercent(data.annualizedReturnPercent, 1)}
-            </span>
+          <div
+            className="metric-card return-card interactive"
+            onClick={() => setIsDietzModalOpen(true)}
+            title={
+              returnMethod === 'TWR'
+                ? "Time-Weighted Return (GIPS TWR). Click to inspect Modified Dietz method & cash flow weights."
+                : "Modified Dietz Return. Click to inspect cash flow weights and capital decomposition."
+            }
+            role="button"
+            tabIndex={0}
+          >
+            <div className="metric-card-header-row">
+              <div className="return-label-group">
+                <span className="label">
+                  {returnMethod === 'TWR'
+                    ? 'Annualized Return'
+                    : (dietzSummary.isAnnualized ? 'Annualized Return' : 'Cumulative Return')}
+                </span>
+                <span className={`method-indicator-pill ${returnMethod.toLowerCase()}`}>
+                  {returnMethod === 'TWR' ? 'TWR' : 'DIETZ'}
+                </span>
+              </div>
+              <div
+                className="return-switcher-pills"
+                onClick={(e) => e.stopPropagation()}
+                role="group"
+                aria-label="Return calculation methodology"
+              >
+                <button
+                  type="button"
+                  className={`return-switcher-btn ${returnMethod === 'TWR' ? 'active' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleReturnMethodChange('TWR');
+                  }}
+                  title="Time-Weighted Return (GIPS): isolates pure investment performance from cash flow timing"
+                >
+                  TWR
+                </button>
+                <button
+                  type="button"
+                  className={`return-switcher-btn ${returnMethod === 'DIETZ' ? 'active' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleReturnMethodChange('DIETZ');
+                  }}
+                  title="Modified Dietz Method: money-weighted return time-weighting every cash flow"
+                >
+                  DIETZ
+                </button>
+              </div>
+            </div>
+
+            {returnMethod === 'TWR' ? (
+              <div className="return-metric-body">
+                <span className={`value ${annualizedPositive ? 'positive' : 'negative'}`}>
+                  {formatPercent(data.annualizedReturnPercent, 1)}
+                </span>
+                <span className="return-method-subtitle">
+                  Time-Weighted (GIPS)
+                </span>
+              </div>
+            ) : (
+              <div className="return-metric-body">
+                {dietzSummary.loading ? (
+                  <span className="value neutral return-loading-shimmer">Calculating...</span>
+                ) : dietzSummary.error ? (
+                  <span className="value negative" style={{ fontSize: '0.95rem' }}>Failed</span>
+                ) : (
+                  <>
+                    <span className={`value ${dietzPositive ? 'positive' : 'negative'}`}>
+                      {dietzDisplayPercent !== null ? formatPercent(dietzDisplayPercent, 1) : '—'}
+                      {dietzSummary.isAnnualized && dietzDisplayPercent !== null ? ' p.a.' : ''}
+                    </span>
+                    <span className="return-method-subtitle dietz-action-hint">
+                      Modified Dietz · <span className="inspect-underline">Inspect Math ↗</span>
+                    </span>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -648,6 +794,13 @@ export const Dashboard = () => {
           setToastMessage(`Preferences saved. Display currency updated to ${updatedPrefs.displayCurrency} (${currSymbol})`);
           setTimeout(() => setToastMessage(null), 4000);
         }}
+      />
+
+      <ModifiedDietzModal
+        isOpen={isDietzModalOpen}
+        onClose={() => setIsDietzModalOpen(false)}
+        portfolioCurrency={userPrefs?.displayCurrency || 'USD'}
+        inceptionDate={data?.inceptionDate || undefined}
       />
 
       {toastMessage && (

@@ -47,4 +47,5 @@ type PortfolioSummary struct {
 	AnnualizedReturnPercent decimal.Decimal
 	CashBalance             Money
 	Investments             []InvestmentSummary
+	InceptionDate           string
 }

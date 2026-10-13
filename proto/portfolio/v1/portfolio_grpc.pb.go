@@ -45,6 +45,7 @@ const (
 	PortfolioService_ListMissingPriceTransactions_FullMethodName = "/portfolio.v1.PortfolioService/ListMissingPriceTransactions"
 	PortfolioService_RebuildValuations_FullMethodName            = "/portfolio.v1.PortfolioService/RebuildValuations"
 	PortfolioService_GetCashFlowReport_FullMethodName            = "/portfolio.v1.PortfolioService/GetCashFlowReport"
+	PortfolioService_GetModifiedDietzReturn_FullMethodName       = "/portfolio.v1.PortfolioService/GetModifiedDietzReturn"
 )
 
 // PortfolioServiceClient is the client API for PortfolioService service.
@@ -86,6 +87,8 @@ type PortfolioServiceClient interface {
 	RebuildValuations(ctx context.Context, in *RebuildValuationsRequest, opts ...grpc.CallOption) (*RebuildValuationsResponse, error)
 	// Portfolio Cash Flow Report
 	GetCashFlowReport(ctx context.Context, in *GetCashFlowReportRequest, opts ...grpc.CallOption) (*GetCashFlowReportResponse, error)
+	// Return Analytics: Modified Dietz Method
+	GetModifiedDietzReturn(ctx context.Context, in *GetModifiedDietzReturnRequest, opts ...grpc.CallOption) (*GetModifiedDietzReturnResponse, error)
 }
 
 type portfolioServiceClient struct {
@@ -330,6 +333,15 @@ func (c *portfolioServiceClient) GetCashFlowReport(ctx context.Context, in *GetC
 	return out, nil
 }
 
+func (c *portfolioServiceClient) GetModifiedDietzReturn(ctx context.Context, in *GetModifiedDietzReturnRequest, opts ...grpc.CallOption) (*GetModifiedDietzReturnResponse, error) {
+	out := new(GetModifiedDietzReturnResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_GetModifiedDietzReturn_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PortfolioServiceServer is the server API for PortfolioService service.
 // All implementations must embed UnimplementedPortfolioServiceServer
 // for forward compatibility
@@ -369,6 +381,8 @@ type PortfolioServiceServer interface {
 	RebuildValuations(context.Context, *RebuildValuationsRequest) (*RebuildValuationsResponse, error)
 	// Portfolio Cash Flow Report
 	GetCashFlowReport(context.Context, *GetCashFlowReportRequest) (*GetCashFlowReportResponse, error)
+	// Return Analytics: Modified Dietz Method
+	GetModifiedDietzReturn(context.Context, *GetModifiedDietzReturnRequest) (*GetModifiedDietzReturnResponse, error)
 	mustEmbedUnimplementedPortfolioServiceServer()
 }
 
@@ -453,6 +467,9 @@ func (UnimplementedPortfolioServiceServer) RebuildValuations(context.Context, *R
 }
 func (UnimplementedPortfolioServiceServer) GetCashFlowReport(context.Context, *GetCashFlowReportRequest) (*GetCashFlowReportResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetCashFlowReport not implemented")
+}
+func (UnimplementedPortfolioServiceServer) GetModifiedDietzReturn(context.Context, *GetModifiedDietzReturnRequest) (*GetModifiedDietzReturnResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetModifiedDietzReturn not implemented")
 }
 func (UnimplementedPortfolioServiceServer) mustEmbedUnimplementedPortfolioServiceServer() {}
 
@@ -935,6 +952,24 @@ func _PortfolioService_GetCashFlowReport_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortfolioService_GetModifiedDietzReturn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetModifiedDietzReturnRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).GetModifiedDietzReturn(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_GetModifiedDietzReturn_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).GetModifiedDietzReturn(ctx, req.(*GetModifiedDietzReturnRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PortfolioService_ServiceDesc is the grpc.ServiceDesc for PortfolioService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1045,6 +1080,10 @@ var PortfolioService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetCashFlowReport",
 			Handler:    _PortfolioService_GetCashFlowReport_Handler,
+		},
+		{
+			MethodName: "GetModifiedDietzReturn",
+			Handler:    _PortfolioService_GetModifiedDietzReturn_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
