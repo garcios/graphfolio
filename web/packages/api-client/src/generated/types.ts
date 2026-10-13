@@ -122,7 +122,12 @@ export default {
         },
         "Query": {
             "portfolio": [
-                34
+                34,
+                {
+                    "includeClosed": [
+                        8
+                    ]
+                }
             ],
             "instruments": [
                 6
@@ -878,6 +883,9 @@ export default {
                 0
             ],
             "isInternational": [
+                8
+            ],
+            "isClosed": [
                 8
             ],
             "__typename": [

@@ -27,8 +27,24 @@ export const Dashboard = () => {
   const [ledgerRefreshKey, setLedgerRefreshKey] = useState(0);
   const [sortField, setSortField] = useState<SortField>('totalValue');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+  const [includeClosed, setIncludeClosed] = useState<boolean>(() => {
+    return localStorage.getItem('graphfolio:include-closed-positions') === 'true';
+  });
+
+  const handleToggleIncludeClosed = (checked: boolean) => {
+    setIncludeClosed(checked);
+    localStorage.setItem('graphfolio:include-closed-positions', String(checked));
+  };
 
   const investments = data?.investments ?? EMPTY_INVESTMENTS;
+
+  const openInvestments = useMemo(() => {
+    return investments.filter((inv: any) => !inv.isClosed);
+  }, [investments]);
+
+  const closedInvestments = useMemo(() => {
+    return investments.filter((inv: any) => inv.isClosed);
+  }, [investments]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -130,6 +146,7 @@ export const Dashboard = () => {
   useEffect(() => {
     client.query({
       portfolio: {
+        __args: { includeClosed },
         totalValue: { amount: true, currencyCode: true },
         todayReturnAmount: { amount: true, currencyCode: true },
         todayReturnPercent: true,
@@ -154,6 +171,7 @@ export const Dashboard = () => {
           currencyGainAmount: { amount: true, currencyCode: true },
           currencyGainPercent: true,
           isInternational: true,
+          isClosed: true,
         }
       },
       userPreferences: {
@@ -183,6 +201,7 @@ export const Dashboard = () => {
       console.warn("Combined dashboard query failed, attempting portfolio-only fallback:", err);
       client.query({
         portfolio: {
+          __args: { includeClosed },
           totalValue: { amount: true, currencyCode: true },
           todayReturnAmount: { amount: true, currencyCode: true },
           todayReturnPercent: true,
@@ -207,6 +226,7 @@ export const Dashboard = () => {
             currencyGainAmount: { amount: true, currencyCode: true },
             currencyGainPercent: true,
             isInternational: true,
+            isClosed: true,
           }
         }
       })
@@ -219,7 +239,7 @@ export const Dashboard = () => {
         setLoading(false);
       });
     });
-  }, []);
+  }, [includeClosed, ledgerRefreshKey]);
 
   if (loading || !data) {
     return <div className="dashboard loading">Loading portfolio...</div>;
@@ -363,7 +383,25 @@ export const Dashboard = () => {
 
           <section className="investments-section">
             <div className="table-card">
-              <h3>Your Investments</h3>
+              <div className="table-card-header">
+                <div className="table-title-group">
+                  <h3>Your Investments</h3>
+                  <span className="assets-count-badge">
+                    {openInvestments.length} active{includeClosed && closedInvestments.length > 0 ? `, ${closedInvestments.length} closed` : ''}
+                  </span>
+                </div>
+                <div className="table-header-controls">
+                  <label className="checkbox-toggle" title="Show or hide fully liquidated positions">
+                    <input
+                      type="checkbox"
+                      id="include-closed-positions-toggle"
+                      checked={includeClosed}
+                      onChange={(e) => handleToggleIncludeClosed(e.target.checked)}
+                    />
+                    <span>Include closed positions</span>
+                  </label>
+                </div>
+              </div>
               <div className="table-responsive">
                 <table className="investments-table">
                   <thead>
@@ -394,11 +432,14 @@ export const Dashboard = () => {
                       const currencyPos = isPositive(inv.currencyGainAmount);
 
                       return (
-                        <tr key={inv.id}>
+                        <tr key={inv.id} className={inv.isClosed ? 'closed-position-row' : ''}>
                           <td>
                             <div className="asset-info">
                               <div className="ticker-wrapper">
                                 <span className="ticker">{inv.ticker}</span>
+                                {inv.isClosed && (
+                                  <span className="closed-badge" title="Position fully closed (0 units held)">CLOSED</span>
+                                )}
                                 {inv.isInternational && (
                                   <span className="intl-badge" title={`International holding denominated in ${inv.price?.currencyCode || 'foreign currency'}`}>INTL</span>
                                 )}
@@ -414,7 +455,7 @@ export const Dashboard = () => {
                               <span className="neutral-dash" title="Cost basis unavailable">—</span>
                             )}
                           </td>
-                          <td className="num-col">{inv.quantity}</td>
+                          <td className="num-col">{inv.isClosed ? '0' : inv.quantity}</td>
                           <td className="num-col">{formatMoney(inv.totalValue)}</td>
                           <td>
                             <div className={`return-info ${capGainPos ? 'positive' : 'negative'}`}>
@@ -445,10 +486,14 @@ export const Dashboard = () => {
                             </div>
                           </td>
                           <td>
-                            <div className={`return-info ${todayPos ? 'positive' : 'negative'}`}>
-                              <span className="amount">{todayPos ? '+' : ''}{formatMoney(inv.todayReturnAmount)}</span>
-                              <span className="percent">{formatPercent(inv.todayReturnPercent, 2)}</span>
-                            </div>
+                            {inv.isClosed ? (
+                              <span className="neutral-dash" title="Position closed — no open shares held today">—</span>
+                            ) : (
+                              <div className={`return-info ${todayPos ? 'positive' : 'negative'}`}>
+                                <span className="amount">{todayPos ? '+' : ''}{formatMoney(inv.todayReturnAmount)}</span>
+                                <span className="percent">{formatPercent(inv.todayReturnPercent, 2)}</span>
+                              </div>
+                            )}
                           </td>
                         </tr>
                       );
@@ -459,7 +504,9 @@ export const Dashboard = () => {
                       <td colSpan={4}>
                         <div className="footer-title-cell">
                           <span className="footer-title">Invested Assets Subtotal</span>
-                          <span className="footer-count">{investments.length} {investments.length === 1 ? 'asset' : 'assets'}</span>
+                          <span className="footer-count">
+                            {openInvestments.length} active{includeClosed && closedInvestments.length > 0 ? `, ${closedInvestments.length} closed` : ''}
+                          </span>
                         </div>
                       </td>
                       <td className="footer-amount">

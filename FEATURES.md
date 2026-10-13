@@ -37,6 +37,7 @@ This document catalogs all implemented features, in-progress components, and pla
 | **27** | **Portfolio Cash Flow Report Generation** | **DONE** | Proto, Svc, BFF, Web | [portfolio-cash-flow-report-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/portfolio-cash-flow-report-implementation-plan.md) |
 | **28** | **GIPS CAGR Annualized Return & Valuation Cost-Basis Resiliency** | **DONE** | Database, Svc, Domain, Worker | [annualized-return-twr-fix-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/annualized-return-twr-fix-implementation-plan.md) |
 | **29** | **Missing Prices Report & Date Range Backfill (Admin Portal)** | **DONE** | Proto, Svc, BFF, Web | [admin-missing-prices-report-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-missing-prices-report-implementation-plan.md) |
+| **30** | **Include Closed Positions in Dashboard Investments Table** | **DONE** | Proto, Svc, BFF, Web | [include-closed-positions-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/include-closed-positions-implementation-plan.md) |
 
 ---
 
@@ -393,6 +394,25 @@ This document catalogs all implemented features, in-progress components, and pla
   - [AdminLayout.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/AdminLayout.tsx)
   - [App.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/App.tsx)
 
+### 2.20 Include Closed Positions in Dashboard Investments Table
+- **Status**: **DONE**
+- **User Story**: [include-closed-positions-dashboard.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/include-closed-positions-dashboard.md)
+- **Plan Reference**: [include-closed-positions-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/include-closed-positions-implementation-plan.md)
+- **Scope**: `proto/portfolio/v1/`, `services/portfolio-api`, `bff/`, `web/apps/main-app`
+- **Description**: Allows investors to view fully exited/liquidated positions ($Q = 0$) directly within the "Your Investments" table via an interactive header checkbox toggle. Reconstructs lifetime performance (realized capital gain, accumulated dividends/income, currency impact, and net total return) from historical tax lots without zero-division or valuation distortion, preserving $0.00 current market value and displaying a distinct `CLOSED` badge.
+- **Key Files**:
+  - [portfolio.proto](file:///Users/oscargarcia/workspace/graphfolio/proto/portfolio/v1/portfolio.proto)
+  - [holding.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/domain/holding.go)
+  - [calculator.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/domain/calculator.go)
+  - [queries.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/repository/queries.go)
+  - [postgres.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/repository/postgres.go)
+  - [service.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/service.go)
+  - [server.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server.go)
+  - [schema.graphqls](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls)
+  - [schema.resolvers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers.go)
+  - [Dashboard.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.tsx)
+  - [Dashboard.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.css)
+
 ---
 
 ## 3. Planned Features (`PLANNED`)
@@ -432,6 +452,7 @@ This document catalogs all implemented features, in-progress components, and pla
   - Interactive drawer/modal to inspect error diagnostics, stack traces, and execution parameters for failed imports.
 
 ---
+
 
 ## 4. Future Roadmap Ideas (`ROADMAP`)
 

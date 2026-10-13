@@ -6,19 +6,26 @@ import (
 )
 
 type HoldingWithPrice struct {
-	PortfolioID        uuid.UUID
-	InstrumentID       uuid.UUID
-	Ticker             string
-	Name               string
-	InstrumentCurrency string
-	Quantity           decimal.Decimal
-	CostBasis          decimal.Decimal
-	CostBasisBase      decimal.Decimal
-	RealizedPnLBase    decimal.Decimal
-	DividendsBase      decimal.Decimal
-	LatestPrice        decimal.Decimal
-	PrevPrice          decimal.Decimal
-	FXRateToBase       decimal.Decimal
+	PortfolioID             uuid.UUID
+	InstrumentID            uuid.UUID
+	Ticker                  string
+	Name                    string
+	InstrumentCurrency      string
+	Quantity                decimal.Decimal
+	CostBasis               decimal.Decimal
+	CostBasisBase           decimal.Decimal
+	RealizedPnLBase         decimal.Decimal
+	DividendsBase           decimal.Decimal
+	LatestPrice             decimal.Decimal
+	PrevPrice               decimal.Decimal
+	FXRateToBase            decimal.Decimal
+	HistoricalQuantity      decimal.Decimal
+	HistoricalCostBasis     decimal.Decimal
+	HistoricalCostBasisBase decimal.Decimal
+}
+
+func (h HoldingWithPrice) IsClosed() bool {
+	return h.Quantity.IsZero()
 }
 
 type InvestmentSummary struct {
@@ -40,4 +47,5 @@ type InvestmentSummary struct {
 	CurrencyGainAmount  Money
 	CurrencyGainPercent decimal.Decimal
 	IsInternational     bool
+	IsClosed            bool
 }

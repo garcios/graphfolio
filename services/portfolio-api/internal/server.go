@@ -38,7 +38,13 @@ func (s *PortfolioServer) GetPortfolio(ctx context.Context, req *pb.GetPortfolio
 			userID = "1"
 		}
 
-		summary, err := s.svc.GetPortfolioSummary(ctx, userID)
+		var summary *domain.PortfolioSummary
+		var err error
+		if req.GetIncludeClosedPositions() {
+			summary, err = s.svc.GetPortfolioSummary(ctx, userID, true)
+		} else {
+			summary, err = s.svc.GetPortfolioSummary(ctx, userID)
+		}
 		if err != nil {
 			if errors.Is(err, repository.ErrPortfolioNotFound) {
 				return nil, status.Errorf(codes.NotFound, "portfolio not found for user: %s", userID)
@@ -1523,6 +1529,7 @@ func mapSummaryToProto(summary *domain.PortfolioSummary) *pb.Portfolio {
 			CurrencyGainAmount:  decimalpb.MoneyToProto(inv.CurrencyGainAmount.Amount, inv.CurrencyGainAmount.CurrencyCode),
 			CurrencyGainPercent: decimalpb.ToProto(inv.CurrencyGainPercent),
 			IsInternational:     inv.IsInternational,
+			IsClosed:            inv.IsClosed,
 		}
 	}
 

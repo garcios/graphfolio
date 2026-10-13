@@ -80,6 +80,7 @@ func toModelPortfolio(p *pb.Portfolio) *model.Portfolio {
 			CurrencyGainAmount:  toModelMoney(inv.CurrencyGainAmount),
 			CurrencyGainPercent: toModelDecimal(inv.CurrencyGainPercent),
 			IsInternational:     inv.IsInternational,
+			IsClosed:            inv.IsClosed,
 		}
 	}
 
@@ -646,4 +647,3 @@ func toModelMissingPriceReport(resp *pb.ListMissingPriceTransactionsResponse) *m
 		LatestTradeDate:        resp.LatestTradeDate,
 	}
 }
-

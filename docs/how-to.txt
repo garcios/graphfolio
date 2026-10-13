@@ -2,7 +2,7 @@
 
 # How to re-compute valuations
 1. Truncate portfolio_valuations table.
-2. make run-valuation-job ARGS="-from 2023-05-10 -portfolio 018f0000-0000-7000-8000-000000000001"
+2. make run-valuation-job ARGS="-from 2020-07-29 -portfolio 018f0000-0000-7000-8000-000000000001"
 
 
 

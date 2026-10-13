@@ -59,7 +59,7 @@ type Exchange {
 }
 
 type Query {
-  portfolio: Portfolio!
+  portfolio(includeClosed: Boolean): Portfolio!
   instruments: [Instrument!]!
   portfolioHistory(timeframe: HistoryTimeframe!): PortfolioHistory!
   transactions(
@@ -342,6 +342,7 @@ type Investment {
   currencyGainAmount: Money!
   currencyGainPercent: Decimal!
   isInternational: Boolean!
+  isClosed: Boolean!
 }
 
 type UserPreferences {

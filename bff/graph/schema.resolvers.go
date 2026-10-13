@@ -351,7 +351,12 @@ func (r *mutationResolver) ImportTransactions(ctx context.Context, input model.B
 }
 
 // Portfolio is the resolver for the portfolio field.
-func (r *queryResolver) Portfolio(ctx context.Context) (*model.Portfolio, error) {
+func (r *queryResolver) Portfolio(ctx context.Context, includeClosed *bool) (*model.Portfolio, error) {
+	incClosed := false
+	if includeClosed != nil {
+		incClosed = *includeClosed
+	}
+
 	var portResp *pb.GetPortfolioResponse
 
 	// Sync portfolio currency with user display currency preference if available
@@ -370,10 +375,11 @@ func (r *queryResolver) Portfolio(ctx context.Context) (*model.Portfolio, error)
 		}
 	}
 
-	if portResp == nil {
+	if portResp == nil || incClosed {
 		var getErr error
 		portResp, getErr = r.PortfolioClient.GetPortfolio(ctx, &pb.GetPortfolioRequest{
-			UserId: defaultUserID,
+			UserId:                 defaultUserID,
+			IncludeClosedPositions: incClosed,
 		})
 		if getErr != nil {
 			return nil, getErr
