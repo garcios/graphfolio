@@ -1527,6 +1527,132 @@ func (s *PortfolioServer) ListMissingPriceTransactions(ctx context.Context, req 
 	return resp, nil
 }
 
+func (s *PortfolioServer) ListMissingFXRateTransactions(ctx context.Context, req *pb.ListMissingFXRateTransactionsRequest) (*pb.ListMissingFXRateTransactionsResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	var currencyPair *string
+	if req.CurrencyPair != nil && *req.CurrencyPair != "" {
+		currencyPair = req.CurrencyPair
+	}
+
+	var fromDate *time.Time
+	if req.FromDate != nil && *req.FromDate != "" {
+		d, err := time.Parse("2006-01-02", *req.FromDate)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid from_date format (must be YYYY-MM-DD): %v", err)
+		}
+		fromDate = &d
+	}
+
+	var toDate *time.Time
+	if req.ToDate != nil && *req.ToDate != "" {
+		d, err := time.Parse("2006-01-02", *req.ToDate)
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid to_date format (must be YYYY-MM-DD): %v", err)
+		}
+		toDate = &d
+	}
+
+	var typeFilter *domain.TransactionType
+	if req.Type != nil && *req.Type != pb.TransactionType_TRANSACTION_TYPE_UNSPECIFIED {
+		var t domain.TransactionType
+		switch *req.Type {
+		case pb.TransactionType_TRANSACTION_TYPE_BUY:
+			t = domain.TxTypeBuy
+		case pb.TransactionType_TRANSACTION_TYPE_SELL:
+			t = domain.TxTypeSell
+		case pb.TransactionType_TRANSACTION_TYPE_DIVIDEND:
+			t = domain.TxTypeDividend
+		case pb.TransactionType_TRANSACTION_TYPE_DEPOSIT:
+			t = domain.TxTypeDeposit
+		case pb.TransactionType_TRANSACTION_TYPE_WITHDRAWAL:
+			t = domain.TxTypeWithdrawal
+		case pb.TransactionType_TRANSACTION_TYPE_INTEREST:
+			t = domain.TxTypeInterest
+		case pb.TransactionType_TRANSACTION_TYPE_FEE:
+			t = domain.TxTypeFee
+		case pb.TransactionType_TRANSACTION_TYPE_TAX:
+			t = domain.TxTypeTax
+		case pb.TransactionType_TRANSACTION_TYPE_TRANSFER_IN:
+			t = domain.TxTypeTransferIn
+		case pb.TransactionType_TRANSACTION_TYPE_TRANSFER_OUT:
+			t = domain.TxTypeTransferOut
+		case pb.TransactionType_TRANSACTION_TYPE_FX_CONVERSION:
+			t = domain.TxTypeFXConversion
+		case pb.TransactionType_TRANSACTION_TYPE_SPLIT:
+			t = domain.TxTypeSplit
+		default:
+			return nil, status.Errorf(codes.InvalidArgument, "invalid transaction type filter: %v", *req.Type)
+		}
+		typeFilter = &t
+	}
+
+	report, err := s.svc.ListMissingFXRateTransactions(ctx, domain.MissingFXRateFilter{
+		CurrencyPair: currencyPair,
+		FromDate:     fromDate,
+		ToDate:       toDate,
+		Type:         typeFilter,
+		Limit:        int(req.GetLimit()),
+		Offset:       int(req.GetOffset()),
+	})
+	if err != nil {
+		if errors.Is(err, service.ErrInvalidDateRange) {
+			return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to list missing fx rate transactions: %v", err)
+	}
+
+	protoItems := make([]*pb.MissingFXRateTransactionItem, len(report.Items))
+	for i, item := range report.Items {
+		var instID *string
+		if item.InstrumentID != nil {
+			idStr := item.InstrumentID.String()
+			instID = &idStr
+		}
+		var recordedRate *commonpb.Decimal
+		if item.RecordedFXRate != nil {
+			recordedRate = decimalpb.ToProto(*item.RecordedFXRate)
+		}
+
+
+		protoItems[i] = &pb.MissingFXRateTransactionItem{
+			TransactionId:    item.TransactionID.String(),
+			PortfolioId:      item.PortfolioID.String(),
+			PortfolioName:    item.PortfolioName,
+			PortfolioBaseCur: item.PortfolioBaseCur,
+			TradeDate:        item.TradeDate.Format("2006-01-02"),
+			Type:             mapDomainTxTypeToProto(item.Type),
+			InstrumentId:     instID,
+			Symbol:           item.Symbol,
+			AssetName:        item.AssetName,
+			Amount:           decimalpb.MoneyToProto(item.Amount.Amount, item.Amount.CurrencyCode),
+			TransactionCur:   item.TransactionCur,
+			RequiredPair:     item.RequiredPair,
+			RecordedFxRate:   recordedRate,
+		}
+	}
+
+	resp := &pb.ListMissingFXRateTransactionsResponse{
+		Items:            protoItems,
+		TotalCount:       int32(report.TotalCount),
+		UniquePairsCount: int32(report.UniquePairsCount),
+	}
+
+	if report.EarliestTradeDate != nil {
+		earliestStr := report.EarliestTradeDate.Format("2006-01-02")
+		resp.EarliestTradeDate = &earliestStr
+	}
+	if report.LatestTradeDate != nil {
+		latestStr := report.LatestTradeDate.Format("2006-01-02")
+		resp.LatestTradeDate = &latestStr
+	}
+
+	return resp, nil
+}
+
+
 func mapFXRateToProto(r domain.FXRate) *pb.FXRateItem {
 	var inverted decimal.Decimal
 	if r.Rate.IsPositive() {

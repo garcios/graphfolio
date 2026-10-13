@@ -654,6 +654,51 @@ func toModelMissingPriceReport(resp *pb.ListMissingPriceTransactionsResponse) *m
 	}
 }
 
+func toModelMissingFXRatesReport(resp *pb.ListMissingFXRateTransactionsResponse) *model.MissingFXRatesReport {
+	if resp == nil {
+		return &model.MissingFXRatesReport{
+			Items:            []*model.MissingFXRateTransactionItem{},
+			TotalCount:       0,
+			UniquePairsCount: 0,
+		}
+	}
+
+	items := make([]*model.MissingFXRateTransactionItem, len(resp.Items))
+	for i, item := range resp.Items {
+		var recordedRate *model.Decimal
+		if item.RecordedFxRate != nil {
+			r := toModelDecimal(item.GetRecordedFxRate())
+			recordedRate = &r
+		}
+
+
+		items[i] = &model.MissingFXRateTransactionItem{
+			TransactionID:         item.GetTransactionId(),
+			PortfolioID:           item.GetPortfolioId(),
+			PortfolioName:         item.GetPortfolioName(),
+			PortfolioBaseCurrency: item.GetPortfolioBaseCur(),
+			TradeDate:             item.GetTradeDate(),
+			Type:                  toModelTransactionType(item.GetType()),
+			InstrumentID:          item.InstrumentId,
+			Symbol:                item.Symbol,
+			AssetName:             item.AssetName,
+			Amount:                toModelMoney(item.GetAmount()),
+			TransactionCurrency:   item.GetTransactionCur(),
+			RequiredPair:          item.GetRequiredPair(),
+			RecordedFxRate:        recordedRate,
+		}
+	}
+
+	return &model.MissingFXRatesReport{
+		Items:             items,
+		TotalCount:        int(resp.GetTotalCount()),
+		UniquePairsCount:  int(resp.GetUniquePairsCount()),
+		EarliestTradeDate: resp.EarliestTradeDate,
+		LatestTradeDate:   resp.LatestTradeDate,
+	}
+}
+
+
 func toModelModifiedDietzReturn(resp *pb.GetModifiedDietzReturnResponse) *model.ModifiedDietzReturnPayload {
 	if resp == nil {
 		return nil

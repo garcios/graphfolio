@@ -46,6 +46,9 @@ service PortfolioService {
   // Admin: Missing Prices Diagnostic Report
   rpc ListMissingPriceTransactions(ListMissingPriceTransactionsRequest) returns (ListMissingPriceTransactionsResponse) {}
 
+  // Admin: Missing FX Rates Diagnostic Report
+  rpc ListMissingFXRateTransactions(ListMissingFXRateTransactionsRequest) returns (ListMissingFXRateTransactionsResponse) {}
+
   // Historical Valuation Engine & Replay
   rpc RebuildValuations(RebuildValuationsRequest) returns (RebuildValuationsResponse) {}
 
@@ -613,6 +616,44 @@ message ListMissingPriceTransactionsResponse {
   optional string                      earliest_trade_date      = 4; // YYYY-MM-DD
   optional string                      latest_trade_date        = 5; // YYYY-MM-DD
 }
+
+// ------------------------------------------------------------------
+// Admin: Missing FX Rates Diagnostic Report Messages
+// ------------------------------------------------------------------
+
+message MissingFXRateTransactionItem {
+  string                     transaction_id       = 1;
+  string                     portfolio_id         = 2;
+  string                     portfolio_name       = 3;
+  string                     portfolio_base_cur   = 4;
+  string                     trade_date           = 5; // YYYY-MM-DD
+  TransactionType            type                 = 6;
+  optional string            instrument_id        = 7;
+  optional string            symbol               = 8;
+  optional string            asset_name           = 9;
+  common.v1.Money            amount               = 10;
+  string                     transaction_cur      = 11;
+  string                     required_pair        = 12; // e.g. "USD/AUD"
+  optional common.v1.Decimal recorded_fx_rate     = 13; // Snapshot fx_rate_to_base if present
+}
+
+message ListMissingFXRateTransactionsRequest {
+  optional string          currency_pair = 1; // e.g. "USD/AUD"
+  optional string          from_date     = 2; // YYYY-MM-DD
+  optional string          to_date       = 3; // YYYY-MM-DD
+  optional TransactionType type          = 4;
+  int32                    limit         = 5; // Default 50, max 200
+  int32                    offset        = 6;
+}
+
+message ListMissingFXRateTransactionsResponse {
+  repeated MissingFXRateTransactionItem items               = 1;
+  int32                                 total_count         = 2;
+  int32                                 unique_pairs_count  = 3;
+  optional string                       earliest_trade_date = 4; // YYYY-MM-DD
+  optional string                       latest_trade_date   = 5; // YYYY-MM-DD
+}
+
 
 // ------------------------------------------------------------------
 // Return Analytics: Modified Dietz Method Messages

@@ -64,6 +64,7 @@ export interface Query {
     checkTransactionDuplicates: Scalars['String'][]
     cashFlowReport: CashFlowReport
     missingPriceTransactions: MissingPriceReport
+    missingFXRateTransactions: MissingFXRatesReport
     modifiedDietzReturn: ModifiedDietzReturnPayload
     __typename: 'Query'
 }
@@ -406,6 +407,32 @@ export interface MissingPriceReport {
     __typename: 'MissingPriceReport'
 }
 
+export interface MissingFXRateTransactionItem {
+    transactionId: Scalars['ID']
+    portfolioId: Scalars['ID']
+    portfolioName: Scalars['String']
+    portfolioBaseCurrency: Scalars['String']
+    tradeDate: Scalars['String']
+    type: TransactionType
+    instrumentId: (Scalars['ID'] | null)
+    symbol: (Scalars['String'] | null)
+    assetName: (Scalars['String'] | null)
+    amount: Money
+    transactionCurrency: Scalars['String']
+    requiredPair: Scalars['String']
+    recordedFxRate: (Scalars['Decimal'] | null)
+    __typename: 'MissingFXRateTransactionItem'
+}
+
+export interface MissingFXRatesReport {
+    items: MissingFXRateTransactionItem[]
+    totalCount: Scalars['Int']
+    uniquePairsCount: Scalars['Int']
+    earliestTradeDate: (Scalars['String'] | null)
+    latestTradeDate: (Scalars['String'] | null)
+    __typename: 'MissingFXRatesReport'
+}
+
 export interface ModifiedDietzReturnPayload {
     portfolioId: Scalars['ID']
     baseCurrency: Scalars['String']
@@ -494,6 +521,7 @@ export interface QueryGenqlSelection{
     checkTransactionDuplicates?: { __args: {externalRefs: Scalars['String'][]} }
     cashFlowReport?: (CashFlowReportGenqlSelection & { __args: {filter: CashFlowFilterInput} })
     missingPriceTransactions?: (MissingPriceReportGenqlSelection & { __args?: {symbol?: (Scalars['String'] | null), fromDate?: (Scalars['String'] | null), toDate?: (Scalars['String'] | null), limit?: (Scalars['Int'] | null), offset?: (Scalars['Int'] | null)} })
+    missingFXRateTransactions?: (MissingFXRatesReportGenqlSelection & { __args?: {currencyPair?: (Scalars['String'] | null), fromDate?: (Scalars['String'] | null), toDate?: (Scalars['String'] | null), type?: (TransactionType | null), limit?: (Scalars['Int'] | null), offset?: (Scalars['Int'] | null)} })
     modifiedDietzReturn?: (ModifiedDietzReturnPayloadGenqlSelection & { __args: {startDate: Scalars['String'], endDate: Scalars['String'], useMonthlyLinking?: (Scalars['Boolean'] | null)} })
     __typename?: boolean | number
     __scalar?: boolean | number
@@ -879,6 +907,34 @@ export interface MissingPriceReportGenqlSelection{
     __scalar?: boolean | number
 }
 
+export interface MissingFXRateTransactionItemGenqlSelection{
+    transactionId?: boolean | number
+    portfolioId?: boolean | number
+    portfolioName?: boolean | number
+    portfolioBaseCurrency?: boolean | number
+    tradeDate?: boolean | number
+    type?: boolean | number
+    instrumentId?: boolean | number
+    symbol?: boolean | number
+    assetName?: boolean | number
+    amount?: MoneyGenqlSelection
+    transactionCurrency?: boolean | number
+    requiredPair?: boolean | number
+    recordedFxRate?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface MissingFXRatesReportGenqlSelection{
+    items?: MissingFXRateTransactionItemGenqlSelection
+    totalCount?: boolean | number
+    uniquePairsCount?: boolean | number
+    earliestTradeDate?: boolean | number
+    latestTradeDate?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
 export interface ModifiedDietzReturnPayloadGenqlSelection{
     portfolioId?: boolean | number
     baseCurrency?: boolean | number
@@ -1205,6 +1261,22 @@ export interface ExternalCashFlowWeightItemGenqlSelection{
     export const isMissingPriceReport = (obj?: { __typename?: any } | null): obj is MissingPriceReport => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isMissingPriceReport"')
       return MissingPriceReport_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const MissingFXRateTransactionItem_possibleTypes: string[] = ['MissingFXRateTransactionItem']
+    export const isMissingFXRateTransactionItem = (obj?: { __typename?: any } | null): obj is MissingFXRateTransactionItem => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isMissingFXRateTransactionItem"')
+      return MissingFXRateTransactionItem_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const MissingFXRatesReport_possibleTypes: string[] = ['MissingFXRatesReport']
+    export const isMissingFXRatesReport = (obj?: { __typename?: any } | null): obj is MissingFXRatesReport => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isMissingFXRatesReport"')
+      return MissingFXRatesReport_possibleTypes.includes(obj.__typename)
     }
     
 

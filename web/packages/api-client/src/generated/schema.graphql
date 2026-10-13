@@ -75,6 +75,7 @@ type Query {
   checkTransactionDuplicates(externalRefs: [String!]!): [String!]!
   cashFlowReport(filter: CashFlowFilterInput!): CashFlowReport!
   missingPriceTransactions(symbol: String, fromDate: String, toDate: String, limit: Int = 50, offset: Int = 0): MissingPriceReport!
+  missingFXRateTransactions(currencyPair: String, fromDate: String, toDate: String, type: TransactionType, limit: Int = 50, offset: Int = 0): MissingFXRatesReport!
   modifiedDietzReturn(startDate: String!, endDate: String!, useMonthlyLinking: Boolean): ModifiedDietzReturnPayload!
 }
 
@@ -483,6 +484,30 @@ type MissingPriceReport {
   items: [MissingPriceTransactionItem!]!
   totalCount: Int!
   uniqueInstrumentsCount: Int!
+  earliestTradeDate: String
+  latestTradeDate: String
+}
+
+type MissingFXRateTransactionItem {
+  transactionId: ID!
+  portfolioId: ID!
+  portfolioName: String!
+  portfolioBaseCurrency: String!
+  tradeDate: String!
+  type: TransactionType!
+  instrumentId: ID
+  symbol: String
+  assetName: String
+  amount: Money!
+  transactionCurrency: String!
+  requiredPair: String!
+  recordedFxRate: Decimal
+}
+
+type MissingFXRatesReport {
+  items: [MissingFXRateTransactionItem!]!
+  totalCount: Int!
+  uniquePairsCount: Int!
   earliestTradeDate: String
   latestTradeDate: String
 }

@@ -116,6 +116,17 @@ type Query {
     offset: Int = 0
   ): MissingPriceReport!
 
+  # Admin: Missing FX Rates Diagnostic Report
+  missingFXRateTransactions(
+    currencyPair: String
+    fromDate: String
+    toDate: String
+    type: TransactionType
+    limit: Int = 50
+    offset: Int = 0
+  ): MissingFXRatesReport!
+
+
   # Return Analytics: Modified Dietz Method
   modifiedDietzReturn(
     startDate: String!
@@ -547,6 +558,35 @@ type MissingPriceReport {
   earliestTradeDate: String
   latestTradeDate: String
 }
+
+# ------------------------------------------------------------------
+# Admin: Missing FX Rates Diagnostic Report Types
+# ------------------------------------------------------------------
+
+type MissingFXRateTransactionItem {
+  transactionId: ID!
+  portfolioId: ID!
+  portfolioName: String!
+  portfolioBaseCurrency: String!
+  tradeDate: String!
+  type: TransactionType!
+  instrumentId: ID
+  symbol: String
+  assetName: String
+  amount: Money!
+  transactionCurrency: String!
+  requiredPair: String!
+  recordedFxRate: Decimal
+}
+
+type MissingFXRatesReport {
+  items: [MissingFXRateTransactionItem!]!
+  totalCount: Int!
+  uniquePairsCount: Int!
+  earliestTradeDate: String
+  latestTradeDate: String
+}
+
 
 # ------------------------------------------------------------------
 # Return Analytics: Modified Dietz Method Types
