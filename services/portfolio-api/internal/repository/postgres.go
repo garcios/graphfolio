@@ -1709,7 +1709,7 @@ func (r *PostgresRepository) GetExternalCashFlows(ctx context.Context, portfolio
 		tx.FXRateToBase = fxRateToBase
 		tx.FeeCurrencyCode = feeCurr
 
-		netImpact, _, _, _, _ := domain.CalculateTransactionCashImpact(tx, baseCurrency)
+		netImpact, _, _, _, _, _ := domain.CalculateTransactionCashImpact(tx, baseCurrency)
 
 		eventDate := tx.TradeDate
 		if tx.SettleDate != nil && !tx.SettleDate.IsZero() {

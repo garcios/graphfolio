@@ -166,20 +166,20 @@ func TestGetCashFlowReport(t *testing.T) {
 		}
 
 		// Inflows:
-		// Dividend (200) + Interest (15) + Sale Proceeds (1190) = 1405
-		expectedInflows := decimal.RequireFromString("1405.00")
+		// Dividend (200) + Interest (15) + Sale Proceeds (1200 gross) = 1415
+		expectedInflows := decimal.RequireFromString("1415.00")
 		if !report.Summary.TotalInflows.Amount.Equal(expectedInflows) {
 			t.Errorf("expected total inflows %s, got %s", expectedInflows, report.Summary.TotalInflows.Amount)
 		}
 
 		// Outflows:
-		// Buy AAPL (1500) + Withdrawal (500) = 2000
-		expectedOutflows := decimal.RequireFromString("2000.00")
+		// Buy AAPL (1500) + Withdrawal (500) + Fees (10 from BHP sale) = 2010
+		expectedOutflows := decimal.RequireFromString("2010.00")
 		if !report.Summary.TotalOutflows.Amount.Equal(expectedOutflows) {
 			t.Errorf("expected total outflows %s, got %s", expectedOutflows, report.Summary.TotalOutflows.Amount)
 		}
 
-		// Net Cash Flow: 1405 - 2000 = -595
+		// Net Cash Flow: 1415 - 2010 = -595
 		expectedNet := decimal.RequireFromString("-595.00")
 		if !report.Summary.NetCashFlow.Amount.Equal(expectedNet) {
 			t.Errorf("expected net cash flow %s, got %s", expectedNet, report.Summary.NetCashFlow.Amount)
@@ -198,14 +198,20 @@ func TestGetCashFlowReport(t *testing.T) {
 		if !report.Breakdown.Interest.Amount.Equal(decimal.RequireFromString("15.00")) {
 			t.Errorf("expected interest breakdown 15.00, got %s", report.Breakdown.Interest.Amount)
 		}
-		if !report.Breakdown.SalesProceeds.Amount.Equal(decimal.RequireFromString("1190.00")) {
-			t.Errorf("expected sales proceeds breakdown 1190.00, got %s", report.Breakdown.SalesProceeds.Amount)
+		if !report.Breakdown.SalesProceeds.Amount.Equal(decimal.RequireFromString("1200.00")) {
+			t.Errorf("expected sales proceeds breakdown 1200.00, got %s", report.Breakdown.SalesProceeds.Amount)
 		}
 		if !report.Breakdown.Purchases.Amount.Equal(decimal.RequireFromString("1500.00")) {
 			t.Errorf("expected purchases breakdown 1500.00, got %s", report.Breakdown.Purchases.Amount)
 		}
 		if !report.Breakdown.Withdrawals.Amount.Equal(decimal.RequireFromString("500.00")) {
 			t.Errorf("expected withdrawals breakdown 500.00, got %s", report.Breakdown.Withdrawals.Amount)
+		}
+		if !report.Breakdown.Fees.Amount.Equal(decimal.RequireFromString("10.00")) {
+			t.Errorf("expected fees breakdown 10.00, got %s", report.Breakdown.Fees.Amount)
+		}
+		if !report.Breakdown.Taxes.Amount.Equal(decimal.RequireFromString("0.00")) {
+			t.Errorf("expected taxes breakdown 0.00, got %s", report.Breakdown.Taxes.Amount)
 		}
 
 		// Verify Itemized Ledger length and running balance
@@ -244,6 +250,13 @@ func TestGetCashFlowReport(t *testing.T) {
 			t.Errorf("expected total outflows %s, got %s", expectedOutflow, report.Summary.TotalOutflows.Amount)
 		}
 
+		if !report.Breakdown.Purchases.Amount.Equal(decimal.RequireFromString("4000.00")) {
+			t.Errorf("expected purchases breakdown 4000.00, got %s", report.Breakdown.Purchases.Amount)
+		}
+		if !report.Breakdown.Fees.Amount.Equal(decimal.RequireFromString("10.00")) {
+			t.Errorf("expected fees breakdown 10.00, got %s", report.Breakdown.Fees.Amount)
+		}
+
 		expectedEnding := decimal.RequireFromString("-4010.00")
 		if !report.Summary.EndingCashBalance.Amount.Equal(expectedEnding) {
 			t.Errorf("expected negative ending cash %s, got %s", expectedEnding, report.Summary.EndingCashBalance.Amount)
@@ -253,6 +266,116 @@ func TestGetCashFlowReport(t *testing.T) {
 		reconciled := report.Summary.StartingCashBalance.Amount.Add(report.Summary.TotalInflows.Amount).Sub(report.Summary.TotalOutflows.Amount)
 		if !reconciled.Equal(report.Summary.EndingCashBalance.Amount) {
 			t.Errorf("reconciliation failed: %s != %s", reconciled, report.Summary.EndingCashBalance.Amount)
+		}
+	})
+
+	t.Run("All categories including dividend withholding tax and trade fees are accurately attributed and reconcile", func(t *testing.T) {
+		mockRepo.EXPECT().FindPortfolioByUser(gomock.Any(), userID).Return(portfolio, nil)
+
+		// Dividend with withholding tax: 100 gross, 15 tax -> net 85
+		divTx := domain.TransactionWithInstrument{
+			Transaction: domain.Transaction{
+				ID:             uuid.New(),
+				PortfolioID:    portfolioID,
+				Type:           domain.TxTypeDividend,
+				TradeDate:      time.Date(2026, 10, 1, 0, 0, 0, 0, time.UTC),
+				Amount:         decimal.NewFromInt(100),
+				WithholdingTax: decimal.NewFromInt(15),
+				CurrencyCode:   "AUD",
+			},
+		}
+
+		// Buy with fee: 2000 gross + 20 fee -> net -2020
+		buyTx := domain.TransactionWithInstrument{
+			Transaction: domain.Transaction{
+				ID:           uuid.New(),
+				PortfolioID:  portfolioID,
+				Type:         domain.TxTypeBuy,
+				TradeDate:    time.Date(2026, 10, 2, 0, 0, 0, 0, time.UTC),
+				Amount:       decimal.NewFromInt(2000),
+				Fee:          decimal.NewFromInt(20),
+				CurrencyCode: "AUD",
+			},
+		}
+
+		// Sell with fee: 3000 gross - 15 fee -> net +2985
+		sellTx := domain.TransactionWithInstrument{
+			Transaction: domain.Transaction{
+				ID:           uuid.New(),
+				PortfolioID:  portfolioID,
+				Type:         domain.TxTypeSell,
+				TradeDate:    time.Date(2026, 10, 3, 0, 0, 0, 0, time.UTC),
+				Amount:       decimal.NewFromInt(3000),
+				Fee:          decimal.NewFromInt(15),
+				CurrencyCode: "AUD",
+			},
+		}
+
+		// Standalone fee: 50 -> net -50
+		feeTx := domain.TransactionWithInstrument{
+			Transaction: domain.Transaction{
+				ID:           uuid.New(),
+				PortfolioID:  portfolioID,
+				Type:         domain.TxTypeFee,
+				TradeDate:    time.Date(2026, 10, 4, 0, 0, 0, 0, time.UTC),
+				Amount:       decimal.NewFromInt(50),
+				CurrencyCode: "AUD",
+			},
+		}
+
+		mockRepo.EXPECT().GetCashFlowTransactions(gomock.Any(), portfolioID, gomock.Any()).Return(
+			[]domain.TransactionWithInstrument{divTx, buyTx, sellTx, feeTx}, nil,
+		)
+
+		filter := domain.CashFlowFilter{
+			UserID:    userID,
+			Timeframe: domain.CashFlowTimeframeMTD,
+		}
+
+		report, err := svc.GetCashFlowReport(context.Background(), filter)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		// Inflows: Dividends (100) + Sales (3000) = 3100
+		if !report.Summary.TotalInflows.Amount.Equal(decimal.RequireFromString("3100.00")) {
+			t.Errorf("expected total inflows 3100.00, got %s", report.Summary.TotalInflows.Amount)
+		}
+		// Outflows: Purchases (2000) + Fees (20 buy + 15 sell + 50 standalone = 85) + Taxes (15) = 2100
+		if !report.Summary.TotalOutflows.Amount.Equal(decimal.RequireFromString("2100.00")) {
+			t.Errorf("expected total outflows 2100.00, got %s", report.Summary.TotalOutflows.Amount)
+		}
+		// Net Cash Flow: 3100 - 2100 = 1000
+		if !report.Summary.NetCashFlow.Amount.Equal(decimal.RequireFromString("1000.00")) {
+			t.Errorf("expected net cash flow 1000.00, got %s", report.Summary.NetCashFlow.Amount)
+		}
+
+		// Breakdown:
+		// Fees: 20 + 15 + 50 = 85
+		if !report.Breakdown.Fees.Amount.Equal(decimal.RequireFromString("85.00")) {
+			t.Errorf("expected fees breakdown 85.00, got %s", report.Breakdown.Fees.Amount)
+		}
+		// Taxes: 15
+		if !report.Breakdown.Taxes.Amount.Equal(decimal.RequireFromString("15.00")) {
+			t.Errorf("expected taxes breakdown 15.00, got %s", report.Breakdown.Taxes.Amount)
+		}
+		// Purchases: 2000
+		if !report.Breakdown.Purchases.Amount.Equal(decimal.RequireFromString("2000.00")) {
+			t.Errorf("expected purchases breakdown 2000.00, got %s", report.Breakdown.Purchases.Amount)
+		}
+		// Sales: 3000
+		if !report.Breakdown.SalesProceeds.Amount.Equal(decimal.RequireFromString("3000.00")) {
+			t.Errorf("expected sales proceeds breakdown 3000.00, got %s", report.Breakdown.SalesProceeds.Amount)
+		}
+		// Dividends: 100
+		if !report.Breakdown.Dividends.Amount.Equal(decimal.RequireFromString("100.00")) {
+			t.Errorf("expected dividends breakdown 100.00, got %s", report.Breakdown.Dividends.Amount)
+		}
+
+		// Reconciliation check
+		netSum := report.Summary.StartingCashBalance.Amount.Add(report.Summary.TotalInflows.Amount).Sub(report.Summary.TotalOutflows.Amount)
+		if !netSum.Equal(report.Summary.EndingCashBalance.Amount) {
+			t.Errorf("reconciliation mismatch: %s != %s", netSum, report.Summary.EndingCashBalance.Amount)
 		}
 	})
 }

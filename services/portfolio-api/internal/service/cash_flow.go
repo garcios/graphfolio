@@ -63,7 +63,7 @@ func (s *portfolioService) GetCashFlowReport(ctx context.Context, input domain.C
 		}
 		eventDateUTC := eventDate.UTC().Truncate(24 * time.Hour)
 
-		netImpact, flowDir, category, feeBase, taxBase := domain.CalculateTransactionCashImpact(tx, baseCurrency)
+		netImpact, flowDir, category, amountBase, feeBase, taxBase := domain.CalculateTransactionCashImpact(tx, baseCurrency)
 
 		// Before period window -> contribute to starting cash balance
 		if !fromDate.IsZero() && eventDateUTC.Before(fromDate) {
@@ -77,35 +77,74 @@ func (s *portfolioService) GetCashFlowReport(ctx context.Context, input domain.C
 		}
 		runningBalance = runningBalance.Add(netImpact)
 
-		// Aggregate inflow vs outflow
-		if netImpact.IsPositive() {
-			totalInflows = totalInflows.Add(netImpact)
-			switch category {
-			case domain.CategoryCapitalDeposits:
-				depositsInflow = depositsInflow.Add(netImpact)
-			case domain.CategoryDividends:
-				dividendsInflow = dividendsInflow.Add(netImpact)
-			case domain.CategoryInterest:
-				interestInflow = interestInflow.Add(netImpact)
-			case domain.CategorySaleProceeds:
-				salesInflow = salesInflow.Add(netImpact)
-			default:
-				depositsInflow = depositsInflow.Add(netImpact)
+		// Attribute flows into category breakdowns
+		switch tx.Type {
+		case domain.TxTypeBuy:
+			purchasesOutflow = purchasesOutflow.Add(amountBase)
+			totalOutflows = totalOutflows.Add(amountBase)
+			if feeBase.IsPositive() {
+				feesOutflow = feesOutflow.Add(feeBase)
+				totalOutflows = totalOutflows.Add(feeBase)
 			}
-		} else if netImpact.IsNegative() {
-			outflowAbs := netImpact.Abs()
-			totalOutflows = totalOutflows.Add(outflowAbs)
-			switch category {
-			case domain.CategoryCapitalWithdrawals:
-				withdrawalsOutflow = withdrawalsOutflow.Add(outflowAbs)
-			case domain.CategoryPurchases:
-				purchasesOutflow = purchasesOutflow.Add(outflowAbs)
-			case domain.CategoryFees:
-				feesOutflow = feesOutflow.Add(outflowAbs)
-			case domain.CategoryTaxes:
-				taxesOutflow = taxesOutflow.Add(outflowAbs)
-			default:
-				feesOutflow = feesOutflow.Add(outflowAbs)
+
+		case domain.TxTypeSell:
+			salesInflow = salesInflow.Add(amountBase)
+			totalInflows = totalInflows.Add(amountBase)
+			if feeBase.IsPositive() {
+				feesOutflow = feesOutflow.Add(feeBase)
+				totalOutflows = totalOutflows.Add(feeBase)
+			}
+
+		case domain.TxTypeDividend:
+			dividendsInflow = dividendsInflow.Add(amountBase)
+			totalInflows = totalInflows.Add(amountBase)
+			if taxBase.IsPositive() {
+				taxesOutflow = taxesOutflow.Add(taxBase)
+				totalOutflows = totalOutflows.Add(taxBase)
+			}
+
+		case domain.TxTypeInterest:
+			interestInflow = interestInflow.Add(amountBase)
+			totalInflows = totalInflows.Add(amountBase)
+			if taxBase.IsPositive() {
+				taxesOutflow = taxesOutflow.Add(taxBase)
+				totalOutflows = totalOutflows.Add(taxBase)
+			}
+
+		case domain.TxTypeDeposit, domain.TxTypeTransferIn:
+			depositsInflow = depositsInflow.Add(amountBase)
+			totalInflows = totalInflows.Add(amountBase)
+			if feeBase.IsPositive() {
+				feesOutflow = feesOutflow.Add(feeBase)
+				totalOutflows = totalOutflows.Add(feeBase)
+			}
+
+		case domain.TxTypeWithdrawal, domain.TxTypeTransferOut:
+			withdrawalsOutflow = withdrawalsOutflow.Add(amountBase)
+			totalOutflows = totalOutflows.Add(amountBase)
+			if feeBase.IsPositive() {
+				feesOutflow = feesOutflow.Add(feeBase)
+				totalOutflows = totalOutflows.Add(feeBase)
+			}
+
+		case domain.TxTypeFee:
+			feesOutflow = feesOutflow.Add(amountBase)
+			totalOutflows = totalOutflows.Add(amountBase)
+
+		case domain.TxTypeTax:
+			taxesOutflow = taxesOutflow.Add(amountBase)
+			totalOutflows = totalOutflows.Add(amountBase)
+
+		case domain.TxTypeSplit:
+			// Corporate stock split has zero cash impact
+
+		default:
+			if netImpact.IsPositive() {
+				depositsInflow = depositsInflow.Add(netImpact)
+				totalInflows = totalInflows.Add(netImpact)
+			} else if netImpact.IsNegative() {
+				feesOutflow = feesOutflow.Add(netImpact.Abs())
+				totalOutflows = totalOutflows.Add(netImpact.Abs())
 			}
 		}
 

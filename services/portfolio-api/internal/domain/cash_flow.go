@@ -92,11 +92,11 @@ type CashFlowReport struct {
 	ToDate       time.Time
 }
 
-// NetCashImpact computes the base-currency net cash movement (inflow > 0, outflow < 0, neutral = 0).
+// CalculateTransactionCashImpact computes the base-currency net cash movement (inflow > 0, outflow < 0, neutral = 0).
 func CalculateTransactionCashImpact(
 	tx Transaction,
 	baseCurrency string,
-) (netImpact decimal.Decimal, direction CashFlowDirection, category CashFlowCategory, feeBase decimal.Decimal, taxBase decimal.Decimal) {
+) (netImpact decimal.Decimal, direction CashFlowDirection, category CashFlowCategory, amountBase decimal.Decimal, feeBase decimal.Decimal, taxBase decimal.Decimal) {
 	fx := decimal.NewFromInt(1)
 	if tx.FXRateToBase != nil && tx.FXRateToBase.IsPositive() {
 		fx = *tx.FXRateToBase
@@ -111,6 +111,7 @@ func CalculateTransactionCashImpact(
 		}
 	}
 
+	amountBase = tx.Amount.Mul(fx)
 	feeBase = tx.Fee.Mul(feeFX)
 	taxBase = tx.WithholdingTax.Mul(fx)
 
@@ -118,13 +119,11 @@ func CalculateTransactionCashImpact(
 	case TxTypeDeposit, TxTypeTransferIn:
 		direction = FlowInflow
 		category = CategoryCapitalDeposits
-		amountBase := tx.Amount.Mul(fx)
 		netImpact = amountBase.Sub(feeBase)
 
 	case TxTypeWithdrawal, TxTypeTransferOut:
 		direction = FlowOutflow
 		category = CategoryCapitalWithdrawals
-		amountBase := tx.Amount.Mul(fx)
 		netImpact = amountBase.Add(feeBase).Neg()
 
 	case TxTypeDividend:
@@ -142,37 +141,40 @@ func CalculateTransactionCashImpact(
 	case TxTypeBuy:
 		direction = FlowOutflow
 		category = CategoryPurchases
-		totalCostLocal := tx.Amount
-		amountBase := totalCostLocal.Mul(fx)
 		netImpact = amountBase.Add(feeBase).Neg()
 
 	case TxTypeSell:
 		direction = FlowInflow
 		category = CategorySaleProceeds
-		amountBase := tx.Amount.Mul(fx)
 		netImpact = amountBase.Sub(feeBase)
 
 	case TxTypeFee:
 		direction = FlowOutflow
 		category = CategoryFees
-		netImpact = tx.Amount.Mul(fx).Neg()
+		netImpact = amountBase.Neg()
 
 	case TxTypeTax:
 		direction = FlowOutflow
 		category = CategoryTaxes
-		netImpact = tx.Amount.Mul(fx).Neg()
+		netImpact = amountBase.Neg()
 
 	case TxTypeSplit:
 		// Corporate stock splits have zero cash impact
 		netImpact = decimal.Zero
 		direction = FlowInflow
 		category = CategoryCapitalDeposits
+		amountBase = decimal.Zero
+		feeBase = decimal.Zero
+		taxBase = decimal.Zero
 
 	default:
 		netImpact = decimal.Zero
 		direction = FlowInflow
 		category = CategoryCapitalDeposits
+		amountBase = decimal.Zero
+		feeBase = decimal.Zero
+		taxBase = decimal.Zero
 	}
 
-	return netImpact, direction, category, feeBase, taxBase
+	return netImpact, direction, category, amountBase, feeBase, taxBase
 }

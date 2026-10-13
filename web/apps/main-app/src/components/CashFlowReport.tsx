@@ -137,9 +137,18 @@ export const CashFlowReport: React.FC<CashFlowReportProps> = ({ preferredCurrenc
 
   const categoryCounts = useMemo(() => {
     const counts: Record<string, number> = {};
+    for (const cat of CATEGORY_OPTIONS) {
+      counts[cat.id] = 0;
+    }
     for (const item of items) {
       if (item.category) {
         counts[item.category] = (counts[item.category] || 0) + 1;
+      }
+      if (item.category !== 'FEES' && (parseFloat(item.fee?.amount) || 0) > 0) {
+        counts['FEES'] = (counts['FEES'] || 0) + 1;
+      }
+      if (item.category !== 'TAXES' && (parseFloat(item.withholdingTax?.amount) || 0) > 0) {
+        counts['TAXES'] = (counts['TAXES'] || 0) + 1;
       }
     }
     return counts;
@@ -185,7 +194,13 @@ export const CashFlowReport: React.FC<CashFlowReportProps> = ({ preferredCurrenc
       if (selectedCategories.length === 0) {
         return false;
       }
-      if (!selectedCategories.includes(item.category)) {
+      const matchesCategory = selectedCategories.some((catId) => {
+        if (item.category === catId) return true;
+        if (catId === 'FEES' && (parseFloat(item.fee?.amount) || 0) > 0) return true;
+        if (catId === 'TAXES' && (parseFloat(item.withholdingTax?.amount) || 0) > 0) return true;
+        return false;
+      });
+      if (!matchesCategory) {
         return false;
       }
       if (searchQuery.trim()) {
@@ -660,7 +675,19 @@ export const CashFlowReport: React.FC<CashFlowReportProps> = ({ preferredCurrenc
                               <span style={{ color: 'var(--text-muted)' }}>—</span>
                             )}
                           </td>
-                          <td style={{ color: 'var(--text-secondary)' }}>{item.description}</td>
+                          <td style={{ color: 'var(--text-secondary)' }}>
+                            <div>{item.description}</div>
+                            {((parseFloat(item.fee?.amount) || 0) > 0 || (parseFloat(item.withholdingTax?.amount) || 0) > 0) && (
+                              <div className="cfr-item-tags">
+                                {(parseFloat(item.fee?.amount) || 0) > 0 && (
+                                  <span className="cfr-fee-tag">Fee: {formatMoney(item.fee)}</span>
+                                )}
+                                {(parseFloat(item.withholdingTax?.amount) || 0) > 0 && (
+                                  <span className="cfr-tax-tag">Tax: {formatMoney(item.withholdingTax)}</span>
+                                )}
+                              </div>
+                            )}
+                          </td>
                           <td className="text-right">
                             <span className={`cfr-flow-amt ${netAmtNum >= 0 ? 'positive' : 'negative'}`}>
                               {netAmtNum >= 0 ? '+' : ''}{formatMoney(item.netAmount)}

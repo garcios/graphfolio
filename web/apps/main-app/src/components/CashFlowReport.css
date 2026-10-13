@@ -648,3 +648,23 @@
   text-align: center;
   color: var(--text-secondary);
 }
+
+.cfr-item-tags {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+  flex-wrap: wrap;
+}
+
+.cfr-fee-tag,
+.cfr-tax-tag {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-xs);
+  font-feature-settings: "tnum";
+}
