@@ -648,6 +648,32 @@ func (r *queryResolver) MissingPriceTransactions(ctx context.Context, symbol *st
 	return toModelMissingPriceReport(resp), nil
 }
 
+// MissingFXRateTransactions is the resolver for the missingFXRateTransactions field.
+func (r *queryResolver) MissingFXRateTransactions(ctx context.Context, currencyPair *string, fromDate *string, toDate *string, typeArg *model.TransactionType, limit *int, offset *int) (*model.MissingFXRatesReport, error) {
+	req := &pb.ListMissingFXRateTransactionsRequest{
+		CurrencyPair: currencyPair,
+		FromDate:     fromDate,
+		ToDate:       toDate,
+	}
+	if typeArg != nil {
+		t := toProtoTransactionType(*typeArg)
+		req.Type = &t
+	}
+	if limit != nil {
+		req.Limit = int32(*limit)
+	}
+	if offset != nil {
+		req.Offset = int32(*offset)
+	}
+
+	resp, err := r.PortfolioClient.ListMissingFXRateTransactions(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return toModelMissingFXRatesReport(resp), nil
+}
+
+
 // ModifiedDietzReturn is the resolver for the modifiedDietzReturn field.
 func (r *queryResolver) ModifiedDietzReturn(ctx context.Context, startDate string, endDate string, useMonthlyLinking *bool) (*model.ModifiedDietzReturnPayload, error) {
 	req := &pb.GetModifiedDietzReturnRequest{

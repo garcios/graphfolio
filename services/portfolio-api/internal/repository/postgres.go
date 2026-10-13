@@ -1076,6 +1076,108 @@ func (r *PostgresRepository) ListMissingPriceTransactions(ctx context.Context, f
 	return report, nil
 }
 
+func (r *PostgresRepository) ListMissingFXRateTransactions(ctx context.Context, filter domain.MissingFXRateFilter) (*domain.MissingFXRatesReport, error) {
+	limit := filter.Limit
+	if limit <= 0 {
+		limit = 50
+	}
+	offset := filter.Offset
+	if offset < 0 {
+		offset = 0
+	}
+
+	var typeFilter *string
+	if filter.Type != nil && *filter.Type != "" {
+		s := string(*filter.Type)
+		typeFilter = &s
+	}
+
+	// 1. Query summary counts & date bounds
+	var totalCount int
+	var uniquePairs int
+	var earliestDate *time.Time
+	var latestDate *time.Time
+
+	row := r.pool.QueryRow(ctx, countMissingFXRateTransactionsSQL,
+		filter.CurrencyPair,
+		filter.FromDate,
+		filter.ToDate,
+		typeFilter,
+	)
+	if err := row.Scan(&totalCount, &uniquePairs, &earliestDate, &latestDate); err != nil {
+		return nil, fmt.Errorf("repository: count missing fx rate transactions failed: %w", err)
+	}
+
+	report := &domain.MissingFXRatesReport{
+		Items:             []domain.MissingFXRateItem{},
+		TotalCount:        totalCount,
+		UniquePairsCount:  uniquePairs,
+		EarliestTradeDate: earliestDate,
+		LatestTradeDate:   latestDate,
+	}
+
+	if totalCount == 0 {
+		return report, nil
+	}
+
+	// 2. Query paginated item rows
+	rows, err := r.pool.Query(ctx, listMissingFXRateTransactionsSQL,
+		filter.CurrencyPair,
+		filter.FromDate,
+		filter.ToDate,
+		typeFilter,
+		limit,
+		offset,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("repository: list missing fx rate transactions failed: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var item domain.MissingFXRateItem
+		var rawType string
+		var rawAmount decimal.Decimal
+		var instrumentID *uuid.UUID
+		var symbol *string
+		var assetName *string
+		var recordedFXRate *decimal.Decimal
+
+		err := rows.Scan(
+			&item.TransactionID,
+			&item.PortfolioID,
+			&item.PortfolioName,
+			&item.PortfolioBaseCur,
+			&item.TradeDate,
+			&rawType,
+			&instrumentID,
+			&symbol,
+			&assetName,
+			&rawAmount,
+			&item.TransactionCur,
+			&item.RequiredPair,
+			&recordedFXRate,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("repository: scan missing fx rate transaction failed: %w", err)
+		}
+
+		item.Type = domain.TransactionType(rawType)
+		item.InstrumentID = instrumentID
+		item.Symbol = symbol
+		item.AssetName = assetName
+		item.Amount = domain.NewMoney(rawAmount, item.TransactionCur)
+		item.RecordedFXRate = recordedFXRate
+		report.Items = append(report.Items, item)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("repository: rows iteration failed: %w", err)
+	}
+
+	return report, nil
+}
+
 func (r *PostgresRepository) GetIngestionMetrics(ctx context.Context) (*domain.IngestionStatus, error) {
 	var trackedInsts int
 	if err := r.pool.QueryRow(ctx, countActiveInstrumentsSQL).Scan(&trackedInsts); err != nil {

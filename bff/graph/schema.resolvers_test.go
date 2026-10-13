@@ -70,9 +70,11 @@ type fakePortfolioClient struct {
 	checkTransactionDuplicatesFn   func(ctx context.Context, in *pb.CheckTransactionDuplicatesRequest) (*pb.CheckTransactionDuplicatesResponse, error)
 	batchImportTransactionsFn      func(ctx context.Context, in *pb.BatchImportTransactionsRequest) (*pb.BatchImportTransactionsResponse, error)
 	getCashFlowReportFn            func(ctx context.Context, in *pb.GetCashFlowReportRequest) (*pb.GetCashFlowReportResponse, error)
-	listMissingPriceTransactionsFn func(ctx context.Context, in *pb.ListMissingPriceTransactionsRequest) (*pb.ListMissingPriceTransactionsResponse, error)
-	getModifiedDietzReturnFn       func(ctx context.Context, in *pb.GetModifiedDietzReturnRequest) (*pb.GetModifiedDietzReturnResponse, error)
+	listMissingPriceTransactionsFn  func(ctx context.Context, in *pb.ListMissingPriceTransactionsRequest) (*pb.ListMissingPriceTransactionsResponse, error)
+	listMissingFXRateTransactionsFn func(ctx context.Context, in *pb.ListMissingFXRateTransactionsRequest) (*pb.ListMissingFXRateTransactionsResponse, error)
+	getModifiedDietzReturnFn        func(ctx context.Context, in *pb.GetModifiedDietzReturnRequest) (*pb.GetModifiedDietzReturnResponse, error)
 }
+
 
 func (f *fakePortfolioClient) GetPortfolio(ctx context.Context, in *pb.GetPortfolioRequest, opts ...grpc.CallOption) (*pb.GetPortfolioResponse, error) {
 	if f.getPortfolioFn != nil {
@@ -248,6 +250,14 @@ func (f *fakePortfolioClient) ListMissingPriceTransactions(ctx context.Context, 
 	}
 	return nil, nil
 }
+
+func (f *fakePortfolioClient) ListMissingFXRateTransactions(ctx context.Context, in *pb.ListMissingFXRateTransactionsRequest, opts ...grpc.CallOption) (*pb.ListMissingFXRateTransactionsResponse, error) {
+	if f.listMissingFXRateTransactionsFn != nil {
+		return f.listMissingFXRateTransactionsFn(ctx, in)
+	}
+	return nil, nil
+}
+
 
 func TestQueryResolver_Portfolio(t *testing.T) {
 	ctx := context.Background()
@@ -2296,6 +2306,105 @@ func TestQueryResolver_MissingPriceTransactions(t *testing.T) {
 		}
 	})
 }
+
+func TestQueryResolver_MissingFXRateTransactions(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully resolves missing fx rate report", func(t *testing.T) {
+		pair := "USD/AUD"
+		fromDate := "2024-01-01"
+		toDate := "2024-10-01"
+		txType := model.TransactionTypeBuy
+		limit := 50
+		offset := 0
+
+		fakeClient := &fakePortfolioClient{
+			listMissingFXRateTransactionsFn: func(ctx context.Context, in *pb.ListMissingFXRateTransactionsRequest) (*pb.ListMissingFXRateTransactionsResponse, error) {
+				if in.GetCurrencyPair() != "USD/AUD" {
+					t.Errorf("expected currency pair USD/AUD, got %s", in.GetCurrencyPair())
+				}
+				earliest := "2024-02-14"
+				latest := "2024-08-11"
+				instID := "inst-1"
+				sym := "AAPL"
+				asset := "Apple Inc"
+				return &pb.ListMissingFXRateTransactionsResponse{
+					Items: []*pb.MissingFXRateTransactionItem{
+						{
+							TransactionId:    "tx-1",
+							PortfolioId:      "port-1",
+							PortfolioName:    "Growth Portfolio",
+							PortfolioBaseCur: "AUD",
+							TradeDate:        "2024-02-14",
+							Type:             pb.TransactionType_TRANSACTION_TYPE_BUY,
+							InstrumentId:     &instID,
+							Symbol:           &sym,
+							AssetName:        &asset,
+							Amount:           &commonpb.Money{Amount: &commonpb.Decimal{Value: "3600.00"}, CurrencyCode: "USD"},
+							TransactionCur:   "USD",
+							RequiredPair:     "USD/AUD",
+							RecordedFxRate:   &commonpb.Decimal{Value: "1.5280000000"},
+						},
+					},
+					TotalCount:         1,
+					UniquePairsCount:   1,
+					EarliestTradeDate:  &earliest,
+					LatestTradeDate:    &latest,
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		res, err := qResolver.MissingFXRateTransactions(ctx, &pair, &fromDate, &toDate, &txType, &limit, &offset)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res == nil {
+			t.Fatalf("expected result, got nil")
+		}
+		if res.TotalCount != 1 {
+			t.Errorf("expected total count 1, got %d", res.TotalCount)
+		}
+		if res.UniquePairsCount != 1 {
+			t.Errorf("expected unique pairs count 1, got %d", res.UniquePairsCount)
+		}
+		if len(res.Items) != 1 {
+			t.Fatalf("expected 1 item, got %d", len(res.Items))
+		}
+		item := res.Items[0]
+		if item.RequiredPair != "USD/AUD" {
+			t.Errorf("expected pair USD/AUD, got %s", item.RequiredPair)
+		}
+		if item.Type != model.TransactionTypeBuy {
+			t.Errorf("expected type BUY, got %v", item.Type)
+		}
+		if item.PortfolioBaseCurrency != "AUD" {
+			t.Errorf("expected base currency AUD, got %s", item.PortfolioBaseCurrency)
+		}
+		if *res.EarliestTradeDate != "2024-02-14" {
+			t.Errorf("expected earliest trade date 2024-02-14, got %s", *res.EarliestTradeDate)
+		}
+	})
+
+	t.Run("handles error from portfolio service", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			listMissingFXRateTransactionsFn: func(ctx context.Context, in *pb.ListMissingFXRateTransactionsRequest) (*pb.ListMissingFXRateTransactionsResponse, error) {
+				return nil, errors.New("service unavailable")
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		_, err := qResolver.MissingFXRateTransactions(ctx, nil, nil, nil, nil, nil, nil)
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+	})
+}
+
 
 func (f *fakePortfolioClient) GetModifiedDietzReturn(ctx context.Context, in *pb.GetModifiedDietzReturnRequest, opts ...grpc.CallOption) (*pb.GetModifiedDietzReturnResponse, error) {
 	if f.getModifiedDietzReturnFn != nil {

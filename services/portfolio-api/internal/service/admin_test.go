@@ -1154,3 +1154,119 @@ func TestPortfolioService_ListMissingPriceTransactions(t *testing.T) {
 		}
 	})
 }
+
+func TestPortfolioService_ListMissingFXRateTransactions(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success returns report with items and bounds", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		fromDate := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+		toDate := time.Date(2024, 10, 1, 0, 0, 0, 0, time.UTC)
+		pair := "USD/AUD"
+		recRate := decimal.NewFromFloat(1.5280)
+		sym := "AAPL"
+		asset := "Apple Inc"
+
+		expectedReport := &domain.MissingFXRatesReport{
+			Items: []domain.MissingFXRateItem{
+				{
+					TransactionID:    uuid.New(),
+					PortfolioID:      uuid.New(),
+					PortfolioName:    "Growth Portfolio",
+					PortfolioBaseCur: "AUD",
+					TradeDate:        time.Date(2024, 2, 14, 0, 0, 0, 0, time.UTC),
+					Type:             domain.TxTypeBuy,
+					Symbol:           &sym,
+					AssetName:        &asset,
+					Amount:           domain.NewMoney(decimal.NewFromInt(3600), "USD"),
+					TransactionCur:   "USD",
+					RequiredPair:     "USD/AUD",
+					RecordedFXRate:   &recRate,
+				},
+			},
+			TotalCount:        1,
+			UniquePairsCount:  1,
+			EarliestTradeDate: &fromDate,
+			LatestTradeDate:   &toDate,
+		}
+
+		mockRepo.EXPECT().
+			ListMissingFXRateTransactions(ctx, domain.MissingFXRateFilter{
+				CurrencyPair: &pair,
+				FromDate:     &fromDate,
+				ToDate:       &toDate,
+				Limit:        50,
+				Offset:       0,
+			}).
+			Return(expectedReport, nil)
+
+		res, err := svc.ListMissingFXRateTransactions(ctx, domain.MissingFXRateFilter{
+			CurrencyPair: &pair,
+			FromDate:     &fromDate,
+			ToDate:       &toDate,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if res.TotalCount != 1 {
+			t.Errorf("expected total count 1, got %d", res.TotalCount)
+		}
+		if len(res.Items) != 1 {
+			t.Fatalf("expected 1 item, got %d", len(res.Items))
+		}
+		if res.Items[0].RequiredPair != "USD/AUD" {
+			t.Errorf("expected USD/AUD, got %s", res.Items[0].RequiredPair)
+		}
+	})
+
+	t.Run("normalizes ALL currency pair and clamps limits", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		pair := "ALL"
+		mockRepo.EXPECT().
+			ListMissingFXRateTransactions(ctx, domain.MissingFXRateFilter{
+				CurrencyPair: nil,
+				Limit:        200,
+				Offset:       0,
+			}).
+			Return(&domain.MissingFXRatesReport{Items: []domain.MissingFXRateItem{}}, nil)
+
+		_, err := svc.ListMissingFXRateTransactions(ctx, domain.MissingFXRateFilter{
+			CurrencyPair: &pair,
+			Limit:        500, // should clamp to 200
+			Offset:       -5,  // should clamp to 0
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+	})
+
+	t.Run("invalid date range returns error", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		fromDate := time.Date(2024, 10, 1, 0, 0, 0, 0, time.UTC)
+		toDate := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+
+		_, err := svc.ListMissingFXRateTransactions(ctx, domain.MissingFXRateFilter{
+			FromDate: &fromDate,
+			ToDate:   &toDate,
+		})
+		if !errors.Is(err, service.ErrInvalidDateRange) {
+			t.Errorf("expected ErrInvalidDateRange, got %v", err)
+		}
+	})
+}
+

@@ -2,12 +2,13 @@ import React from 'react';
 import { Badge } from '@graphfolio/ui';
 import './AdminLayout.css';
 
-export type AdminTab = 'assets' | 'prices' | 'missing-prices' | 'fx' | 'ingestion';
+export type AdminTab = 'assets' | 'prices' | 'missing-prices' | 'missing-fx' | 'fx' | 'ingestion';
 
 interface AdminLayoutProps {
   currentTab: AdminTab;
   onTabChange: (tab: AdminTab) => void;
   missingPriceCount?: number;
+  missingFXCount?: number;
   children: React.ReactNode;
 }
 
@@ -15,8 +16,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   currentTab,
   onTabChange,
   missingPriceCount,
+  missingFXCount,
   children,
 }) => {
+
   return (
     <div className="admin-layout">
       <aside className="admin-sidebar">
@@ -60,6 +63,18 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
 
           <button
             type="button"
+            className={`admin-nav-item ${currentTab === 'missing-fx' ? 'admin-nav-item--active' : ''}`}
+            onClick={() => onTabChange('missing-fx')}
+          >
+            <span>💱⚠️</span>
+            <span>Missing FX Rates</span>
+            {typeof missingFXCount === 'number' && missingFXCount > 0 && (
+              <Badge variant="warning">{missingFXCount}</Badge>
+            )}
+          </button>
+
+          <button
+            type="button"
             className={`admin-nav-item ${currentTab === 'fx' ? 'admin-nav-item--active' : ''}`}
             onClick={() => onTabChange('fx')}
           >
@@ -95,9 +110,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             {currentTab === 'assets' && 'Tradable Asset & Instrument Directory'}
             {currentTab === 'prices' && 'Market Data, Closing Prices & Overrides'}
             {currentTab === 'missing-prices' && 'Diagnostic Report: Unpriced Transactions on Trade Date'}
+            {currentTab === 'missing-fx' && 'Diagnostic Report: Unconverted Transactions Lacking Trade-Date FX'}
             {currentTab === 'fx' && 'Foreign Exchange (FX) & Currency Pair History'}
             {currentTab === 'ingestion' && 'Market Ingestion Pipeline & FX Monitor'}
           </h2>
+
           <div className="admin-topbar__actions">
             <Badge variant="purple">Internal Portal</Badge>
           </div>

@@ -3,6 +3,7 @@ import { AdminLayout, type AdminTab } from './components/AdminLayout';
 import { AssetManagement } from './components/AssetManagement';
 import { PriceManagement } from './components/PriceManagement';
 import { MissingPricesReport } from './components/MissingPricesReport';
+import { MissingFXRatesReport } from './components/MissingFXRatesReport';
 import { FXManagement } from './components/FXManagement';
 import { IngestionPipeline } from './components/IngestionPipeline';
 import './App.css';
@@ -11,6 +12,7 @@ export default function App() {
   const [currentTab, setCurrentTab] = useState<AdminTab>('assets');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [missingPriceCount, setMissingPriceCount] = useState<number>(0);
+  const [missingFXCount, setMissingFXCount] = useState<number>(0);
 
   const notify = (msg: string) => {
     setToastMessage(msg);
@@ -25,15 +27,20 @@ export default function App() {
         currentTab={currentTab}
         onTabChange={setCurrentTab}
         missingPriceCount={missingPriceCount}
+        missingFXCount={missingFXCount}
       >
         {currentTab === 'assets' && <AssetManagement onNotify={notify} />}
         {currentTab === 'prices' && <PriceManagement onNotify={notify} />}
         {currentTab === 'missing-prices' && (
           <MissingPricesReport onNotify={notify} onUpdateCount={setMissingPriceCount} />
         )}
+        {currentTab === 'missing-fx' && (
+          <MissingFXRatesReport onNotify={notify} onUpdateCount={setMissingFXCount} />
+        )}
         {currentTab === 'fx' && <FXManagement onNotify={notify} />}
         {currentTab === 'ingestion' && <IngestionPipeline onNotify={notify} />}
       </AdminLayout>
+
 
       {toastMessage && (
         <div className="admin-toast">

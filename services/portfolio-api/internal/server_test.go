@@ -2606,6 +2606,130 @@ func TestPortfolioServer_ListMissingPriceTransactions(t *testing.T) {
 	})
 }
 
+func TestPortfolioServer_ListMissingFXRateTransactions(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success returns proto response", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		fromDate := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+		toDate := time.Date(2024, 10, 1, 0, 0, 0, 0, time.UTC)
+		pair := "USD/AUD"
+		fromDateStr := "2024-01-01"
+		toDateStr := "2024-10-01"
+		recRate := decimal.NewFromFloat(1.5280)
+		sym := "AAPL"
+		asset := "Apple Inc"
+		txType := pb.TransactionType_TRANSACTION_TYPE_BUY
+		domainBuy := domain.TxTypeBuy
+
+		expectedReport := &domain.MissingFXRatesReport{
+			Items: []domain.MissingFXRateItem{
+				{
+					TransactionID:    uuid.MustParse("018f0000-0000-7000-8000-000000000001"),
+					PortfolioID:      uuid.MustParse("018f0000-0000-7000-8000-000000000002"),
+					PortfolioName:    "Growth Vault",
+					PortfolioBaseCur: "AUD",
+					TradeDate:        time.Date(2024, 2, 14, 0, 0, 0, 0, time.UTC),
+					Type:             domain.TxTypeBuy,
+					Symbol:           &sym,
+					AssetName:        &asset,
+					Amount:           domain.NewMoney(decimal.NewFromInt(3600), "USD"),
+					TransactionCur:   "USD",
+					RequiredPair:     "USD/AUD",
+					RecordedFXRate:   &recRate,
+				},
+			},
+			TotalCount:        1,
+			UniquePairsCount:  1,
+			EarliestTradeDate: &fromDate,
+			LatestTradeDate:   &toDate,
+		}
+
+		mockSvc.EXPECT().
+			ListMissingFXRateTransactions(ctx, domain.MissingFXRateFilter{
+				CurrencyPair: &pair,
+				FromDate:     &fromDate,
+				ToDate:       &toDate,
+				Type:         &domainBuy,
+				Limit:        50,
+				Offset:       0,
+			}).
+			Return(expectedReport, nil)
+
+		resp, err := server.ListMissingFXRateTransactions(ctx, &pb.ListMissingFXRateTransactionsRequest{
+			CurrencyPair: &pair,
+			FromDate:     &fromDateStr,
+			ToDate:       &toDateStr,
+			Type:         &txType,
+			Limit:        50,
+			Offset:       0,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if resp.TotalCount != 1 {
+			t.Errorf("expected TotalCount 1, got %d", resp.TotalCount)
+		}
+		if resp.UniquePairsCount != 1 {
+			t.Errorf("expected UniquePairsCount 1, got %d", resp.UniquePairsCount)
+		}
+		if len(resp.Items) != 1 {
+			t.Fatalf("expected 1 item, got %d", len(resp.Items))
+		}
+		item := resp.Items[0]
+		if item.RequiredPair != "USD/AUD" {
+			t.Errorf("expected pair USD/AUD, got %s", item.RequiredPair)
+		}
+		if item.Type != pb.TransactionType_TRANSACTION_TYPE_BUY {
+			t.Errorf("expected BUY, got %v", item.Type)
+		}
+		if resp.GetEarliestTradeDate() != "2024-01-01" {
+			t.Errorf("expected earliest 2024-01-01, got %s", resp.GetEarliestTradeDate())
+		}
+		if resp.GetLatestTradeDate() != "2024-10-01" {
+			t.Errorf("expected latest 2024-10-01, got %s", resp.GetLatestTradeDate())
+		}
+	})
+
+	t.Run("invalid from_date returns InvalidArgument", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		badDate := "not-a-date"
+		_, err := server.ListMissingFXRateTransactions(ctx, &pb.ListMissingFXRateTransactionsRequest{
+			FromDate: &badDate,
+		})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", err)
+		}
+	})
+
+	t.Run("nil service returns Unavailable", func(t *testing.T) {
+		server := NewPortfolioServer(nil)
+		_, err := server.ListMissingFXRateTransactions(ctx, &pb.ListMissingFXRateTransactionsRequest{})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.Unavailable {
+			t.Errorf("expected Unavailable, got %v", err)
+		}
+	})
+}
+
+
 func TestPortfolioServer_GetModifiedDietzReturn(t *testing.T) {
 	ctx := context.Background()
 

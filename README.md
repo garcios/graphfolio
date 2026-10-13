@@ -21,6 +21,7 @@ A modern portfolio tracker built for serious investors. GraphFolio accurately me
 - **Asset Deletion & Historical Price Cascading**: Permanently remove obsolete or erroneous assets from the master directory in the Admin Portal (`:5174`). Automatically cascades deletion to all associated closing marks in `portfolio.instrument_prices` within an atomic database transaction. Protects referential integrity by rejecting deletion if an asset is actively held or referenced by user transactions (`ErrInstrumentInUse`, `FailedPrecondition`), accompanied by a safety confirmation dialog (`DeleteAssetModal`).
 - **Admin Historical Market Data Backfill**: Operators can backfill daily closing prices and ECB FX fixings over custom date ranges (up to ~5 years) from the Admin Portal's `BackfillModal`. Offers date presets (`30D`, `90D`, `YTD`, `1Y`, `ALL`), All-Active vs. Specific symbol/pair scopes, API token budget impact projections, and optional retroactive valuation recompute for affected portfolios. Available from the Ingestion Pipeline console and the Price and FX management toolbars. Per-asset provider failures are reported as non-fatal warnings and do not abort the batch.
 - **Missing Prices Diagnostic Report & Date Range Backfill (Admin Portal)**: Dedicated operational diagnostic tool in the internal Admin Portal (`:5174`). Detects and aggregates trade transactions (`BUY`, `SELL`, `SPLIT`, excluding cash distributions like `DIVIDEND`) that lack corresponding market closing marks in `portfolio.instrument_prices` on execution dates. Displays summary KPI cards (Missing Transactions count, Impacted Assets, Date Span), date range presets (`30D`, `90D`, `YTD`, `1Y`, `ALL`), symbol and transaction type filters, and one-click backfill integrations: row-level "Backfill Range" and bulk "Backfill All Missing" opening `BackfillModal` pre-populated with affected instruments and date boundaries, plus inline manual closing price override shortcuts (`AddAssetPriceModal`).
+- **Missing FX Rates Diagnostic Report & Date Range Backfill (Admin Portal)**: Dedicated operational diagnostic tool in the internal Admin Portal (`:5174`). Detects and aggregates cross-currency trade transactions ($t.\text{currency\_code} \neq p.\text{base\_currency}$) lacking authoritative daily closing foreign exchange rates in `portfolio.fx_rates` on execution dates. Supports bidirectional quote lookup (direct vs. reciprocal inversion $1/\text{rate}$), summary KPI cards (Total Missing Transactions, Impacted Currency Pairs, Earliest Trade Date, Date Range Span), date range presets (`30D`, `90D`, `1Y`, `ALL`), base and quote currency filters, and one-click backfill integrations: row-level "Backfill FX" opening `BackfillModal` pre-populated with affected currency pairs and a 3-day buffer on `fromDate` (accounting for weekend/holiday trade dates and preceding Friday central bank fixings), and inline manual rate override shortcut (`FXOverrideModal`).
 - **Multi-Broker CSV Ingestion & Cash Account Statement Parsing**: Seamless batch statement ingestion supporting leading Australian retail brokers (CommSec and nabtrade). Features automated header signature detection with manual override, dialect parsing for Australian dates (`DD/MM/YYYY`) and currency formatting, domestic and international cash account trade matching with native brokerage fee derivation, full cash account statement ingestion (capturing `DEPOSIT`, `WITHDRAWAL`, `INTEREST`, and domestic ETF/stock dividends while ignoring informational interest rate updates to eliminate negative cash balances), idempotent deduplication via pre-flight external reference checking, and an interactive glassmorphic preview modal (`ImportTransactionsModal`) with validation diagnostics. Backend microservices support flexible ticker suffix matching (`IVV` ↔ `IVV.AX` ↔ `IVV.ASX`), unmapped instrument auto-provisioning, atomic batch persistence, single-pass projection rebuilds, and retroactive valuation backfills.
 - **User Preferences & Dynamic Multi-Currency Re-anchoring**: Manage investor profile display name, UI theme (`DARK`, `LIGHT`, `SYSTEM`), and base display currency (`USD`, `EUR`, `GBP`, `AUD`, `CAD`, `JPY`, `CHF`). Changing preferred currency automatically triggers atomic base currency re-anchoring on `portfolio-api`, re-scaling valuations and holdings cost bases via live FX triangulation without data drift.
 - **Investment Holding Return Attribution (Capital Gain, Income & Currency Gain/Loss)**: Full 3-pillar return decomposition for every investment holding using exact fixed-point decimal arithmetic:
@@ -202,7 +203,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 ```text
 ├── proto/                        # Single Source of Truth for APIs (Protobuf definitions)
 │   ├── common/v1/decimal.proto   # Decimal and Money contracts
-│   ├── portfolio/v1/             # Portfolio gRPC service (GetPortfolio, UpdatePortfolioBaseCurrency, AddTransaction, GetCashFlowReport, DeleteInstrument, TriggerBackfill, etc.)
+│   ├── portfolio/v1/             # Portfolio gRPC service (GetPortfolio, UpdatePortfolioBaseCurrency, AddTransaction, GetCashFlowReport, ListMissingFXRateTransactions, DeleteInstrument, TriggerBackfill, etc.)
 │   └── user/v1/user.proto        # User gRPC service (GetUserPreferences, UpdateUserPreferences, ListSupportedCurrencies)
 ├── pkg/                          # Shared Go infrastructure
 │   ├── database/                 # pgx connection pooling, auto .env loading, migration runner
@@ -213,7 +214,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── cmd/server/           # Application entrypoint (:50051)
 │   │   ├── cmd/worker/           # Scheduled EOD & on-demand valuation worker (make run-valuation-job)
 │   │   ├── cmd/market-ingest/    # Market data ingestion & historical backfill CLI (make ingest-market-data)
-│   │   ├── internal/             # Domain entities, repository, service (incl. cash flow report & engine), and gRPC server
+│   │   ├── internal/             # Domain entities (incl. missing_fx.go), repository, service (incl. cash flow report & engine), and gRPC server
 │   │   ├── migrations/           # Versioned schema migrations (000001 - 000009)
 │   │   └── seeds/                # Seed fixtures (dev_seed.sql with 365-day history)
 │   └── user-api/                 # User domain microservice (:50052)
@@ -228,7 +229,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── main-app/             # Primary Investor React App (:5173)
 │   │   │   └── src/components/   # Dashboard, PerformanceChart, ModifiedDietzModal, TransactionLedger, ReportsView, CashFlowReport, AddTransactionModal, ImportTransactionsModal, UserPreferencesModal
 │   │   └── admin-app/            # Internal Operations Portal (:5174)
-│   │       └── src/components/   # AssetManagement, DeleteAssetModal, PriceManagement, MissingPricesReport, FXManagement, FXTrendChart, FXOverrideModal, BackfillModal, IngestionPipeline
+│   │       └── src/components/   # AssetManagement, DeleteAssetModal, PriceManagement, MissingPricesReport, MissingFXRatesReport, FXManagement, FXTrendChart, FXOverrideModal, BackfillModal, IngestionPipeline
 │   └── packages/
 │       ├── ui/                   # Shared Design System (@graphfolio/ui)
 │       └── api-client/           # Shared GraphQL Client (@graphfolio/api-client)
@@ -248,6 +249,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── admin-historical-backfill-implementation-plan.md
 │   │   ├── asset-prices-date-range-filter-implementation-plan.md
 │   │   ├── admin-missing-prices-report-implementation-plan.md
+│   │   ├── admin-missing-fx-rates-report-implementation-plan.md
 │   │   ├── delete-asset-implementation-plan.md
 │   │   ├── exchange-dropdown-implementation-plan.md
 │   │   ├── ingestion-job-history-implementation-plan.md
@@ -262,6 +264,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── investment-holding-capital-gain-income-currency.md
 │   │   ├── portfolio-cash-flow-report-generation.md
 │   │   ├── admin-missing-prices-report.md
+│   │   ├── admin-missing-fx-rates-report.md
 │   │   ├── include-closed-positions-dashboard.md
 │   │   └── annualized-return-modified-dietz.md
 │   ├── negative-cash-balance-investigation-report.md # Cash ledger overdraft root cause & remediation report
@@ -354,6 +357,8 @@ make generate
 - **Portfolio Cash Flow Report User Story**: [`docs/user-stories/portfolio-cash-flow-report-generation.md`](./docs/user-stories/portfolio-cash-flow-report-generation.md)
 - **Admin Missing Prices Report Implementation Plan**: [`docs/plans/admin-missing-prices-report-implementation-plan.md`](./docs/plans/admin-missing-prices-report-implementation-plan.md)
 - **Admin Missing Prices Report User Story**: [`docs/user-stories/admin-missing-prices-report.md`](./docs/user-stories/admin-missing-prices-report.md)
+- **Admin Missing FX Rates Report Implementation Plan**: [`docs/plans/admin-missing-fx-rates-report-implementation-plan.md`](./docs/plans/admin-missing-fx-rates-report-implementation-plan.md)
+- **Admin Missing FX Rates Report User Story**: [`docs/user-stories/admin-missing-fx-rates-report.md`](./docs/user-stories/admin-missing-fx-rates-report.md)
 - **Include Closed Positions Implementation Plan**: [`docs/plans/include-closed-positions-implementation-plan.md`](./docs/plans/include-closed-positions-implementation-plan.md)
 - **Include Closed Positions User Story**: [`docs/user-stories/include-closed-positions-dashboard.md`](./docs/user-stories/include-closed-positions-dashboard.md)
 - **Modified Dietz Annualized Return Implementation Plan**: [`docs/plans/annualized-return-modified-dietz-implementation-plan.md`](./docs/plans/annualized-return-modified-dietz-implementation-plan.md)

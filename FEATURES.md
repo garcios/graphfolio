@@ -39,6 +39,9 @@ This document catalogs all implemented features, in-progress components, and pla
 | **29** | **Missing Prices Report & Date Range Backfill (Admin Portal)** | **DONE** | Proto, Svc, BFF, Web | [admin-missing-prices-report-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-missing-prices-report-implementation-plan.md) |
 | **30** | **Include Closed Positions in Dashboard Investments Table** | **DONE** | Proto, Svc, BFF, Web | [include-closed-positions-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/include-closed-positions-implementation-plan.md) |
 | **31** | **Modified Dietz Annualized Return & Cash-Flow Weighting** | **DONE** | Proto, Svc, BFF, Web | [annualized-return-modified-dietz-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/annualized-return-modified-dietz-implementation-plan.md) |
+| **32** | **Missing FX Rates Report & Date Range Backfill (Admin Portal)** | **DONE** | Proto, Svc, BFF, Web | [admin-missing-fx-rates-report-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-missing-fx-rates-report-implementation-plan.md) |
+
+
 
 ---
 
@@ -439,6 +442,30 @@ This document catalogs all implemented features, in-progress components, and pla
   - [Dashboard.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.tsx)
   - [Dashboard.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/Dashboard.css)
 
+### 2.32 Missing FX Rates Report & Date Range Backfill (Admin Portal)
+- **Status**: **DONE**
+- **User Story**: [admin-missing-fx-rates-report.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/admin-missing-fx-rates-report.md)
+- **Plan Reference**: [admin-missing-fx-rates-report-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-missing-fx-rates-report-implementation-plan.md)
+- **Scope**: `proto/portfolio/v1/`, `services/portfolio-api`, `bff/`, `web/apps/admin-app`
+- **Description**: Diagnostic and audit report identifying all recorded cross-currency transactions ($t.\text{currency\_code} \neq p.\text{base\_currency}$) lacking an authoritative daily closing foreign exchange rate in `portfolio.fx_rates` on their trade date. Supports bidirectional direct and inverted quote lookups ($1/\text{rate}$), high-precision decimal exchange rate storage, and interactive single-click integration to pre-populate [BackfillModal.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/BackfillModal.tsx) (with a 3-day buffer for weekend/holiday trade dates) or [FXOverrideModal.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/FXOverrideModal.tsx) to record manual rates with automatic valuation recomputation.
+- **Key Files**:
+  - [portfolio.proto](file:///Users/oscargarcia/workspace/graphfolio/proto/portfolio/v1/portfolio.proto)
+  - [missing_fx.go (domain)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/domain/missing_fx.go)
+  - [queries.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/repository/queries.go)
+  - [postgres.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/repository/postgres.go)
+  - [admin.go (service)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/admin.go)
+  - [admin_test.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/admin_test.go)
+  - [server.go (gRPC)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server.go)
+  - [server_test.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server_test.go)
+  - [schema.graphqls](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls)
+  - [helpers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/helpers.go)
+  - [schema.resolvers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers.go)
+  - [schema.resolvers_test.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers_test.go)
+  - [MissingFXRatesReport.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/MissingFXRatesReport.tsx)
+  - [MissingFXRatesReport.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/MissingFXRatesReport.css)
+  - [MissingFXRatesReport.test.ts](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/MissingFXRatesReport.test.ts)
+  - [AdminLayout.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/AdminLayout.tsx)
+
 ---
 
 ## 3. Planned Features (`PLANNED`)
@@ -476,6 +503,7 @@ This document catalogs all implemented features, in-progress components, and pla
   - Granular record split metrics displaying successful vs failed rows (`420 ok / 12 fail`).
   - Single-pass `COUNT(*) OVER()` pagination with server-side sorting by start date.
   - Interactive drawer/modal to inspect error diagnostics, stack traces, and execution parameters for failed imports.
+
 
 ---
 

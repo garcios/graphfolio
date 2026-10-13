@@ -51,6 +51,7 @@ type Repository interface {
 	UpsertInstrumentPrice(ctx context.Context, instrumentID uuid.UUID, priceDate time.Time, closePrice decimal.Decimal, source string) (*domain.InstrumentPrice, error)
 	FindPortfoliosHoldingInstrument(ctx context.Context, instrumentID uuid.UUID) ([]uuid.UUID, error)
 	ListMissingPriceTransactions(ctx context.Context, filter domain.MissingPriceFilter) (*domain.MissingPriceReport, error)
+	ListMissingFXRateTransactions(ctx context.Context, filter domain.MissingFXRateFilter) (*domain.MissingFXRatesReport, error)
 
 	// Admin: Ingestion Diagnostics
 	GetIngestionMetrics(ctx context.Context) (*domain.IngestionStatus, error)

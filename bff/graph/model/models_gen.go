@@ -281,6 +281,30 @@ type MarketSyncPayload struct {
 	Message       string `json:"message"`
 }
 
+type MissingFXRateTransactionItem struct {
+	TransactionID         string          `json:"transactionId"`
+	PortfolioID           string          `json:"portfolioId"`
+	PortfolioName         string          `json:"portfolioName"`
+	PortfolioBaseCurrency string          `json:"portfolioBaseCurrency"`
+	TradeDate             string          `json:"tradeDate"`
+	Type                  TransactionType `json:"type"`
+	InstrumentID          *string         `json:"instrumentId,omitempty"`
+	Symbol                *string         `json:"symbol,omitempty"`
+	AssetName             *string         `json:"assetName,omitempty"`
+	Amount                *Money          `json:"amount"`
+	TransactionCurrency   string          `json:"transactionCurrency"`
+	RequiredPair          string          `json:"requiredPair"`
+	RecordedFxRate        *Decimal        `json:"recordedFxRate,omitempty"`
+}
+
+type MissingFXRatesReport struct {
+	Items             []*MissingFXRateTransactionItem `json:"items"`
+	TotalCount        int                             `json:"totalCount"`
+	UniquePairsCount  int                             `json:"uniquePairsCount"`
+	EarliestTradeDate *string                         `json:"earliestTradeDate,omitempty"`
+	LatestTradeDate   *string                         `json:"latestTradeDate,omitempty"`
+}
+
 type MissingPriceReport struct {
 	Items                  []*MissingPriceTransactionItem `json:"items"`
 	TotalCount             int                            `json:"totalCount"`

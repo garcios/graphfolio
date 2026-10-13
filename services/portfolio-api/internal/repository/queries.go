@@ -450,6 +450,73 @@ WHERE t.instrument_id IS NOT NULL
 ORDER BY t.trade_date DESC, i.symbol ASC
 LIMIT $4 OFFSET $5;`
 
+	countMissingFXRateTransactionsSQL = `
+SELECT 
+    COUNT(*)::int AS total_count,
+    COUNT(DISTINCT CONCAT(TRIM(t.currency_code), '/', TRIM(p.base_currency)))::int AS unique_pairs_count,
+    MIN(t.trade_date) AS earliest_trade_date,
+    MAX(t.trade_date) AS latest_trade_date
+FROM portfolio.transactions t
+JOIN portfolio.portfolios p ON t.portfolio_id = p.id
+LEFT JOIN portfolio.instruments i ON t.instrument_id = i.id
+LEFT JOIN portfolio.fx_rates fx_direct 
+    ON fx_direct.rate_date = t.trade_date
+   AND fx_direct.base_currency = t.currency_code 
+   AND fx_direct.quote_currency = p.base_currency
+LEFT JOIN portfolio.fx_rates fx_inverse 
+    ON fx_inverse.rate_date = t.trade_date
+   AND fx_inverse.base_currency = p.base_currency 
+   AND fx_inverse.quote_currency = t.currency_code
+WHERE t.type <> 'SPLIT'
+  AND t.currency_code <> p.base_currency
+  AND fx_direct.rate IS NULL 
+  AND fx_inverse.rate IS NULL
+  AND ($1::text IS NULL OR 
+       UPPER(CONCAT(TRIM(t.currency_code), '/', TRIM(p.base_currency))) = UPPER($1) OR 
+       UPPER(CONCAT(TRIM(p.base_currency), '/', TRIM(t.currency_code))) = UPPER($1))
+  AND ($2::date IS NULL OR t.trade_date >= $2)
+  AND ($3::date IS NULL OR t.trade_date <= $3)
+  AND ($4::text IS NULL OR t.type::text = $4);`
+
+	listMissingFXRateTransactionsSQL = `
+SELECT 
+    t.id AS transaction_id,
+    t.portfolio_id,
+    p.name AS portfolio_name,
+    p.base_currency AS portfolio_base_currency,
+    t.trade_date,
+    t.type,
+    t.instrument_id,
+    i.symbol,
+    i.name AS asset_name,
+    t.amount,
+    t.currency_code AS transaction_currency,
+    CONCAT(TRIM(t.currency_code), '/', TRIM(p.base_currency)) AS required_pair,
+    t.fx_rate_to_base AS recorded_fx_rate
+FROM portfolio.transactions t
+JOIN portfolio.portfolios p ON t.portfolio_id = p.id
+LEFT JOIN portfolio.instruments i ON t.instrument_id = i.id
+LEFT JOIN portfolio.fx_rates fx_direct 
+    ON fx_direct.rate_date = t.trade_date
+   AND fx_direct.base_currency = t.currency_code 
+   AND fx_direct.quote_currency = p.base_currency
+LEFT JOIN portfolio.fx_rates fx_inverse 
+    ON fx_inverse.rate_date = t.trade_date
+   AND fx_inverse.base_currency = p.base_currency 
+   AND fx_inverse.quote_currency = t.currency_code
+WHERE t.type <> 'SPLIT'
+  AND t.currency_code <> p.base_currency
+  AND fx_direct.rate IS NULL 
+  AND fx_inverse.rate IS NULL
+  AND ($1::text IS NULL OR 
+       UPPER(CONCAT(TRIM(t.currency_code), '/', TRIM(p.base_currency))) = UPPER($1) OR 
+       UPPER(CONCAT(TRIM(p.base_currency), '/', TRIM(t.currency_code))) = UPPER($1))
+  AND ($2::date IS NULL OR t.trade_date >= $2)
+  AND ($3::date IS NULL OR t.trade_date <= $3)
+  AND ($4::text IS NULL OR t.type::text = $4)
+ORDER BY t.trade_date DESC, t.id ASC
+LIMIT $5 OFFSET $6;`
+
 	countActiveInstrumentsSQL = `
 SELECT COUNT(*) FROM portfolio.instruments WHERE is_active = true;`
 

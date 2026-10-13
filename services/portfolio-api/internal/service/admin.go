@@ -436,3 +436,32 @@ func (s *portfolioService) ListMissingPriceTransactions(ctx context.Context, fil
 	}
 	return report, nil
 }
+
+func (s *portfolioService) ListMissingFXRateTransactions(ctx context.Context, filter domain.MissingFXRateFilter) (*domain.MissingFXRatesReport, error) {
+	if filter.FromDate != nil && filter.ToDate != nil && filter.FromDate.After(*filter.ToDate) {
+		return nil, ErrInvalidDateRange
+	}
+	if filter.Limit <= 0 {
+		filter.Limit = 50
+	} else if filter.Limit > 200 {
+		filter.Limit = 200
+	}
+	if filter.Offset < 0 {
+		filter.Offset = 0
+	}
+	if filter.CurrencyPair != nil {
+		pair := strings.ToUpper(strings.TrimSpace(*filter.CurrencyPair))
+		if pair == "" || pair == "ALL" {
+			filter.CurrencyPair = nil
+		} else {
+			filter.CurrencyPair = &pair
+		}
+	}
+
+	report, err := s.repo.ListMissingFXRateTransactions(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("service: list missing fx rate transactions: %w", err)
+	}
+	return report, nil
+}
+

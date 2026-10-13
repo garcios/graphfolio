@@ -259,6 +259,30 @@ type ComplexityRoot struct {
 		Success       func(childComplexity int) int
 	}
 
+	MissingFXRateTransactionItem struct {
+		Amount                func(childComplexity int) int
+		AssetName             func(childComplexity int) int
+		InstrumentID          func(childComplexity int) int
+		PortfolioBaseCurrency func(childComplexity int) int
+		PortfolioID           func(childComplexity int) int
+		PortfolioName         func(childComplexity int) int
+		RecordedFxRate        func(childComplexity int) int
+		RequiredPair          func(childComplexity int) int
+		Symbol                func(childComplexity int) int
+		TradeDate             func(childComplexity int) int
+		TransactionCurrency   func(childComplexity int) int
+		TransactionID         func(childComplexity int) int
+		Type                  func(childComplexity int) int
+	}
+
+	MissingFXRatesReport struct {
+		EarliestTradeDate func(childComplexity int) int
+		Items             func(childComplexity int) int
+		LatestTradeDate   func(childComplexity int) int
+		TotalCount        func(childComplexity int) int
+		UniquePairsCount  func(childComplexity int) int
+	}
+
 	MissingPriceReport struct {
 		EarliestTradeDate      func(childComplexity int) int
 		Items                  func(childComplexity int) int
@@ -348,6 +372,7 @@ type ComplexityRoot struct {
 		IngestionStatus            func(childComplexity int) int
 		InstrumentPrices           func(childComplexity int, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) int
 		Instruments                func(childComplexity int) int
+		MissingFXRateTransactions  func(childComplexity int, currencyPair *string, fromDate *string, toDate *string, typeArg *model.TransactionType, limit *int, offset *int) int
 		MissingPriceTransactions   func(childComplexity int, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) int
 		ModifiedDietzReturn        func(childComplexity int, startDate string, endDate string, useMonthlyLinking *bool) int
 		Portfolio                  func(childComplexity int, includeClosed *bool) int
@@ -447,6 +472,7 @@ type QueryResolver interface {
 	CheckTransactionDuplicates(ctx context.Context, externalRefs []string) ([]string, error)
 	CashFlowReport(ctx context.Context, filter model.CashFlowFilterInput) (*model.CashFlowReport, error)
 	MissingPriceTransactions(ctx context.Context, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) (*model.MissingPriceReport, error)
+	MissingFXRateTransactions(ctx context.Context, currencyPair *string, fromDate *string, toDate *string, typeArg *model.TransactionType, limit *int, offset *int) (*model.MissingFXRatesReport, error)
 	ModifiedDietzReturn(ctx context.Context, startDate string, endDate string, useMonthlyLinking *bool) (*model.ModifiedDietzReturnPayload, error)
 }
 
@@ -1392,6 +1418,116 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.MarketSyncPayload.Success(childComplexity), true
 
+	case "MissingFXRateTransactionItem.amount":
+		if e.ComplexityRoot.MissingFXRateTransactionItem.Amount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MissingFXRateTransactionItem.Amount(childComplexity), true
+	case "MissingFXRateTransactionItem.assetName":
+		if e.ComplexityRoot.MissingFXRateTransactionItem.AssetName == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MissingFXRateTransactionItem.AssetName(childComplexity), true
+	case "MissingFXRateTransactionItem.instrumentId":
+		if e.ComplexityRoot.MissingFXRateTransactionItem.InstrumentID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MissingFXRateTransactionItem.InstrumentID(childComplexity), true
+	case "MissingFXRateTransactionItem.portfolioBaseCurrency":
+		if e.ComplexityRoot.MissingFXRateTransactionItem.PortfolioBaseCurrency == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MissingFXRateTransactionItem.PortfolioBaseCurrency(childComplexity), true
+	case "MissingFXRateTransactionItem.portfolioId":
+		if e.ComplexityRoot.MissingFXRateTransactionItem.PortfolioID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MissingFXRateTransactionItem.PortfolioID(childComplexity), true
+	case "MissingFXRateTransactionItem.portfolioName":
+		if e.ComplexityRoot.MissingFXRateTransactionItem.PortfolioName == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MissingFXRateTransactionItem.PortfolioName(childComplexity), true
+	case "MissingFXRateTransactionItem.recordedFxRate":
+		if e.ComplexityRoot.MissingFXRateTransactionItem.RecordedFxRate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MissingFXRateTransactionItem.RecordedFxRate(childComplexity), true
+	case "MissingFXRateTransactionItem.requiredPair":
+		if e.ComplexityRoot.MissingFXRateTransactionItem.RequiredPair == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MissingFXRateTransactionItem.RequiredPair(childComplexity), true
+	case "MissingFXRateTransactionItem.symbol":
+		if e.ComplexityRoot.MissingFXRateTransactionItem.Symbol == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MissingFXRateTransactionItem.Symbol(childComplexity), true
+	case "MissingFXRateTransactionItem.tradeDate":
+		if e.ComplexityRoot.MissingFXRateTransactionItem.TradeDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MissingFXRateTransactionItem.TradeDate(childComplexity), true
+	case "MissingFXRateTransactionItem.transactionCurrency":
+		if e.ComplexityRoot.MissingFXRateTransactionItem.TransactionCurrency == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MissingFXRateTransactionItem.TransactionCurrency(childComplexity), true
+	case "MissingFXRateTransactionItem.transactionId":
+		if e.ComplexityRoot.MissingFXRateTransactionItem.TransactionID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MissingFXRateTransactionItem.TransactionID(childComplexity), true
+	case "MissingFXRateTransactionItem.type":
+		if e.ComplexityRoot.MissingFXRateTransactionItem.Type == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MissingFXRateTransactionItem.Type(childComplexity), true
+
+	case "MissingFXRatesReport.earliestTradeDate":
+		if e.ComplexityRoot.MissingFXRatesReport.EarliestTradeDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MissingFXRatesReport.EarliestTradeDate(childComplexity), true
+	case "MissingFXRatesReport.items":
+		if e.ComplexityRoot.MissingFXRatesReport.Items == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MissingFXRatesReport.Items(childComplexity), true
+	case "MissingFXRatesReport.latestTradeDate":
+		if e.ComplexityRoot.MissingFXRatesReport.LatestTradeDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MissingFXRatesReport.LatestTradeDate(childComplexity), true
+	case "MissingFXRatesReport.totalCount":
+		if e.ComplexityRoot.MissingFXRatesReport.TotalCount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MissingFXRatesReport.TotalCount(childComplexity), true
+	case "MissingFXRatesReport.uniquePairsCount":
+		if e.ComplexityRoot.MissingFXRatesReport.UniquePairsCount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MissingFXRatesReport.UniquePairsCount(childComplexity), true
+
 	case "MissingPriceReport.earliestTradeDate":
 		if e.ComplexityRoot.MissingPriceReport.EarliestTradeDate == nil {
 			break
@@ -1887,6 +2023,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.Query.Instruments(childComplexity), true
 
+	case "Query.missingFXRateTransactions":
+		if e.ComplexityRoot.Query.MissingFXRateTransactions == nil {
+			break
+		}
+
+		args, err := ec.field_Query_missingFXRateTransactions_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.MissingFXRateTransactions(childComplexity, args["currencyPair"].(*string), args["fromDate"].(*string), args["toDate"].(*string), args["type"].(*model.TransactionType), args["limit"].(*int), args["offset"].(*int)), true
 	case "Query.missingPriceTransactions":
 		if e.ComplexityRoot.Query.MissingPriceTransactions == nil {
 			break
@@ -2722,6 +2869,54 @@ func (ec *executionContext) childFields_MarketSyncPayload(ctx context.Context, f
 	return nil, fmt.Errorf("no field named %q was found under type MarketSyncPayload", field.Name)
 }
 
+func (ec *executionContext) childFields_MissingFXRateTransactionItem(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "transactionId":
+		return ec.fieldContext_MissingFXRateTransactionItem_transactionId(ctx, field)
+	case "portfolioId":
+		return ec.fieldContext_MissingFXRateTransactionItem_portfolioId(ctx, field)
+	case "portfolioName":
+		return ec.fieldContext_MissingFXRateTransactionItem_portfolioName(ctx, field)
+	case "portfolioBaseCurrency":
+		return ec.fieldContext_MissingFXRateTransactionItem_portfolioBaseCurrency(ctx, field)
+	case "tradeDate":
+		return ec.fieldContext_MissingFXRateTransactionItem_tradeDate(ctx, field)
+	case "type":
+		return ec.fieldContext_MissingFXRateTransactionItem_type(ctx, field)
+	case "instrumentId":
+		return ec.fieldContext_MissingFXRateTransactionItem_instrumentId(ctx, field)
+	case "symbol":
+		return ec.fieldContext_MissingFXRateTransactionItem_symbol(ctx, field)
+	case "assetName":
+		return ec.fieldContext_MissingFXRateTransactionItem_assetName(ctx, field)
+	case "amount":
+		return ec.fieldContext_MissingFXRateTransactionItem_amount(ctx, field)
+	case "transactionCurrency":
+		return ec.fieldContext_MissingFXRateTransactionItem_transactionCurrency(ctx, field)
+	case "requiredPair":
+		return ec.fieldContext_MissingFXRateTransactionItem_requiredPair(ctx, field)
+	case "recordedFxRate":
+		return ec.fieldContext_MissingFXRateTransactionItem_recordedFxRate(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type MissingFXRateTransactionItem", field.Name)
+}
+
+func (ec *executionContext) childFields_MissingFXRatesReport(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "items":
+		return ec.fieldContext_MissingFXRatesReport_items(ctx, field)
+	case "totalCount":
+		return ec.fieldContext_MissingFXRatesReport_totalCount(ctx, field)
+	case "uniquePairsCount":
+		return ec.fieldContext_MissingFXRatesReport_uniquePairsCount(ctx, field)
+	case "earliestTradeDate":
+		return ec.fieldContext_MissingFXRatesReport_earliestTradeDate(ctx, field)
+	case "latestTradeDate":
+		return ec.fieldContext_MissingFXRatesReport_latestTradeDate(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type MissingFXRatesReport", field.Name)
+}
+
 func (ec *executionContext) childFields_MissingPriceReport(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "items":
@@ -3429,6 +3624,60 @@ func (ec *executionContext) field_Query_instrumentPrices_args(ctx context.Contex
 		return nil, err
 	}
 	args["offset"] = arg4
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_missingFXRateTransactions_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "currencyPair",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["currencyPair"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "fromDate",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["fromDate"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "toDate",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["toDate"] = arg2
+	arg3, err := graphql.ProcessArgField(ctx, rawArgs, "type",
+		func(ctx context.Context, v any) (*model.TransactionType, error) {
+			return ec.unmarshalOTransactionType2ᚖbffᚋgraphᚋmodelᚐTransactionType(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["type"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "limit",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["limit"] = arg4
+	arg5, err := graphql.ProcessArgField(ctx, rawArgs, "offset",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["offset"] = arg5
 	return args, nil
 }
 
@@ -7444,6 +7693,438 @@ func (ec *executionContext) fieldContext_MarketSyncPayload_message(_ context.Con
 	return graphql.NewScalarFieldContext("MarketSyncPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
+func (ec *executionContext) _MissingFXRateTransactionItem_transactionId(ctx context.Context, field graphql.CollectedField, obj *model.MissingFXRateTransactionItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MissingFXRateTransactionItem_transactionId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TransactionID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_MissingFXRateTransactionItem_transactionId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MissingFXRateTransactionItem", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _MissingFXRateTransactionItem_portfolioId(ctx context.Context, field graphql.CollectedField, obj *model.MissingFXRateTransactionItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MissingFXRateTransactionItem_portfolioId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PortfolioID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_MissingFXRateTransactionItem_portfolioId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MissingFXRateTransactionItem", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _MissingFXRateTransactionItem_portfolioName(ctx context.Context, field graphql.CollectedField, obj *model.MissingFXRateTransactionItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MissingFXRateTransactionItem_portfolioName(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PortfolioName, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_MissingFXRateTransactionItem_portfolioName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MissingFXRateTransactionItem", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _MissingFXRateTransactionItem_portfolioBaseCurrency(ctx context.Context, field graphql.CollectedField, obj *model.MissingFXRateTransactionItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MissingFXRateTransactionItem_portfolioBaseCurrency(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PortfolioBaseCurrency, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_MissingFXRateTransactionItem_portfolioBaseCurrency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MissingFXRateTransactionItem", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _MissingFXRateTransactionItem_tradeDate(ctx context.Context, field graphql.CollectedField, obj *model.MissingFXRateTransactionItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MissingFXRateTransactionItem_tradeDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TradeDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_MissingFXRateTransactionItem_tradeDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MissingFXRateTransactionItem", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _MissingFXRateTransactionItem_type(ctx context.Context, field graphql.CollectedField, obj *model.MissingFXRateTransactionItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MissingFXRateTransactionItem_type(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Type, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.TransactionType) graphql.Marshaler {
+			return ec.marshalNTransactionType2bffᚋgraphᚋmodelᚐTransactionType(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_MissingFXRateTransactionItem_type(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MissingFXRateTransactionItem", field, false, false, errors.New("field of type TransactionType does not have child fields"))
+}
+
+func (ec *executionContext) _MissingFXRateTransactionItem_instrumentId(ctx context.Context, field graphql.CollectedField, obj *model.MissingFXRateTransactionItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MissingFXRateTransactionItem_instrumentId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.InstrumentID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOID2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_MissingFXRateTransactionItem_instrumentId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MissingFXRateTransactionItem", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _MissingFXRateTransactionItem_symbol(ctx context.Context, field graphql.CollectedField, obj *model.MissingFXRateTransactionItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MissingFXRateTransactionItem_symbol(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Symbol, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_MissingFXRateTransactionItem_symbol(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MissingFXRateTransactionItem", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _MissingFXRateTransactionItem_assetName(ctx context.Context, field graphql.CollectedField, obj *model.MissingFXRateTransactionItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MissingFXRateTransactionItem_assetName(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.AssetName, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_MissingFXRateTransactionItem_assetName(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MissingFXRateTransactionItem", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _MissingFXRateTransactionItem_amount(ctx context.Context, field graphql.CollectedField, obj *model.MissingFXRateTransactionItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MissingFXRateTransactionItem_amount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Amount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_MissingFXRateTransactionItem_amount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MissingFXRateTransactionItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MissingFXRateTransactionItem_transactionCurrency(ctx context.Context, field graphql.CollectedField, obj *model.MissingFXRateTransactionItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MissingFXRateTransactionItem_transactionCurrency(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TransactionCurrency, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_MissingFXRateTransactionItem_transactionCurrency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MissingFXRateTransactionItem", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _MissingFXRateTransactionItem_requiredPair(ctx context.Context, field graphql.CollectedField, obj *model.MissingFXRateTransactionItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MissingFXRateTransactionItem_requiredPair(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.RequiredPair, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_MissingFXRateTransactionItem_requiredPair(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MissingFXRateTransactionItem", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _MissingFXRateTransactionItem_recordedFxRate(ctx context.Context, field graphql.CollectedField, obj *model.MissingFXRateTransactionItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MissingFXRateTransactionItem_recordedFxRate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.RecordedFxRate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Decimal) graphql.Marshaler {
+			return ec.marshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_MissingFXRateTransactionItem_recordedFxRate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MissingFXRateTransactionItem", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _MissingFXRatesReport_items(ctx context.Context, field graphql.CollectedField, obj *model.MissingFXRatesReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MissingFXRatesReport_items(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Items, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.MissingFXRateTransactionItem) graphql.Marshaler {
+			return ec.marshalNMissingFXRateTransactionItem2ᚕᚖbffᚋgraphᚋmodelᚐMissingFXRateTransactionItemᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_MissingFXRatesReport_items(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MissingFXRatesReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_MissingFXRateTransactionItem(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MissingFXRatesReport_totalCount(ctx context.Context, field graphql.CollectedField, obj *model.MissingFXRatesReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MissingFXRatesReport_totalCount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TotalCount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_MissingFXRatesReport_totalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MissingFXRatesReport", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _MissingFXRatesReport_uniquePairsCount(ctx context.Context, field graphql.CollectedField, obj *model.MissingFXRatesReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MissingFXRatesReport_uniquePairsCount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.UniquePairsCount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_MissingFXRatesReport_uniquePairsCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MissingFXRatesReport", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _MissingFXRatesReport_earliestTradeDate(ctx context.Context, field graphql.CollectedField, obj *model.MissingFXRatesReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MissingFXRatesReport_earliestTradeDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.EarliestTradeDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_MissingFXRatesReport_earliestTradeDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MissingFXRatesReport", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _MissingFXRatesReport_latestTradeDate(ctx context.Context, field graphql.CollectedField, obj *model.MissingFXRatesReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MissingFXRatesReport_latestTradeDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LatestTradeDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_MissingFXRatesReport_latestTradeDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MissingFXRatesReport", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
 func (ec *executionContext) _MissingPriceReport_items(ctx context.Context, field graphql.CollectedField, obj *model.MissingPriceReport) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -9756,6 +10437,50 @@ func (ec *executionContext) fieldContext_Query_missingPriceTransactions(ctx cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_missingPriceTransactions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_missingFXRateTransactions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_missingFXRateTransactions(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().MissingFXRateTransactions(ctx, fc.Args["currencyPair"].(*string), fc.Args["fromDate"].(*string), fc.Args["toDate"].(*string), fc.Args["type"].(*model.TransactionType), fc.Args["limit"].(*int), fc.Args["offset"].(*int))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.MissingFXRatesReport) graphql.Marshaler {
+			return ec.marshalNMissingFXRatesReport2ᚖbffᚋgraphᚋmodelᚐMissingFXRatesReport(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_missingFXRateTransactions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_MissingFXRatesReport(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_missingFXRateTransactions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -14019,6 +14744,162 @@ func (ec *executionContext) _MarketSyncPayload(ctx context.Context, sel ast.Sele
 	return out
 }
 
+var missingFXRateTransactionItemImplementors = []string{"MissingFXRateTransactionItem"}
+
+func (ec *executionContext) _MissingFXRateTransactionItem(ctx context.Context, sel ast.SelectionSet, obj *model.MissingFXRateTransactionItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, missingFXRateTransactionItemImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MissingFXRateTransactionItem")
+		case "transactionId":
+			out.Values[i] = ec._MissingFXRateTransactionItem_transactionId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "portfolioId":
+			out.Values[i] = ec._MissingFXRateTransactionItem_portfolioId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "portfolioName":
+			out.Values[i] = ec._MissingFXRateTransactionItem_portfolioName(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "portfolioBaseCurrency":
+			out.Values[i] = ec._MissingFXRateTransactionItem_portfolioBaseCurrency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "tradeDate":
+			out.Values[i] = ec._MissingFXRateTransactionItem_tradeDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "type":
+			out.Values[i] = ec._MissingFXRateTransactionItem_type(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "instrumentId":
+			out.Values[i] = ec._MissingFXRateTransactionItem_instrumentId(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "symbol":
+			out.Values[i] = ec._MissingFXRateTransactionItem_symbol(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "assetName":
+			out.Values[i] = ec._MissingFXRateTransactionItem_assetName(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "amount":
+			out.Values[i] = ec._MissingFXRateTransactionItem_amount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "transactionCurrency":
+			out.Values[i] = ec._MissingFXRateTransactionItem_transactionCurrency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "requiredPair":
+			out.Values[i] = ec._MissingFXRateTransactionItem_requiredPair(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "recordedFxRate":
+			out.Values[i] = ec._MissingFXRateTransactionItem_recordedFxRate(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var missingFXRatesReportImplementors = []string{"MissingFXRatesReport"}
+
+func (ec *executionContext) _MissingFXRatesReport(ctx context.Context, sel ast.SelectionSet, obj *model.MissingFXRatesReport) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, missingFXRatesReportImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MissingFXRatesReport")
+		case "items":
+			out.Values[i] = ec._MissingFXRatesReport_items(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCount":
+			out.Values[i] = ec._MissingFXRatesReport_totalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "uniquePairsCount":
+			out.Values[i] = ec._MissingFXRatesReport_uniquePairsCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "earliestTradeDate":
+			out.Values[i] = ec._MissingFXRatesReport_earliestTradeDate(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "latestTradeDate":
+			out.Values[i] = ec._MissingFXRatesReport_latestTradeDate(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
 var missingPriceReportImplementors = []string{"MissingPriceReport"}
 
 func (ec *executionContext) _MissingPriceReport(ctx context.Context, sel ast.SelectionSet, obj *model.MissingPriceReport) graphql.Marshaler {
@@ -14925,6 +15806,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_missingPriceTransactions(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "missingFXRateTransactions":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_missingFXRateTransactions(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -16340,6 +17243,42 @@ func (ec *executionContext) marshalNMarketSyncPayload2ᚖbffᚋgraphᚋmodelᚐM
 	return ec._MarketSyncPayload(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNMissingFXRateTransactionItem2ᚕᚖbffᚋgraphᚋmodelᚐMissingFXRateTransactionItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.MissingFXRateTransactionItem) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNMissingFXRateTransactionItem2ᚖbffᚋgraphᚋmodelᚐMissingFXRateTransactionItem(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNMissingFXRateTransactionItem2ᚖbffᚋgraphᚋmodelᚐMissingFXRateTransactionItem(ctx context.Context, sel ast.SelectionSet, v *model.MissingFXRateTransactionItem) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._MissingFXRateTransactionItem(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNMissingFXRatesReport2ᚖbffᚋgraphᚋmodelᚐMissingFXRatesReport(ctx context.Context, sel ast.SelectionSet, v *model.MissingFXRatesReport) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._MissingFXRatesReport(ctx, sel, v)
+}
+
 func (ec *executionContext) marshalNMissingPriceReport2ᚖbffᚋgraphᚋmodelᚐMissingPriceReport(ctx context.Context, sel ast.SelectionSet, v *model.MissingPriceReport) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
@@ -16782,6 +17721,24 @@ func (ec *executionContext) marshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) unmarshalOID2ᚖstring(ctx context.Context, v any) (*string, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalID(v)
+	return &res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOID2ᚖstring(ctx context.Context, sel ast.SelectionSet, v *string) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	_ = sel
+	_ = ctx
+	res := graphql.MarshalID(*v)
+	return res
 }
 
 func (ec *executionContext) unmarshalOInt2ᚖint(ctx context.Context, v any) (*int, error) {

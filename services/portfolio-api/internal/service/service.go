@@ -55,7 +55,11 @@ type PortfolioService interface {
 
 	// Admin: Missing Prices Diagnostic Report
 	ListMissingPriceTransactions(ctx context.Context, filter domain.MissingPriceFilter) (*domain.MissingPriceReport, error)
+
+	// Admin: Missing FX Rates Diagnostic Report
+	ListMissingFXRateTransactions(ctx context.Context, filter domain.MissingFXRateFilter) (*domain.MissingFXRatesReport, error)
 }
+
 
 type ServiceOption func(*portfolioService)
 

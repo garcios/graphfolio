@@ -282,8 +282,31 @@ export default {
                     ]
                 }
             ],
+            "missingFXRateTransactions": [
+                58,
+                {
+                    "currencyPair": [
+                        2
+                    ],
+                    "fromDate": [
+                        2
+                    ],
+                    "toDate": [
+                        2
+                    ],
+                    "type": [
+                        3
+                    ],
+                    "limit": [
+                        11
+                    ],
+                    "offset": [
+                        11
+                    ]
+                }
+            ],
             "modifiedDietzReturn": [
-                57,
+                59,
                 {
                     "startDate": [
                         2,
@@ -1334,6 +1357,70 @@ export default {
                 2
             ]
         },
+        "MissingFXRateTransactionItem": {
+            "transactionId": [
+                7
+            ],
+            "portfolioId": [
+                7
+            ],
+            "portfolioName": [
+                2
+            ],
+            "portfolioBaseCurrency": [
+                2
+            ],
+            "tradeDate": [
+                2
+            ],
+            "type": [
+                3
+            ],
+            "instrumentId": [
+                7
+            ],
+            "symbol": [
+                2
+            ],
+            "assetName": [
+                2
+            ],
+            "amount": [
+                1
+            ],
+            "transactionCurrency": [
+                2
+            ],
+            "requiredPair": [
+                2
+            ],
+            "recordedFxRate": [
+                0
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "MissingFXRatesReport": {
+            "items": [
+                57
+            ],
+            "totalCount": [
+                11
+            ],
+            "uniquePairsCount": [
+                11
+            ],
+            "earliestTradeDate": [
+                2
+            ],
+            "latestTradeDate": [
+                2
+            ],
+            "__typename": [
+                2
+            ]
+        },
         "ModifiedDietzReturnPayload": {
             "portfolioId": [
                 7
@@ -1381,7 +1468,7 @@ export default {
                 2
             ],
             "cashFlowWeights": [
-                58
+                60
             ],
             "__typename": [
                 2
