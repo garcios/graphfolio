@@ -847,6 +847,10 @@ func TestPortfolioService_TriggerBackfill_AllActiveAssets(t *testing.T) {
 			{ID: id2, Symbol: "MSFT", ExchangeCode: "XNAS"},
 		}, nil)
 
+	mockRepo.EXPECT().
+		ListBenchmarkInstruments(ctx).
+		Return(nil, nil)
+
 	mockIngestion.EXPECT().
 		BackfillInstrumentPrices(ctx, id1, "AAPL", "XNAS", fromDate, toDate).
 		Return(20, nil)
@@ -1269,4 +1273,3 @@ func TestPortfolioService_ListMissingFXRateTransactions(t *testing.T) {
 		}
 	})
 }
-

@@ -12,9 +12,12 @@ import (
 	"time"
 
 	"pkg/database"
+	"portfolio-api/internal/domain"
 	"portfolio-api/internal/marketdata"
 	"portfolio-api/internal/repository"
 	"portfolio-api/internal/service"
+
+	"github.com/google/uuid"
 )
 
 func main() {
@@ -23,6 +26,7 @@ func main() {
 		fromStr            = flag.String("from", "", "Start date for historical range backfill (YYYY-MM-DD)")
 		toStr              = flag.String("to", "", "End date for historical range backfill (YYYY-MM-DD, defaults to today)")
 		symbolFlag         = flag.String("symbol", "", "Specific instrument symbol to backfill (e.g. AAPL)")
+		benchmarkFlag      = flag.String("benchmark", "", "Specific benchmark ID to backfill (e.g. SP500TR, NASDAQ100, ASX200TR)")
 		pairFlag           = flag.String("pair", "", "Specific currency pair to backfill (e.g. EUR/USD)")
 		rebuildProjections = flag.Bool("rebuild-projections", true, "Recompute portfolio projections and valuations after ingestion")
 	)
@@ -110,6 +114,26 @@ func main() {
 			}
 			log.Printf("[market-ingest] Backfill complete: %d closing prices persisted for %s", count, sym)
 
+		} else if *benchmarkFlag != "" {
+			// Specific benchmark backfill
+			benchID := strings.TrimSpace(*benchmarkFlag)
+			bench, err := repo.GetBenchmarkByID(ctx, benchID)
+			var inst *domain.Instrument
+			if err == nil {
+				inst, err = repo.FindInstrumentBySymbol(ctx, bench.Symbol)
+			} else {
+				inst, err = repo.FindInstrumentBySymbol(ctx, benchID)
+			}
+			if err != nil {
+				log.Fatalf("[market-ingest] benchmark %s not found: %v", benchID, err)
+			}
+
+			count, err := ingestionSvc.BackfillInstrumentPrices(ctx, inst.ID, inst.Symbol, inst.ExchangeCode, fromDate, toDate)
+			if err != nil {
+				log.Fatalf("[market-ingest] benchmark backfill failed for %s: %v", inst.Symbol, err)
+			}
+			log.Printf("[market-ingest] Benchmark backfill complete: %d closing prices persisted for %s", count, inst.Symbol)
+
 		} else if *pairFlag != "" {
 			// Single currency pair backfill
 			parts := strings.Split(strings.ReplaceAll(*pairFlag, "/", " "), " ")
@@ -126,13 +150,27 @@ func main() {
 			log.Printf("[market-ingest] Backfill complete: %d FX fixing rates persisted for %s/%s", count, base, quote)
 
 		} else {
-			// Backfill all active instruments and standard FX pairs
+			// Backfill all active instruments, benchmarks, and standard FX pairs
 			insts, err := repo.ListActiveInstruments(ctx)
 			if err != nil {
 				log.Fatalf("[market-ingest] failed to list active instruments: %v", err)
 			}
+			benchmarks, err := repo.ListBenchmarkInstruments(ctx)
+			if err != nil {
+				log.Printf("[market-ingest] warning: failed to list benchmark instruments: %v", err)
+			}
+			seen := make(map[uuid.UUID]bool)
+			for _, inst := range insts {
+				seen[inst.ID] = true
+			}
+			for _, b := range benchmarks {
+				if !seen[b.ID] {
+					seen[b.ID] = true
+					insts = append(insts, b)
+				}
+			}
 
-			log.Printf("[market-ingest] Backfilling %d active instruments...", len(insts))
+			log.Printf("[market-ingest] Backfilling %d active instruments and benchmarks...", len(insts))
 			totalPrices := 0
 			for _, inst := range insts {
 				count, err := ingestionSvc.BackfillInstrumentPrices(ctx, inst.ID, inst.Symbol, inst.ExchangeCode, fromDate, toDate)

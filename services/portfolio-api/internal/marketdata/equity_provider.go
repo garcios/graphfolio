@@ -185,10 +185,15 @@ func (p *TwelveDataProvider) FetchClosingPrices(ctx context.Context, instruments
 			continue
 		}
 
+		targetSym := resolveTwelveDataSymbol(inst)
+
 		q := url.Values{}
-		q.Set("symbol", sym)
+		q.Set("symbol", targetSym)
 		q.Set("interval", "1day")
 		q.Set("outputsize", "5") // fetch small buffer in case of weekend/holiday LOCF
+		if pName, pVal := twelveDataExchangeParam(inst.Exchange); pName != "" {
+			q.Set(pName, pVal)
+		}
 
 		tsResp, err := p.fetchTimeSeries(ctx, q)
 		if err != nil {
@@ -274,12 +279,17 @@ func (p *TwelveDataProvider) FetchHistoricalPrices(ctx context.Context, inst Ins
 		return nil, errors.New("to date cannot be before from date")
 	}
 
+	targetSym := resolveTwelveDataSymbol(inst)
+
 	q := url.Values{}
-	q.Set("symbol", sym)
+	q.Set("symbol", targetSym)
 	q.Set("interval", "1day")
 	q.Set("start_date", fromUTC.Format("2006-01-02"))
 	q.Set("end_date", toUTC.Format("2006-01-02"))
 	q.Set("outputsize", "5000")
+	if pName, pVal := twelveDataExchangeParam(inst.Exchange); pName != "" {
+		q.Set(pName, pVal)
+	}
 
 	tsResp, err := p.fetchTimeSeries(ctx, q)
 	if err != nil {
@@ -323,6 +333,62 @@ func (p *TwelveDataProvider) FetchHistoricalPrices(ctx context.Context, inst Ins
 	})
 
 	return records, nil
+}
+
+// resolveTwelveDataSymbol maps internal symbols to Twelve Data-compatible tickers.
+func resolveTwelveDataSymbol(inst InstrumentRef) string {
+	if inst.ProviderSymbol != "" {
+		return inst.ProviderSymbol
+	}
+	sym := strings.TrimSpace(inst.Symbol)
+	switch strings.ToUpper(sym) {
+	case "SP500TR":
+		return "SPY"
+	}
+	return sym
+}
+
+// twelveDataExchangeParam maps an exchange MIC/code to Twelve Data URL query parameters.
+func twelveDataExchangeParam(exchange string) (string, string) {
+	ex := strings.ToUpper(strings.TrimSpace(exchange))
+	if ex == "" {
+		return "", ""
+	}
+	if strings.HasPrefix(ex, "X") && len(ex) == 4 {
+		return "mic_code", ex
+	}
+	return "exchange", ex
+}
+
+// resolveYahooSymbol maps internal symbols and regional exchanges to Yahoo Finance tickers.
+func resolveYahooSymbol(inst InstrumentRef) string {
+	if inst.ProviderSymbol != "" {
+		return inst.ProviderSymbol
+	}
+	sym := strings.TrimSpace(inst.Symbol)
+	switch strings.ToUpper(sym) {
+	case "SP500TR":
+		return "^SP500TR"
+	}
+	switch strings.ToUpper(inst.Exchange) {
+	case "XASX", "ASX":
+		if !strings.HasSuffix(strings.ToUpper(sym), ".AX") {
+			return sym + ".AX"
+		}
+	case "XLON", "LSE":
+		if !strings.HasSuffix(strings.ToUpper(sym), ".L") {
+			return sym + ".L"
+		}
+	case "XFRA", "XETR", "ETR":
+		if !strings.HasSuffix(strings.ToUpper(sym), ".DE") {
+			return sym + ".DE"
+		}
+	case "XTSE", "TSX":
+		if !strings.HasSuffix(strings.ToUpper(sym), ".TO") {
+			return sym + ".TO"
+		}
+	}
+	return sym
 }
 
 // ============================================================================
@@ -395,6 +461,9 @@ type yahooChartResponse struct {
 				Quote []struct {
 					Close []json.Number `json:"close"`
 				} `json:"quote"`
+				Adjclose []struct {
+					Adjclose []json.Number `json:"adjclose"`
+				} `json:"adjclose"`
 			} `json:"indicators"`
 		} `json:"result"`
 		Error *struct {
@@ -475,11 +544,17 @@ func (p *YahooFinanceProvider) FetchClosingPrices(ctx context.Context, instrumen
 			continue
 		}
 
+		targetSym := resolveYahooSymbol(inst)
+
 		params := url.Values{}
 		params.Set("interval", "1d")
 		params.Set("range", "5d")
 
-		chartResp, err := p.fetchChart(ctx, sym, params)
+		chartResp, err := p.fetchChart(ctx, targetSym, params)
+		if err != nil && targetSym == "^SP500TR" {
+			// Fallback to liquid ETF proxy SPY with adjclose
+			chartResp, err = p.fetchChart(ctx, "SPY", params)
+		}
 		if err != nil {
 			return nil, fmt.Errorf("yahoo finance failed for %s: %w", sym, err)
 		}
@@ -510,10 +585,16 @@ func (p *YahooFinanceProvider) FetchClosingPrices(ctx context.Context, instrumen
 
 			if targetDateStr == "" || tStr <= targetDateStr {
 				raw := string(closes[i])
+				if (inst.IsTotalReturn || sym == "SP500TR") && len(res.Indicators.Adjclose) > 0 && i < len(res.Indicators.Adjclose[0].Adjclose) {
+					rawAdj := string(res.Indicators.Adjclose[0].Adjclose[i])
+					if rawAdj != "" && rawAdj != "null" {
+						raw = rawAdj
+					}
+				}
 				if raw == "" || raw == "null" {
 					continue
 				}
-				chosenClose = closes[i]
+				chosenClose = json.Number(raw)
 				chosenTime = t.Truncate(24 * time.Hour)
 				found = true
 				break
@@ -559,13 +640,18 @@ func (p *YahooFinanceProvider) FetchHistoricalPrices(ctx context.Context, inst I
 		return nil, errors.New("to date cannot be before from date")
 	}
 
+	targetSym := resolveYahooSymbol(inst)
+
 	params := url.Values{}
 	params.Set("interval", "1d")
 	params.Set("period1", strconv.FormatInt(fromUTC.Unix(), 10))
 	// Period2 on Yahoo is exclusive; add 24 hours to include target day
 	params.Set("period2", strconv.FormatInt(toUTC.Add(24*time.Hour).Unix(), 10))
 
-	chartResp, err := p.fetchChart(ctx, sym, params)
+	chartResp, err := p.fetchChart(ctx, targetSym, params)
+	if err != nil && targetSym == "^SP500TR" {
+		chartResp, err = p.fetchChart(ctx, "SPY", params)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("yahoo finance historical failed for %s: %w", sym, err)
 	}
@@ -588,6 +674,12 @@ func (p *YahooFinanceProvider) FetchHistoricalPrices(ctx context.Context, inst I
 			break
 		}
 		raw := string(closes[i])
+		if (inst.IsTotalReturn || sym == "SP500TR") && len(res.Indicators.Adjclose) > 0 && i < len(res.Indicators.Adjclose[0].Adjclose) {
+			rawAdj := string(res.Indicators.Adjclose[0].Adjclose[i])
+			if rawAdj != "" && rawAdj != "null" {
+				raw = rawAdj
+			}
+		}
 		if raw == "" || raw == "null" {
 			continue
 		}

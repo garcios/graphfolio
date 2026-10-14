@@ -61,20 +61,40 @@ func (s *ingestionService) IngestDailyMarketData(ctx context.Context, asOfDate t
 	pricesSynced := 0
 	fxSynced := 0
 
-	// 1. Ingest closing marks for active instruments
+	// 1. Ingest closing marks for active instruments and benchmark instruments
 	if s.priceProvider != nil {
 		activeInsts, err := s.repo.ListActiveInstruments(ctx)
 		if err != nil {
 			log.Printf("ingestion: failed to list active instruments: %v", err)
-		} else if len(activeInsts) > 0 {
-			refs := make([]marketdata.InstrumentRef, 0, len(activeInsts))
-			for _, inst := range activeInsts {
-				refs = append(refs, marketdata.InstrumentRef{
-					ID:       inst.ID,
-					Symbol:   inst.Symbol,
-					Exchange: inst.ExchangeCode,
-					Currency: inst.CurrencyCode,
-				})
+		}
+		benchInsts, err := s.repo.ListBenchmarkInstruments(ctx)
+		if err != nil {
+			log.Printf("ingestion: failed to list benchmark instruments: %v", err)
+		}
+
+		instMap := make(map[uuid.UUID]marketdata.InstrumentRef)
+		for _, inst := range activeInsts {
+			instMap[inst.ID] = marketdata.InstrumentRef{
+				ID:       inst.ID,
+				Symbol:   inst.Symbol,
+				Exchange: inst.ExchangeCode,
+				Currency: inst.CurrencyCode,
+			}
+		}
+		for _, inst := range benchInsts {
+			instMap[inst.ID] = marketdata.InstrumentRef{
+				ID:            inst.ID,
+				Symbol:        inst.Symbol,
+				Exchange:      inst.ExchangeCode,
+				Currency:      inst.CurrencyCode,
+				IsTotalReturn: true,
+			}
+		}
+
+		if len(instMap) > 0 {
+			refs := make([]marketdata.InstrumentRef, 0, len(instMap))
+			for _, ref := range instMap {
+				refs = append(refs, ref)
 			}
 
 			priceRecords, err := s.priceProvider.FetchClosingPrices(ctx, refs, asOfDate)
@@ -154,10 +174,16 @@ func (s *ingestionService) BackfillInstrumentPrices(
 		return 0, fmt.Errorf("to date %s cannot be before from date %s", toDate.Format("2006-01-02"), fromDate.Format("2006-01-02"))
 	}
 
+	isTotalReturn := false
+	if strings.EqualFold(symbol, "SP500TR") || strings.EqualFold(symbol, "VAS") || strings.EqualFold(symbol, "QQQ") {
+		isTotalReturn = true
+	}
+
 	ref := marketdata.InstrumentRef{
-		ID:       instrumentID,
-		Symbol:   symbol,
-		Exchange: exchange,
+		ID:            instrumentID,
+		Symbol:        symbol,
+		Exchange:      exchange,
+		IsTotalReturn: isTotalReturn,
 	}
 
 	records, err := s.priceProvider.FetchHistoricalPrices(ctx, ref, fromDate, toDate)

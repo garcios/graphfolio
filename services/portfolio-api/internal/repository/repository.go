@@ -83,4 +83,5 @@ type Repository interface {
 	ListBenchmarks(ctx context.Context) ([]domain.Benchmark, error)
 	GetBenchmarkByID(ctx context.Context, id string) (*domain.Benchmark, error)
 	GetBenchmarkPricesWithFX(ctx context.Context, instrumentID uuid.UUID, quoteCurrency, baseCurrency string, fromDate, toDate time.Time) ([]domain.RawBenchmarkQuote, error)
+	ListBenchmarkInstruments(ctx context.Context) ([]domain.Instrument, error)
 }

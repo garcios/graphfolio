@@ -39,6 +39,7 @@ func TestIngestionService_IngestDailyMarketData(t *testing.T) {
 	fxMock.SetRate("EUR", "USD", tradeDate, decimal.RequireFromString("1.0850"))
 
 	mockRepo.EXPECT().ListActiveInstruments(gomock.Any()).Return(activeInsts, nil)
+	mockRepo.EXPECT().ListBenchmarkInstruments(gomock.Any()).Return(nil, nil)
 	mockRepo.EXPECT().BatchUpsertInstrumentPrices(gomock.Any(), gomock.Len(2)).Return(nil)
 
 	mockRepo.EXPECT().ListActiveCurrencies(gomock.Any()).Return([]string{"USD", "EUR"}, nil)
@@ -243,5 +244,47 @@ func TestPortfolioService_AddTransaction_TriggersIngestionHook(t *testing.T) {
 	}
 	if !summary.TotalValue.Amount.Equal(qty.Mul(price)) {
 		t.Errorf("expected total value %s, got %s", qty.Mul(price), summary.TotalValue.Amount)
+	}
+}
+
+func TestIngestionService_IngestDailyMarketData_WithBenchmarks(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := mocks.NewMockRepository(ctrl)
+	priceMock := marketdata.NewMockPriceProvider("MockPrice")
+
+	instID := uuid.New()
+	benchID := uuid.New()
+
+	activeInsts := []domain.Instrument{
+		{ID: instID, Symbol: "AAPL", ExchangeCode: "XNAS", CurrencyCode: "USD"},
+	}
+	benchInsts := []domain.Instrument{
+		{ID: benchID, Symbol: "SP500TR", ExchangeCode: "XNYS", CurrencyCode: "USD"},
+	}
+
+	tradeDate, _ := time.Parse("2006-01-02", "2026-10-14")
+	tradeDate = tradeDate.UTC()
+
+	priceMock.SetPrice("AAPL", tradeDate, decimal.RequireFromString("227.63"))
+	priceMock.SetPrice("SP500TR", tradeDate, decimal.RequireFromString("580.50"))
+
+	mockRepo.EXPECT().ListActiveInstruments(gomock.Any()).Return(activeInsts, nil)
+	mockRepo.EXPECT().ListBenchmarkInstruments(gomock.Any()).Return(benchInsts, nil)
+	mockRepo.EXPECT().BatchUpsertInstrumentPrices(gomock.Any(), gomock.Len(2)).Return(nil)
+
+	svc := service.NewIngestionService(mockRepo, priceMock, nil, nil)
+
+	res, err := svc.IngestDailyMarketData(context.Background(), tradeDate)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !res.Success {
+		t.Errorf("expected success true, got false")
+	}
+	if res.PricesSynced != 2 {
+		t.Errorf("expected 2 prices synced (1 active + 1 benchmark), got %d", res.PricesSynced)
 	}
 }
