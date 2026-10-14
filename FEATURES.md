@@ -40,6 +40,7 @@ This document catalogs all implemented features, in-progress components, and pla
 | **30** | **Include Closed Positions in Dashboard Investments Table** | **DONE** | Proto, Svc, BFF, Web | [include-closed-positions-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/include-closed-positions-implementation-plan.md) |
 | **31** | **Modified Dietz Annualized Return & Cash-Flow Weighting** | **DONE** | Proto, Svc, BFF, Web | [annualized-return-modified-dietz-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/annualized-return-modified-dietz-implementation-plan.md) |
 | **32** | **Missing FX Rates Report & Date Range Backfill (Admin Portal)** | **DONE** | Proto, Svc, BFF, Web | [admin-missing-fx-rates-report-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-missing-fx-rates-report-implementation-plan.md) |
+| **33** | **Portfolio Benchmark Comparison & Relative Performance Analytics (S&P 500, NASDAQ-100, ASX 200)** | **PLANNED** | Proto, Svc, BFF, Web | [benchmark-performance-comparison-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/benchmark-performance-comparison-implementation-plan.md) |
 
 
 
@@ -504,6 +505,18 @@ This document catalogs all implemented features, in-progress components, and pla
   - Single-pass `COUNT(*) OVER()` pagination with server-side sorting by start date.
   - Interactive drawer/modal to inspect error diagnostics, stack traces, and execution parameters for failed imports.
 
+
+### 3.4 Portfolio Benchmark Comparison & Relative Performance Analytics
+- **Status**: **PLANNED**
+- **User Story**: [benchmark-performance-comparison.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/benchmark-performance-comparison.md)
+- **Plan Reference**: [benchmark-performance-comparison-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/benchmark-performance-comparison-implementation-plan.md)
+- **Scope**: Database (`portfolio.benchmarks`), `proto/portfolio/v1/`, `services/portfolio-api`, `bff/`, `web/apps/main-app`
+- **Highlights**:
+  - Direct comparative benchmarking of investor portfolios against major indexes: S&P 500 Total Return (`SP500TR`/`SPY`), NASDAQ-100 (`QQQ`), and ASX 200 (`^AXJO`/`VAS`).
+  - GIPS Standard 2.A compliant origin re-basing ($0.00\%$ at $T_0$) and time-weighted return normalization to neutralize cash flow timing.
+  - Multi-currency perspective switching: Portfolio Base Currency (daily spot FX conversion) vs Native Benchmark Currency (unhedged).
+  - Relative alpha/beta attribution strip: Active Return (excess return/spread), Portfolio Beta ($\beta$), Annualized Tracking Error ($\text{TE}$), and Information Ratio ($\text{IR}$).
+  - Interactive dual-curve SVG chart overlay on `PerformanceChart.tsx` with synchronized crosshairs and tooltip comparisons.
 
 ---
 

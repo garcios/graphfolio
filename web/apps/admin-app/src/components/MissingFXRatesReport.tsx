@@ -529,12 +529,12 @@ export const MissingFXRatesReport: React.FC<MissingFXRatesReportProps> = ({ onNo
       </Card>
 
       {/* 3. Diagnostic Report Table */}
-      <Card>
-        {loading && items.length === 0 ? (
-          <div style={{ padding: '2.5rem', textAlign: 'center', color: '#a1a1aa' }}>
-            Checking trade ledger and foreign exchange fixings...
-          </div>
-        ) : displayItems.length === 0 ? (
+      {loading && items.length === 0 ? (
+        <div style={{ padding: '2.5rem', textAlign: 'center', color: '#a1a1aa' }}>
+          Checking trade ledger and foreign exchange fixings...
+        </div>
+      ) : displayItems.length === 0 ? (
+        <Card>
           <div className="missing-fx-report__empty">
             <div className="missing-fx-report__empty-icon">🛡️</div>
             <div className="missing-fx-report__empty-title">All Cross-Currency Transactions Covered</div>
@@ -546,143 +546,143 @@ export const MissingFXRatesReport: React.FC<MissingFXRatesReportProps> = ({ onNo
               Re-run FX Verification
             </Button>
           </div>
-        ) : (
-          <>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableHeaderCell>Trade Date</TableHeaderCell>
-                  <TableHeaderCell>Required Pair</TableHeaderCell>
-                  <TableHeaderCell>Type</TableHeaderCell>
-                  <TableHeaderCell>Asset / Symbol</TableHeaderCell>
-                  <TableHeaderCell>Transacted Amount</TableHeaderCell>
-                  <TableHeaderCell>Portfolio (Base)</TableHeaderCell>
-                  <TableHeaderCell>Recorded FX</TableHeaderCell>
-                  <TableHeaderCell>Status</TableHeaderCell>
-                  <TableHeaderCell>Actions</TableHeaderCell>
+        </Card>
+      ) : (
+        <>
+          <Table hoverable striped>
+            <TableHead>
+              <TableRow>
+                <TableHeaderCell>Trade Date</TableHeaderCell>
+                <TableHeaderCell>Required Pair</TableHeaderCell>
+                <TableHeaderCell>Type</TableHeaderCell>
+                <TableHeaderCell>Asset / Symbol</TableHeaderCell>
+                <TableHeaderCell>Transacted Amount</TableHeaderCell>
+                <TableHeaderCell>Portfolio (Base)</TableHeaderCell>
+                <TableHeaderCell>Recorded FX</TableHeaderCell>
+                <TableHeaderCell>Status</TableHeaderCell>
+                <TableHeaderCell align="right">Actions</TableHeaderCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {displayItems.map((item) => (
+                <TableRow key={item.transactionId}>
+                  {/* Trade Date */}
+                  <TableCell>{formatDate(item.tradeDate)}</TableCell>
+
+                  {/* Required Pair */}
+                  <TableCell>
+                    <strong style={{ fontFamily: 'monospace', letterSpacing: '0.05em' }}>
+                      {item.requiredPair}
+                    </strong>
+                  </TableCell>
+
+                  {/* Type Badge */}
+                  <TableCell>
+                    <Badge variant={getTypeBadgeVariant(item.type)}>{item.type}</Badge>
+                  </TableCell>
+
+                  {/* Asset / Symbol */}
+                  <TableCell>
+                    {item.symbol ? (
+                      <div className="missing-fx-report__asset-meta">
+                        <span style={{ fontWeight: 600 }}>{item.symbol}</span>
+                        {item.assetName && (
+                          <span className="missing-fx-report__asset-name">{item.assetName}</span>
+                        )}
+                      </div>
+                    ) : (
+                      <span style={{ color: '#a1a1aa', fontStyle: 'italic' }}>Cash Movement</span>
+                    )}
+                  </TableCell>
+
+                  {/* Amount */}
+                  <TableCell>
+                    <span style={{ fontWeight: 600 }}>
+                      {formatMoney(item.amount.amount, item.amount.currencyCode)}
+                    </span>
+                  </TableCell>
+
+                  {/* Portfolio */}
+                  <TableCell>
+                    <div className="missing-fx-report__portfolio-pill">
+                      <span>{item.portfolioName}</span>
+                      <Badge variant="neutral">[{item.portfolioBaseCurrency}]</Badge>
+                    </div>
+                  </TableCell>
+
+                  {/* Recorded FX Rate */}
+                  <TableCell>
+                    {item.recordedFxRate ? (
+                      <div className="missing-fx-report__recorded-fx">
+                        <span>{item.recordedFxRate}</span>
+                        <span className="missing-fx-report__recorded-note">(Broker snapshot)</span>
+                      </div>
+                    ) : (
+                      <span style={{ color: '#71717a' }}>—</span>
+                    )}
+                  </TableCell>
+
+                  {/* Price Status */}
+                  <TableCell>
+                    <Badge variant="warning">Missing Fixing</Badge>
+                  </TableCell>
+
+                  {/* Action Buttons */}
+                  <TableCell align="right">
+                    <div className="missing-fx-report__actions-cell">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleRowBackfill(item)}
+                      >
+                        Backfill Pair
+                      </Button>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleRowManualOverride(item)}
+                      >
+                        Manual FX
+                      </Button>
+                    </div>
+                  </TableCell>
                 </TableRow>
-              </TableHead>
-              <TableBody>
-                {displayItems.map((item) => (
-                  <TableRow key={item.transactionId}>
-                    {/* Trade Date */}
-                    <TableCell>{formatDate(item.tradeDate)}</TableCell>
+              ))}
+            </TableBody>
+          </Table>
 
-                    {/* Required Pair */}
-                    <TableCell>
-                      <strong style={{ fontFamily: 'monospace', letterSpacing: '0.05em' }}>
-                        {item.requiredPair}
-                      </strong>
-                    </TableCell>
-
-                    {/* Type Badge */}
-                    <TableCell>
-                      <Badge variant={getTypeBadgeVariant(item.type)}>{item.type}</Badge>
-                    </TableCell>
-
-                    {/* Asset / Symbol */}
-                    <TableCell>
-                      {item.symbol ? (
-                        <div className="missing-fx-report__asset-meta">
-                          <span style={{ fontWeight: 600 }}>{item.symbol}</span>
-                          {item.assetName && (
-                            <span className="missing-fx-report__asset-name">{item.assetName}</span>
-                          )}
-                        </div>
-                      ) : (
-                        <span style={{ color: '#a1a1aa', fontStyle: 'italic' }}>Cash Movement</span>
-                      )}
-                    </TableCell>
-
-                    {/* Amount */}
-                    <TableCell>
-                      <span style={{ fontWeight: 600 }}>
-                        {formatMoney(item.amount.amount, item.amount.currencyCode)}
-                      </span>
-                    </TableCell>
-
-                    {/* Portfolio */}
-                    <TableCell>
-                      <div className="missing-fx-report__portfolio-pill">
-                        <span>{item.portfolioName}</span>
-                        <Badge variant="neutral">[{item.portfolioBaseCurrency}]</Badge>
-                      </div>
-                    </TableCell>
-
-                    {/* Recorded FX Rate */}
-                    <TableCell>
-                      {item.recordedFxRate ? (
-                        <div className="missing-fx-report__recorded-fx">
-                          <span>{item.recordedFxRate}</span>
-                          <span className="missing-fx-report__recorded-note">(Broker snapshot)</span>
-                        </div>
-                      ) : (
-                        <span style={{ color: '#71717a' }}>—</span>
-                      )}
-                    </TableCell>
-
-                    {/* Price Status */}
-                    <TableCell>
-                      <Badge variant="warning">Missing Fixing</Badge>
-                    </TableCell>
-
-                    {/* Action Buttons */}
-                    <TableCell>
-                      <div className="missing-fx-report__actions-cell">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleRowBackfill(item)}
-                        >
-                          Backfill Pair
-                        </Button>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => handleRowManualOverride(item)}
-                        >
-                          Manual FX
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="missing-fx-report__pagination">
-                <div>
-                  Showing {(page - 1) * PAGE_SIZE + 1}–
-                  {Math.min(page * PAGE_SIZE, totalCount)} of {totalCount} records
-                </div>
-                <div className="missing-fx-report__pagination-controls">
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={page <= 1}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  >
-                    &lt; Prev
-                  </Button>
-                  <span>
-                    Page {page} of {totalPages}
-                  </span>
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    disabled={page >= totalPages}
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  >
-                    Next &gt;
-                  </Button>
-                </div>
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="missing-fx-report__pagination">
+              <div>
+                Showing {(page - 1) * PAGE_SIZE + 1}–
+                {Math.min(page * PAGE_SIZE, totalCount)} of {totalCount} records
               </div>
-            )}
-          </>
-        )}
-      </Card>
+              <div className="missing-fx-report__pagination-controls">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
+                  &lt; Prev
+                </Button>
+                <span>
+                  Page {page} of {totalPages}
+                </span>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                >
+                  Next &gt;
+                </Button>
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       {/* 4. Connected Modals */}
       <BackfillModal
