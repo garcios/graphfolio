@@ -133,6 +133,21 @@ func (mr *MockPortfolioServiceMockRecorder) DeleteTransaction(ctx, userID, trans
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteTransaction", reflect.TypeOf((*MockPortfolioService)(nil).DeleteTransaction), ctx, userID, transactionID)
 }
 
+// GetBenchmarkComparison mocks base method.
+func (m *MockPortfolioService) GetBenchmarkComparison(ctx context.Context, userID, benchmarkID string, timeframe domain.HistoryTimeframe, mode domain.BenchmarkCurrencyMode) (*domain.BenchmarkComparisonResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBenchmarkComparison", ctx, userID, benchmarkID, timeframe, mode)
+	ret0, _ := ret[0].(*domain.BenchmarkComparisonResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBenchmarkComparison indicates an expected call of GetBenchmarkComparison.
+func (mr *MockPortfolioServiceMockRecorder) GetBenchmarkComparison(ctx, userID, benchmarkID, timeframe, mode any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBenchmarkComparison", reflect.TypeOf((*MockPortfolioService)(nil).GetBenchmarkComparison), ctx, userID, benchmarkID, timeframe, mode)
+}
+
 // GetCashFlowReport mocks base method.
 func (m *MockPortfolioService) GetCashFlowReport(ctx context.Context, input domain.CashFlowFilter) (*domain.CashFlowReport, error) {
 	m.ctrl.T.Helper()
@@ -242,6 +257,21 @@ func (m *MockPortfolioService) ListAllInstruments(ctx context.Context, isActive 
 func (mr *MockPortfolioServiceMockRecorder) ListAllInstruments(ctx, isActive, search any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllInstruments", reflect.TypeOf((*MockPortfolioService)(nil).ListAllInstruments), ctx, isActive, search)
+}
+
+// ListBenchmarks mocks base method.
+func (m *MockPortfolioService) ListBenchmarks(ctx context.Context) ([]domain.Benchmark, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListBenchmarks", ctx)
+	ret0, _ := ret[0].([]domain.Benchmark)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListBenchmarks indicates an expected call of ListBenchmarks.
+func (mr *MockPortfolioServiceMockRecorder) ListBenchmarks(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBenchmarks", reflect.TypeOf((*MockPortfolioService)(nil).ListBenchmarks), ctx)
 }
 
 // ListCurrencyPairs mocks base method.

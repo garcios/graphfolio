@@ -196,4 +196,86 @@ INSERT INTO portfolio.transactions (
   ('018f0000-0002-7000-8000-000000000002', '018f0000-0001-7000-8000-000000000001', 'BUY', '2025-01-15', 10.0, 200.00, 2000.00, 'USD', 'FIFO-B2'),
   ('018f0000-0002-7000-8000-000000000002', '018f0000-0001-7000-8000-000000000001', 'SELL', '2025-01-20', 10.0, 250.00, 2500.00, 'USD', 'FIFO-S1');
 
+-- 12. Benchmark Reference Instruments, Catalog, and 365-day History
+INSERT INTO portfolio.instruments (id, symbol, exchange_code, name, asset_class, currency_code, is_active)
+VALUES
+  ('018f0000-0005-7000-8000-000000000001', 'SP500TR', 'XNYS', 'S&P 500 Total Return Index', 'ETF', 'USD', true),
+  ('018f0000-0005-7000-8000-000000000002', 'QQQ',     'XNAS', 'Invesco QQQ Trust (NASDAQ-100)', 'ETF', 'USD', true),
+  ('018f0000-0005-7000-8000-000000000003', 'VAS',     'XASX', 'Vanguard Australian Shares Index ETF', 'ETF', 'AUD', true)
+ON CONFLICT (symbol, exchange_code) DO NOTHING;
+
+INSERT INTO portfolio.benchmarks (id, instrument_id, name, index_type, is_default, display_order)
+VALUES
+  ('SP500TR',   '018f0000-0005-7000-8000-000000000001', 'S&P 500 Total Return', 'TOTAL_RETURN', true,  1),
+  ('NASDAQ100', '018f0000-0005-7000-8000-000000000002', 'NASDAQ-100 (QQQ)',    'TOTAL_RETURN', false, 2),
+  ('ASX200TR',  '018f0000-0005-7000-8000-000000000003', 'ASX 200 (VAS)',       'TOTAL_RETURN', false, 3)
+ON CONFLICT (id) DO NOTHING;
+
+-- Seed 365-day historical daily prices for benchmarks
+WITH date_series AS (
+  SELECT 
+    s::date AS price_date,
+    ROW_NUMBER() OVER (ORDER BY s ASC) - 1 AS day_idx,
+    COUNT(*) OVER () - 1 AS total_days
+  FROM generate_series(CURRENT_DATE - INTERVAL '365 days', CURRENT_DATE, '1 day') AS s
+)
+INSERT INTO portfolio.instrument_prices (instrument_id, price_date, close, source)
+SELECT
+  '018f0000-0005-7000-8000-000000000001', -- SP500TR
+  price_date,
+  ROUND((500.0 + (100.0 * (day_idx::numeric / total_days::numeric)) + sin(day_idx::numeric * 0.1) * 15.0)::numeric, 4),
+  'dev_seed'
+FROM date_series
+ON CONFLICT (instrument_id, price_date) DO UPDATE SET close = EXCLUDED.close;
+
+WITH date_series AS (
+  SELECT 
+    s::date AS price_date,
+    ROW_NUMBER() OVER (ORDER BY s ASC) - 1 AS day_idx,
+    COUNT(*) OVER () - 1 AS total_days
+  FROM generate_series(CURRENT_DATE - INTERVAL '365 days', CURRENT_DATE, '1 day') AS s
+)
+INSERT INTO portfolio.instrument_prices (instrument_id, price_date, close, source)
+SELECT
+  '018f0000-0005-7000-8000-000000000002', -- QQQ
+  price_date,
+  ROUND((400.0 + (120.0 * (day_idx::numeric / total_days::numeric)) + sin(day_idx::numeric * 0.15) * 20.0)::numeric, 4),
+  'dev_seed'
+FROM date_series
+ON CONFLICT (instrument_id, price_date) DO UPDATE SET close = EXCLUDED.close;
+
+WITH date_series AS (
+  SELECT 
+    s::date AS price_date,
+    ROW_NUMBER() OVER (ORDER BY s ASC) - 1 AS day_idx,
+    COUNT(*) OVER () - 1 AS total_days
+  FROM generate_series(CURRENT_DATE - INTERVAL '365 days', CURRENT_DATE, '1 day') AS s
+)
+INSERT INTO portfolio.instrument_prices (instrument_id, price_date, close, source)
+SELECT
+  '018f0000-0005-7000-8000-000000000003', -- VAS
+  price_date,
+  ROUND((85.0 + (10.0 * (day_idx::numeric / total_days::numeric)) + cos(day_idx::numeric * 0.08) * 3.0)::numeric, 4),
+  'dev_seed'
+FROM date_series
+ON CONFLICT (instrument_id, price_date) DO UPDATE SET close = EXCLUDED.close;
+
+-- Also seed 365-day USD -> AUD FX rates so multi-currency conversion works across history
+WITH date_series AS (
+  SELECT 
+    s::date AS rate_date,
+    ROW_NUMBER() OVER (ORDER BY s ASC) - 1 AS day_idx,
+    COUNT(*) OVER () - 1 AS total_days
+  FROM generate_series(CURRENT_DATE - INTERVAL '365 days', CURRENT_DATE, '1 day') AS s
+)
+INSERT INTO portfolio.fx_rates (base_currency, quote_currency, rate_date, rate, source)
+SELECT
+  'USD',
+  'AUD',
+  rate_date,
+  ROUND((1.50 + (0.05 * sin(day_idx::numeric * 0.05)))::numeric, 6),
+  'dev_seed'
+FROM date_series
+ON CONFLICT (base_currency, quote_currency, rate_date) DO UPDATE SET rate = EXCLUDED.rate;
+
 COMMIT;

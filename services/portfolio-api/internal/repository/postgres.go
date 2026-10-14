@@ -1834,3 +1834,92 @@ func (r *PostgresRepository) GetExternalCashFlows(ctx context.Context, portfolio
 
 	return flows, nil
 }
+
+func (r *PostgresRepository) ListBenchmarks(ctx context.Context) ([]domain.Benchmark, error) {
+	rows, err := r.pool.Query(ctx, listBenchmarksSQL)
+	if err != nil {
+		return nil, fmt.Errorf("repository: list benchmarks failed: %w", err)
+	}
+	defer rows.Close()
+
+	var benchmarks []domain.Benchmark
+	for rows.Next() {
+		var b domain.Benchmark
+		if err := rows.Scan(
+			&b.ID,
+			&b.Name,
+			&b.IndexType,
+			&b.IsDefault,
+			&b.DisplayOrder,
+			&b.InstrumentID,
+			&b.Symbol,
+			&b.ExchangeCode,
+			&b.CurrencyCode,
+		); err != nil {
+			return nil, fmt.Errorf("repository: scan benchmark failed: %w", err)
+		}
+		benchmarks = append(benchmarks, b)
+	}
+
+	return benchmarks, rows.Err()
+}
+
+func (r *PostgresRepository) GetBenchmarkByID(ctx context.Context, id string) (*domain.Benchmark, error) {
+	var b domain.Benchmark
+	err := r.pool.QueryRow(ctx, getBenchmarkByIDSQL, id).Scan(
+		&b.ID,
+		&b.Name,
+		&b.IndexType,
+		&b.IsDefault,
+		&b.DisplayOrder,
+		&b.InstrumentID,
+		&b.Symbol,
+		&b.ExchangeCode,
+		&b.CurrencyCode,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, fmt.Errorf("repository: benchmark %q not found", id)
+		}
+		return nil, fmt.Errorf("repository: get benchmark by id failed: %w", err)
+	}
+	return &b, nil
+}
+
+func (r *PostgresRepository) GetBenchmarkPricesWithFX(
+	ctx context.Context,
+	instrumentID uuid.UUID,
+	quoteCurrency, baseCurrency string,
+	fromDate, toDate time.Time,
+) ([]domain.RawBenchmarkQuote, error) {
+	var fromParam, toParam *time.Time
+	if !fromDate.IsZero() {
+		fromParam = &fromDate
+	}
+	if !toDate.IsZero() {
+		toParam = &toDate
+	}
+
+	rows, err := r.pool.Query(ctx, getBenchmarkPricesWithFXSQL, instrumentID, quoteCurrency, baseCurrency, fromParam, toParam)
+	if err != nil {
+		return nil, fmt.Errorf("repository: get benchmark prices with fx failed: %w", err)
+	}
+	defer rows.Close()
+
+	var quotes []domain.RawBenchmarkQuote
+	for rows.Next() {
+		var q domain.RawBenchmarkQuote
+		var fx *decimal.Decimal
+		if err := rows.Scan(
+			&q.PriceDate,
+			&q.ClosePrice,
+			&fx,
+		); err != nil {
+			return nil, fmt.Errorf("repository: scan benchmark quote failed: %w", err)
+		}
+		q.FXRateToBase = fx
+		quotes = append(quotes, q)
+	}
+
+	return quotes, rows.Err()
+}

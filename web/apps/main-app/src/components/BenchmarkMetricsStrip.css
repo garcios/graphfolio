@@ -1,0 +1,127 @@
+.benchmark-metrics-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 0.85rem 1.25rem;
+  background: rgba(17, 24, 39, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Alpha Pill */
+.benchmark-alpha-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+
+.benchmark-alpha-pill.positive {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18), rgba(5, 150, 105, 0.26));
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+
+.benchmark-alpha-pill.negative {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(220, 38, 38, 0.26));
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #f87171;
+}
+
+.alpha-badge-icon {
+  font-size: 0.9rem;
+}
+
+.alpha-badge-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.alpha-badge-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.alpha-badge-subtitle {
+  font-size: 0.725rem;
+  opacity: 0.85;
+}
+
+/* Stats Row */
+.benchmark-stats-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.benchmark-stat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.stat-label-group {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #9ca3af);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+
+.info-icon {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.35);
+  cursor: help;
+  transition: color 0.15s ease;
+}
+
+.info-icon:hover {
+  color: var(--text-primary, #f9fafb);
+}
+
+.stat-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary, #f9fafb);
+}
+
+.text-positive {
+  color: #10b981;
+}
+
+.text-negative {
+  color: #ef4444;
+}
+
+.font-mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+@media (max-width: 768px) {
+  .benchmark-metrics-strip {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .benchmark-stats-row {
+    width: 100%;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+}

@@ -258,3 +258,127 @@
     transform: rotate(360deg);
   }
 }
+
+/* Benchmark Comparison Controls & Legend */
+.performance-chart-title-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.benchmark-select-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0.2rem 0.6rem;
+}
+
+.benchmark-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary, #9ca3af);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.benchmark-dropdown {
+  background: transparent;
+  border: none;
+  color: var(--text-primary, #f9fafb);
+  font-size: 0.825rem;
+  font-weight: 600;
+  cursor: pointer;
+  outline: none;
+}
+
+.benchmark-dropdown option {
+  background: #1f2937;
+  color: #f9fafb;
+}
+
+.benchmark-currency-toggle {
+  display: flex;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 0.2rem;
+  gap: 0.2rem;
+}
+
+.currency-toggle-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary, #9ca3af);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.currency-toggle-btn:hover {
+  color: #f9fafb;
+}
+
+.currency-toggle-btn.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #38bdf8;
+}
+
+.chart-zero-baseline {
+  stroke: rgba(255, 255, 255, 0.25);
+  stroke-width: 1.25;
+  stroke-dasharray: 2 2;
+}
+
+.chart-zero-label {
+  fill: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+}
+
+.chart-legend-strip {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1.5rem;
+  margin-top: 0.75rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chart-legend-line {
+  width: 20px;
+  height: 2.5px;
+  border-radius: 2px;
+}
+
+.chart-legend-line.solid-green {
+  background: #10b981;
+}
+
+.chart-legend-line.dashed-amber {
+  background: repeating-linear-gradient(
+    90deg,
+    #f59e0b,
+    #f59e0b 4px,
+    transparent 4px,
+    transparent 8px
+  );
+}
+
+.chart-legend-text {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #9ca3af);
+  font-weight: 500;
+}

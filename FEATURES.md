@@ -40,7 +40,7 @@ This document catalogs all implemented features, in-progress components, and pla
 | **30** | **Include Closed Positions in Dashboard Investments Table** | **DONE** | Proto, Svc, BFF, Web | [include-closed-positions-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/include-closed-positions-implementation-plan.md) |
 | **31** | **Modified Dietz Annualized Return & Cash-Flow Weighting** | **DONE** | Proto, Svc, BFF, Web | [annualized-return-modified-dietz-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/annualized-return-modified-dietz-implementation-plan.md) |
 | **32** | **Missing FX Rates Report & Date Range Backfill (Admin Portal)** | **DONE** | Proto, Svc, BFF, Web | [admin-missing-fx-rates-report-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-missing-fx-rates-report-implementation-plan.md) |
-| **33** | **Portfolio Benchmark Comparison & Relative Performance Analytics (S&P 500, NASDAQ-100, ASX 200)** | **PLANNED** | Proto, Svc, BFF, Web | [benchmark-performance-comparison-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/benchmark-performance-comparison-implementation-plan.md) |
+| **33** | **Portfolio Benchmark Comparison & Relative Performance Analytics (S&P 500, NASDAQ-100, ASX 200)** | **DONE** | Database, Proto, Svc, BFF, Web | [benchmark-performance-comparison-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/benchmark-performance-comparison-implementation-plan.md) |
 
 
 
@@ -467,6 +467,33 @@ This document catalogs all implemented features, in-progress components, and pla
   - [MissingFXRatesReport.test.ts](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/MissingFXRatesReport.test.ts)
   - [AdminLayout.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/admin-app/src/components/AdminLayout.tsx)
 
+### 2.33 Portfolio Benchmark Comparison & Relative Performance Analytics
+- **Status**: **DONE**
+- **User Story**: [benchmark-performance-comparison.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/benchmark-performance-comparison.md)
+- **Plan Reference**: [benchmark-performance-comparison-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/benchmark-performance-comparison-implementation-plan.md)
+- **Scope**: Database (`portfolio.benchmarks`), `proto/portfolio/v1/`, `services/portfolio-api`, `bff/`, `web/apps/main-app`
+- **Description**: Institutional-grade comparative performance analysis engine allowing investors to overlay market benchmarks (S&P 500 Total Return `SP500TR`, NASDAQ-100 `QQQ`, ASX 200 `VAS`) directly against their portfolio performance. Features GIPS Standard 2.A compliant origin re-basing ($0.00\%$ at $T_0$), sub-1-year annualization prohibition ($CD < 365$), dual currency modes (Portfolio Base Currency with daily spot FX translation vs Native Benchmark Currency unhedged), active risk attribution (Active Alpha, Beta $\beta$, Tracking Error $\text{TE}$, Information Ratio $\text{IR}$), and interactive dual-curve SVG visualization with synchronized hover tooltips.
+- **Key Files**:
+  - [000010_benchmarks.up.sql](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/migrations/000010_benchmarks.up.sql)
+  - [portfolio.proto](file:///Users/oscargarcia/workspace/graphfolio/proto/portfolio/v1/portfolio.proto)
+  - [benchmark.go (domain)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/domain/benchmark.go)
+  - [benchmark_test.go (domain)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/domain/benchmark_test.go)
+  - [repository.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/repository/repository.go)
+  - [queries.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/repository/queries.go)
+  - [postgres.go](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/repository/postgres.go)
+  - [benchmark.go (service)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/benchmark.go)
+  - [benchmark_test.go (service)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/service/benchmark_test.go)
+  - [server.go (gRPC)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server.go)
+  - [server_test.go (gRPC)](file:///Users/oscargarcia/workspace/graphfolio/services/portfolio-api/internal/server_test.go)
+  - [schema.graphqls](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.graphqls)
+  - [helpers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/helpers.go)
+  - [schema.resolvers.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers.go)
+  - [schema.resolvers_test.go](file:///Users/oscargarcia/workspace/graphfolio/bff/graph/schema.resolvers_test.go)
+  - [PerformanceChart.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/PerformanceChart.tsx)
+  - [PerformanceChart.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/PerformanceChart.css)
+  - [BenchmarkMetricsStrip.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/BenchmarkMetricsStrip.tsx)
+  - [BenchmarkMetricsStrip.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/BenchmarkMetricsStrip.css)
+
 ---
 
 ## 3. Planned Features (`PLANNED`)
@@ -504,19 +531,6 @@ This document catalogs all implemented features, in-progress components, and pla
   - Granular record split metrics displaying successful vs failed rows (`420 ok / 12 fail`).
   - Single-pass `COUNT(*) OVER()` pagination with server-side sorting by start date.
   - Interactive drawer/modal to inspect error diagnostics, stack traces, and execution parameters for failed imports.
-
-
-### 3.4 Portfolio Benchmark Comparison & Relative Performance Analytics
-- **Status**: **PLANNED**
-- **User Story**: [benchmark-performance-comparison.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/benchmark-performance-comparison.md)
-- **Plan Reference**: [benchmark-performance-comparison-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/benchmark-performance-comparison-implementation-plan.md)
-- **Scope**: Database (`portfolio.benchmarks`), `proto/portfolio/v1/`, `services/portfolio-api`, `bff/`, `web/apps/main-app`
-- **Highlights**:
-  - Direct comparative benchmarking of investor portfolios against major indexes: S&P 500 Total Return (`SP500TR`/`SPY`), NASDAQ-100 (`QQQ`), and ASX 200 (`^AXJO`/`VAS`).
-  - GIPS Standard 2.A compliant origin re-basing ($0.00\%$ at $T_0$) and time-weighted return normalization to neutralize cash flow timing.
-  - Multi-currency perspective switching: Portfolio Base Currency (daily spot FX conversion) vs Native Benchmark Currency (unhedged).
-  - Relative alpha/beta attribution strip: Active Return (excess return/spread), Portfolio Beta ($\beta$), Annualized Tracking Error ($\text{TE}$), and Information Ratio ($\text{IR}$).
-  - Interactive dual-curve SVG chart overlay on `PerformanceChart.tsx` with synchronized crosshairs and tooltip comparisons.
 
 ---
 

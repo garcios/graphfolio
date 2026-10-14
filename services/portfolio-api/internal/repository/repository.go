@@ -78,4 +78,9 @@ type Repository interface {
 	// Return Analytics: Modified Dietz Method
 	GetValuationAtOrBefore(ctx context.Context, portfolioID uuid.UUID, targetDate time.Time) (*domain.PortfolioValuation, error)
 	GetExternalCashFlows(ctx context.Context, portfolioID uuid.UUID, fromDate, toDate time.Time, baseCurrency string) ([]domain.ExternalCashFlow, error)
+
+	// Benchmark Comparison & Relative Performance
+	ListBenchmarks(ctx context.Context) ([]domain.Benchmark, error)
+	GetBenchmarkByID(ctx context.Context, id string) (*domain.Benchmark, error)
+	GetBenchmarkPricesWithFX(ctx context.Context, instrumentID uuid.UUID, quoteCurrency, baseCurrency string, fromDate, toDate time.Time) ([]domain.RawBenchmarkQuote, error)
 }

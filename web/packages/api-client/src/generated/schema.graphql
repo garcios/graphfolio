@@ -77,6 +77,8 @@ type Query {
   missingPriceTransactions(symbol: String, fromDate: String, toDate: String, limit: Int = 50, offset: Int = 0): MissingPriceReport!
   missingFXRateTransactions(currencyPair: String, fromDate: String, toDate: String, type: TransactionType, limit: Int = 50, offset: Int = 0): MissingFXRatesReport!
   modifiedDietzReturn(startDate: String!, endDate: String!, useMonthlyLinking: Boolean): ModifiedDietzReturnPayload!
+  benchmarks: [Benchmark!]!
+  benchmarkComparison(benchmarkId: ID!, timeframe: HistoryTimeframe!, currencyMode: BenchmarkCurrencyMode = PORTFOLIO_BASE): BenchmarkComparisonPayload!
 }
 
 enum HistoryTimeframe {
@@ -539,4 +541,53 @@ type ExternalCashFlowWeightItem {
   weight: Decimal!
   weightedAmount: Money!
   localAmount: Money!
+}
+
+enum BenchmarkCurrencyMode {
+  PORTFOLIO_BASE
+  BENCHMARK_NATIVE
+}
+
+type Benchmark {
+  id: ID!
+  symbol: String!
+  name: String!
+  exchangeCode: String!
+  currencyCode: String!
+  indexType: String!
+  isDefault: Boolean!
+}
+
+type BenchmarkComparisonPoint {
+  date: String!
+  portfolioReturnPercent: Decimal!
+  benchmarkReturnPercent: Decimal!
+  activeReturnPercent: Decimal!
+  portfolioValue: Money!
+  benchmarkPriceAdjusted: Money!
+}
+
+type BenchmarkMetrics {
+  portfolioCumulativeReturnPercent: Decimal!
+  benchmarkCumulativeReturnPercent: Decimal!
+  activeCumulativeReturnPercent: Decimal!
+  portfolioAnnualizedReturnPercent: Decimal
+  benchmarkAnnualizedReturnPercent: Decimal
+  activeAnnualizedReturnPercent: Decimal
+  isAnnualized: Boolean!
+  beta: Decimal
+  trackingErrorPercent: Decimal
+  informationRatio: Decimal
+}
+
+type BenchmarkComparisonPayload {
+  portfolioId: ID!
+  baseCurrency: String!
+  benchmark: Benchmark!
+  currencyMode: BenchmarkCurrencyMode!
+  startDate: String!
+  endDate: String!
+  elapsedDays: Int!
+  points: [BenchmarkComparisonPoint!]!
+  metrics: BenchmarkMetrics!
 }

@@ -48,6 +48,50 @@ type BatchImportTransactionsPayload struct {
 	Message       string     `json:"message"`
 }
 
+type Benchmark struct {
+	ID           string `json:"id"`
+	Symbol       string `json:"symbol"`
+	Name         string `json:"name"`
+	ExchangeCode string `json:"exchangeCode"`
+	CurrencyCode string `json:"currencyCode"`
+	IndexType    string `json:"indexType"`
+	IsDefault    bool   `json:"isDefault"`
+}
+
+type BenchmarkComparisonPayload struct {
+	PortfolioID  string                      `json:"portfolioId"`
+	BaseCurrency string                      `json:"baseCurrency"`
+	Benchmark    *Benchmark                  `json:"benchmark"`
+	CurrencyMode BenchmarkCurrencyMode       `json:"currencyMode"`
+	StartDate    string                      `json:"startDate"`
+	EndDate      string                      `json:"endDate"`
+	ElapsedDays  int                         `json:"elapsedDays"`
+	Points       []*BenchmarkComparisonPoint `json:"points"`
+	Metrics      *BenchmarkMetrics           `json:"metrics"`
+}
+
+type BenchmarkComparisonPoint struct {
+	Date                   string  `json:"date"`
+	PortfolioReturnPercent Decimal `json:"portfolioReturnPercent"`
+	BenchmarkReturnPercent Decimal `json:"benchmarkReturnPercent"`
+	ActiveReturnPercent    Decimal `json:"activeReturnPercent"`
+	PortfolioValue         *Money  `json:"portfolioValue"`
+	BenchmarkPriceAdjusted *Money  `json:"benchmarkPriceAdjusted"`
+}
+
+type BenchmarkMetrics struct {
+	PortfolioCumulativeReturnPercent Decimal  `json:"portfolioCumulativeReturnPercent"`
+	BenchmarkCumulativeReturnPercent Decimal  `json:"benchmarkCumulativeReturnPercent"`
+	ActiveCumulativeReturnPercent    Decimal  `json:"activeCumulativeReturnPercent"`
+	PortfolioAnnualizedReturnPercent *Decimal `json:"portfolioAnnualizedReturnPercent,omitempty"`
+	BenchmarkAnnualizedReturnPercent *Decimal `json:"benchmarkAnnualizedReturnPercent,omitempty"`
+	ActiveAnnualizedReturnPercent    *Decimal `json:"activeAnnualizedReturnPercent,omitempty"`
+	IsAnnualized                     bool     `json:"isAnnualized"`
+	Beta                             *Decimal `json:"beta,omitempty"`
+	TrackingErrorPercent             *Decimal `json:"trackingErrorPercent,omitempty"`
+	InformationRatio                 *Decimal `json:"informationRatio,omitempty"`
+}
+
 type CashFlowCategoryBreakdown struct {
 	Deposits      *Money `json:"deposits"`
 	Dividends     *Money `json:"dividends"`
@@ -468,6 +512,61 @@ type ValuationPoint struct {
 	CashValue   *Money   `json:"cashValue"`
 	TwrIndex    Decimal  `json:"twrIndex"`
 	DailyReturn *Decimal `json:"dailyReturn,omitempty"`
+}
+
+type BenchmarkCurrencyMode string
+
+const (
+	BenchmarkCurrencyModePortfolioBase   BenchmarkCurrencyMode = "PORTFOLIO_BASE"
+	BenchmarkCurrencyModeBenchmarkNative BenchmarkCurrencyMode = "BENCHMARK_NATIVE"
+)
+
+var AllBenchmarkCurrencyMode = []BenchmarkCurrencyMode{
+	BenchmarkCurrencyModePortfolioBase,
+	BenchmarkCurrencyModeBenchmarkNative,
+}
+
+func (e BenchmarkCurrencyMode) IsValid() bool {
+	switch e {
+	case BenchmarkCurrencyModePortfolioBase, BenchmarkCurrencyModeBenchmarkNative:
+		return true
+	}
+	return false
+}
+
+func (e BenchmarkCurrencyMode) String() string {
+	return string(e)
+}
+
+func (e *BenchmarkCurrencyMode) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = BenchmarkCurrencyMode(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid BenchmarkCurrencyMode", str)
+	}
+	return nil
+}
+
+func (e BenchmarkCurrencyMode) MarshalGQL(w io.Writer) {
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *BenchmarkCurrencyMode) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e BenchmarkCurrencyMode) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
 }
 
 type CashFlowCategory string

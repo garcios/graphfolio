@@ -1,7 +1,7 @@
 # User Story: Portfolio Benchmark Comparison & Relative Performance Analytics
 
 > **Target Layers**: Domain Microservice (`services/portfolio-api`), Protobuf (`proto/portfolio/v1/`), BFF GraphQL (`bff/`), Primary Investor Application (`web/apps/main-app`)  
-> **Status**: Ready for Implementation  
+> **Status**: Completed  
 > **Story ID**: US-PERF-107  
 > **Epic**: Portfolio Performance Measurement & Return Analytics  
 > **Implementation Plan**: [benchmark-performance-comparison-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/benchmark-performance-comparison-implementation-plan.md)  

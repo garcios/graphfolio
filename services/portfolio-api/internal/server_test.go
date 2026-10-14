@@ -2870,3 +2870,148 @@ func TestPortfolioServer_GetModifiedDietzReturn(t *testing.T) {
 	})
 }
 
+func TestPortfolioServer_ListBenchmarks(t *testing.T) {
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockSvc := mocks.NewMockPortfolioService(ctrl)
+	server := NewPortfolioServer(mockSvc)
+
+	benchmarks := []domain.Benchmark{
+		{
+			ID:           "SP500TR",
+			Symbol:       "SP500TR",
+			Name:         "S&P 500 Total Return",
+			ExchangeCode: "XNYS",
+			CurrencyCode: "USD",
+			IndexType:    "TOTAL_RETURN",
+			IsDefault:    true,
+		},
+	}
+
+	mockSvc.EXPECT().ListBenchmarks(ctx).Return(benchmarks, nil)
+
+	resp, err := server.ListBenchmarks(ctx, &pb.ListBenchmarksRequest{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(resp.Benchmarks) != 1 {
+		t.Fatalf("expected 1 benchmark, got %d", len(resp.Benchmarks))
+	}
+	if resp.Benchmarks[0].Id != "SP500TR" {
+		t.Errorf("expected SP500TR, got %s", resp.Benchmarks[0].Id)
+	}
+}
+
+func TestPortfolioServer_GetBenchmarkComparison(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successful comparison response mapping", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		portfolioID := uuid.New()
+		t0 := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+		t1 := time.Date(2025, 1, 2, 0, 0, 0, 0, time.UTC)
+
+		portAnn := decimal.RequireFromString("15.50")
+		benchAnn := decimal.RequireFromString("10.20")
+		activeAnn := decimal.RequireFromString("5.30")
+		beta := decimal.RequireFromString("1.10")
+		te := decimal.RequireFromString("4.20")
+		ir := decimal.RequireFromString("1.26")
+
+		domainResult := &domain.BenchmarkComparisonResult{
+			PortfolioID:  portfolioID,
+			BaseCurrency: "USD",
+			Benchmark: domain.Benchmark{
+				ID:           "SP500TR",
+				Symbol:       "SP500TR",
+				Name:         "S&P 500 Total Return",
+				ExchangeCode: "XNYS",
+				CurrencyCode: "USD",
+				IndexType:    "TOTAL_RETURN",
+				IsDefault:    true,
+			},
+			CurrencyMode: domain.BenchmarkCurrencyModePortfolioBase,
+			StartDate:    t0,
+			EndDate:      t1,
+			ElapsedDays:  1,
+			Points: []domain.BenchmarkComparisonPoint{
+				{
+					Date:                   t0,
+					PortfolioReturnPercent: decimal.Zero,
+					BenchmarkReturnPercent: decimal.Zero,
+					ActiveReturnPercent:    decimal.Zero,
+					PortfolioValue:         domain.NewMoney(decimal.NewFromInt(100000), "USD"),
+					BenchmarkPriceAdjusted: domain.NewMoney(decimal.RequireFromString("500.00"), "USD"),
+				},
+			},
+			Metrics: domain.BenchmarkMetrics{
+				PortfolioCumulativeReturnPercent: decimal.Zero,
+				BenchmarkCumulativeReturnPercent: decimal.Zero,
+				ActiveCumulativeReturnPercent:    decimal.Zero,
+				PortfolioAnnualizedReturnPercent: &portAnn,
+				BenchmarkAnnualizedReturnPercent: &benchAnn,
+				ActiveAnnualizedReturnPercent:    &activeAnn,
+				IsAnnualized:                     true,
+				Beta:                             &beta,
+				TrackingErrorPercent:             &te,
+				InformationRatio:                 &ir,
+			},
+		}
+
+		mockSvc.EXPECT().
+			GetBenchmarkComparison(gomock.Any(), "user-1", "SP500TR", domain.Timeframe1Y, domain.BenchmarkCurrencyModePortfolioBase).
+			Return(domainResult, nil)
+
+		resp, err := server.GetBenchmarkComparison(ctx, &pb.GetBenchmarkComparisonRequest{
+			UserId:       "user-1",
+			BenchmarkId:  "SP500TR",
+			Timeframe:    pb.HistoryTimeframe_HISTORY_TIMEFRAME_1Y,
+			CurrencyMode: pb.BenchmarkCurrencyMode_BENCHMARK_CURRENCY_MODE_PORTFOLIO_BASE,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+
+		if resp.PortfolioId != portfolioID.String() {
+			t.Errorf("expected portfolio id %s, got %s", portfolioID.String(), resp.PortfolioId)
+		}
+		if resp.Benchmark.Id != "SP500TR" {
+			t.Errorf("expected SP500TR, got %s", resp.Benchmark.Id)
+		}
+		if len(resp.Points) != 1 {
+			t.Errorf("expected 1 point, got %d", len(resp.Points))
+		}
+		if resp.Metrics.Beta == nil {
+			t.Errorf("expected beta to be mapped")
+		}
+	})
+
+	t.Run("empty benchmark ID returns InvalidArgument", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		_, err := server.GetBenchmarkComparison(ctx, &pb.GetBenchmarkComparisonRequest{
+			UserId:      "user-1",
+			BenchmarkId: "",
+		})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got %v", err)
+		}
+	})
+}
+

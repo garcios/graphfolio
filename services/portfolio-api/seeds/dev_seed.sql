@@ -29,4 +29,19 @@ INSERT INTO portfolio.portfolios (id, user_id, name, base_currency, cost_basis_m
 ON CONFLICT (user_id, name) DO NOTHING;
 
 
+-- 5. Benchmark Reference Instruments & Catalog
+INSERT INTO portfolio.instruments (id, symbol, exchange_code, name, asset_class, currency_code, is_active)
+VALUES
+  ('018f0000-0005-7000-8000-000000000001', 'SP500TR', 'XNYS', 'S&P 500 Total Return Index', 'ETF', 'USD', true),
+  ('018f0000-0005-7000-8000-000000000002', 'QQQ',     'XNAS', 'Invesco QQQ Trust (NASDAQ-100)', 'ETF', 'USD', true),
+  ('018f0000-0005-7000-8000-000000000003', 'VAS',     'XASX', 'Vanguard Australian Shares Index ETF', 'ETF', 'AUD', true)
+ON CONFLICT (symbol, exchange_code) DO NOTHING;
+
+INSERT INTO portfolio.benchmarks (id, instrument_id, name, index_type, is_default, display_order)
+VALUES
+  ('SP500TR',   '018f0000-0005-7000-8000-000000000001', 'S&P 500 Total Return', 'TOTAL_RETURN', true,  1),
+  ('NASDAQ100', '018f0000-0005-7000-8000-000000000002', 'NASDAQ-100 (QQQ)',    'TOTAL_RETURN', false, 2),
+  ('ASX200TR',  '018f0000-0005-7000-8000-000000000003', 'ASX 200 (VAS)',       'TOTAL_RETURN', false, 3)
+ON CONFLICT (id) DO NOTHING;
+
 COMMIT;

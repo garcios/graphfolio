@@ -743,3 +743,110 @@ func toModelModifiedDietzReturn(resp *pb.GetModifiedDietzReturnResponse) *model.
 	}
 }
 
+func toModelBenchmark(b *pb.Benchmark) *model.Benchmark {
+	if b == nil {
+		return nil
+	}
+	return &model.Benchmark{
+		ID:           b.GetId(),
+		Symbol:       b.GetSymbol(),
+		Name:         b.GetName(),
+		ExchangeCode: b.GetExchangeCode(),
+		CurrencyCode: b.GetCurrencyCode(),
+		IndexType:    b.GetIndexType(),
+		IsDefault:    b.GetIsDefault(),
+	}
+}
+
+func toProtoBenchmarkCurrencyMode(m *model.BenchmarkCurrencyMode) pb.BenchmarkCurrencyMode {
+	if m == nil {
+		return pb.BenchmarkCurrencyMode_BENCHMARK_CURRENCY_MODE_PORTFOLIO_BASE
+	}
+	switch *m {
+	case model.BenchmarkCurrencyModeBenchmarkNative:
+		return pb.BenchmarkCurrencyMode_BENCHMARK_CURRENCY_MODE_BENCHMARK_NATIVE
+	case model.BenchmarkCurrencyModePortfolioBase:
+		return pb.BenchmarkCurrencyMode_BENCHMARK_CURRENCY_MODE_PORTFOLIO_BASE
+	default:
+		return pb.BenchmarkCurrencyMode_BENCHMARK_CURRENCY_MODE_PORTFOLIO_BASE
+	}
+}
+
+func toModelBenchmarkCurrencyMode(m pb.BenchmarkCurrencyMode) model.BenchmarkCurrencyMode {
+	switch m {
+	case pb.BenchmarkCurrencyMode_BENCHMARK_CURRENCY_MODE_BENCHMARK_NATIVE:
+		return model.BenchmarkCurrencyModeBenchmarkNative
+	default:
+		return model.BenchmarkCurrencyModePortfolioBase
+	}
+}
+
+func toModelBenchmarkComparison(resp *pb.GetBenchmarkComparisonResponse) *model.BenchmarkComparisonPayload {
+	if resp == nil {
+		return nil
+	}
+
+	points := make([]*model.BenchmarkComparisonPoint, len(resp.GetPoints()))
+	for i, pt := range resp.GetPoints() {
+		points[i] = &model.BenchmarkComparisonPoint{
+			Date:                   pt.GetDate(),
+			PortfolioReturnPercent: toModelDecimal(pt.GetPortfolioReturnPercent()),
+			BenchmarkReturnPercent: toModelDecimal(pt.GetBenchmarkReturnPercent()),
+			ActiveReturnPercent:    toModelDecimal(pt.GetActiveReturnPercent()),
+			PortfolioValue:         toModelMoney(pt.GetPortfolioValue()),
+			BenchmarkPriceAdjusted: toModelMoney(pt.GetBenchmarkPriceAdjusted()),
+		}
+	}
+
+	var portAnn, benchAnn, activeAnn, beta, te, ir *model.Decimal
+	if resp.GetMetrics().GetPortfolioAnnualizedReturnPercent() != nil {
+		d := toModelDecimal(resp.GetMetrics().GetPortfolioAnnualizedReturnPercent())
+		portAnn = &d
+	}
+	if resp.GetMetrics().GetBenchmarkAnnualizedReturnPercent() != nil {
+		d := toModelDecimal(resp.GetMetrics().GetBenchmarkAnnualizedReturnPercent())
+		benchAnn = &d
+	}
+	if resp.GetMetrics().GetActiveAnnualizedReturnPercent() != nil {
+		d := toModelDecimal(resp.GetMetrics().GetActiveAnnualizedReturnPercent())
+		activeAnn = &d
+	}
+	if resp.GetMetrics().GetBeta() != nil {
+		d := toModelDecimal(resp.GetMetrics().GetBeta())
+		beta = &d
+	}
+	if resp.GetMetrics().GetTrackingErrorPercent() != nil {
+		d := toModelDecimal(resp.GetMetrics().GetTrackingErrorPercent())
+		te = &d
+	}
+	if resp.GetMetrics().GetInformationRatio() != nil {
+		d := toModelDecimal(resp.GetMetrics().GetInformationRatio())
+		ir = &d
+	}
+
+	metrics := &model.BenchmarkMetrics{
+		PortfolioCumulativeReturnPercent: toModelDecimal(resp.GetMetrics().GetPortfolioCumulativeReturnPercent()),
+		BenchmarkCumulativeReturnPercent: toModelDecimal(resp.GetMetrics().GetBenchmarkCumulativeReturnPercent()),
+		ActiveCumulativeReturnPercent:    toModelDecimal(resp.GetMetrics().GetActiveCumulativeReturnPercent()),
+		PortfolioAnnualizedReturnPercent: portAnn,
+		BenchmarkAnnualizedReturnPercent: benchAnn,
+		ActiveAnnualizedReturnPercent:    activeAnn,
+		IsAnnualized:                     resp.GetMetrics().GetIsAnnualized(),
+		Beta:                             beta,
+		TrackingErrorPercent:             te,
+		InformationRatio:                 ir,
+	}
+
+	return &model.BenchmarkComparisonPayload{
+		PortfolioID:  resp.GetPortfolioId(),
+		BaseCurrency: resp.GetBaseCurrency(),
+		Benchmark:    toModelBenchmark(resp.GetBenchmark()),
+		CurrencyMode: toModelBenchmarkCurrencyMode(resp.GetCurrencyMode()),
+		StartDate:    resp.GetStartDate(),
+		EndDate:      resp.GetEndDate(),
+		ElapsedDays:  int(resp.GetElapsedDays()),
+		Points:       points,
+		Metrics:      metrics,
+	}
+}
+

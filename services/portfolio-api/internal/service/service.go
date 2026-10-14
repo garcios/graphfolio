@@ -58,6 +58,10 @@ type PortfolioService interface {
 
 	// Admin: Missing FX Rates Diagnostic Report
 	ListMissingFXRateTransactions(ctx context.Context, filter domain.MissingFXRateFilter) (*domain.MissingFXRatesReport, error)
+
+	// Benchmark Comparison & Relative Performance
+	ListBenchmarks(ctx context.Context) ([]domain.Benchmark, error)
+	GetBenchmarkComparison(ctx context.Context, userID, benchmarkID string, timeframe domain.HistoryTimeframe, mode domain.BenchmarkCurrencyMode) (*domain.BenchmarkComparisonResult, error)
 }
 
 

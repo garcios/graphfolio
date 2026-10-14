@@ -1,7 +1,7 @@
 # Implementation Plan: Portfolio Benchmark Comparison & Relative Performance Analytics
 
 > **User Story**: [benchmark-performance-comparison.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/benchmark-performance-comparison.md) (`US-PERF-107`)  
-> **Status**: Ready for Implementation  
+> **Status**: Completed  
 > **Roadmap Reference**: [FEATURES.md (Feature #33)](file:///Users/oscargarcia/workspace/graphfolio/FEATURES.md#L43)  
 > **Calculation Standard**: [financial-calculations skill](file:///Users/oscargarcia/workspace/graphfolio/.agents/skills/financial-calculations/SKILL.md) (GIPS® Standard 2.A, CFA Institute Performance Attribution, ASC 820)  
 > **Target Layers**: Database (`portfolio.benchmarks`), Protobuf (`proto/portfolio/v1/`), Domain Microservice (`services/portfolio-api`), BFF (`bff/`), Shared Web Client (`packages/api-client`), Primary Web App (`web/apps/main-app`)  

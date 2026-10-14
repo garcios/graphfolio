@@ -73,6 +73,8 @@ type fakePortfolioClient struct {
 	listMissingPriceTransactionsFn  func(ctx context.Context, in *pb.ListMissingPriceTransactionsRequest) (*pb.ListMissingPriceTransactionsResponse, error)
 	listMissingFXRateTransactionsFn func(ctx context.Context, in *pb.ListMissingFXRateTransactionsRequest) (*pb.ListMissingFXRateTransactionsResponse, error)
 	getModifiedDietzReturnFn        func(ctx context.Context, in *pb.GetModifiedDietzReturnRequest) (*pb.GetModifiedDietzReturnResponse, error)
+	listBenchmarksFn                func(ctx context.Context, in *pb.ListBenchmarksRequest) (*pb.ListBenchmarksResponse, error)
+	getBenchmarkComparisonFn        func(ctx context.Context, in *pb.GetBenchmarkComparisonRequest) (*pb.GetBenchmarkComparisonResponse, error)
 }
 
 
@@ -2496,6 +2498,167 @@ func TestQueryResolver_ModifiedDietzReturn(t *testing.T) {
 		qResolver := resolver.Query()
 
 		_, err := qResolver.ModifiedDietzReturn(ctx, "2025-01-01", "2025-12-31", nil)
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+	})
+}
+
+func (f *fakePortfolioClient) ListBenchmarks(ctx context.Context, in *pb.ListBenchmarksRequest, opts ...grpc.CallOption) (*pb.ListBenchmarksResponse, error) {
+	if f.listBenchmarksFn != nil {
+		return f.listBenchmarksFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakePortfolioClient) GetBenchmarkComparison(ctx context.Context, in *pb.GetBenchmarkComparisonRequest, opts ...grpc.CallOption) (*pb.GetBenchmarkComparisonResponse, error) {
+	if f.getBenchmarkComparisonFn != nil {
+		return f.getBenchmarkComparisonFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func TestQueryResolver_Benchmarks(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully resolves benchmarks", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			listBenchmarksFn: func(ctx context.Context, in *pb.ListBenchmarksRequest) (*pb.ListBenchmarksResponse, error) {
+				return &pb.ListBenchmarksResponse{
+					Benchmarks: []*pb.Benchmark{
+						{
+							Id:           "SP500TR",
+							Symbol:       "SP500TR",
+							Name:         "S&P 500 Total Return",
+							ExchangeCode: "XNYS",
+							CurrencyCode: "USD",
+							IndexType:    "TOTAL_RETURN",
+							IsDefault:    true,
+						},
+					},
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		res, err := qResolver.Benchmarks(ctx)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if len(res) != 1 {
+			t.Fatalf("expected 1 benchmark, got %d", len(res))
+		}
+		if res[0].ID != "SP500TR" || res[0].Symbol != "SP500TR" {
+			t.Errorf("unexpected benchmark: %+v", res[0])
+		}
+	})
+
+	t.Run("handles error from portfolio service", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			listBenchmarksFn: func(ctx context.Context, in *pb.ListBenchmarksRequest) (*pb.ListBenchmarksResponse, error) {
+				return nil, errors.New("service unavailable")
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		_, err := qResolver.Benchmarks(ctx)
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+	})
+}
+
+func TestQueryResolver_BenchmarkComparison(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully resolves benchmark comparison", func(t *testing.T) {
+		portAnn, _ := decimalpb.FromString("15.50")
+		benchAnn, _ := decimalpb.FromString("10.20")
+		actAnn, _ := decimalpb.FromString("5.30")
+		beta, _ := decimalpb.FromString("1.10")
+		te, _ := decimalpb.FromString("4.20")
+		ir, _ := decimalpb.FromString("1.26")
+		cumPort, _ := decimalpb.FromString("20.00")
+		cumBench, _ := decimalpb.FromString("15.00")
+		actCum, _ := decimalpb.FromString("5.00")
+
+		fakeClient := &fakePortfolioClient{
+			getBenchmarkComparisonFn: func(ctx context.Context, in *pb.GetBenchmarkComparisonRequest) (*pb.GetBenchmarkComparisonResponse, error) {
+				return &pb.GetBenchmarkComparisonResponse{
+					PortfolioId:  "port-1",
+					BaseCurrency: "USD",
+					Benchmark: &pb.Benchmark{
+						Id:           "SP500TR",
+						Symbol:       "SP500TR",
+						Name:         "S&P 500 Total Return",
+						ExchangeCode: "XNYS",
+						CurrencyCode: "USD",
+						IndexType:    "TOTAL_RETURN",
+						IsDefault:    true,
+					},
+					CurrencyMode: pb.BenchmarkCurrencyMode_BENCHMARK_CURRENCY_MODE_PORTFOLIO_BASE,
+					StartDate:    "2025-01-01",
+					EndDate:      "2026-01-01",
+					ElapsedDays:  365,
+					Points: []*pb.BenchmarkComparisonPoint{
+						{
+							Date:                   "2025-01-01",
+							PortfolioReturnPercent: cumPort,
+							BenchmarkReturnPercent: cumBench,
+							ActiveReturnPercent:    actCum,
+							PortfolioValue:         decimalpb.MoneyToProto(decimal.NewFromInt(100000), "USD"),
+							BenchmarkPriceAdjusted: decimalpb.MoneyToProto(decimal.RequireFromString("500.00"), "USD"),
+						},
+					},
+					Metrics: &pb.BenchmarkMetrics{
+						PortfolioCumulativeReturnPercent: cumPort,
+						BenchmarkCumulativeReturnPercent: cumBench,
+						ActiveCumulativeReturnPercent:    actCum,
+						PortfolioAnnualizedReturnPercent: portAnn,
+						BenchmarkAnnualizedReturnPercent: benchAnn,
+						ActiveAnnualizedReturnPercent:    actAnn,
+						IsAnnualized:                     true,
+						Beta:                             beta,
+						TrackingErrorPercent:             te,
+						InformationRatio:                 ir,
+					},
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		res, err := qResolver.BenchmarkComparison(ctx, "SP500TR", model.HistoryTimeframeTimeframe1y, nil)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if res.PortfolioID != "port-1" || res.Benchmark.ID != "SP500TR" {
+			t.Errorf("unexpected payload: %+v", res)
+		}
+		if len(res.Points) != 1 {
+			t.Fatalf("expected 1 point, got %d", len(res.Points))
+		}
+		if res.Metrics.Beta == nil || (res.Metrics.Beta.String() != "1.10" && res.Metrics.Beta.String() != "1.1") {
+			t.Errorf("expected beta 1.10 or 1.1, got %v", res.Metrics.Beta)
+		}
+	})
+
+	t.Run("handles error from portfolio service", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			getBenchmarkComparisonFn: func(ctx context.Context, in *pb.GetBenchmarkComparisonRequest) (*pb.GetBenchmarkComparisonResponse, error) {
+				return nil, errors.New("service unavailable")
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		_, err := qResolver.BenchmarkComparison(ctx, "SP500TR", model.HistoryTimeframeTimeframe1y, nil)
 		if err == nil {
 			t.Fatal("expected error, got nil")
 		}

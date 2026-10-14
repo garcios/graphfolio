@@ -66,6 +66,8 @@ export interface Query {
     missingPriceTransactions: MissingPriceReport
     missingFXRateTransactions: MissingFXRatesReport
     modifiedDietzReturn: ModifiedDietzReturnPayload
+    benchmarks: Benchmark[]
+    benchmarkComparison: BenchmarkComparisonPayload
     __typename: 'Query'
 }
 
@@ -464,6 +466,56 @@ export interface ExternalCashFlowWeightItem {
     __typename: 'ExternalCashFlowWeightItem'
 }
 
+export type BenchmarkCurrencyMode = 'PORTFOLIO_BASE' | 'BENCHMARK_NATIVE'
+
+export interface Benchmark {
+    id: Scalars['ID']
+    symbol: Scalars['String']
+    name: Scalars['String']
+    exchangeCode: Scalars['String']
+    currencyCode: Scalars['String']
+    indexType: Scalars['String']
+    isDefault: Scalars['Boolean']
+    __typename: 'Benchmark'
+}
+
+export interface BenchmarkComparisonPoint {
+    date: Scalars['String']
+    portfolioReturnPercent: Scalars['Decimal']
+    benchmarkReturnPercent: Scalars['Decimal']
+    activeReturnPercent: Scalars['Decimal']
+    portfolioValue: Money
+    benchmarkPriceAdjusted: Money
+    __typename: 'BenchmarkComparisonPoint'
+}
+
+export interface BenchmarkMetrics {
+    portfolioCumulativeReturnPercent: Scalars['Decimal']
+    benchmarkCumulativeReturnPercent: Scalars['Decimal']
+    activeCumulativeReturnPercent: Scalars['Decimal']
+    portfolioAnnualizedReturnPercent: (Scalars['Decimal'] | null)
+    benchmarkAnnualizedReturnPercent: (Scalars['Decimal'] | null)
+    activeAnnualizedReturnPercent: (Scalars['Decimal'] | null)
+    isAnnualized: Scalars['Boolean']
+    beta: (Scalars['Decimal'] | null)
+    trackingErrorPercent: (Scalars['Decimal'] | null)
+    informationRatio: (Scalars['Decimal'] | null)
+    __typename: 'BenchmarkMetrics'
+}
+
+export interface BenchmarkComparisonPayload {
+    portfolioId: Scalars['ID']
+    baseCurrency: Scalars['String']
+    benchmark: Benchmark
+    currencyMode: BenchmarkCurrencyMode
+    startDate: Scalars['String']
+    endDate: Scalars['String']
+    elapsedDays: Scalars['Int']
+    points: BenchmarkComparisonPoint[]
+    metrics: BenchmarkMetrics
+    __typename: 'BenchmarkComparisonPayload'
+}
+
 export interface MoneyGenqlSelection{
     amount?: boolean | number
     currencyCode?: boolean | number
@@ -523,6 +575,8 @@ export interface QueryGenqlSelection{
     missingPriceTransactions?: (MissingPriceReportGenqlSelection & { __args?: {symbol?: (Scalars['String'] | null), fromDate?: (Scalars['String'] | null), toDate?: (Scalars['String'] | null), limit?: (Scalars['Int'] | null), offset?: (Scalars['Int'] | null)} })
     missingFXRateTransactions?: (MissingFXRatesReportGenqlSelection & { __args?: {currencyPair?: (Scalars['String'] | null), fromDate?: (Scalars['String'] | null), toDate?: (Scalars['String'] | null), type?: (TransactionType | null), limit?: (Scalars['Int'] | null), offset?: (Scalars['Int'] | null)} })
     modifiedDietzReturn?: (ModifiedDietzReturnPayloadGenqlSelection & { __args: {startDate: Scalars['String'], endDate: Scalars['String'], useMonthlyLinking?: (Scalars['Boolean'] | null)} })
+    benchmarks?: BenchmarkGenqlSelection
+    benchmarkComparison?: (BenchmarkComparisonPayloadGenqlSelection & { __args: {benchmarkId: Scalars['ID'], timeframe: HistoryTimeframe, currencyMode?: (BenchmarkCurrencyMode | null)} })
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -968,6 +1022,58 @@ export interface ExternalCashFlowWeightItemGenqlSelection{
     __scalar?: boolean | number
 }
 
+export interface BenchmarkGenqlSelection{
+    id?: boolean | number
+    symbol?: boolean | number
+    name?: boolean | number
+    exchangeCode?: boolean | number
+    currencyCode?: boolean | number
+    indexType?: boolean | number
+    isDefault?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface BenchmarkComparisonPointGenqlSelection{
+    date?: boolean | number
+    portfolioReturnPercent?: boolean | number
+    benchmarkReturnPercent?: boolean | number
+    activeReturnPercent?: boolean | number
+    portfolioValue?: MoneyGenqlSelection
+    benchmarkPriceAdjusted?: MoneyGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface BenchmarkMetricsGenqlSelection{
+    portfolioCumulativeReturnPercent?: boolean | number
+    benchmarkCumulativeReturnPercent?: boolean | number
+    activeCumulativeReturnPercent?: boolean | number
+    portfolioAnnualizedReturnPercent?: boolean | number
+    benchmarkAnnualizedReturnPercent?: boolean | number
+    activeAnnualizedReturnPercent?: boolean | number
+    isAnnualized?: boolean | number
+    beta?: boolean | number
+    trackingErrorPercent?: boolean | number
+    informationRatio?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface BenchmarkComparisonPayloadGenqlSelection{
+    portfolioId?: boolean | number
+    baseCurrency?: boolean | number
+    benchmark?: BenchmarkGenqlSelection
+    currencyMode?: boolean | number
+    startDate?: boolean | number
+    endDate?: boolean | number
+    elapsedDays?: boolean | number
+    points?: BenchmarkComparisonPointGenqlSelection
+    metrics?: BenchmarkMetricsGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
 
     const Money_possibleTypes: string[] = ['Money']
     export const isMoney = (obj?: { __typename?: any } | null): obj is Money => {
@@ -1296,6 +1402,38 @@ export interface ExternalCashFlowWeightItemGenqlSelection{
     }
     
 
+
+    const Benchmark_possibleTypes: string[] = ['Benchmark']
+    export const isBenchmark = (obj?: { __typename?: any } | null): obj is Benchmark => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isBenchmark"')
+      return Benchmark_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const BenchmarkComparisonPoint_possibleTypes: string[] = ['BenchmarkComparisonPoint']
+    export const isBenchmarkComparisonPoint = (obj?: { __typename?: any } | null): obj is BenchmarkComparisonPoint => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isBenchmarkComparisonPoint"')
+      return BenchmarkComparisonPoint_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const BenchmarkMetrics_possibleTypes: string[] = ['BenchmarkMetrics']
+    export const isBenchmarkMetrics = (obj?: { __typename?: any } | null): obj is BenchmarkMetrics => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isBenchmarkMetrics"')
+      return BenchmarkMetrics_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const BenchmarkComparisonPayload_possibleTypes: string[] = ['BenchmarkComparisonPayload']
+    export const isBenchmarkComparisonPayload = (obj?: { __typename?: any } | null): obj is BenchmarkComparisonPayload => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isBenchmarkComparisonPayload"')
+      return BenchmarkComparisonPayload_possibleTypes.includes(obj.__typename)
+    }
+    
+
 export const enumTransactionType = {
    BUY: 'BUY' as const,
    SELL: 'SELL' as const,
@@ -1344,4 +1482,9 @@ export const enumCashFlowCategory = {
    PURCHASES: 'PURCHASES' as const,
    FEES: 'FEES' as const,
    TAXES: 'TAXES' as const
+}
+
+export const enumBenchmarkCurrencyMode = {
+   PORTFOLIO_BASE: 'PORTFOLIO_BASE' as const,
+   BENCHMARK_NATIVE: 'BENCHMARK_NATIVE' as const
 }

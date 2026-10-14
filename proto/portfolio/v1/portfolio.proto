@@ -57,6 +57,10 @@ service PortfolioService {
 
   // Return Analytics: Modified Dietz Method
   rpc GetModifiedDietzReturn(GetModifiedDietzReturnRequest) returns (GetModifiedDietzReturnResponse) {}
+
+  // Benchmark Comparison & Relative Performance Analytics
+  rpc ListBenchmarks(ListBenchmarksRequest) returns (ListBenchmarksResponse) {}
+  rpc GetBenchmarkComparison(GetBenchmarkComparisonRequest) returns (GetBenchmarkComparisonResponse) {}
 }
 
 message RebuildValuationsRequest {
@@ -693,6 +697,73 @@ message GetModifiedDietzReturnResponse {
   bool                            is_computable             = 14;
   string                          diagnostic_code           = 15; // OK, ZERO_CAPITAL_EMPLOYED, NEGATIVE_AVERAGE_CAPITAL
   repeated ExternalCashFlowWeight cash_flow_weights         = 16;
+}
+
+// ------------------------------------------------------------------
+// Benchmark Comparison & Relative Performance Messages
+// ------------------------------------------------------------------
+
+enum BenchmarkCurrencyMode {
+  BENCHMARK_CURRENCY_MODE_UNSPECIFIED = 0;
+  BENCHMARK_CURRENCY_MODE_PORTFOLIO_BASE = 1; // Translated to portfolio base currency via daily FX
+  BENCHMARK_CURRENCY_MODE_BENCHMARK_NATIVE = 2; // Expressed in native benchmark currency (unhedged)
+}
+
+message Benchmark {
+  string id            = 1; // e.g. "SP500TR"
+  string symbol        = 2; // e.g. "SP500TR" or "SPY"
+  string name          = 3; // e.g. "S&P 500 Total Return"
+  string exchange_code = 4; // "XNYS"
+  string currency_code = 5; // "USD"
+  string index_type    = 6; // "TOTAL_RETURN"
+  bool   is_default    = 7;
+}
+
+message ListBenchmarksRequest {}
+
+message ListBenchmarksResponse {
+  repeated Benchmark benchmarks = 1;
+}
+
+message BenchmarkComparisonPoint {
+  string            date                     = 1; // YYYY-MM-DD
+  common.v1.Decimal portfolio_return_percent = 2; // Cumulative return % from T_start
+  common.v1.Decimal benchmark_return_percent = 3; // Cumulative return % from T_start
+  common.v1.Decimal active_return_percent    = 4; // portfolio_return - benchmark_return
+  common.v1.Money   portfolio_value          = 5; // Absolute portfolio valuation in base currency
+  common.v1.Money   benchmark_price_adjusted = 6; // Benchmark price in selected currency mode
+}
+
+message BenchmarkMetrics {
+  common.v1.Decimal portfolio_cumulative_return_percent = 1;
+  common.v1.Decimal benchmark_cumulative_return_percent = 2;
+  common.v1.Decimal active_cumulative_return_percent    = 3; // Outperformance (+) or Underperformance (-)
+  common.v1.Decimal portfolio_annualized_return_percent = 4; // Null if elapsed < 365 days
+  common.v1.Decimal benchmark_annualized_return_percent = 5; // Null if elapsed < 365 days
+  common.v1.Decimal active_annualized_return_percent    = 6; // Null if elapsed < 365 days
+  bool              is_annualized                       = 7; // GIPS Standard 2.A.20
+  common.v1.Decimal beta                                = 8; // Null if observations < 30
+  common.v1.Decimal tracking_error_percent              = 9; // Null if observations < 30
+  common.v1.Decimal information_ratio                   = 10; // Null if elapsed < 365 or TE == 0
+}
+
+message GetBenchmarkComparisonRequest {
+  string                user_id       = 1;
+  string                benchmark_id  = 2; // e.g. "SP500TR"
+  HistoryTimeframe      timeframe     = 3; // 1D, 1W, 1M, 1Y, ALL
+  BenchmarkCurrencyMode currency_mode = 4; // BASE or NATIVE
+}
+
+message GetBenchmarkComparisonResponse {
+  string                            portfolio_id  = 1;
+  string                            base_currency = 2;
+  Benchmark                         benchmark     = 3;
+  BenchmarkCurrencyMode             currency_mode = 4;
+  string                            start_date    = 5;
+  string                            end_date      = 6;
+  int32                             elapsed_days  = 7;
+  repeated BenchmarkComparisonPoint points        = 8;
+  BenchmarkMetrics                  metrics       = 9;
 }
 
 

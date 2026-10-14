@@ -58,6 +58,50 @@ type ComplexityRoot struct {
 		Success       func(childComplexity int) int
 	}
 
+	Benchmark struct {
+		CurrencyCode func(childComplexity int) int
+		ExchangeCode func(childComplexity int) int
+		ID           func(childComplexity int) int
+		IndexType    func(childComplexity int) int
+		IsDefault    func(childComplexity int) int
+		Name         func(childComplexity int) int
+		Symbol       func(childComplexity int) int
+	}
+
+	BenchmarkComparisonPayload struct {
+		BaseCurrency func(childComplexity int) int
+		Benchmark    func(childComplexity int) int
+		CurrencyMode func(childComplexity int) int
+		ElapsedDays  func(childComplexity int) int
+		EndDate      func(childComplexity int) int
+		Metrics      func(childComplexity int) int
+		Points       func(childComplexity int) int
+		PortfolioID  func(childComplexity int) int
+		StartDate    func(childComplexity int) int
+	}
+
+	BenchmarkComparisonPoint struct {
+		ActiveReturnPercent    func(childComplexity int) int
+		BenchmarkPriceAdjusted func(childComplexity int) int
+		BenchmarkReturnPercent func(childComplexity int) int
+		Date                   func(childComplexity int) int
+		PortfolioReturnPercent func(childComplexity int) int
+		PortfolioValue         func(childComplexity int) int
+	}
+
+	BenchmarkMetrics struct {
+		ActiveAnnualizedReturnPercent    func(childComplexity int) int
+		ActiveCumulativeReturnPercent    func(childComplexity int) int
+		BenchmarkAnnualizedReturnPercent func(childComplexity int) int
+		BenchmarkCumulativeReturnPercent func(childComplexity int) int
+		Beta                             func(childComplexity int) int
+		InformationRatio                 func(childComplexity int) int
+		IsAnnualized                     func(childComplexity int) int
+		PortfolioAnnualizedReturnPercent func(childComplexity int) int
+		PortfolioCumulativeReturnPercent func(childComplexity int) int
+		TrackingErrorPercent             func(childComplexity int) int
+	}
+
 	CashFlowCategoryBreakdown struct {
 		Deposits      func(childComplexity int) int
 		Dividends     func(childComplexity int) int
@@ -363,6 +407,8 @@ type ComplexityRoot struct {
 
 	Query struct {
 		AllInstruments             func(childComplexity int, isActive *bool, search *string) int
+		BenchmarkComparison        func(childComplexity int, benchmarkID string, timeframe model.HistoryTimeframe, currencyMode *model.BenchmarkCurrencyMode) int
+		Benchmarks                 func(childComplexity int) int
 		CashFlowReport             func(childComplexity int, filter model.CashFlowFilterInput) int
 		CheckTransactionDuplicates func(childComplexity int, externalRefs []string) int
 		CurrencyPairHistory        func(childComplexity int, baseCurrency string, quoteCurrency string, timeframe model.HistoryTimeframe) int
@@ -474,6 +520,8 @@ type QueryResolver interface {
 	MissingPriceTransactions(ctx context.Context, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) (*model.MissingPriceReport, error)
 	MissingFXRateTransactions(ctx context.Context, currencyPair *string, fromDate *string, toDate *string, typeArg *model.TransactionType, limit *int, offset *int) (*model.MissingFXRatesReport, error)
 	ModifiedDietzReturn(ctx context.Context, startDate string, endDate string, useMonthlyLinking *bool) (*model.ModifiedDietzReturnPayload, error)
+	Benchmarks(ctx context.Context) ([]*model.Benchmark, error)
+	BenchmarkComparison(ctx context.Context, benchmarkID string, timeframe model.HistoryTimeframe, currencyMode *model.BenchmarkCurrencyMode) (*model.BenchmarkComparisonPayload, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -568,6 +616,202 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.BatchImportTransactionsPayload.Success(childComplexity), true
+
+	case "Benchmark.currencyCode":
+		if e.ComplexityRoot.Benchmark.CurrencyCode == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Benchmark.CurrencyCode(childComplexity), true
+	case "Benchmark.exchangeCode":
+		if e.ComplexityRoot.Benchmark.ExchangeCode == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Benchmark.ExchangeCode(childComplexity), true
+	case "Benchmark.id":
+		if e.ComplexityRoot.Benchmark.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Benchmark.ID(childComplexity), true
+	case "Benchmark.indexType":
+		if e.ComplexityRoot.Benchmark.IndexType == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Benchmark.IndexType(childComplexity), true
+	case "Benchmark.isDefault":
+		if e.ComplexityRoot.Benchmark.IsDefault == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Benchmark.IsDefault(childComplexity), true
+	case "Benchmark.name":
+		if e.ComplexityRoot.Benchmark.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Benchmark.Name(childComplexity), true
+	case "Benchmark.symbol":
+		if e.ComplexityRoot.Benchmark.Symbol == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Benchmark.Symbol(childComplexity), true
+
+	case "BenchmarkComparisonPayload.baseCurrency":
+		if e.ComplexityRoot.BenchmarkComparisonPayload.BaseCurrency == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkComparisonPayload.BaseCurrency(childComplexity), true
+	case "BenchmarkComparisonPayload.benchmark":
+		if e.ComplexityRoot.BenchmarkComparisonPayload.Benchmark == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkComparisonPayload.Benchmark(childComplexity), true
+	case "BenchmarkComparisonPayload.currencyMode":
+		if e.ComplexityRoot.BenchmarkComparisonPayload.CurrencyMode == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkComparisonPayload.CurrencyMode(childComplexity), true
+	case "BenchmarkComparisonPayload.elapsedDays":
+		if e.ComplexityRoot.BenchmarkComparisonPayload.ElapsedDays == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkComparisonPayload.ElapsedDays(childComplexity), true
+	case "BenchmarkComparisonPayload.endDate":
+		if e.ComplexityRoot.BenchmarkComparisonPayload.EndDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkComparisonPayload.EndDate(childComplexity), true
+	case "BenchmarkComparisonPayload.metrics":
+		if e.ComplexityRoot.BenchmarkComparisonPayload.Metrics == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkComparisonPayload.Metrics(childComplexity), true
+	case "BenchmarkComparisonPayload.points":
+		if e.ComplexityRoot.BenchmarkComparisonPayload.Points == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkComparisonPayload.Points(childComplexity), true
+	case "BenchmarkComparisonPayload.portfolioId":
+		if e.ComplexityRoot.BenchmarkComparisonPayload.PortfolioID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkComparisonPayload.PortfolioID(childComplexity), true
+	case "BenchmarkComparisonPayload.startDate":
+		if e.ComplexityRoot.BenchmarkComparisonPayload.StartDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkComparisonPayload.StartDate(childComplexity), true
+
+	case "BenchmarkComparisonPoint.activeReturnPercent":
+		if e.ComplexityRoot.BenchmarkComparisonPoint.ActiveReturnPercent == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkComparisonPoint.ActiveReturnPercent(childComplexity), true
+	case "BenchmarkComparisonPoint.benchmarkPriceAdjusted":
+		if e.ComplexityRoot.BenchmarkComparisonPoint.BenchmarkPriceAdjusted == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkComparisonPoint.BenchmarkPriceAdjusted(childComplexity), true
+	case "BenchmarkComparisonPoint.benchmarkReturnPercent":
+		if e.ComplexityRoot.BenchmarkComparisonPoint.BenchmarkReturnPercent == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkComparisonPoint.BenchmarkReturnPercent(childComplexity), true
+	case "BenchmarkComparisonPoint.date":
+		if e.ComplexityRoot.BenchmarkComparisonPoint.Date == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkComparisonPoint.Date(childComplexity), true
+	case "BenchmarkComparisonPoint.portfolioReturnPercent":
+		if e.ComplexityRoot.BenchmarkComparisonPoint.PortfolioReturnPercent == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkComparisonPoint.PortfolioReturnPercent(childComplexity), true
+	case "BenchmarkComparisonPoint.portfolioValue":
+		if e.ComplexityRoot.BenchmarkComparisonPoint.PortfolioValue == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkComparisonPoint.PortfolioValue(childComplexity), true
+
+	case "BenchmarkMetrics.activeAnnualizedReturnPercent":
+		if e.ComplexityRoot.BenchmarkMetrics.ActiveAnnualizedReturnPercent == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkMetrics.ActiveAnnualizedReturnPercent(childComplexity), true
+	case "BenchmarkMetrics.activeCumulativeReturnPercent":
+		if e.ComplexityRoot.BenchmarkMetrics.ActiveCumulativeReturnPercent == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkMetrics.ActiveCumulativeReturnPercent(childComplexity), true
+	case "BenchmarkMetrics.benchmarkAnnualizedReturnPercent":
+		if e.ComplexityRoot.BenchmarkMetrics.BenchmarkAnnualizedReturnPercent == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkMetrics.BenchmarkAnnualizedReturnPercent(childComplexity), true
+	case "BenchmarkMetrics.benchmarkCumulativeReturnPercent":
+		if e.ComplexityRoot.BenchmarkMetrics.BenchmarkCumulativeReturnPercent == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkMetrics.BenchmarkCumulativeReturnPercent(childComplexity), true
+	case "BenchmarkMetrics.beta":
+		if e.ComplexityRoot.BenchmarkMetrics.Beta == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkMetrics.Beta(childComplexity), true
+	case "BenchmarkMetrics.informationRatio":
+		if e.ComplexityRoot.BenchmarkMetrics.InformationRatio == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkMetrics.InformationRatio(childComplexity), true
+	case "BenchmarkMetrics.isAnnualized":
+		if e.ComplexityRoot.BenchmarkMetrics.IsAnnualized == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkMetrics.IsAnnualized(childComplexity), true
+	case "BenchmarkMetrics.portfolioAnnualizedReturnPercent":
+		if e.ComplexityRoot.BenchmarkMetrics.PortfolioAnnualizedReturnPercent == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkMetrics.PortfolioAnnualizedReturnPercent(childComplexity), true
+	case "BenchmarkMetrics.portfolioCumulativeReturnPercent":
+		if e.ComplexityRoot.BenchmarkMetrics.PortfolioCumulativeReturnPercent == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkMetrics.PortfolioCumulativeReturnPercent(childComplexity), true
+	case "BenchmarkMetrics.trackingErrorPercent":
+		if e.ComplexityRoot.BenchmarkMetrics.TrackingErrorPercent == nil {
+			break
+		}
+
+		return e.ComplexityRoot.BenchmarkMetrics.TrackingErrorPercent(childComplexity), true
 
 	case "CashFlowCategoryBreakdown.deposits":
 		if e.ComplexityRoot.CashFlowCategoryBreakdown.Deposits == nil {
@@ -1943,6 +2187,23 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.AllInstruments(childComplexity, args["isActive"].(*bool), args["search"].(*string)), true
+	case "Query.benchmarkComparison":
+		if e.ComplexityRoot.Query.BenchmarkComparison == nil {
+			break
+		}
+
+		args, err := ec.field_Query_benchmarkComparison_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.BenchmarkComparison(childComplexity, args["benchmarkId"].(string), args["timeframe"].(model.HistoryTimeframe), args["currencyMode"].(*model.BenchmarkCurrencyMode)), true
+	case "Query.benchmarks":
+		if e.ComplexityRoot.Query.Benchmarks == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Query.Benchmarks(childComplexity), true
 	case "Query.cashFlowReport":
 		if e.ComplexityRoot.Query.CashFlowReport == nil {
 			break
@@ -2465,6 +2726,94 @@ func (ec *executionContext) childFields_BatchImportTransactionsPayload(ctx conte
 		return ec.fieldContext_BatchImportTransactionsPayload_message(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type BatchImportTransactionsPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_Benchmark(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_Benchmark_id(ctx, field)
+	case "symbol":
+		return ec.fieldContext_Benchmark_symbol(ctx, field)
+	case "name":
+		return ec.fieldContext_Benchmark_name(ctx, field)
+	case "exchangeCode":
+		return ec.fieldContext_Benchmark_exchangeCode(ctx, field)
+	case "currencyCode":
+		return ec.fieldContext_Benchmark_currencyCode(ctx, field)
+	case "indexType":
+		return ec.fieldContext_Benchmark_indexType(ctx, field)
+	case "isDefault":
+		return ec.fieldContext_Benchmark_isDefault(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type Benchmark", field.Name)
+}
+
+func (ec *executionContext) childFields_BenchmarkComparisonPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "portfolioId":
+		return ec.fieldContext_BenchmarkComparisonPayload_portfolioId(ctx, field)
+	case "baseCurrency":
+		return ec.fieldContext_BenchmarkComparisonPayload_baseCurrency(ctx, field)
+	case "benchmark":
+		return ec.fieldContext_BenchmarkComparisonPayload_benchmark(ctx, field)
+	case "currencyMode":
+		return ec.fieldContext_BenchmarkComparisonPayload_currencyMode(ctx, field)
+	case "startDate":
+		return ec.fieldContext_BenchmarkComparisonPayload_startDate(ctx, field)
+	case "endDate":
+		return ec.fieldContext_BenchmarkComparisonPayload_endDate(ctx, field)
+	case "elapsedDays":
+		return ec.fieldContext_BenchmarkComparisonPayload_elapsedDays(ctx, field)
+	case "points":
+		return ec.fieldContext_BenchmarkComparisonPayload_points(ctx, field)
+	case "metrics":
+		return ec.fieldContext_BenchmarkComparisonPayload_metrics(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type BenchmarkComparisonPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_BenchmarkComparisonPoint(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "date":
+		return ec.fieldContext_BenchmarkComparisonPoint_date(ctx, field)
+	case "portfolioReturnPercent":
+		return ec.fieldContext_BenchmarkComparisonPoint_portfolioReturnPercent(ctx, field)
+	case "benchmarkReturnPercent":
+		return ec.fieldContext_BenchmarkComparisonPoint_benchmarkReturnPercent(ctx, field)
+	case "activeReturnPercent":
+		return ec.fieldContext_BenchmarkComparisonPoint_activeReturnPercent(ctx, field)
+	case "portfolioValue":
+		return ec.fieldContext_BenchmarkComparisonPoint_portfolioValue(ctx, field)
+	case "benchmarkPriceAdjusted":
+		return ec.fieldContext_BenchmarkComparisonPoint_benchmarkPriceAdjusted(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type BenchmarkComparisonPoint", field.Name)
+}
+
+func (ec *executionContext) childFields_BenchmarkMetrics(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "portfolioCumulativeReturnPercent":
+		return ec.fieldContext_BenchmarkMetrics_portfolioCumulativeReturnPercent(ctx, field)
+	case "benchmarkCumulativeReturnPercent":
+		return ec.fieldContext_BenchmarkMetrics_benchmarkCumulativeReturnPercent(ctx, field)
+	case "activeCumulativeReturnPercent":
+		return ec.fieldContext_BenchmarkMetrics_activeCumulativeReturnPercent(ctx, field)
+	case "portfolioAnnualizedReturnPercent":
+		return ec.fieldContext_BenchmarkMetrics_portfolioAnnualizedReturnPercent(ctx, field)
+	case "benchmarkAnnualizedReturnPercent":
+		return ec.fieldContext_BenchmarkMetrics_benchmarkAnnualizedReturnPercent(ctx, field)
+	case "activeAnnualizedReturnPercent":
+		return ec.fieldContext_BenchmarkMetrics_activeAnnualizedReturnPercent(ctx, field)
+	case "isAnnualized":
+		return ec.fieldContext_BenchmarkMetrics_isAnnualized(ctx, field)
+	case "beta":
+		return ec.fieldContext_BenchmarkMetrics_beta(ctx, field)
+	case "trackingErrorPercent":
+		return ec.fieldContext_BenchmarkMetrics_trackingErrorPercent(ctx, field)
+	case "informationRatio":
+		return ec.fieldContext_BenchmarkMetrics_informationRatio(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type BenchmarkMetrics", field.Name)
 }
 
 func (ec *executionContext) childFields_CashFlowCategoryBreakdown(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -3469,6 +3818,36 @@ func (ec *executionContext) field_Query_allInstruments_args(ctx context.Context,
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_benchmarkComparison_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "benchmarkId",
+		func(ctx context.Context, v any) (string, error) {
+			return ec.unmarshalNID2string(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["benchmarkId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "timeframe",
+		func(ctx context.Context, v any) (model.HistoryTimeframe, error) {
+			return ec.unmarshalNHistoryTimeframe2bffᚋgraphᚋmodelᚐHistoryTimeframe(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["timeframe"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "currencyMode",
+		func(ctx context.Context, v any) (*model.BenchmarkCurrencyMode, error) {
+			return ec.unmarshalOBenchmarkCurrencyMode2ᚖbffᚋgraphᚋmodelᚐBenchmarkCurrencyMode(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["currencyMode"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_cashFlowReport_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -4175,6 +4554,787 @@ func (ec *executionContext) _BatchImportTransactionsPayload_message(ctx context.
 }
 func (ec *executionContext) fieldContext_BatchImportTransactionsPayload_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("BatchImportTransactionsPayload", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Benchmark_id(ctx context.Context, field graphql.CollectedField, obj *model.Benchmark) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Benchmark_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Benchmark_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Benchmark", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _Benchmark_symbol(ctx context.Context, field graphql.CollectedField, obj *model.Benchmark) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Benchmark_symbol(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Symbol, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Benchmark_symbol(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Benchmark", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Benchmark_name(ctx context.Context, field graphql.CollectedField, obj *model.Benchmark) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Benchmark_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Benchmark_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Benchmark", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Benchmark_exchangeCode(ctx context.Context, field graphql.CollectedField, obj *model.Benchmark) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Benchmark_exchangeCode(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ExchangeCode, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Benchmark_exchangeCode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Benchmark", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Benchmark_currencyCode(ctx context.Context, field graphql.CollectedField, obj *model.Benchmark) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Benchmark_currencyCode(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CurrencyCode, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Benchmark_currencyCode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Benchmark", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Benchmark_indexType(ctx context.Context, field graphql.CollectedField, obj *model.Benchmark) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Benchmark_indexType(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.IndexType, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Benchmark_indexType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Benchmark", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _Benchmark_isDefault(ctx context.Context, field graphql.CollectedField, obj *model.Benchmark) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Benchmark_isDefault(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.IsDefault, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Benchmark_isDefault(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("Benchmark", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _BenchmarkComparisonPayload_portfolioId(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkComparisonPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkComparisonPayload_portfolioId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PortfolioID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkComparisonPayload_portfolioId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BenchmarkComparisonPayload", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _BenchmarkComparisonPayload_baseCurrency(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkComparisonPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkComparisonPayload_baseCurrency(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.BaseCurrency, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkComparisonPayload_baseCurrency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BenchmarkComparisonPayload", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _BenchmarkComparisonPayload_benchmark(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkComparisonPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkComparisonPayload_benchmark(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Benchmark, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Benchmark) graphql.Marshaler {
+			return ec.marshalNBenchmark2ᚖbffᚋgraphᚋmodelᚐBenchmark(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkComparisonPayload_benchmark(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BenchmarkComparisonPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Benchmark(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BenchmarkComparisonPayload_currencyMode(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkComparisonPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkComparisonPayload_currencyMode(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CurrencyMode, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.BenchmarkCurrencyMode) graphql.Marshaler {
+			return ec.marshalNBenchmarkCurrencyMode2bffᚋgraphᚋmodelᚐBenchmarkCurrencyMode(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkComparisonPayload_currencyMode(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BenchmarkComparisonPayload", field, false, false, errors.New("field of type BenchmarkCurrencyMode does not have child fields"))
+}
+
+func (ec *executionContext) _BenchmarkComparisonPayload_startDate(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkComparisonPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkComparisonPayload_startDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.StartDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkComparisonPayload_startDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BenchmarkComparisonPayload", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _BenchmarkComparisonPayload_endDate(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkComparisonPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkComparisonPayload_endDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.EndDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkComparisonPayload_endDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BenchmarkComparisonPayload", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _BenchmarkComparisonPayload_elapsedDays(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkComparisonPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkComparisonPayload_elapsedDays(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ElapsedDays, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkComparisonPayload_elapsedDays(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BenchmarkComparisonPayload", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _BenchmarkComparisonPayload_points(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkComparisonPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkComparisonPayload_points(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Points, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.BenchmarkComparisonPoint) graphql.Marshaler {
+			return ec.marshalNBenchmarkComparisonPoint2ᚕᚖbffᚋgraphᚋmodelᚐBenchmarkComparisonPointᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkComparisonPayload_points(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BenchmarkComparisonPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_BenchmarkComparisonPoint(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BenchmarkComparisonPayload_metrics(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkComparisonPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkComparisonPayload_metrics(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Metrics, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.BenchmarkMetrics) graphql.Marshaler {
+			return ec.marshalNBenchmarkMetrics2ᚖbffᚋgraphᚋmodelᚐBenchmarkMetrics(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkComparisonPayload_metrics(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BenchmarkComparisonPayload",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_BenchmarkMetrics(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BenchmarkComparisonPoint_date(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkComparisonPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkComparisonPoint_date(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Date, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkComparisonPoint_date(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BenchmarkComparisonPoint", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _BenchmarkComparisonPoint_portfolioReturnPercent(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkComparisonPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkComparisonPoint_portfolioReturnPercent(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PortfolioReturnPercent, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkComparisonPoint_portfolioReturnPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BenchmarkComparisonPoint", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _BenchmarkComparisonPoint_benchmarkReturnPercent(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkComparisonPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkComparisonPoint_benchmarkReturnPercent(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.BenchmarkReturnPercent, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkComparisonPoint_benchmarkReturnPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BenchmarkComparisonPoint", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _BenchmarkComparisonPoint_activeReturnPercent(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkComparisonPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkComparisonPoint_activeReturnPercent(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ActiveReturnPercent, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkComparisonPoint_activeReturnPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BenchmarkComparisonPoint", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _BenchmarkComparisonPoint_portfolioValue(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkComparisonPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkComparisonPoint_portfolioValue(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PortfolioValue, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkComparisonPoint_portfolioValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BenchmarkComparisonPoint",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BenchmarkComparisonPoint_benchmarkPriceAdjusted(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkComparisonPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkComparisonPoint_benchmarkPriceAdjusted(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.BenchmarkPriceAdjusted, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkComparisonPoint_benchmarkPriceAdjusted(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "BenchmarkComparisonPoint",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _BenchmarkMetrics_portfolioCumulativeReturnPercent(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkMetrics) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkMetrics_portfolioCumulativeReturnPercent(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PortfolioCumulativeReturnPercent, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkMetrics_portfolioCumulativeReturnPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BenchmarkMetrics", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _BenchmarkMetrics_benchmarkCumulativeReturnPercent(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkMetrics) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkMetrics_benchmarkCumulativeReturnPercent(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.BenchmarkCumulativeReturnPercent, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkMetrics_benchmarkCumulativeReturnPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BenchmarkMetrics", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _BenchmarkMetrics_activeCumulativeReturnPercent(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkMetrics) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkMetrics_activeCumulativeReturnPercent(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ActiveCumulativeReturnPercent, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkMetrics_activeCumulativeReturnPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BenchmarkMetrics", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _BenchmarkMetrics_portfolioAnnualizedReturnPercent(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkMetrics) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkMetrics_portfolioAnnualizedReturnPercent(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PortfolioAnnualizedReturnPercent, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Decimal) graphql.Marshaler {
+			return ec.marshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkMetrics_portfolioAnnualizedReturnPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BenchmarkMetrics", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _BenchmarkMetrics_benchmarkAnnualizedReturnPercent(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkMetrics) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkMetrics_benchmarkAnnualizedReturnPercent(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.BenchmarkAnnualizedReturnPercent, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Decimal) graphql.Marshaler {
+			return ec.marshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkMetrics_benchmarkAnnualizedReturnPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BenchmarkMetrics", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _BenchmarkMetrics_activeAnnualizedReturnPercent(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkMetrics) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkMetrics_activeAnnualizedReturnPercent(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ActiveAnnualizedReturnPercent, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Decimal) graphql.Marshaler {
+			return ec.marshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkMetrics_activeAnnualizedReturnPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BenchmarkMetrics", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _BenchmarkMetrics_isAnnualized(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkMetrics) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkMetrics_isAnnualized(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.IsAnnualized, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkMetrics_isAnnualized(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BenchmarkMetrics", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _BenchmarkMetrics_beta(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkMetrics) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkMetrics_beta(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Beta, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Decimal) graphql.Marshaler {
+			return ec.marshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkMetrics_beta(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BenchmarkMetrics", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _BenchmarkMetrics_trackingErrorPercent(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkMetrics) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkMetrics_trackingErrorPercent(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TrackingErrorPercent, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Decimal) graphql.Marshaler {
+			return ec.marshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkMetrics_trackingErrorPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BenchmarkMetrics", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _BenchmarkMetrics_informationRatio(ctx context.Context, field graphql.CollectedField, obj *model.BenchmarkMetrics) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_BenchmarkMetrics_informationRatio(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.InformationRatio, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Decimal) graphql.Marshaler {
+			return ec.marshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_BenchmarkMetrics_informationRatio(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("BenchmarkMetrics", field, false, false, errors.New("field of type Decimal does not have child fields"))
 }
 
 func (ec *executionContext) _CashFlowCategoryBreakdown_deposits(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowCategoryBreakdown) (ret graphql.Marshaler) {
@@ -10531,6 +11691,82 @@ func (ec *executionContext) fieldContext_Query_modifiedDietzReturn(ctx context.C
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_benchmarks(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_benchmarks(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Query().Benchmarks(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.Benchmark) graphql.Marshaler {
+			return ec.marshalNBenchmark2ᚕᚖbffᚋgraphᚋmodelᚐBenchmarkᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_benchmarks(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Benchmark(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_benchmarkComparison(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_benchmarkComparison(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().BenchmarkComparison(ctx, fc.Args["benchmarkId"].(string), fc.Args["timeframe"].(model.HistoryTimeframe), fc.Args["currencyMode"].(*model.BenchmarkCurrencyMode))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.BenchmarkComparisonPayload) graphql.Marshaler {
+			return ec.marshalNBenchmarkComparisonPayload2ᚖbffᚋgraphᚋmodelᚐBenchmarkComparisonPayload(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_benchmarkComparison(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_BenchmarkComparisonPayload(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_benchmarkComparison_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -13361,6 +14597,298 @@ func (ec *executionContext) _BatchImportTransactionsPayload(ctx context.Context,
 	return out
 }
 
+var benchmarkImplementors = []string{"Benchmark"}
+
+func (ec *executionContext) _Benchmark(ctx context.Context, sel ast.SelectionSet, obj *model.Benchmark) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, benchmarkImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("Benchmark")
+		case "id":
+			out.Values[i] = ec._Benchmark_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "symbol":
+			out.Values[i] = ec._Benchmark_symbol(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._Benchmark_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "exchangeCode":
+			out.Values[i] = ec._Benchmark_exchangeCode(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currencyCode":
+			out.Values[i] = ec._Benchmark_currencyCode(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "indexType":
+			out.Values[i] = ec._Benchmark_indexType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isDefault":
+			out.Values[i] = ec._Benchmark_isDefault(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var benchmarkComparisonPayloadImplementors = []string{"BenchmarkComparisonPayload"}
+
+func (ec *executionContext) _BenchmarkComparisonPayload(ctx context.Context, sel ast.SelectionSet, obj *model.BenchmarkComparisonPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, benchmarkComparisonPayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BenchmarkComparisonPayload")
+		case "portfolioId":
+			out.Values[i] = ec._BenchmarkComparisonPayload_portfolioId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "baseCurrency":
+			out.Values[i] = ec._BenchmarkComparisonPayload_baseCurrency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "benchmark":
+			out.Values[i] = ec._BenchmarkComparisonPayload_benchmark(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currencyMode":
+			out.Values[i] = ec._BenchmarkComparisonPayload_currencyMode(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "startDate":
+			out.Values[i] = ec._BenchmarkComparisonPayload_startDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "endDate":
+			out.Values[i] = ec._BenchmarkComparisonPayload_endDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "elapsedDays":
+			out.Values[i] = ec._BenchmarkComparisonPayload_elapsedDays(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "points":
+			out.Values[i] = ec._BenchmarkComparisonPayload_points(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "metrics":
+			out.Values[i] = ec._BenchmarkComparisonPayload_metrics(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var benchmarkComparisonPointImplementors = []string{"BenchmarkComparisonPoint"}
+
+func (ec *executionContext) _BenchmarkComparisonPoint(ctx context.Context, sel ast.SelectionSet, obj *model.BenchmarkComparisonPoint) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, benchmarkComparisonPointImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BenchmarkComparisonPoint")
+		case "date":
+			out.Values[i] = ec._BenchmarkComparisonPoint_date(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "portfolioReturnPercent":
+			out.Values[i] = ec._BenchmarkComparisonPoint_portfolioReturnPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "benchmarkReturnPercent":
+			out.Values[i] = ec._BenchmarkComparisonPoint_benchmarkReturnPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "activeReturnPercent":
+			out.Values[i] = ec._BenchmarkComparisonPoint_activeReturnPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "portfolioValue":
+			out.Values[i] = ec._BenchmarkComparisonPoint_portfolioValue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "benchmarkPriceAdjusted":
+			out.Values[i] = ec._BenchmarkComparisonPoint_benchmarkPriceAdjusted(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var benchmarkMetricsImplementors = []string{"BenchmarkMetrics"}
+
+func (ec *executionContext) _BenchmarkMetrics(ctx context.Context, sel ast.SelectionSet, obj *model.BenchmarkMetrics) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, benchmarkMetricsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("BenchmarkMetrics")
+		case "portfolioCumulativeReturnPercent":
+			out.Values[i] = ec._BenchmarkMetrics_portfolioCumulativeReturnPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "benchmarkCumulativeReturnPercent":
+			out.Values[i] = ec._BenchmarkMetrics_benchmarkCumulativeReturnPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "activeCumulativeReturnPercent":
+			out.Values[i] = ec._BenchmarkMetrics_activeCumulativeReturnPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "portfolioAnnualizedReturnPercent":
+			out.Values[i] = ec._BenchmarkMetrics_portfolioAnnualizedReturnPercent(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "benchmarkAnnualizedReturnPercent":
+			out.Values[i] = ec._BenchmarkMetrics_benchmarkAnnualizedReturnPercent(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "activeAnnualizedReturnPercent":
+			out.Values[i] = ec._BenchmarkMetrics_activeAnnualizedReturnPercent(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "isAnnualized":
+			out.Values[i] = ec._BenchmarkMetrics_isAnnualized(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "beta":
+			out.Values[i] = ec._BenchmarkMetrics_beta(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "trackingErrorPercent":
+			out.Values[i] = ec._BenchmarkMetrics_trackingErrorPercent(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "informationRatio":
+			out.Values[i] = ec._BenchmarkMetrics_informationRatio(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
 var cashFlowCategoryBreakdownImplementors = []string{"CashFlowCategoryBreakdown"}
 
 func (ec *executionContext) _CashFlowCategoryBreakdown(ctx context.Context, sel ast.SelectionSet, obj *model.CashFlowCategoryBreakdown) graphql.Marshaler {
@@ -15862,6 +17390,50 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "benchmarks":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_benchmarks(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "benchmarkComparison":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_benchmarkComparison(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -16728,6 +18300,88 @@ func (ec *executionContext) marshalNBatchImportTransactionsPayload2ᚖbffᚋgrap
 		return graphql.Null
 	}
 	return ec._BatchImportTransactionsPayload(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNBenchmark2ᚕᚖbffᚋgraphᚋmodelᚐBenchmarkᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Benchmark) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNBenchmark2ᚖbffᚋgraphᚋmodelᚐBenchmark(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNBenchmark2ᚖbffᚋgraphᚋmodelᚐBenchmark(ctx context.Context, sel ast.SelectionSet, v *model.Benchmark) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._Benchmark(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNBenchmarkComparisonPayload2ᚖbffᚋgraphᚋmodelᚐBenchmarkComparisonPayload(ctx context.Context, sel ast.SelectionSet, v *model.BenchmarkComparisonPayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BenchmarkComparisonPayload(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNBenchmarkComparisonPoint2ᚕᚖbffᚋgraphᚋmodelᚐBenchmarkComparisonPointᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.BenchmarkComparisonPoint) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNBenchmarkComparisonPoint2ᚖbffᚋgraphᚋmodelᚐBenchmarkComparisonPoint(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNBenchmarkComparisonPoint2ᚖbffᚋgraphᚋmodelᚐBenchmarkComparisonPoint(ctx context.Context, sel ast.SelectionSet, v *model.BenchmarkComparisonPoint) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BenchmarkComparisonPoint(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNBenchmarkCurrencyMode2bffᚋgraphᚋmodelᚐBenchmarkCurrencyMode(ctx context.Context, v any) (model.BenchmarkCurrencyMode, error) {
+	var res model.BenchmarkCurrencyMode
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNBenchmarkCurrencyMode2bffᚋgraphᚋmodelᚐBenchmarkCurrencyMode(ctx context.Context, sel ast.SelectionSet, v model.BenchmarkCurrencyMode) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNBenchmarkMetrics2ᚖbffᚋgraphᚋmodelᚐBenchmarkMetrics(ctx context.Context, sel ast.SelectionSet, v *model.BenchmarkMetrics) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._BenchmarkMetrics(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNBoolean2bool(ctx context.Context, v any) (bool, error) {
@@ -17675,6 +19329,22 @@ func (ec *executionContext) marshalN__TypeKind2string(ctx context.Context, sel a
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalOBenchmarkCurrencyMode2ᚖbffᚋgraphᚋmodelᚐBenchmarkCurrencyMode(ctx context.Context, v any) (*model.BenchmarkCurrencyMode, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.BenchmarkCurrencyMode)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOBenchmarkCurrencyMode2ᚖbffᚋgraphᚋmodelᚐBenchmarkCurrencyMode(ctx context.Context, sel ast.SelectionSet, v *model.BenchmarkCurrencyMode) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOBoolean2bool(ctx context.Context, v any) (bool, error) {
