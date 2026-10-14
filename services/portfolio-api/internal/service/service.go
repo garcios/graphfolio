@@ -16,6 +16,7 @@ import (
 //go:generate go run go.uber.org/mock/mockgen -destination=mocks/mock_service.go -package=mocks portfolio-api/internal/service PortfolioService
 type PortfolioService interface {
 	GetPortfolioSummary(ctx context.Context, userID string, includeClosed ...bool) (*domain.PortfolioSummary, error)
+	CreatePortfolio(ctx context.Context, userID string, name string, baseCurrency string, costBasisMethod string) (*domain.Portfolio, error)
 	UpdatePortfolioBaseCurrency(ctx context.Context, userID string, baseCurrency string) (*domain.PortfolioSummary, error)
 	RebuildProjections(ctx context.Context, userID string) error
 	AddTransaction(ctx context.Context, input domain.AddTransactionInput) (*domain.Transaction, *domain.PortfolioSummary, error)
@@ -149,6 +150,26 @@ func (s *portfolioService) GetPortfolioSummary(ctx context.Context, userID strin
 
 	summary := domain.CalculatePortfolioSummary(*portfolio, holdings, cash, valuation, fxRates, earliestValuation)
 	return &summary, nil
+}
+
+func (s *portfolioService) CreatePortfolio(ctx context.Context, userID string, name string, baseCurrency string, costBasisMethod string) (*domain.Portfolio, error) {
+	uid, err := uuid.Parse(strings.TrimSpace(userID))
+	if err != nil {
+		return nil, fmt.Errorf("service: invalid user id %q: %w", userID, err)
+	}
+	cleanName := strings.TrimSpace(name)
+	if cleanName == "" {
+		cleanName = "Main Portfolio"
+	}
+	cleanCurrency := strings.TrimSpace(strings.ToUpper(baseCurrency))
+	if cleanCurrency == "" {
+		cleanCurrency = "USD"
+	}
+	cbm := domain.CostBasisMethodAverageCost
+	if strings.ToUpper(strings.TrimSpace(costBasisMethod)) == "FIFO" {
+		cbm = domain.CostBasisMethodFIFO
+	}
+	return s.repo.CreatePortfolio(ctx, uid, cleanName, cleanCurrency, cbm)
 }
 
 func (s *portfolioService) UpdatePortfolioBaseCurrency(ctx context.Context, userID string, baseCurrency string) (*domain.PortfolioSummary, error) {

@@ -41,7 +41,8 @@ This document catalogs all implemented features, in-progress components, and pla
 | **31** | **Modified Dietz Annualized Return & Cash-Flow Weighting** | **DONE** | Proto, Svc, BFF, Web | [annualized-return-modified-dietz-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/annualized-return-modified-dietz-implementation-plan.md) |
 | **32** | **Missing FX Rates Report & Date Range Backfill (Admin Portal)** | **DONE** | Proto, Svc, BFF, Web | [admin-missing-fx-rates-report-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-missing-fx-rates-report-implementation-plan.md) |
 | **33** | **Portfolio Benchmark Comparison & Relative Performance Analytics (S&P 500, NASDAQ-100, ASX 200)** | **DONE** | Database, Proto, Svc, BFF, Web | [benchmark-performance-comparison-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/benchmark-performance-comparison-implementation-plan.md) |
-| **34** | **Benchmark Instrument Market Price Ingestion & Historical Backfill** | **PLANNED** | Market Data, Database, Svc, Worker, Admin | [benchmark-instrument-price-ingestion-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/benchmark-instrument-price-ingestion-plan.md) |
+| **35** | **User Registration, Authentication & Session Management (Main App)** | **DONE** | Proto, User API, BFF, Web | [user-registration-and-login-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/user-registration-and-login-implementation-plan.md) |
+| **36** | **User Password Change & Session Invalidation (Main App)** | **DONE** | Proto, User API, BFF, Web | [user-change-password-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/user-change-password-implementation-plan.md) |
 
 
 
@@ -544,6 +545,30 @@ This document catalogs all implemented features, in-progress components, and pla
   - Total Return adjusted close (`adjclose`) ingestion for ETF proxies to ensure multi-year reinvested dividend comparability and eliminate dividend bias.
   - Multi-year historical backfill capability via CLI (`cmd/market-ingest -symbol SP500TR -from 2020-01-01`) and Admin backfill triggers.
   - Integration with Admin Portal `MissingPricesReport` to identify and backfill missing benchmark quotes with a single click.
+
+### 2.34 User Registration, Authentication & Session Management (Main App)
+- **Status**: **DONE**
+- **User Story**: [user-registration-and-login.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/user-registration-and-login.md) (`US-AUTH-101`)
+- **Plan Reference**: [user-registration-and-login-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/user-registration-and-login-implementation-plan.md)
+- **Scope**: Proto (`proto/user/v1/user.proto`, `proto/portfolio/v1/portfolio.proto`), Database (`users.users`, `users.sessions`), User Service (`services/user-api`), BFF (`bff/`), Main App (`web/apps/main-app`)
+- **Highlights**:
+  - Secure investor registration with Argon2id cryptographic password hashing, real-time complexity validation, and automatic initial default portfolio provisioning in the chosen base currency.
+  - Dual-token session security architecture: short-lived (15-minute) JWT access tokens in memory and long-lived (30-day) `httpOnly`, `Secure`, `SameSite=Strict` rotating refresh cookies with token family reuse detection.
+  - Decoupling BFF resolvers from the hardcoded `defaultUserID` using contextual authorization middleware (`ctx.UserID`).
+  - Dark glassmorphic login and registration views in `@graphfolio/ui` aesthetics, accessible forms, silent background session refresh, and explicit sign-out action in the navigation profile menu.
+
+### 2.35 User Password Change & Session Invalidation (Main App)
+- **Status**: **DONE**
+- **User Story**: [user-change-password.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/user-change-password.md) (`US-AUTH-102`)
+- **Plan Reference**: [user-change-password-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/user-change-password-implementation-plan.md)
+- **Scope**: Proto (`proto/user/v1/user.proto`), Database (`users.users`, `users.sessions`), User Service (`services/user-api`), BFF (`bff/`), Main App (`web/apps/main-app`)
+- **Highlights**:
+  - Secure credential rotation conforming to OWASP ASVS v4.0 Level 2 and NIST SP 800-63B memorized secret verifier specifications.
+  - Mandatory current password re-authentication before permitting changes, protecting against unauthorized workstation takeover.
+  - Real-time password complexity enforcement ($\ge 10$ characters, uppercase, lowercase, digit, special symbol) via live `PasswordStrengthMeter` checklist and match verification.
+  - Prevention of identical password reuse and constant-time dummy hash verification against user enumeration timing attacks.
+  - Option to revoke all other active sessions and background refresh tokens across devices while preserving uninterrupted authentication on the current active session.
+  - Dark glassmorphic `ChangePasswordModal` launched from `UserProfileMenu` with password visibility toggles, loading state, error banners, and auto-dismissing success notifications.
 
 ---
 

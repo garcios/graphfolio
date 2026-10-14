@@ -103,6 +103,21 @@ func (mr *MockRepositoryMockRecorder) CreateInstrument(ctx, input any) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateInstrument", reflect.TypeOf((*MockRepository)(nil).CreateInstrument), ctx, input)
 }
 
+// CreatePortfolio mocks base method.
+func (m *MockRepository) CreatePortfolio(ctx context.Context, userID uuid.UUID, name, baseCurrency string, costBasisMethod domain.CostBasisMethod) (*domain.Portfolio, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreatePortfolio", ctx, userID, name, baseCurrency, costBasisMethod)
+	ret0, _ := ret[0].(*domain.Portfolio)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreatePortfolio indicates an expected call of CreatePortfolio.
+func (mr *MockRepositoryMockRecorder) CreatePortfolio(ctx, userID, name, baseCurrency, costBasisMethod any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePortfolio", reflect.TypeOf((*MockRepository)(nil).CreatePortfolio), ctx, userID, name, baseCurrency, costBasisMethod)
+}
+
 // DeleteInstrument mocks base method.
 func (m *MockRepository) DeleteInstrument(ctx context.Context, id uuid.UUID) error {
 	m.ctrl.T.Helper()

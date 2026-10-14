@@ -57,6 +57,26 @@ func (r *PostgresRepository) FindPortfolioByUser(ctx context.Context, userID str
 	return &p, nil
 }
 
+func (r *PostgresRepository) CreatePortfolio(ctx context.Context, userID uuid.UUID, name string, baseCurrency string, costBasisMethod domain.CostBasisMethod) (*domain.Portfolio, error) {
+	if costBasisMethod == "" {
+		costBasisMethod = domain.CostBasisMethodAverageCost
+	}
+	id := uuid.New()
+	query := `
+INSERT INTO portfolio.portfolios (id, user_id, name, base_currency, cost_basis_method, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, now(), now())
+RETURNING id, user_id, name, base_currency, cost_basis_method, created_at;`
+	row := r.pool.QueryRow(ctx, query, id, userID, name, baseCurrency, string(costBasisMethod))
+	var p domain.Portfolio
+	var method string
+	err := row.Scan(&p.ID, &p.UserID, &p.Name, &p.BaseCurrency, &method, &p.CreatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("repository: failed to create portfolio: %w", err)
+	}
+	p.CostBasisMethod = domain.CostBasisMethod(method)
+	return &p, nil
+}
+
 func (r *PostgresRepository) ListActivePortfolios(ctx context.Context) ([]uuid.UUID, error) {
 	rows, err := r.pool.Query(ctx, listActivePortfoliosSQL)
 	if err != nil {

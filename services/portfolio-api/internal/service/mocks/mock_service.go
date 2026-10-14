@@ -104,6 +104,21 @@ func (mr *MockPortfolioServiceMockRecorder) CreateInstrument(ctx, input any) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateInstrument", reflect.TypeOf((*MockPortfolioService)(nil).CreateInstrument), ctx, input)
 }
 
+// CreatePortfolio mocks base method.
+func (m *MockPortfolioService) CreatePortfolio(ctx context.Context, userID, name, baseCurrency, costBasisMethod string) (*domain.Portfolio, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreatePortfolio", ctx, userID, name, baseCurrency, costBasisMethod)
+	ret0, _ := ret[0].(*domain.Portfolio)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreatePortfolio indicates an expected call of CreatePortfolio.
+func (mr *MockPortfolioServiceMockRecorder) CreatePortfolio(ctx, userID, name, baseCurrency, costBasisMethod any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePortfolio", reflect.TypeOf((*MockPortfolioService)(nil).CreatePortfolio), ctx, userID, name, baseCurrency, costBasisMethod)
+}
+
 // DeleteInstrument mocks base method.
 func (m *MockPortfolioService) DeleteInstrument(ctx context.Context, id uuid.UUID) error {
 	m.ctrl.T.Helper()

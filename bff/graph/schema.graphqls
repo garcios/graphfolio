@@ -82,6 +82,7 @@ type Query {
   ingestionStatus: IngestionStatus!
 
   # User Preferences Queries
+  me: UserPreferences!
   userPreferences: UserPreferences!
   supportedCurrencies: [Currency!]!
 
@@ -219,7 +220,45 @@ type Mutation {
 
   # Multi-Broker CSV Ingestion Mutations
   importTransactions(input: BatchImportTransactionsInput!): BatchImportTransactionsPayload!
+
+  # Identity & Authentication Mutations
+  register(input: RegisterInput!): AuthPayload!
+  login(input: LoginInput!): AuthPayload!
+  refreshToken: AuthPayload!
+  logout: Boolean!
+  changePassword(input: ChangePasswordInput!): ChangePasswordPayload!
 }
+
+type AuthPayload {
+  user: UserPreferences!
+  accessToken: String!
+  expiresIn: Int!
+}
+
+type ChangePasswordPayload {
+  success: Boolean!
+  message: String!
+}
+
+input ChangePasswordInput {
+  currentPassword: String!
+  newPassword: String!
+  revokeOtherSessions: Boolean
+}
+
+input RegisterInput {
+  email: String!
+  password: String!
+  displayName: String!
+  displayCurrency: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+  rememberMe: Boolean
+}
+
 
 input ImportTransactionInput {
   externalRef: String!

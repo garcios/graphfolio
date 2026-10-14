@@ -8,6 +8,7 @@ option go_package = "graphfolio/proto/portfolio/v1;portfoliopb";
 
 service PortfolioService {
   rpc GetPortfolio(GetPortfolioRequest) returns (GetPortfolioResponse) {}
+  rpc CreatePortfolio(CreatePortfolioRequest) returns (CreatePortfolioResponse) {}
   rpc UpdatePortfolioBaseCurrency(UpdatePortfolioBaseCurrencyRequest) returns (UpdatePortfolioBaseCurrencyResponse) {}
   rpc AddTransaction(AddTransactionRequest) returns (AddTransactionResponse) {}
   rpc ListInstruments(ListInstrumentsRequest) returns (ListInstrumentsResponse) {}
@@ -89,6 +90,19 @@ message UpdatePortfolioBaseCurrencyRequest {
 
 message UpdatePortfolioBaseCurrencyResponse {
   Portfolio portfolio = 1;
+}
+
+message CreatePortfolioRequest {
+  string user_id           = 1;
+  string name              = 2;
+  string base_currency     = 3; // e.g. "AUD"
+  string cost_basis_method = 4; // e.g. "AVERAGE_COST"
+}
+
+message CreatePortfolioResponse {
+  string portfolio_id      = 1;
+  string name              = 2;
+  string base_currency     = 3;
 }
 
 enum TransactionType {

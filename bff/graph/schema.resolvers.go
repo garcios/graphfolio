@@ -7,6 +7,7 @@ package graph
 
 import (
 	"bff/graph/model"
+	"bff/internal/auth"
 	"context"
 	"fmt"
 	pb "graphfolio/proto/portfolio/v1"
@@ -26,7 +27,7 @@ func (r *mutationResolver) AddTransaction(ctx context.Context, input model.AddTr
 	}
 
 	req := &pb.AddTransactionRequest{
-		UserId:    "1", // Default user ID for single-user/demo session
+		UserId:    r.resolveUserID(ctx),
 		Type:      toProtoTransactionType(input.Type),
 		TradeDate: input.TradeDate,
 		Quantity:  toProtoDecimal(input.Quantity),
@@ -56,7 +57,7 @@ func (r *mutationResolver) AddTransaction(ctx context.Context, input model.AddTr
 // DeleteTransaction is the resolver for the deleteTransaction field.
 func (r *mutationResolver) DeleteTransaction(ctx context.Context, id string) (*model.DeleteTransactionPayload, error) {
 	resp, err := r.PortfolioClient.DeleteTransaction(ctx, &pb.DeleteTransactionRequest{
-		UserId:        "1", // Hardcoded for single-user/demo session
+		UserId:        r.resolveUserID(ctx),
 		TransactionId: id,
 	})
 	if err != nil {
@@ -220,7 +221,7 @@ func (r *mutationResolver) TriggerBackfill(ctx context.Context, input model.Trig
 // UpdateUserPreferences is the resolver for the updateUserPreferences field.
 func (r *mutationResolver) UpdateUserPreferences(ctx context.Context, input model.UpdateUserPreferencesInput) (*model.UpdateUserPreferencesPayload, error) {
 	req := &userpb.UpdateUserPreferencesRequest{
-		UserId:          defaultUserID,
+		UserId:          r.resolveUserID(ctx),
 		DisplayName:     input.DisplayName,
 		DisplayCurrency: input.DisplayCurrency,
 		Theme:           input.Theme,
@@ -234,7 +235,7 @@ func (r *mutationResolver) UpdateUserPreferences(ctx context.Context, input mode
 	var portfolioModel *model.Portfolio
 	if input.DisplayCurrency != nil && *input.DisplayCurrency != "" {
 		portResp, err := r.PortfolioClient.UpdatePortfolioBaseCurrency(ctx, &pb.UpdatePortfolioBaseCurrencyRequest{
-			UserId:       defaultUserID,
+			UserId:       r.resolveUserID(ctx),
 			BaseCurrency: *input.DisplayCurrency,
 		})
 		if err == nil && portResp != nil {
@@ -244,7 +245,7 @@ func (r *mutationResolver) UpdateUserPreferences(ctx context.Context, input mode
 
 	if portfolioModel == nil {
 		portResp, err := r.PortfolioClient.GetPortfolio(ctx, &pb.GetPortfolioRequest{
-			UserId: defaultUserID,
+			UserId: r.resolveUserID(ctx),
 		})
 		if err == nil && portResp != nil {
 			portfolioModel = toModelPortfolio(portResp.Portfolio)
@@ -333,7 +334,7 @@ func (r *mutationResolver) ImportTransactions(ctx context.Context, input model.B
 	}
 
 	resp, err := r.PortfolioClient.BatchImportTransactions(ctx, &pb.BatchImportTransactionsRequest{
-		UserId:         "1",
+		UserId:         r.resolveUserID(ctx),
 		Transactions:   items,
 		SkipDuplicates: skipDuplicates,
 	})
@@ -350,6 +351,131 @@ func (r *mutationResolver) ImportTransactions(ctx context.Context, input model.B
 	}, nil
 }
 
+// Register is the resolver for the register field.
+func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInput) (*model.AuthPayload, error) {
+	resp, err := r.UserClient.Register(ctx, &userpb.RegisterRequest{
+		Email:           input.Email,
+		Password:        input.Password,
+		DisplayName:     input.DisplayName,
+		DisplayCurrency: input.DisplayCurrency,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Auto-provision initial portfolio in user's chosen base currency
+	_, _ = r.PortfolioClient.CreatePortfolio(ctx, &pb.CreatePortfolioRequest{
+		UserId:       resp.User.UserId,
+		Name:         "Main Portfolio",
+		BaseCurrency: input.DisplayCurrency,
+	})
+
+	// Set refresh token cookie (30 days)
+	auth.SetRefreshCookie(ctx, resp.RefreshToken, 30*24*3600)
+
+	return &model.AuthPayload{
+		User:        toModelUserPreferences(resp.User),
+		AccessToken: resp.AccessToken,
+		ExpiresIn:   int(resp.ExpiresIn),
+	}, nil
+}
+
+// Login is the resolver for the login field.
+func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*model.AuthPayload, error) {
+	rememberMe := false
+	if input.RememberMe != nil {
+		rememberMe = *input.RememberMe
+	}
+
+	resp, err := r.UserClient.Login(ctx, &userpb.LoginRequest{
+		Email:      input.Email,
+		Password:   input.Password,
+		RememberMe: rememberMe,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	maxAge := 7 * 24 * 3600
+	if rememberMe {
+		maxAge = 30 * 24 * 3600
+	}
+	auth.SetRefreshCookie(ctx, resp.RefreshToken, maxAge)
+
+	return &model.AuthPayload{
+		User:        toModelUserPreferences(resp.User),
+		AccessToken: resp.AccessToken,
+		ExpiresIn:   int(resp.ExpiresIn),
+	}, nil
+}
+
+// RefreshToken is the resolver for the refreshToken field.
+func (r *mutationResolver) RefreshToken(ctx context.Context) (*model.AuthPayload, error) {
+	cookieToken, err := auth.GetRefreshCookie(ctx)
+	if err != nil || cookieToken == "" {
+		return nil, fmt.Errorf("unauthenticated: no refresh token available")
+	}
+
+	resp, err := r.UserClient.RefreshToken(ctx, &userpb.RefreshTokenRequest{
+		RefreshToken: cookieToken,
+	})
+	if err != nil {
+		auth.ClearRefreshCookie(ctx)
+		return nil, err
+	}
+
+	auth.SetRefreshCookie(ctx, resp.RefreshToken, 30*24*3600)
+
+	return &model.AuthPayload{
+		User:        toModelUserPreferences(resp.User),
+		AccessToken: resp.AccessToken,
+		ExpiresIn:   int(resp.ExpiresIn),
+	}, nil
+}
+
+// Logout is the resolver for the logout field.
+func (r *mutationResolver) Logout(ctx context.Context) (bool, error) {
+	cookieToken, _ := auth.GetRefreshCookie(ctx)
+	if cookieToken != "" {
+		_, _ = r.UserClient.Logout(ctx, &userpb.LogoutRequest{
+			RefreshToken: cookieToken,
+		})
+	}
+	auth.ClearRefreshCookie(ctx)
+	return true, nil
+}
+
+// ChangePassword is the resolver for the changePassword field.
+func (r *mutationResolver) ChangePassword(ctx context.Context, input model.ChangePasswordInput) (*model.ChangePasswordPayload, error) {
+	userID := r.resolveUserID(ctx)
+	if userID == "" {
+		return nil, fmt.Errorf("unauthenticated: missing user context")
+	}
+
+	revokeOthers := true
+	if input.RevokeOtherSessions != nil {
+		revokeOthers = *input.RevokeOtherSessions
+	}
+
+	cookieToken, _ := auth.GetRefreshCookie(ctx)
+
+	resp, err := r.UserClient.ChangePassword(ctx, &userpb.ChangePasswordRequest{
+		UserId:              userID,
+		CurrentPassword:     input.CurrentPassword,
+		NewPassword:         input.NewPassword,
+		RevokeOtherSessions: revokeOthers,
+		CurrentRefreshToken: cookieToken,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.ChangePasswordPayload{
+		Success: resp.GetSuccess(),
+		Message: resp.GetMessage(),
+	}, nil
+}
+
 // Portfolio is the resolver for the portfolio field.
 func (r *queryResolver) Portfolio(ctx context.Context, includeClosed *bool) (*model.Portfolio, error) {
 	incClosed := false
@@ -362,11 +488,11 @@ func (r *queryResolver) Portfolio(ctx context.Context, includeClosed *bool) (*mo
 	// Sync portfolio currency with user display currency preference if available
 	if r.UserClient != nil {
 		userResp, err := r.UserClient.GetUserPreferences(ctx, &userpb.GetUserPreferencesRequest{
-			UserId: defaultUserID,
+			UserId: r.resolveUserID(ctx),
 		})
 		if err == nil && userResp != nil && userResp.Preferences != nil && userResp.Preferences.DisplayCurrency != "" {
 			updateResp, updateErr := r.PortfolioClient.UpdatePortfolioBaseCurrency(ctx, &pb.UpdatePortfolioBaseCurrencyRequest{
-				UserId:       defaultUserID,
+				UserId:       r.resolveUserID(ctx),
 				BaseCurrency: userResp.Preferences.DisplayCurrency,
 			})
 			if updateErr == nil && updateResp != nil && updateResp.Portfolio != nil {
@@ -378,7 +504,7 @@ func (r *queryResolver) Portfolio(ctx context.Context, includeClosed *bool) (*mo
 	if portResp == nil || incClosed {
 		var getErr error
 		portResp, getErr = r.PortfolioClient.GetPortfolio(ctx, &pb.GetPortfolioRequest{
-			UserId:                 defaultUserID,
+			UserId:                 r.resolveUserID(ctx),
 			IncludeClosedPositions: incClosed,
 		})
 		if getErr != nil {
@@ -407,7 +533,7 @@ func (r *queryResolver) Instruments(ctx context.Context) ([]*model.Instrument, e
 // PortfolioHistory is the resolver for the portfolioHistory field.
 func (r *queryResolver) PortfolioHistory(ctx context.Context, timeframe model.HistoryTimeframe) (*model.PortfolioHistory, error) {
 	resp, err := r.PortfolioClient.GetPortfolioHistory(ctx, &pb.GetPortfolioHistoryRequest{
-		UserId:    "1", // Hardcoded for single-user/demo session
+		UserId:    r.resolveUserID(ctx),
 		Timeframe: toProtoHistoryTimeframe(timeframe),
 	})
 	if err != nil {
@@ -420,7 +546,7 @@ func (r *queryResolver) PortfolioHistory(ctx context.Context, timeframe model.Hi
 // Transactions is the resolver for the transactions field.
 func (r *queryResolver) Transactions(ctx context.Context, typeArg *model.TransactionType, symbol *string, page *int, pageSize *int) (*model.TransactionsConnection, error) {
 	req := &pb.ListTransactionsRequest{
-		UserId: "1", // Hardcoded for single-user/demo session
+		UserId: r.resolveUserID(ctx),
 	}
 
 	if typeArg != nil {
@@ -512,10 +638,27 @@ func (r *queryResolver) IngestionStatus(ctx context.Context) (*model.IngestionSt
 	return toModelIngestionStatus(resp), nil
 }
 
+// Me is the resolver for the me field.
+func (r *queryResolver) Me(ctx context.Context) (*model.UserPreferences, error) {
+	userID, err := auth.GetUserID(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("unauthenticated: %w", err)
+	}
+
+	resp, err := r.UserClient.GetMe(ctx, &userpb.GetMeRequest{
+		UserId: userID,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return toModelUserPreferences(resp.User), nil
+}
+
 // UserPreferences is the resolver for the userPreferences field.
 func (r *queryResolver) UserPreferences(ctx context.Context) (*model.UserPreferences, error) {
 	resp, err := r.UserClient.GetUserPreferences(ctx, &userpb.GetUserPreferencesRequest{
-		UserId: defaultUserID,
+		UserId: r.resolveUserID(ctx),
 	})
 	if err != nil {
 		return nil, err
@@ -592,7 +735,7 @@ func (r *queryResolver) FxRates(ctx context.Context, baseCurrency *string, quote
 // CheckTransactionDuplicates is the resolver for the checkTransactionDuplicates field.
 func (r *queryResolver) CheckTransactionDuplicates(ctx context.Context, externalRefs []string) ([]string, error) {
 	resp, err := r.PortfolioClient.CheckTransactionDuplicates(ctx, &pb.CheckTransactionDuplicatesRequest{
-		UserId:       "1",
+		UserId:       r.resolveUserID(ctx),
 		ExternalRefs: externalRefs,
 	})
 	if err != nil {
@@ -607,7 +750,7 @@ func (r *queryResolver) CheckTransactionDuplicates(ctx context.Context, external
 // CashFlowReport is the resolver for the cashFlowReport field.
 func (r *queryResolver) CashFlowReport(ctx context.Context, filter model.CashFlowFilterInput) (*model.CashFlowReport, error) {
 	req := &pb.GetCashFlowReportRequest{
-		UserId:    "1",
+		UserId:    r.resolveUserID(ctx),
 		Timeframe: toProtoCashFlowTimeframe(filter.Timeframe),
 	}
 	if filter.FromDate != nil {
@@ -676,7 +819,7 @@ func (r *queryResolver) MissingFXRateTransactions(ctx context.Context, currencyP
 // ModifiedDietzReturn is the resolver for the modifiedDietzReturn field.
 func (r *queryResolver) ModifiedDietzReturn(ctx context.Context, startDate string, endDate string, useMonthlyLinking *bool) (*model.ModifiedDietzReturnPayload, error) {
 	req := &pb.GetModifiedDietzReturnRequest{
-		UserId:    "1",
+		UserId:    r.resolveUserID(ctx),
 		StartDate: startDate,
 		EndDate:   endDate,
 	}
@@ -708,7 +851,7 @@ func (r *queryResolver) Benchmarks(ctx context.Context) ([]*model.Benchmark, err
 // BenchmarkComparison is the resolver for the benchmarkComparison field.
 func (r *queryResolver) BenchmarkComparison(ctx context.Context, benchmarkID string, timeframe model.HistoryTimeframe, currencyMode *model.BenchmarkCurrencyMode) (*model.BenchmarkComparisonPayload, error) {
 	resp, err := r.PortfolioClient.GetBenchmarkComparison(ctx, &pb.GetBenchmarkComparisonRequest{
-		UserId:       "1",
+		UserId:       r.resolveUserID(ctx),
 		BenchmarkId:  benchmarkID,
 		Timeframe:    toProtoHistoryTimeframe(timeframe),
 		CurrencyMode: toProtoBenchmarkCurrencyMode(currencyMode),

@@ -56,6 +56,7 @@ export interface Query {
     exchanges: Exchange[]
     instrumentPrices: InstrumentPricesConnection
     ingestionStatus: IngestionStatus
+    me: UserPreferences
     userPreferences: UserPreferences
     supportedCurrencies: Currency[]
     currencyPairs: CurrencyPair[]
@@ -139,7 +140,25 @@ export interface Mutation {
     updateUserPreferences: UpdateUserPreferencesPayload
     recordFXRateOverride: RecordFXRateOverridePayload
     importTransactions: BatchImportTransactionsPayload
+    register: AuthPayload
+    login: AuthPayload
+    refreshToken: AuthPayload
+    logout: Scalars['Boolean']
+    changePassword: ChangePasswordPayload
     __typename: 'Mutation'
+}
+
+export interface AuthPayload {
+    user: UserPreferences
+    accessToken: Scalars['String']
+    expiresIn: Scalars['Int']
+    __typename: 'AuthPayload'
+}
+
+export interface ChangePasswordPayload {
+    success: Scalars['Boolean']
+    message: Scalars['String']
+    __typename: 'ChangePasswordPayload'
 }
 
 export interface BatchImportTransactionsPayload {
@@ -565,6 +584,7 @@ export interface QueryGenqlSelection{
     exchanges?: ExchangeGenqlSelection
     instrumentPrices?: (InstrumentPricesConnectionGenqlSelection & { __args?: {symbol?: (Scalars['String'] | null), fromDate?: (Scalars['String'] | null), toDate?: (Scalars['String'] | null), limit?: (Scalars['Int'] | null), offset?: (Scalars['Int'] | null)} })
     ingestionStatus?: IngestionStatusGenqlSelection
+    me?: UserPreferencesGenqlSelection
     userPreferences?: UserPreferencesGenqlSelection
     supportedCurrencies?: CurrencyGenqlSelection
     currencyPairs?: CurrencyPairGenqlSelection
@@ -653,9 +673,35 @@ export interface MutationGenqlSelection{
     updateUserPreferences?: (UpdateUserPreferencesPayloadGenqlSelection & { __args: {input: UpdateUserPreferencesInput} })
     recordFXRateOverride?: (RecordFXRateOverridePayloadGenqlSelection & { __args: {input: RecordFXRateOverrideInput} })
     importTransactions?: (BatchImportTransactionsPayloadGenqlSelection & { __args: {input: BatchImportTransactionsInput} })
+    register?: (AuthPayloadGenqlSelection & { __args: {input: RegisterInput} })
+    login?: (AuthPayloadGenqlSelection & { __args: {input: LoginInput} })
+    refreshToken?: AuthPayloadGenqlSelection
+    logout?: boolean | number
+    changePassword?: (ChangePasswordPayloadGenqlSelection & { __args: {input: ChangePasswordInput} })
     __typename?: boolean | number
     __scalar?: boolean | number
 }
+
+export interface AuthPayloadGenqlSelection{
+    user?: UserPreferencesGenqlSelection
+    accessToken?: boolean | number
+    expiresIn?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface ChangePasswordPayloadGenqlSelection{
+    success?: boolean | number
+    message?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface ChangePasswordInput {currentPassword: Scalars['String'],newPassword: Scalars['String'],revokeOtherSessions?: (Scalars['Boolean'] | null)}
+
+export interface RegisterInput {email: Scalars['String'],password: Scalars['String'],displayName: Scalars['String'],displayCurrency: Scalars['String']}
+
+export interface LoginInput {email: Scalars['String'],password: Scalars['String'],rememberMe?: (Scalars['Boolean'] | null)}
 
 export interface ImportTransactionInput {externalRef: Scalars['String'],symbol: Scalars['String'],type: TransactionType,tradeDate: Scalars['String'],settleDate?: (Scalars['String'] | null),quantity: Scalars['Decimal'],price: Scalars['Decimal'],amount: Scalars['Decimal'],fee: Scalars['Decimal'],feeCurrencyCode?: (Scalars['String'] | null),currencyCode?: (Scalars['String'] | null),notes?: (Scalars['String'] | null)}
 
@@ -1167,6 +1213,22 @@ export interface BenchmarkComparisonPayloadGenqlSelection{
     export const isMutation = (obj?: { __typename?: any } | null): obj is Mutation => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isMutation"')
       return Mutation_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const AuthPayload_possibleTypes: string[] = ['AuthPayload']
+    export const isAuthPayload = (obj?: { __typename?: any } | null): obj is AuthPayload => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isAuthPayload"')
+      return AuthPayload_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const ChangePasswordPayload_possibleTypes: string[] = ['ChangePasswordPayload']
+    export const isChangePasswordPayload = (obj?: { __typename?: any } | null): obj is ChangePasswordPayload => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isChangePasswordPayload"')
+      return ChangePasswordPayload_possibleTypes.includes(obj.__typename)
     }
     
 
