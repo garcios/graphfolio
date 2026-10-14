@@ -27,6 +27,12 @@ type AddTransactionPayload struct {
 	Portfolio     *Portfolio `json:"portfolio"`
 }
 
+type AuthPayload struct {
+	User        *UserPreferences `json:"user"`
+	AccessToken string           `json:"accessToken"`
+	ExpiresIn   int              `json:"expiresIn"`
+}
+
 type BackfillPayload struct {
 	Success       bool     `json:"success"`
 	PricesSynced  int      `json:"pricesSynced"`
@@ -318,6 +324,12 @@ type Investment struct {
 	IsClosed            bool    `json:"isClosed"`
 }
 
+type LoginInput struct {
+	Email      string `json:"email"`
+	Password   string `json:"password"`
+	RememberMe *bool  `json:"rememberMe,omitempty"`
+}
+
 type MarketSyncPayload struct {
 	Success       bool   `json:"success"`
 	PricesSynced  int    `json:"pricesSynced"`
@@ -444,6 +456,13 @@ type RecordPriceOverrideInput struct {
 type RecordPriceOverridePayload struct {
 	Price                *InstrumentPrice `json:"price"`
 	ValuationsRecomputed bool             `json:"valuationsRecomputed"`
+}
+
+type RegisterInput struct {
+	Email           string `json:"email"`
+	Password        string `json:"password"`
+	DisplayName     string `json:"displayName"`
+	DisplayCurrency string `json:"displayCurrency"`
 }
 
 type TransactionItem struct {

@@ -10,11 +10,29 @@ import (
 type User struct {
 	ID              uuid.UUID
 	Email           string
+	PasswordHash    string
+	IsActive        bool
 	DisplayName     string
 	DisplayCurrency string
 	Theme           string
+	EmailVerifiedAt *time.Time
+	LastLoginAt     *time.Time
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
+}
+
+// Session represents an active refresh token session for a user.
+type Session struct {
+	ID               uuid.UUID
+	UserID           uuid.UUID
+	RefreshTokenHash string
+	FamilyID         uuid.UUID
+	IsRevoked        bool
+	UserAgent        string
+	IPAddress        string
+	ExpiresAt        time.Time
+	CreatedAt        time.Time
+	UpdatedAt        time.Time
 }
 
 // CurrencyInfo represents metadata about a supported currency.

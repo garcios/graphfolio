@@ -588,6 +588,140 @@ func (x *UpdatePortfolioBaseCurrencyResponse) GetPortfolio() *Portfolio {
 	return nil
 }
 
+type CreatePortfolioRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	UserId          string `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	Name            string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	BaseCurrency    string `protobuf:"bytes,3,opt,name=base_currency,json=baseCurrency,proto3" json:"base_currency,omitempty"`            // e.g. "AUD"
+	CostBasisMethod string `protobuf:"bytes,4,opt,name=cost_basis_method,json=costBasisMethod,proto3" json:"cost_basis_method,omitempty"` // e.g. "AVERAGE_COST"
+}
+
+func (x *CreatePortfolioRequest) Reset() {
+	*x = CreatePortfolioRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CreatePortfolioRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreatePortfolioRequest) ProtoMessage() {}
+
+func (x *CreatePortfolioRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreatePortfolioRequest.ProtoReflect.Descriptor instead.
+func (*CreatePortfolioRequest) Descriptor() ([]byte, []int) {
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *CreatePortfolioRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *CreatePortfolioRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CreatePortfolioRequest) GetBaseCurrency() string {
+	if x != nil {
+		return x.BaseCurrency
+	}
+	return ""
+}
+
+func (x *CreatePortfolioRequest) GetCostBasisMethod() string {
+	if x != nil {
+		return x.CostBasisMethod
+	}
+	return ""
+}
+
+type CreatePortfolioResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	PortfolioId  string `protobuf:"bytes,1,opt,name=portfolio_id,json=portfolioId,proto3" json:"portfolio_id,omitempty"`
+	Name         string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	BaseCurrency string `protobuf:"bytes,3,opt,name=base_currency,json=baseCurrency,proto3" json:"base_currency,omitempty"`
+}
+
+func (x *CreatePortfolioResponse) Reset() {
+	*x = CreatePortfolioResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CreatePortfolioResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreatePortfolioResponse) ProtoMessage() {}
+
+func (x *CreatePortfolioResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreatePortfolioResponse.ProtoReflect.Descriptor instead.
+func (*CreatePortfolioResponse) Descriptor() ([]byte, []int) {
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *CreatePortfolioResponse) GetPortfolioId() string {
+	if x != nil {
+		return x.PortfolioId
+	}
+	return ""
+}
+
+func (x *CreatePortfolioResponse) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *CreatePortfolioResponse) GetBaseCurrency() string {
+	if x != nil {
+		return x.BaseCurrency
+	}
+	return ""
+}
+
 type AddTransactionRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -607,7 +741,7 @@ type AddTransactionRequest struct {
 func (x *AddTransactionRequest) Reset() {
 	*x = AddTransactionRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[6]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -620,7 +754,7 @@ func (x *AddTransactionRequest) String() string {
 func (*AddTransactionRequest) ProtoMessage() {}
 
 func (x *AddTransactionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[6]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -633,7 +767,7 @@ func (x *AddTransactionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddTransactionRequest.ProtoReflect.Descriptor instead.
 func (*AddTransactionRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{6}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *AddTransactionRequest) GetUserId() string {
@@ -711,7 +845,7 @@ type AddTransactionResponse struct {
 func (x *AddTransactionResponse) Reset() {
 	*x = AddTransactionResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[7]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -724,7 +858,7 @@ func (x *AddTransactionResponse) String() string {
 func (*AddTransactionResponse) ProtoMessage() {}
 
 func (x *AddTransactionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[7]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -737,7 +871,7 @@ func (x *AddTransactionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddTransactionResponse.ProtoReflect.Descriptor instead.
 func (*AddTransactionResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{7}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *AddTransactionResponse) GetTransactionId() string {
@@ -772,7 +906,7 @@ type Instrument struct {
 func (x *Instrument) Reset() {
 	*x = Instrument{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[8]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -785,7 +919,7 @@ func (x *Instrument) String() string {
 func (*Instrument) ProtoMessage() {}
 
 func (x *Instrument) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[8]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -798,7 +932,7 @@ func (x *Instrument) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Instrument.ProtoReflect.Descriptor instead.
 func (*Instrument) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{8}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *Instrument) GetId() string {
@@ -866,7 +1000,7 @@ type ListInstrumentsRequest struct {
 func (x *ListInstrumentsRequest) Reset() {
 	*x = ListInstrumentsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[9]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -879,7 +1013,7 @@ func (x *ListInstrumentsRequest) String() string {
 func (*ListInstrumentsRequest) ProtoMessage() {}
 
 func (x *ListInstrumentsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[9]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -892,7 +1026,7 @@ func (x *ListInstrumentsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListInstrumentsRequest.ProtoReflect.Descriptor instead.
 func (*ListInstrumentsRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{9}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{11}
 }
 
 type ListInstrumentsResponse struct {
@@ -906,7 +1040,7 @@ type ListInstrumentsResponse struct {
 func (x *ListInstrumentsResponse) Reset() {
 	*x = ListInstrumentsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[10]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -919,7 +1053,7 @@ func (x *ListInstrumentsResponse) String() string {
 func (*ListInstrumentsResponse) ProtoMessage() {}
 
 func (x *ListInstrumentsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[10]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -932,7 +1066,7 @@ func (x *ListInstrumentsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListInstrumentsResponse.ProtoReflect.Descriptor instead.
 func (*ListInstrumentsResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{10}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *ListInstrumentsResponse) GetInstruments() []*Instrument {
@@ -959,7 +1093,7 @@ type Portfolio struct {
 func (x *Portfolio) Reset() {
 	*x = Portfolio{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[11]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -972,7 +1106,7 @@ func (x *Portfolio) String() string {
 func (*Portfolio) ProtoMessage() {}
 
 func (x *Portfolio) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[11]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -985,7 +1119,7 @@ func (x *Portfolio) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Portfolio.ProtoReflect.Descriptor instead.
 func (*Portfolio) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{11}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *Portfolio) GetTotalValue() *v1.Money {
@@ -1066,7 +1200,7 @@ type Investment struct {
 func (x *Investment) Reset() {
 	*x = Investment{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[12]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1079,7 +1213,7 @@ func (x *Investment) String() string {
 func (*Investment) ProtoMessage() {}
 
 func (x *Investment) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[12]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1092,7 +1226,7 @@ func (x *Investment) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Investment.ProtoReflect.Descriptor instead.
 func (*Investment) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{12}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *Investment) GetId() string {
@@ -1244,7 +1378,7 @@ type ValuationPoint struct {
 func (x *ValuationPoint) Reset() {
 	*x = ValuationPoint{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[13]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1257,7 +1391,7 @@ func (x *ValuationPoint) String() string {
 func (*ValuationPoint) ProtoMessage() {}
 
 func (x *ValuationPoint) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[13]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1270,7 +1404,7 @@ func (x *ValuationPoint) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ValuationPoint.ProtoReflect.Descriptor instead.
 func (*ValuationPoint) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{13}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ValuationPoint) GetDate() string {
@@ -1327,7 +1461,7 @@ type GetPortfolioHistoryRequest struct {
 func (x *GetPortfolioHistoryRequest) Reset() {
 	*x = GetPortfolioHistoryRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[14]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1340,7 +1474,7 @@ func (x *GetPortfolioHistoryRequest) String() string {
 func (*GetPortfolioHistoryRequest) ProtoMessage() {}
 
 func (x *GetPortfolioHistoryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[14]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1353,7 +1487,7 @@ func (x *GetPortfolioHistoryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPortfolioHistoryRequest.ProtoReflect.Descriptor instead.
 func (*GetPortfolioHistoryRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{14}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *GetPortfolioHistoryRequest) GetUserId() string {
@@ -1385,7 +1519,7 @@ type GetPortfolioHistoryResponse struct {
 func (x *GetPortfolioHistoryResponse) Reset() {
 	*x = GetPortfolioHistoryResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[15]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1398,7 +1532,7 @@ func (x *GetPortfolioHistoryResponse) String() string {
 func (*GetPortfolioHistoryResponse) ProtoMessage() {}
 
 func (x *GetPortfolioHistoryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[15]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1411,7 +1545,7 @@ func (x *GetPortfolioHistoryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPortfolioHistoryResponse.ProtoReflect.Descriptor instead.
 func (*GetPortfolioHistoryResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{15}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *GetPortfolioHistoryResponse) GetPoints() []*ValuationPoint {
@@ -1470,7 +1604,7 @@ type TransactionItem struct {
 func (x *TransactionItem) Reset() {
 	*x = TransactionItem{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[16]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1483,7 +1617,7 @@ func (x *TransactionItem) String() string {
 func (*TransactionItem) ProtoMessage() {}
 
 func (x *TransactionItem) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[16]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1496,7 +1630,7 @@ func (x *TransactionItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TransactionItem.ProtoReflect.Descriptor instead.
 func (*TransactionItem) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{16}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *TransactionItem) GetId() string {
@@ -1591,7 +1725,7 @@ type ListTransactionsRequest struct {
 func (x *ListTransactionsRequest) Reset() {
 	*x = ListTransactionsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[17]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1604,7 +1738,7 @@ func (x *ListTransactionsRequest) String() string {
 func (*ListTransactionsRequest) ProtoMessage() {}
 
 func (x *ListTransactionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[17]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1617,7 +1751,7 @@ func (x *ListTransactionsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTransactionsRequest.ProtoReflect.Descriptor instead.
 func (*ListTransactionsRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{17}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *ListTransactionsRequest) GetUserId() string {
@@ -1669,7 +1803,7 @@ type ListTransactionsResponse struct {
 func (x *ListTransactionsResponse) Reset() {
 	*x = ListTransactionsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[18]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1682,7 +1816,7 @@ func (x *ListTransactionsResponse) String() string {
 func (*ListTransactionsResponse) ProtoMessage() {}
 
 func (x *ListTransactionsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[18]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1695,7 +1829,7 @@ func (x *ListTransactionsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTransactionsResponse.ProtoReflect.Descriptor instead.
 func (*ListTransactionsResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{18}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *ListTransactionsResponse) GetTransactions() []*TransactionItem {
@@ -1738,7 +1872,7 @@ type DeleteTransactionRequest struct {
 func (x *DeleteTransactionRequest) Reset() {
 	*x = DeleteTransactionRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[19]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1751,7 +1885,7 @@ func (x *DeleteTransactionRequest) String() string {
 func (*DeleteTransactionRequest) ProtoMessage() {}
 
 func (x *DeleteTransactionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[19]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1764,7 +1898,7 @@ func (x *DeleteTransactionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTransactionRequest.ProtoReflect.Descriptor instead.
 func (*DeleteTransactionRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{19}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *DeleteTransactionRequest) GetUserId() string {
@@ -1793,7 +1927,7 @@ type DeleteTransactionResponse struct {
 func (x *DeleteTransactionResponse) Reset() {
 	*x = DeleteTransactionResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[20]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1806,7 +1940,7 @@ func (x *DeleteTransactionResponse) String() string {
 func (*DeleteTransactionResponse) ProtoMessage() {}
 
 func (x *DeleteTransactionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[20]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1819,7 +1953,7 @@ func (x *DeleteTransactionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTransactionResponse.ProtoReflect.Descriptor instead.
 func (*DeleteTransactionResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{20}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *DeleteTransactionResponse) GetSuccess() bool {
@@ -1848,7 +1982,7 @@ type ListAllInstrumentsRequest struct {
 func (x *ListAllInstrumentsRequest) Reset() {
 	*x = ListAllInstrumentsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[21]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1861,7 +1995,7 @@ func (x *ListAllInstrumentsRequest) String() string {
 func (*ListAllInstrumentsRequest) ProtoMessage() {}
 
 func (x *ListAllInstrumentsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[21]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1874,7 +2008,7 @@ func (x *ListAllInstrumentsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAllInstrumentsRequest.ProtoReflect.Descriptor instead.
 func (*ListAllInstrumentsRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{21}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *ListAllInstrumentsRequest) GetIsActive() bool {
@@ -1902,7 +2036,7 @@ type ListAllInstrumentsResponse struct {
 func (x *ListAllInstrumentsResponse) Reset() {
 	*x = ListAllInstrumentsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[22]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[24]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1915,7 +2049,7 @@ func (x *ListAllInstrumentsResponse) String() string {
 func (*ListAllInstrumentsResponse) ProtoMessage() {}
 
 func (x *ListAllInstrumentsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[22]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[24]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1928,7 +2062,7 @@ func (x *ListAllInstrumentsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAllInstrumentsResponse.ProtoReflect.Descriptor instead.
 func (*ListAllInstrumentsResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{22}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *ListAllInstrumentsResponse) GetInstruments() []*Instrument {
@@ -1954,7 +2088,7 @@ type CreateInstrumentRequest struct {
 func (x *CreateInstrumentRequest) Reset() {
 	*x = CreateInstrumentRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[23]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[25]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1967,7 +2101,7 @@ func (x *CreateInstrumentRequest) String() string {
 func (*CreateInstrumentRequest) ProtoMessage() {}
 
 func (x *CreateInstrumentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[23]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[25]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1980,7 +2114,7 @@ func (x *CreateInstrumentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateInstrumentRequest.ProtoReflect.Descriptor instead.
 func (*CreateInstrumentRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{23}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *CreateInstrumentRequest) GetSymbol() string {
@@ -2036,7 +2170,7 @@ type CreateInstrumentResponse struct {
 func (x *CreateInstrumentResponse) Reset() {
 	*x = CreateInstrumentResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[24]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[26]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2049,7 +2183,7 @@ func (x *CreateInstrumentResponse) String() string {
 func (*CreateInstrumentResponse) ProtoMessage() {}
 
 func (x *CreateInstrumentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[24]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[26]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2062,7 +2196,7 @@ func (x *CreateInstrumentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateInstrumentResponse.ProtoReflect.Descriptor instead.
 func (*CreateInstrumentResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{24}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *CreateInstrumentResponse) GetInstrument() *Instrument {
@@ -2086,7 +2220,7 @@ type UpdateInstrumentRequest struct {
 func (x *UpdateInstrumentRequest) Reset() {
 	*x = UpdateInstrumentRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[25]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[27]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2099,7 +2233,7 @@ func (x *UpdateInstrumentRequest) String() string {
 func (*UpdateInstrumentRequest) ProtoMessage() {}
 
 func (x *UpdateInstrumentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[25]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[27]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2112,7 +2246,7 @@ func (x *UpdateInstrumentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateInstrumentRequest.ProtoReflect.Descriptor instead.
 func (*UpdateInstrumentRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{25}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *UpdateInstrumentRequest) GetId() string {
@@ -2154,7 +2288,7 @@ type UpdateInstrumentResponse struct {
 func (x *UpdateInstrumentResponse) Reset() {
 	*x = UpdateInstrumentResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[26]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[28]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2167,7 +2301,7 @@ func (x *UpdateInstrumentResponse) String() string {
 func (*UpdateInstrumentResponse) ProtoMessage() {}
 
 func (x *UpdateInstrumentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[26]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[28]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2180,7 +2314,7 @@ func (x *UpdateInstrumentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateInstrumentResponse.ProtoReflect.Descriptor instead.
 func (*UpdateInstrumentResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{26}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *UpdateInstrumentResponse) GetInstrument() *Instrument {
@@ -2201,7 +2335,7 @@ type DeleteInstrumentRequest struct {
 func (x *DeleteInstrumentRequest) Reset() {
 	*x = DeleteInstrumentRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[27]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[29]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2214,7 +2348,7 @@ func (x *DeleteInstrumentRequest) String() string {
 func (*DeleteInstrumentRequest) ProtoMessage() {}
 
 func (x *DeleteInstrumentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[27]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[29]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2227,7 +2361,7 @@ func (x *DeleteInstrumentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteInstrumentRequest.ProtoReflect.Descriptor instead.
 func (*DeleteInstrumentRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{27}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *DeleteInstrumentRequest) GetId() string {
@@ -2249,7 +2383,7 @@ type DeleteInstrumentResponse struct {
 func (x *DeleteInstrumentResponse) Reset() {
 	*x = DeleteInstrumentResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[28]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[30]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2262,7 +2396,7 @@ func (x *DeleteInstrumentResponse) String() string {
 func (*DeleteInstrumentResponse) ProtoMessage() {}
 
 func (x *DeleteInstrumentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[28]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[30]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2275,7 +2409,7 @@ func (x *DeleteInstrumentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteInstrumentResponse.ProtoReflect.Descriptor instead.
 func (*DeleteInstrumentResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{28}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *DeleteInstrumentResponse) GetSuccess() bool {
@@ -2306,7 +2440,7 @@ type Exchange struct {
 func (x *Exchange) Reset() {
 	*x = Exchange{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[29]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[31]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2319,7 +2453,7 @@ func (x *Exchange) String() string {
 func (*Exchange) ProtoMessage() {}
 
 func (x *Exchange) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[29]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[31]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2332,7 +2466,7 @@ func (x *Exchange) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Exchange.ProtoReflect.Descriptor instead.
 func (*Exchange) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{29}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *Exchange) GetCode() string {
@@ -2372,7 +2506,7 @@ type ListExchangesRequest struct {
 func (x *ListExchangesRequest) Reset() {
 	*x = ListExchangesRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[30]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[32]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2385,7 +2519,7 @@ func (x *ListExchangesRequest) String() string {
 func (*ListExchangesRequest) ProtoMessage() {}
 
 func (x *ListExchangesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[30]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[32]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2398,7 +2532,7 @@ func (x *ListExchangesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListExchangesRequest.ProtoReflect.Descriptor instead.
 func (*ListExchangesRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{30}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{32}
 }
 
 type ListExchangesResponse struct {
@@ -2412,7 +2546,7 @@ type ListExchangesResponse struct {
 func (x *ListExchangesResponse) Reset() {
 	*x = ListExchangesResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[31]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[33]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2425,7 +2559,7 @@ func (x *ListExchangesResponse) String() string {
 func (*ListExchangesResponse) ProtoMessage() {}
 
 func (x *ListExchangesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[31]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[33]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2438,7 +2572,7 @@ func (x *ListExchangesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListExchangesResponse.ProtoReflect.Descriptor instead.
 func (*ListExchangesResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{31}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *ListExchangesResponse) GetExchanges() []*Exchange {
@@ -2464,7 +2598,7 @@ type InstrumentPriceItem struct {
 func (x *InstrumentPriceItem) Reset() {
 	*x = InstrumentPriceItem{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[32]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[34]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2477,7 +2611,7 @@ func (x *InstrumentPriceItem) String() string {
 func (*InstrumentPriceItem) ProtoMessage() {}
 
 func (x *InstrumentPriceItem) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[32]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[34]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2490,7 +2624,7 @@ func (x *InstrumentPriceItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InstrumentPriceItem.ProtoReflect.Descriptor instead.
 func (*InstrumentPriceItem) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{32}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *InstrumentPriceItem) GetInstrumentId() string {
@@ -2550,7 +2684,7 @@ type ListInstrumentPricesRequest struct {
 func (x *ListInstrumentPricesRequest) Reset() {
 	*x = ListInstrumentPricesRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[33]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[35]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2563,7 +2697,7 @@ func (x *ListInstrumentPricesRequest) String() string {
 func (*ListInstrumentPricesRequest) ProtoMessage() {}
 
 func (x *ListInstrumentPricesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[33]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[35]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2576,7 +2710,7 @@ func (x *ListInstrumentPricesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListInstrumentPricesRequest.ProtoReflect.Descriptor instead.
 func (*ListInstrumentPricesRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{33}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *ListInstrumentPricesRequest) GetSymbol() string {
@@ -2626,7 +2760,7 @@ type ListInstrumentPricesResponse struct {
 func (x *ListInstrumentPricesResponse) Reset() {
 	*x = ListInstrumentPricesResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[34]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[36]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2639,7 +2773,7 @@ func (x *ListInstrumentPricesResponse) String() string {
 func (*ListInstrumentPricesResponse) ProtoMessage() {}
 
 func (x *ListInstrumentPricesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[34]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[36]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2652,7 +2786,7 @@ func (x *ListInstrumentPricesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListInstrumentPricesResponse.ProtoReflect.Descriptor instead.
 func (*ListInstrumentPricesResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{34}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *ListInstrumentPricesResponse) GetPrices() []*InstrumentPriceItem {
@@ -2684,7 +2818,7 @@ type RecordPriceOverrideRequest struct {
 func (x *RecordPriceOverrideRequest) Reset() {
 	*x = RecordPriceOverrideRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[35]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[37]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2697,7 +2831,7 @@ func (x *RecordPriceOverrideRequest) String() string {
 func (*RecordPriceOverrideRequest) ProtoMessage() {}
 
 func (x *RecordPriceOverrideRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[35]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[37]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2710,7 +2844,7 @@ func (x *RecordPriceOverrideRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RecordPriceOverrideRequest.ProtoReflect.Descriptor instead.
 func (*RecordPriceOverrideRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{35}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *RecordPriceOverrideRequest) GetSymbol() string {
@@ -2760,7 +2894,7 @@ type RecordPriceOverrideResponse struct {
 func (x *RecordPriceOverrideResponse) Reset() {
 	*x = RecordPriceOverrideResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[36]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[38]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2773,7 +2907,7 @@ func (x *RecordPriceOverrideResponse) String() string {
 func (*RecordPriceOverrideResponse) ProtoMessage() {}
 
 func (x *RecordPriceOverrideResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[36]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[38]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2786,7 +2920,7 @@ func (x *RecordPriceOverrideResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RecordPriceOverrideResponse.ProtoReflect.Descriptor instead.
 func (*RecordPriceOverrideResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{36}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *RecordPriceOverrideResponse) GetPrice() *InstrumentPriceItem {
@@ -2819,7 +2953,7 @@ type FeedHealthStatus struct {
 func (x *FeedHealthStatus) Reset() {
 	*x = FeedHealthStatus{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[37]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[39]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2832,7 +2966,7 @@ func (x *FeedHealthStatus) String() string {
 func (*FeedHealthStatus) ProtoMessage() {}
 
 func (x *FeedHealthStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[37]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[39]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2845,7 +2979,7 @@ func (x *FeedHealthStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FeedHealthStatus.ProtoReflect.Descriptor instead.
 func (*FeedHealthStatus) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{37}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *FeedHealthStatus) GetName() string {
@@ -2899,7 +3033,7 @@ type GetIngestionStatusRequest struct {
 func (x *GetIngestionStatusRequest) Reset() {
 	*x = GetIngestionStatusRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[38]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[40]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2912,7 +3046,7 @@ func (x *GetIngestionStatusRequest) String() string {
 func (*GetIngestionStatusRequest) ProtoMessage() {}
 
 func (x *GetIngestionStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[38]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[40]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2925,7 +3059,7 @@ func (x *GetIngestionStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetIngestionStatusRequest.ProtoReflect.Descriptor instead.
 func (*GetIngestionStatusRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{38}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{40}
 }
 
 type GetIngestionStatusResponse struct {
@@ -2946,7 +3080,7 @@ type GetIngestionStatusResponse struct {
 func (x *GetIngestionStatusResponse) Reset() {
 	*x = GetIngestionStatusResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[39]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[41]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2959,7 +3093,7 @@ func (x *GetIngestionStatusResponse) String() string {
 func (*GetIngestionStatusResponse) ProtoMessage() {}
 
 func (x *GetIngestionStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[39]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[41]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2972,7 +3106,7 @@ func (x *GetIngestionStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetIngestionStatusResponse.ProtoReflect.Descriptor instead.
 func (*GetIngestionStatusResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{39}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *GetIngestionStatusResponse) GetFeeds() []*FeedHealthStatus {
@@ -3043,7 +3177,7 @@ type TriggerMarketSyncRequest struct {
 func (x *TriggerMarketSyncRequest) Reset() {
 	*x = TriggerMarketSyncRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[40]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[42]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3056,7 +3190,7 @@ func (x *TriggerMarketSyncRequest) String() string {
 func (*TriggerMarketSyncRequest) ProtoMessage() {}
 
 func (x *TriggerMarketSyncRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[40]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[42]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3069,7 +3203,7 @@ func (x *TriggerMarketSyncRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TriggerMarketSyncRequest.ProtoReflect.Descriptor instead.
 func (*TriggerMarketSyncRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{40}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *TriggerMarketSyncRequest) GetSymbols() []string {
@@ -3100,7 +3234,7 @@ type TriggerMarketSyncResponse struct {
 func (x *TriggerMarketSyncResponse) Reset() {
 	*x = TriggerMarketSyncResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[41]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[43]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3113,7 +3247,7 @@ func (x *TriggerMarketSyncResponse) String() string {
 func (*TriggerMarketSyncResponse) ProtoMessage() {}
 
 func (x *TriggerMarketSyncResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[41]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[43]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3126,7 +3260,7 @@ func (x *TriggerMarketSyncResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TriggerMarketSyncResponse.ProtoReflect.Descriptor instead.
 func (*TriggerMarketSyncResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{41}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *TriggerMarketSyncResponse) GetSuccess() bool {
@@ -3178,7 +3312,7 @@ type CurrencyPairItem struct {
 func (x *CurrencyPairItem) Reset() {
 	*x = CurrencyPairItem{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[42]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[44]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3191,7 +3325,7 @@ func (x *CurrencyPairItem) String() string {
 func (*CurrencyPairItem) ProtoMessage() {}
 
 func (x *CurrencyPairItem) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[42]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[44]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3204,7 +3338,7 @@ func (x *CurrencyPairItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CurrencyPairItem.ProtoReflect.Descriptor instead.
 func (*CurrencyPairItem) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{42}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *CurrencyPairItem) GetBaseCurrency() string {
@@ -3293,7 +3427,7 @@ type ListCurrencyPairsRequest struct {
 func (x *ListCurrencyPairsRequest) Reset() {
 	*x = ListCurrencyPairsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[43]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[45]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3306,7 +3440,7 @@ func (x *ListCurrencyPairsRequest) String() string {
 func (*ListCurrencyPairsRequest) ProtoMessage() {}
 
 func (x *ListCurrencyPairsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[43]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[45]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3319,7 +3453,7 @@ func (x *ListCurrencyPairsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCurrencyPairsRequest.ProtoReflect.Descriptor instead.
 func (*ListCurrencyPairsRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{43}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{45}
 }
 
 type ListCurrencyPairsResponse struct {
@@ -3333,7 +3467,7 @@ type ListCurrencyPairsResponse struct {
 func (x *ListCurrencyPairsResponse) Reset() {
 	*x = ListCurrencyPairsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[44]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[46]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3346,7 +3480,7 @@ func (x *ListCurrencyPairsResponse) String() string {
 func (*ListCurrencyPairsResponse) ProtoMessage() {}
 
 func (x *ListCurrencyPairsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[44]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[46]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3359,7 +3493,7 @@ func (x *ListCurrencyPairsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListCurrencyPairsResponse.ProtoReflect.Descriptor instead.
 func (*ListCurrencyPairsResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{44}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *ListCurrencyPairsResponse) GetPairs() []*CurrencyPairItem {
@@ -3385,7 +3519,7 @@ type FXRateItem struct {
 func (x *FXRateItem) Reset() {
 	*x = FXRateItem{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[45]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[47]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3398,7 +3532,7 @@ func (x *FXRateItem) String() string {
 func (*FXRateItem) ProtoMessage() {}
 
 func (x *FXRateItem) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[45]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[47]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3411,7 +3545,7 @@ func (x *FXRateItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FXRateItem.ProtoReflect.Descriptor instead.
 func (*FXRateItem) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{45}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{47}
 }
 
 func (x *FXRateItem) GetBaseCurrency() string {
@@ -3472,7 +3606,7 @@ type ListFXRatesRequest struct {
 func (x *ListFXRatesRequest) Reset() {
 	*x = ListFXRatesRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[46]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[48]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3485,7 +3619,7 @@ func (x *ListFXRatesRequest) String() string {
 func (*ListFXRatesRequest) ProtoMessage() {}
 
 func (x *ListFXRatesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[46]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[48]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3498,7 +3632,7 @@ func (x *ListFXRatesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListFXRatesRequest.ProtoReflect.Descriptor instead.
 func (*ListFXRatesRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{46}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *ListFXRatesRequest) GetBaseCurrency() string {
@@ -3555,7 +3689,7 @@ type ListFXRatesResponse struct {
 func (x *ListFXRatesResponse) Reset() {
 	*x = ListFXRatesResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[47]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[49]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3568,7 +3702,7 @@ func (x *ListFXRatesResponse) String() string {
 func (*ListFXRatesResponse) ProtoMessage() {}
 
 func (x *ListFXRatesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[47]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[49]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3581,7 +3715,7 @@ func (x *ListFXRatesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListFXRatesResponse.ProtoReflect.Descriptor instead.
 func (*ListFXRatesResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{47}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *ListFXRatesResponse) GetRates() []*FXRateItem {
@@ -3612,7 +3746,7 @@ type FXHistoryPoint struct {
 func (x *FXHistoryPoint) Reset() {
 	*x = FXHistoryPoint{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[48]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[50]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3625,7 +3759,7 @@ func (x *FXHistoryPoint) String() string {
 func (*FXHistoryPoint) ProtoMessage() {}
 
 func (x *FXHistoryPoint) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[48]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[50]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3638,7 +3772,7 @@ func (x *FXHistoryPoint) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FXHistoryPoint.ProtoReflect.Descriptor instead.
 func (*FXHistoryPoint) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{48}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *FXHistoryPoint) GetDate() string {
@@ -3682,7 +3816,7 @@ type GetCurrencyPairHistoryRequest struct {
 func (x *GetCurrencyPairHistoryRequest) Reset() {
 	*x = GetCurrencyPairHistoryRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[49]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[51]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3695,7 +3829,7 @@ func (x *GetCurrencyPairHistoryRequest) String() string {
 func (*GetCurrencyPairHistoryRequest) ProtoMessage() {}
 
 func (x *GetCurrencyPairHistoryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[49]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[51]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3708,7 +3842,7 @@ func (x *GetCurrencyPairHistoryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCurrencyPairHistoryRequest.ProtoReflect.Descriptor instead.
 func (*GetCurrencyPairHistoryRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{49}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *GetCurrencyPairHistoryRequest) GetBaseCurrency() string {
@@ -3751,7 +3885,7 @@ type GetCurrencyPairHistoryResponse struct {
 func (x *GetCurrencyPairHistoryResponse) Reset() {
 	*x = GetCurrencyPairHistoryResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[50]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[52]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3764,7 +3898,7 @@ func (x *GetCurrencyPairHistoryResponse) String() string {
 func (*GetCurrencyPairHistoryResponse) ProtoMessage() {}
 
 func (x *GetCurrencyPairHistoryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[50]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[52]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3777,7 +3911,7 @@ func (x *GetCurrencyPairHistoryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCurrencyPairHistoryResponse.ProtoReflect.Descriptor instead.
 func (*GetCurrencyPairHistoryResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{50}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *GetCurrencyPairHistoryResponse) GetBaseCurrency() string {
@@ -3859,7 +3993,7 @@ type RecordFXRateOverrideRequest struct {
 func (x *RecordFXRateOverrideRequest) Reset() {
 	*x = RecordFXRateOverrideRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[51]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[53]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3872,7 +4006,7 @@ func (x *RecordFXRateOverrideRequest) String() string {
 func (*RecordFXRateOverrideRequest) ProtoMessage() {}
 
 func (x *RecordFXRateOverrideRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[51]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[53]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3885,7 +4019,7 @@ func (x *RecordFXRateOverrideRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RecordFXRateOverrideRequest.ProtoReflect.Descriptor instead.
 func (*RecordFXRateOverrideRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{51}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *RecordFXRateOverrideRequest) GetBaseCurrency() string {
@@ -3942,7 +4076,7 @@ type RecordFXRateOverrideResponse struct {
 func (x *RecordFXRateOverrideResponse) Reset() {
 	*x = RecordFXRateOverrideResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[52]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[54]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -3955,7 +4089,7 @@ func (x *RecordFXRateOverrideResponse) String() string {
 func (*RecordFXRateOverrideResponse) ProtoMessage() {}
 
 func (x *RecordFXRateOverrideResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[52]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[54]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3968,7 +4102,7 @@ func (x *RecordFXRateOverrideResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RecordFXRateOverrideResponse.ProtoReflect.Descriptor instead.
 func (*RecordFXRateOverrideResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{52}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *RecordFXRateOverrideResponse) GetRate() *FXRateItem {
@@ -4002,7 +4136,7 @@ type TriggerBackfillRequest struct {
 func (x *TriggerBackfillRequest) Reset() {
 	*x = TriggerBackfillRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[53]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[55]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4015,7 +4149,7 @@ func (x *TriggerBackfillRequest) String() string {
 func (*TriggerBackfillRequest) ProtoMessage() {}
 
 func (x *TriggerBackfillRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[53]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[55]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4028,7 +4162,7 @@ func (x *TriggerBackfillRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TriggerBackfillRequest.ProtoReflect.Descriptor instead.
 func (*TriggerBackfillRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{53}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *TriggerBackfillRequest) GetFromDate() string {
@@ -4095,7 +4229,7 @@ type TriggerBackfillResponse struct {
 func (x *TriggerBackfillResponse) Reset() {
 	*x = TriggerBackfillResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[54]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[56]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4108,7 +4242,7 @@ func (x *TriggerBackfillResponse) String() string {
 func (*TriggerBackfillResponse) ProtoMessage() {}
 
 func (x *TriggerBackfillResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[54]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[56]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4121,7 +4255,7 @@ func (x *TriggerBackfillResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TriggerBackfillResponse.ProtoReflect.Descriptor instead.
 func (*TriggerBackfillResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{54}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *TriggerBackfillResponse) GetSuccess() bool {
@@ -4171,7 +4305,7 @@ type CheckTransactionDuplicatesRequest struct {
 func (x *CheckTransactionDuplicatesRequest) Reset() {
 	*x = CheckTransactionDuplicatesRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[55]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[57]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4184,7 +4318,7 @@ func (x *CheckTransactionDuplicatesRequest) String() string {
 func (*CheckTransactionDuplicatesRequest) ProtoMessage() {}
 
 func (x *CheckTransactionDuplicatesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[55]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[57]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4197,7 +4331,7 @@ func (x *CheckTransactionDuplicatesRequest) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use CheckTransactionDuplicatesRequest.ProtoReflect.Descriptor instead.
 func (*CheckTransactionDuplicatesRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{55}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *CheckTransactionDuplicatesRequest) GetUserId() string {
@@ -4225,7 +4359,7 @@ type CheckTransactionDuplicatesResponse struct {
 func (x *CheckTransactionDuplicatesResponse) Reset() {
 	*x = CheckTransactionDuplicatesResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[56]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[58]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4238,7 +4372,7 @@ func (x *CheckTransactionDuplicatesResponse) String() string {
 func (*CheckTransactionDuplicatesResponse) ProtoMessage() {}
 
 func (x *CheckTransactionDuplicatesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[56]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[58]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4251,7 +4385,7 @@ func (x *CheckTransactionDuplicatesResponse) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use CheckTransactionDuplicatesResponse.ProtoReflect.Descriptor instead.
 func (*CheckTransactionDuplicatesResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{56}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *CheckTransactionDuplicatesResponse) GetExistingExternalRefs() []string {
@@ -4281,7 +4415,7 @@ type ImportTransactionItem struct {
 func (x *ImportTransactionItem) Reset() {
 	*x = ImportTransactionItem{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[57]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[59]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4294,7 +4428,7 @@ func (x *ImportTransactionItem) String() string {
 func (*ImportTransactionItem) ProtoMessage() {}
 
 func (x *ImportTransactionItem) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[57]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[59]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4307,7 +4441,7 @@ func (x *ImportTransactionItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ImportTransactionItem.ProtoReflect.Descriptor instead.
 func (*ImportTransactionItem) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{57}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *ImportTransactionItem) GetType() TransactionType {
@@ -4393,7 +4527,7 @@ type BatchImportTransactionsRequest struct {
 func (x *BatchImportTransactionsRequest) Reset() {
 	*x = BatchImportTransactionsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[58]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[60]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4406,7 +4540,7 @@ func (x *BatchImportTransactionsRequest) String() string {
 func (*BatchImportTransactionsRequest) ProtoMessage() {}
 
 func (x *BatchImportTransactionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[58]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[60]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4419,7 +4553,7 @@ func (x *BatchImportTransactionsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BatchImportTransactionsRequest.ProtoReflect.Descriptor instead.
 func (*BatchImportTransactionsRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{58}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *BatchImportTransactionsRequest) GetUserId() string {
@@ -4458,7 +4592,7 @@ type BatchImportTransactionsResponse struct {
 func (x *BatchImportTransactionsResponse) Reset() {
 	*x = BatchImportTransactionsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[59]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[61]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4471,7 +4605,7 @@ func (x *BatchImportTransactionsResponse) String() string {
 func (*BatchImportTransactionsResponse) ProtoMessage() {}
 
 func (x *BatchImportTransactionsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[59]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[61]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4484,7 +4618,7 @@ func (x *BatchImportTransactionsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BatchImportTransactionsResponse.ProtoReflect.Descriptor instead.
 func (*BatchImportTransactionsResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{59}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{61}
 }
 
 func (x *BatchImportTransactionsResponse) GetSuccess() bool {
@@ -4537,7 +4671,7 @@ type GetCashFlowReportRequest struct {
 func (x *GetCashFlowReportRequest) Reset() {
 	*x = GetCashFlowReportRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[60]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[62]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4550,7 +4684,7 @@ func (x *GetCashFlowReportRequest) String() string {
 func (*GetCashFlowReportRequest) ProtoMessage() {}
 
 func (x *GetCashFlowReportRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[60]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[62]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4563,7 +4697,7 @@ func (x *GetCashFlowReportRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCashFlowReportRequest.ProtoReflect.Descriptor instead.
 func (*GetCashFlowReportRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{60}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{62}
 }
 
 func (x *GetCashFlowReportRequest) GetUserId() string {
@@ -4616,7 +4750,7 @@ type CashFlowSummary struct {
 func (x *CashFlowSummary) Reset() {
 	*x = CashFlowSummary{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[61]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[63]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4629,7 +4763,7 @@ func (x *CashFlowSummary) String() string {
 func (*CashFlowSummary) ProtoMessage() {}
 
 func (x *CashFlowSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[61]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[63]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4642,7 +4776,7 @@ func (x *CashFlowSummary) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CashFlowSummary.ProtoReflect.Descriptor instead.
 func (*CashFlowSummary) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{61}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{63}
 }
 
 func (x *CashFlowSummary) GetStartingCashBalance() *v1.Money {
@@ -4698,7 +4832,7 @@ type CashFlowCategoryBreakdown struct {
 func (x *CashFlowCategoryBreakdown) Reset() {
 	*x = CashFlowCategoryBreakdown{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[62]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[64]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4711,7 +4845,7 @@ func (x *CashFlowCategoryBreakdown) String() string {
 func (*CashFlowCategoryBreakdown) ProtoMessage() {}
 
 func (x *CashFlowCategoryBreakdown) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[62]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[64]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4724,7 +4858,7 @@ func (x *CashFlowCategoryBreakdown) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CashFlowCategoryBreakdown.ProtoReflect.Descriptor instead.
 func (*CashFlowCategoryBreakdown) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{62}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{64}
 }
 
 func (x *CashFlowCategoryBreakdown) GetDeposits() *v1.Money {
@@ -4806,7 +4940,7 @@ type CashFlowItem struct {
 func (x *CashFlowItem) Reset() {
 	*x = CashFlowItem{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[63]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[65]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4819,7 +4953,7 @@ func (x *CashFlowItem) String() string {
 func (*CashFlowItem) ProtoMessage() {}
 
 func (x *CashFlowItem) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[63]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[65]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4832,7 +4966,7 @@ func (x *CashFlowItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CashFlowItem.ProtoReflect.Descriptor instead.
 func (*CashFlowItem) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{63}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{65}
 }
 
 func (x *CashFlowItem) GetId() string {
@@ -4942,7 +5076,7 @@ type GetCashFlowReportResponse struct {
 func (x *GetCashFlowReportResponse) Reset() {
 	*x = GetCashFlowReportResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[64]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[66]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -4955,7 +5089,7 @@ func (x *GetCashFlowReportResponse) String() string {
 func (*GetCashFlowReportResponse) ProtoMessage() {}
 
 func (x *GetCashFlowReportResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[64]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[66]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4968,7 +5102,7 @@ func (x *GetCashFlowReportResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetCashFlowReportResponse.ProtoReflect.Descriptor instead.
 func (*GetCashFlowReportResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{64}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{66}
 }
 
 func (x *GetCashFlowReportResponse) GetSummary() *CashFlowSummary {
@@ -5034,7 +5168,7 @@ type MissingPriceTransactionItem struct {
 func (x *MissingPriceTransactionItem) Reset() {
 	*x = MissingPriceTransactionItem{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[65]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[67]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5047,7 +5181,7 @@ func (x *MissingPriceTransactionItem) String() string {
 func (*MissingPriceTransactionItem) ProtoMessage() {}
 
 func (x *MissingPriceTransactionItem) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[65]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[67]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5060,7 +5194,7 @@ func (x *MissingPriceTransactionItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MissingPriceTransactionItem.ProtoReflect.Descriptor instead.
 func (*MissingPriceTransactionItem) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{65}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{67}
 }
 
 func (x *MissingPriceTransactionItem) GetTransactionId() string {
@@ -5155,7 +5289,7 @@ type ListMissingPriceTransactionsRequest struct {
 func (x *ListMissingPriceTransactionsRequest) Reset() {
 	*x = ListMissingPriceTransactionsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[66]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[68]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5168,7 +5302,7 @@ func (x *ListMissingPriceTransactionsRequest) String() string {
 func (*ListMissingPriceTransactionsRequest) ProtoMessage() {}
 
 func (x *ListMissingPriceTransactionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[66]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[68]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5181,7 +5315,7 @@ func (x *ListMissingPriceTransactionsRequest) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use ListMissingPriceTransactionsRequest.ProtoReflect.Descriptor instead.
 func (*ListMissingPriceTransactionsRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{66}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{68}
 }
 
 func (x *ListMissingPriceTransactionsRequest) GetSymbol() string {
@@ -5234,7 +5368,7 @@ type ListMissingPriceTransactionsResponse struct {
 func (x *ListMissingPriceTransactionsResponse) Reset() {
 	*x = ListMissingPriceTransactionsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[67]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[69]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5247,7 +5381,7 @@ func (x *ListMissingPriceTransactionsResponse) String() string {
 func (*ListMissingPriceTransactionsResponse) ProtoMessage() {}
 
 func (x *ListMissingPriceTransactionsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[67]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[69]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5260,7 +5394,7 @@ func (x *ListMissingPriceTransactionsResponse) ProtoReflect() protoreflect.Messa
 
 // Deprecated: Use ListMissingPriceTransactionsResponse.ProtoReflect.Descriptor instead.
 func (*ListMissingPriceTransactionsResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{67}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{69}
 }
 
 func (x *ListMissingPriceTransactionsResponse) GetItems() []*MissingPriceTransactionItem {
@@ -5321,7 +5455,7 @@ type MissingFXRateTransactionItem struct {
 func (x *MissingFXRateTransactionItem) Reset() {
 	*x = MissingFXRateTransactionItem{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[68]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[70]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5334,7 +5468,7 @@ func (x *MissingFXRateTransactionItem) String() string {
 func (*MissingFXRateTransactionItem) ProtoMessage() {}
 
 func (x *MissingFXRateTransactionItem) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[68]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[70]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5347,7 +5481,7 @@ func (x *MissingFXRateTransactionItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MissingFXRateTransactionItem.ProtoReflect.Descriptor instead.
 func (*MissingFXRateTransactionItem) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{68}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{70}
 }
 
 func (x *MissingFXRateTransactionItem) GetTransactionId() string {
@@ -5457,7 +5591,7 @@ type ListMissingFXRateTransactionsRequest struct {
 func (x *ListMissingFXRateTransactionsRequest) Reset() {
 	*x = ListMissingFXRateTransactionsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[69]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[71]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5470,7 +5604,7 @@ func (x *ListMissingFXRateTransactionsRequest) String() string {
 func (*ListMissingFXRateTransactionsRequest) ProtoMessage() {}
 
 func (x *ListMissingFXRateTransactionsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[69]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[71]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5483,7 +5617,7 @@ func (x *ListMissingFXRateTransactionsRequest) ProtoReflect() protoreflect.Messa
 
 // Deprecated: Use ListMissingFXRateTransactionsRequest.ProtoReflect.Descriptor instead.
 func (*ListMissingFXRateTransactionsRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{69}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{71}
 }
 
 func (x *ListMissingFXRateTransactionsRequest) GetCurrencyPair() string {
@@ -5543,7 +5677,7 @@ type ListMissingFXRateTransactionsResponse struct {
 func (x *ListMissingFXRateTransactionsResponse) Reset() {
 	*x = ListMissingFXRateTransactionsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[70]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[72]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5556,7 +5690,7 @@ func (x *ListMissingFXRateTransactionsResponse) String() string {
 func (*ListMissingFXRateTransactionsResponse) ProtoMessage() {}
 
 func (x *ListMissingFXRateTransactionsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[70]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[72]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5569,7 +5703,7 @@ func (x *ListMissingFXRateTransactionsResponse) ProtoReflect() protoreflect.Mess
 
 // Deprecated: Use ListMissingFXRateTransactionsResponse.ProtoReflect.Descriptor instead.
 func (*ListMissingFXRateTransactionsResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{70}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{72}
 }
 
 func (x *ListMissingFXRateTransactionsResponse) GetItems() []*MissingFXRateTransactionItem {
@@ -5621,7 +5755,7 @@ type GetModifiedDietzReturnRequest struct {
 func (x *GetModifiedDietzReturnRequest) Reset() {
 	*x = GetModifiedDietzReturnRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[71]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[73]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5634,7 +5768,7 @@ func (x *GetModifiedDietzReturnRequest) String() string {
 func (*GetModifiedDietzReturnRequest) ProtoMessage() {}
 
 func (x *GetModifiedDietzReturnRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[71]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[73]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5647,7 +5781,7 @@ func (x *GetModifiedDietzReturnRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetModifiedDietzReturnRequest.ProtoReflect.Descriptor instead.
 func (*GetModifiedDietzReturnRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{71}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{73}
 }
 
 func (x *GetModifiedDietzReturnRequest) GetUserId() string {
@@ -5695,7 +5829,7 @@ type ExternalCashFlowWeight struct {
 func (x *ExternalCashFlowWeight) Reset() {
 	*x = ExternalCashFlowWeight{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[72]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[74]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5708,7 +5842,7 @@ func (x *ExternalCashFlowWeight) String() string {
 func (*ExternalCashFlowWeight) ProtoMessage() {}
 
 func (x *ExternalCashFlowWeight) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[72]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[74]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5721,7 +5855,7 @@ func (x *ExternalCashFlowWeight) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExternalCashFlowWeight.ProtoReflect.Descriptor instead.
 func (*ExternalCashFlowWeight) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{72}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{74}
 }
 
 func (x *ExternalCashFlowWeight) GetTransactionId() string {
@@ -5799,7 +5933,7 @@ type GetModifiedDietzReturnResponse struct {
 func (x *GetModifiedDietzReturnResponse) Reset() {
 	*x = GetModifiedDietzReturnResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[73]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[75]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5812,7 +5946,7 @@ func (x *GetModifiedDietzReturnResponse) String() string {
 func (*GetModifiedDietzReturnResponse) ProtoMessage() {}
 
 func (x *GetModifiedDietzReturnResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[73]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[75]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5825,7 +5959,7 @@ func (x *GetModifiedDietzReturnResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetModifiedDietzReturnResponse.ProtoReflect.Descriptor instead.
 func (*GetModifiedDietzReturnResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{73}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{75}
 }
 
 func (x *GetModifiedDietzReturnResponse) GetPortfolioId() string {
@@ -5957,7 +6091,7 @@ type Benchmark struct {
 func (x *Benchmark) Reset() {
 	*x = Benchmark{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[74]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[76]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -5970,7 +6104,7 @@ func (x *Benchmark) String() string {
 func (*Benchmark) ProtoMessage() {}
 
 func (x *Benchmark) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[74]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[76]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5983,7 +6117,7 @@ func (x *Benchmark) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Benchmark.ProtoReflect.Descriptor instead.
 func (*Benchmark) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{74}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{76}
 }
 
 func (x *Benchmark) GetId() string {
@@ -6044,7 +6178,7 @@ type ListBenchmarksRequest struct {
 func (x *ListBenchmarksRequest) Reset() {
 	*x = ListBenchmarksRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[75]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[77]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6057,7 +6191,7 @@ func (x *ListBenchmarksRequest) String() string {
 func (*ListBenchmarksRequest) ProtoMessage() {}
 
 func (x *ListBenchmarksRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[75]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[77]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6070,7 +6204,7 @@ func (x *ListBenchmarksRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListBenchmarksRequest.ProtoReflect.Descriptor instead.
 func (*ListBenchmarksRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{75}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{77}
 }
 
 type ListBenchmarksResponse struct {
@@ -6084,7 +6218,7 @@ type ListBenchmarksResponse struct {
 func (x *ListBenchmarksResponse) Reset() {
 	*x = ListBenchmarksResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[76]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[78]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6097,7 +6231,7 @@ func (x *ListBenchmarksResponse) String() string {
 func (*ListBenchmarksResponse) ProtoMessage() {}
 
 func (x *ListBenchmarksResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[76]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[78]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6110,7 +6244,7 @@ func (x *ListBenchmarksResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListBenchmarksResponse.ProtoReflect.Descriptor instead.
 func (*ListBenchmarksResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{76}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{78}
 }
 
 func (x *ListBenchmarksResponse) GetBenchmarks() []*Benchmark {
@@ -6136,7 +6270,7 @@ type BenchmarkComparisonPoint struct {
 func (x *BenchmarkComparisonPoint) Reset() {
 	*x = BenchmarkComparisonPoint{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[77]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[79]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6149,7 +6283,7 @@ func (x *BenchmarkComparisonPoint) String() string {
 func (*BenchmarkComparisonPoint) ProtoMessage() {}
 
 func (x *BenchmarkComparisonPoint) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[77]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[79]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6162,7 +6296,7 @@ func (x *BenchmarkComparisonPoint) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BenchmarkComparisonPoint.ProtoReflect.Descriptor instead.
 func (*BenchmarkComparisonPoint) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{77}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{79}
 }
 
 func (x *BenchmarkComparisonPoint) GetDate() string {
@@ -6227,7 +6361,7 @@ type BenchmarkMetrics struct {
 func (x *BenchmarkMetrics) Reset() {
 	*x = BenchmarkMetrics{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[78]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[80]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6240,7 +6374,7 @@ func (x *BenchmarkMetrics) String() string {
 func (*BenchmarkMetrics) ProtoMessage() {}
 
 func (x *BenchmarkMetrics) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[78]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[80]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6253,7 +6387,7 @@ func (x *BenchmarkMetrics) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BenchmarkMetrics.ProtoReflect.Descriptor instead.
 func (*BenchmarkMetrics) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{78}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{80}
 }
 
 func (x *BenchmarkMetrics) GetPortfolioCumulativeReturnPercent() *v1.Decimal {
@@ -6340,7 +6474,7 @@ type GetBenchmarkComparisonRequest struct {
 func (x *GetBenchmarkComparisonRequest) Reset() {
 	*x = GetBenchmarkComparisonRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[79]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[81]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6353,7 +6487,7 @@ func (x *GetBenchmarkComparisonRequest) String() string {
 func (*GetBenchmarkComparisonRequest) ProtoMessage() {}
 
 func (x *GetBenchmarkComparisonRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[79]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[81]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6366,7 +6500,7 @@ func (x *GetBenchmarkComparisonRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetBenchmarkComparisonRequest.ProtoReflect.Descriptor instead.
 func (*GetBenchmarkComparisonRequest) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{79}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{81}
 }
 
 func (x *GetBenchmarkComparisonRequest) GetUserId() string {
@@ -6416,7 +6550,7 @@ type GetBenchmarkComparisonResponse struct {
 func (x *GetBenchmarkComparisonResponse) Reset() {
 	*x = GetBenchmarkComparisonResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_portfolio_v1_portfolio_proto_msgTypes[80]
+		mi := &file_portfolio_v1_portfolio_proto_msgTypes[82]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -6429,7 +6563,7 @@ func (x *GetBenchmarkComparisonResponse) String() string {
 func (*GetBenchmarkComparisonResponse) ProtoMessage() {}
 
 func (x *GetBenchmarkComparisonResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_portfolio_v1_portfolio_proto_msgTypes[80]
+	mi := &file_portfolio_v1_portfolio_proto_msgTypes[82]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6442,7 +6576,7 @@ func (x *GetBenchmarkComparisonResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetBenchmarkComparisonResponse.ProtoReflect.Descriptor instead.
 func (*GetBenchmarkComparisonResponse) Descriptor() ([]byte, []int) {
-	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{80}
+	return file_portfolio_v1_portfolio_proto_rawDescGZIP(), []int{82}
 }
 
 func (x *GetBenchmarkComparisonResponse) GetPortfolioId() string {
@@ -6549,7 +6683,24 @@ var file_portfolio_v1_portfolio_proto_rawDesc = []byte{
 	0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
 	0x17, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x50,
 	0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x52, 0x09, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f,
-	0x6c, 0x69, 0x6f, 0x22, 0xd6, 0x02, 0x0a, 0x15, 0x41, 0x64, 0x64, 0x54, 0x72, 0x61, 0x6e, 0x73,
+	0x6c, 0x69, 0x6f, 0x22, 0x96, 0x01, 0x0a, 0x16, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x6f,
+	0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x17,
+	0x0a, 0x07, 0x75, 0x73, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x06, 0x75, 0x73, 0x65, 0x72, 0x49, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x23, 0x0a, 0x0d, 0x62,
+	0x61, 0x73, 0x65, 0x5f, 0x63, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x63, 0x79, 0x18, 0x03, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x0c, 0x62, 0x61, 0x73, 0x65, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x63, 0x79,
+	0x12, 0x2a, 0x0a, 0x11, 0x63, 0x6f, 0x73, 0x74, 0x5f, 0x62, 0x61, 0x73, 0x69, 0x73, 0x5f, 0x6d,
+	0x65, 0x74, 0x68, 0x6f, 0x64, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0f, 0x63, 0x6f, 0x73,
+	0x74, 0x42, 0x61, 0x73, 0x69, 0x73, 0x4d, 0x65, 0x74, 0x68, 0x6f, 0x64, 0x22, 0x75, 0x0a, 0x17,
+	0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x21, 0x0a, 0x0c, 0x70, 0x6f, 0x72, 0x74, 0x66,
+	0x6f, 0x6c, 0x69, 0x6f, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x70,
+	0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x49, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61,
+	0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x23,
+	0x0a, 0x0d, 0x62, 0x61, 0x73, 0x65, 0x5f, 0x63, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x63, 0x79, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0c, 0x62, 0x61, 0x73, 0x65, 0x43, 0x75, 0x72, 0x72, 0x65,
+	0x6e, 0x63, 0x79, 0x22, 0xd6, 0x02, 0x0a, 0x15, 0x41, 0x64, 0x64, 0x54, 0x72, 0x61, 0x6e, 0x73,
 	0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x17, 0x0a,
 	0x07, 0x75, 0x73, 0x65, 0x72, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06,
 	0x75, 0x73, 0x65, 0x72, 0x49, 0x64, 0x12, 0x31, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x02,
@@ -7758,216 +7909,222 @@ var file_portfolio_v1_portfolio_proto_rawDesc = []byte{
 	0x46, 0x4f, 0x4c, 0x49, 0x4f, 0x5f, 0x42, 0x41, 0x53, 0x45, 0x10, 0x01, 0x12, 0x2c, 0x0a, 0x28,
 	0x42, 0x45, 0x4e, 0x43, 0x48, 0x4d, 0x41, 0x52, 0x4b, 0x5f, 0x43, 0x55, 0x52, 0x52, 0x45, 0x4e,
 	0x43, 0x59, 0x5f, 0x4d, 0x4f, 0x44, 0x45, 0x5f, 0x42, 0x45, 0x4e, 0x43, 0x48, 0x4d, 0x41, 0x52,
-	0x4b, 0x5f, 0x4e, 0x41, 0x54, 0x49, 0x56, 0x45, 0x10, 0x02, 0x32, 0xd0, 0x19, 0x0a, 0x10, 0x50,
+	0x4b, 0x5f, 0x4e, 0x41, 0x54, 0x49, 0x56, 0x45, 0x10, 0x02, 0x32, 0xb2, 0x1a, 0x0a, 0x10, 0x50,
 	0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12,
 	0x57, 0x0a, 0x0c, 0x47, 0x65, 0x74, 0x50, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x12,
 	0x21, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x47,
 	0x65, 0x74, 0x50, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65,
 	0x73, 0x74, 0x1a, 0x22, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76,
 	0x31, 0x2e, 0x47, 0x65, 0x74, 0x50, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x84, 0x01, 0x0a, 0x1b, 0x55, 0x70, 0x64,
-	0x61, 0x74, 0x65, 0x50, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x42, 0x61, 0x73, 0x65,
-	0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x63, 0x79, 0x12, 0x30, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66,
-	0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x6f,
-	0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x42, 0x61, 0x73, 0x65, 0x43, 0x75, 0x72, 0x72, 0x65,
-	0x6e, 0x63, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x31, 0x2e, 0x70, 0x6f, 0x72,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x60, 0x0a, 0x0f, 0x43, 0x72, 0x65, 0x61,
+	0x74, 0x65, 0x50, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x12, 0x24, 0x2e, 0x70, 0x6f,
+	0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74,
+	0x65, 0x50, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x25, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31,
+	0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x50, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x84, 0x01, 0x0a, 0x1b, 0x55,
+	0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x42, 0x61,
+	0x73, 0x65, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x63, 0x79, 0x12, 0x30, 0x2e, 0x70, 0x6f, 0x72,
 	0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
 	0x50, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x42, 0x61, 0x73, 0x65, 0x43, 0x75, 0x72,
-	0x72, 0x65, 0x6e, 0x63, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12,
-	0x5d, 0x0a, 0x0e, 0x41, 0x64, 0x64, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f,
-	0x6e, 0x12, 0x23, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31,
-	0x2e, 0x41, 0x64, 0x64, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x24, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c,
-	0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x41, 0x64, 0x64, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63,
-	0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x60,
-	0x0a, 0x0f, 0x4c, 0x69, 0x73, 0x74, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e, 0x74,
-	0x73, 0x12, 0x24, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31,
-	0x2e, 0x4c, 0x69, 0x73, 0x74, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x73,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x25, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f,
-	0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x49, 0x6e, 0x73, 0x74, 0x72,
-	0x75, 0x6d, 0x65, 0x6e, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00,
-	0x12, 0x6c, 0x0a, 0x13, 0x47, 0x65, 0x74, 0x50, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f,
-	0x48, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x79, 0x12, 0x28, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f,
-	0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x50, 0x6f, 0x72, 0x74, 0x66, 0x6f,
-	0x6c, 0x69, 0x6f, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x29, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31,
-	0x2e, 0x47, 0x65, 0x74, 0x50, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x48, 0x69, 0x73,
-	0x74, 0x6f, 0x72, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x63,
-	0x0a, 0x10, 0x4c, 0x69, 0x73, 0x74, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f,
-	0x6e, 0x73, 0x12, 0x25, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76,
-	0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f,
-	0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x70, 0x6f, 0x72, 0x74,
-	0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x54, 0x72, 0x61,
-	0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x22, 0x00, 0x12, 0x66, 0x0a, 0x11, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x54, 0x72, 0x61,
-	0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x26, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66,
-	0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x54, 0x72,
-	0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x27, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e,
-	0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f,
-	0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x81, 0x01, 0x0a, 0x1a,
-	0x43, 0x68, 0x65, 0x63, 0x6b, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e,
-	0x44, 0x75, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x65, 0x73, 0x12, 0x2f, 0x2e, 0x70, 0x6f, 0x72,
-	0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x54,
-	0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x44, 0x75, 0x70, 0x6c, 0x69, 0x63,
-	0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x30, 0x2e, 0x70, 0x6f,
-	0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x68, 0x65, 0x63, 0x6b,
-	0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x44, 0x75, 0x70, 0x6c, 0x69,
-	0x63, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12,
-	0x78, 0x0a, 0x17, 0x42, 0x61, 0x74, 0x63, 0x68, 0x49, 0x6d, 0x70, 0x6f, 0x72, 0x74, 0x54, 0x72,
-	0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x2c, 0x2e, 0x70, 0x6f, 0x72,
+	0x72, 0x65, 0x6e, 0x63, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x31, 0x2e, 0x70,
+	0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x55, 0x70, 0x64, 0x61,
+	0x74, 0x65, 0x50, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x42, 0x61, 0x73, 0x65, 0x43,
+	0x75, 0x72, 0x72, 0x65, 0x6e, 0x63, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x00, 0x12, 0x5d, 0x0a, 0x0e, 0x41, 0x64, 0x64, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74,
+	0x69, 0x6f, 0x6e, 0x12, 0x23, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e,
+	0x76, 0x31, 0x2e, 0x41, 0x64, 0x64, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f,
+	0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x24, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66,
+	0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x41, 0x64, 0x64, 0x54, 0x72, 0x61, 0x6e, 0x73,
+	0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00,
+	0x12, 0x60, 0x0a, 0x0f, 0x4c, 0x69, 0x73, 0x74, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65,
+	0x6e, 0x74, 0x73, 0x12, 0x24, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e,
+	0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e,
+	0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x25, 0x2e, 0x70, 0x6f, 0x72, 0x74,
+	0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x49, 0x6e, 0x73,
+	0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x22, 0x00, 0x12, 0x6c, 0x0a, 0x13, 0x47, 0x65, 0x74, 0x50, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c,
+	0x69, 0x6f, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x79, 0x12, 0x28, 0x2e, 0x70, 0x6f, 0x72, 0x74,
+	0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x50, 0x6f, 0x72, 0x74,
+	0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x79, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x29, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e,
+	0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x50, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x48,
+	0x69, 0x73, 0x74, 0x6f, 0x72, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00,
+	0x12, 0x63, 0x0a, 0x10, 0x4c, 0x69, 0x73, 0x74, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74,
+	0x69, 0x6f, 0x6e, 0x73, 0x12, 0x25, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f,
+	0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74,
+	0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x70, 0x6f,
+	0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x54,
+	0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x66, 0x0a, 0x11, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x54,
+	0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x26, 0x2e, 0x70, 0x6f, 0x72,
+	0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65,
+	0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x27, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76,
+	0x31, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74,
+	0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x81, 0x01,
+	0x0a, 0x1a, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69,
+	0x6f, 0x6e, 0x44, 0x75, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x74, 0x65, 0x73, 0x12, 0x2f, 0x2e, 0x70,
+	0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x68, 0x65, 0x63,
+	0x6b, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x44, 0x75, 0x70, 0x6c,
+	0x69, 0x63, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x30, 0x2e,
+	0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x68, 0x65,
+	0x63, 0x6b, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x44, 0x75, 0x70,
+	0x6c, 0x69, 0x63, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x00, 0x12, 0x78, 0x0a, 0x17, 0x42, 0x61, 0x74, 0x63, 0x68, 0x49, 0x6d, 0x70, 0x6f, 0x72, 0x74,
+	0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x2c, 0x2e, 0x70,
+	0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x42, 0x61, 0x74, 0x63,
+	0x68, 0x49, 0x6d, 0x70, 0x6f, 0x72, 0x74, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69,
+	0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2d, 0x2e, 0x70, 0x6f, 0x72,
 	0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x42, 0x61, 0x74, 0x63, 0x68, 0x49,
 	0x6d, 0x70, 0x6f, 0x72, 0x74, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e,
-	0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2d, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66,
-	0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x42, 0x61, 0x74, 0x63, 0x68, 0x49, 0x6d, 0x70,
-	0x6f, 0x72, 0x74, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x69, 0x0a, 0x12, 0x4c, 0x69, 0x73,
-	0x74, 0x41, 0x6c, 0x6c, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x73, 0x12,
-	0x27, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c,
+	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x69, 0x0a, 0x12, 0x4c,
 	0x69, 0x73, 0x74, 0x41, 0x6c, 0x6c, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e, 0x74,
-	0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66,
-	0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x41, 0x6c, 0x6c, 0x49,
-	0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x00, 0x12, 0x63, 0x0a, 0x10, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x49, 0x6e,
-	0x73, 0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x12, 0x25, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66,
-	0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x49, 0x6e,
-	0x73, 0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
-	0x26, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x43,
-	0x72, 0x65, 0x61, 0x74, 0x65, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x63, 0x0a, 0x10, 0x55, 0x70, 0x64,
-	0x61, 0x74, 0x65, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x12, 0x25, 0x2e,
-	0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x55, 0x70, 0x64,
-	0x61, 0x74, 0x65, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f,
-	0x2e, 0x76, 0x31, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75,
-	0x6d, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x63,
-	0x0a, 0x10, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65,
-	0x6e, 0x74, 0x12, 0x25, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76,
-	0x31, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65,
-	0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x70, 0x6f, 0x72, 0x74,
-	0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x49,
-	0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x22, 0x00, 0x12, 0x5a, 0x0a, 0x0d, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x63, 0x68, 0x61,
-	0x6e, 0x67, 0x65, 0x73, 0x12, 0x22, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f,
-	0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x63, 0x68, 0x61, 0x6e, 0x67, 0x65,
-	0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x23, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66,
-	0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x63, 0x68,
-	0x61, 0x6e, 0x67, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12,
-	0x6f, 0x0a, 0x14, 0x4c, 0x69, 0x73, 0x74, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e,
-	0x74, 0x50, 0x72, 0x69, 0x63, 0x65, 0x73, 0x12, 0x29, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f,
-	0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x49, 0x6e, 0x73, 0x74, 0x72,
-	0x75, 0x6d, 0x65, 0x6e, 0x74, 0x50, 0x72, 0x69, 0x63, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76,
-	0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e, 0x74,
-	0x50, 0x72, 0x69, 0x63, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00,
-	0x12, 0x6c, 0x0a, 0x13, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x50, 0x72, 0x69, 0x63, 0x65, 0x4f,
-	0x76, 0x65, 0x72, 0x72, 0x69, 0x64, 0x65, 0x12, 0x28, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f,
-	0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x50, 0x72, 0x69,
-	0x63, 0x65, 0x4f, 0x76, 0x65, 0x72, 0x72, 0x69, 0x64, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x29, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31,
-	0x2e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x50, 0x72, 0x69, 0x63, 0x65, 0x4f, 0x76, 0x65, 0x72,
-	0x72, 0x69, 0x64, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x69,
-	0x0a, 0x12, 0x47, 0x65, 0x74, 0x49, 0x6e, 0x67, 0x65, 0x73, 0x74, 0x69, 0x6f, 0x6e, 0x53, 0x74,
-	0x61, 0x74, 0x75, 0x73, 0x12, 0x27, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f,
-	0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x49, 0x6e, 0x67, 0x65, 0x73, 0x74, 0x69, 0x6f, 0x6e,
-	0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e,
-	0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74,
-	0x49, 0x6e, 0x67, 0x65, 0x73, 0x74, 0x69, 0x6f, 0x6e, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x66, 0x0a, 0x11, 0x54, 0x72, 0x69,
-	0x67, 0x67, 0x65, 0x72, 0x4d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x53, 0x79, 0x6e, 0x63, 0x12, 0x26,
-	0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x54, 0x72,
-	0x69, 0x67, 0x67, 0x65, 0x72, 0x4d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x53, 0x79, 0x6e, 0x63, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x27, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c,
-	0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x54, 0x72, 0x69, 0x67, 0x67, 0x65, 0x72, 0x4d, 0x61, 0x72,
-	0x6b, 0x65, 0x74, 0x53, 0x79, 0x6e, 0x63, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
-	0x00, 0x12, 0x66, 0x0a, 0x11, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x63,
-	0x79, 0x50, 0x61, 0x69, 0x72, 0x73, 0x12, 0x26, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c,
-	0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e,
-	0x63, 0x79, 0x50, 0x61, 0x69, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x27,
-	0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69,
-	0x73, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x63, 0x79, 0x50, 0x61, 0x69, 0x72, 0x73, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x54, 0x0a, 0x0b, 0x4c, 0x69, 0x73,
-	0x74, 0x46, 0x58, 0x52, 0x61, 0x74, 0x65, 0x73, 0x12, 0x20, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66,
-	0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x46, 0x58, 0x52, 0x61,
-	0x74, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x21, 0x2e, 0x70, 0x6f, 0x72,
+	0x73, 0x12, 0x27, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31,
+	0x2e, 0x4c, 0x69, 0x73, 0x74, 0x41, 0x6c, 0x6c, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65,
+	0x6e, 0x74, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x28, 0x2e, 0x70, 0x6f, 0x72,
+	0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x41, 0x6c,
+	0x6c, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x73, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x63, 0x0a, 0x10, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
+	0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x12, 0x25, 0x2e, 0x70, 0x6f, 0x72,
+	0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65,
+	0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x26, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31,
+	0x2e, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e,
+	0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x63, 0x0a, 0x10, 0x55,
+	0x70, 0x64, 0x61, 0x74, 0x65, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x12,
+	0x25, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x55,
+	0x70, 0x64, 0x61, 0x74, 0x65, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c,
+	0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x49, 0x6e, 0x73, 0x74,
+	0x72, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00,
+	0x12, 0x63, 0x0a, 0x10, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75,
+	0x6d, 0x65, 0x6e, 0x74, 0x12, 0x25, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f,
+	0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75,
+	0x6d, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x70, 0x6f,
+	0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74,
+	0x65, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x5a, 0x0a, 0x0d, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x63,
+	0x68, 0x61, 0x6e, 0x67, 0x65, 0x73, 0x12, 0x22, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c,
+	0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78, 0x63, 0x68, 0x61, 0x6e,
+	0x67, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x23, 0x2e, 0x70, 0x6f, 0x72,
+	0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x45, 0x78,
+	0x63, 0x68, 0x61, 0x6e, 0x67, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x00, 0x12, 0x6f, 0x0a, 0x14, 0x4c, 0x69, 0x73, 0x74, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d,
+	0x65, 0x6e, 0x74, 0x50, 0x72, 0x69, 0x63, 0x65, 0x73, 0x12, 0x29, 0x2e, 0x70, 0x6f, 0x72, 0x74,
+	0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x49, 0x6e, 0x73,
+	0x74, 0x72, 0x75, 0x6d, 0x65, 0x6e, 0x74, 0x50, 0x72, 0x69, 0x63, 0x65, 0x73, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f,
+	0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x49, 0x6e, 0x73, 0x74, 0x72, 0x75, 0x6d, 0x65,
+	0x6e, 0x74, 0x50, 0x72, 0x69, 0x63, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x22, 0x00, 0x12, 0x6c, 0x0a, 0x13, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x50, 0x72, 0x69, 0x63,
+	0x65, 0x4f, 0x76, 0x65, 0x72, 0x72, 0x69, 0x64, 0x65, 0x12, 0x28, 0x2e, 0x70, 0x6f, 0x72, 0x74,
+	0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x50,
+	0x72, 0x69, 0x63, 0x65, 0x4f, 0x76, 0x65, 0x72, 0x72, 0x69, 0x64, 0x65, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x1a, 0x29, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e,
+	0x76, 0x31, 0x2e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x50, 0x72, 0x69, 0x63, 0x65, 0x4f, 0x76,
+	0x65, 0x72, 0x72, 0x69, 0x64, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00,
+	0x12, 0x69, 0x0a, 0x12, 0x47, 0x65, 0x74, 0x49, 0x6e, 0x67, 0x65, 0x73, 0x74, 0x69, 0x6f, 0x6e,
+	0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x27, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c,
+	0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x49, 0x6e, 0x67, 0x65, 0x73, 0x74, 0x69,
+	0x6f, 0x6e, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x28, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x47,
+	0x65, 0x74, 0x49, 0x6e, 0x67, 0x65, 0x73, 0x74, 0x69, 0x6f, 0x6e, 0x53, 0x74, 0x61, 0x74, 0x75,
+	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x66, 0x0a, 0x11, 0x54,
+	0x72, 0x69, 0x67, 0x67, 0x65, 0x72, 0x4d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x53, 0x79, 0x6e, 0x63,
+	0x12, 0x26, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e,
+	0x54, 0x72, 0x69, 0x67, 0x67, 0x65, 0x72, 0x4d, 0x61, 0x72, 0x6b, 0x65, 0x74, 0x53, 0x79, 0x6e,
+	0x63, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x27, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66,
+	0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x54, 0x72, 0x69, 0x67, 0x67, 0x65, 0x72, 0x4d,
+	0x61, 0x72, 0x6b, 0x65, 0x74, 0x53, 0x79, 0x6e, 0x63, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x22, 0x00, 0x12, 0x66, 0x0a, 0x11, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65,
+	0x6e, 0x63, 0x79, 0x50, 0x61, 0x69, 0x72, 0x73, 0x12, 0x26, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66,
+	0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x43, 0x75, 0x72, 0x72,
+	0x65, 0x6e, 0x63, 0x79, 0x50, 0x61, 0x69, 0x72, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x27, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e,
+	0x4c, 0x69, 0x73, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x63, 0x79, 0x50, 0x61, 0x69, 0x72,
+	0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x54, 0x0a, 0x0b, 0x4c,
+	0x69, 0x73, 0x74, 0x46, 0x58, 0x52, 0x61, 0x74, 0x65, 0x73, 0x12, 0x20, 0x2e, 0x70, 0x6f, 0x72,
 	0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x46, 0x58,
-	0x52, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12,
-	0x75, 0x0a, 0x16, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x63, 0x79, 0x50, 0x61,
-	0x69, 0x72, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x79, 0x12, 0x2b, 0x2e, 0x70, 0x6f, 0x72, 0x74,
-	0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72,
-	0x65, 0x6e, 0x63, 0x79, 0x50, 0x61, 0x69, 0x72, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x79, 0x52,
-	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2c, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c,
-	0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x63,
-	0x79, 0x50, 0x61, 0x69, 0x72, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x79, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x6f, 0x0a, 0x14, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64,
-	0x46, 0x58, 0x52, 0x61, 0x74, 0x65, 0x4f, 0x76, 0x65, 0x72, 0x72, 0x69, 0x64, 0x65, 0x12, 0x29,
-	0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65,
-	0x63, 0x6f, 0x72, 0x64, 0x46, 0x58, 0x52, 0x61, 0x74, 0x65, 0x4f, 0x76, 0x65, 0x72, 0x72, 0x69,
-	0x64, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x70, 0x6f, 0x72, 0x74,
-	0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x46,
-	0x58, 0x52, 0x61, 0x74, 0x65, 0x4f, 0x76, 0x65, 0x72, 0x72, 0x69, 0x64, 0x65, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x60, 0x0a, 0x0f, 0x54, 0x72, 0x69, 0x67, 0x67,
-	0x65, 0x72, 0x42, 0x61, 0x63, 0x6b, 0x66, 0x69, 0x6c, 0x6c, 0x12, 0x24, 0x2e, 0x70, 0x6f, 0x72,
-	0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x54, 0x72, 0x69, 0x67, 0x67, 0x65,
-	0x72, 0x42, 0x61, 0x63, 0x6b, 0x66, 0x69, 0x6c, 0x6c, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x25, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e,
-	0x54, 0x72, 0x69, 0x67, 0x67, 0x65, 0x72, 0x42, 0x61, 0x63, 0x6b, 0x66, 0x69, 0x6c, 0x6c, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x87, 0x01, 0x0a, 0x1c, 0x4c, 0x69,
-	0x73, 0x74, 0x4d, 0x69, 0x73, 0x73, 0x69, 0x6e, 0x67, 0x50, 0x72, 0x69, 0x63, 0x65, 0x54, 0x72,
-	0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x31, 0x2e, 0x70, 0x6f, 0x72,
-	0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x4d, 0x69,
-	0x73, 0x73, 0x69, 0x6e, 0x67, 0x50, 0x72, 0x69, 0x63, 0x65, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61,
-	0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x32, 0x2e,
-	0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73,
-	0x74, 0x4d, 0x69, 0x73, 0x73, 0x69, 0x6e, 0x67, 0x50, 0x72, 0x69, 0x63, 0x65, 0x54, 0x72, 0x61,
-	0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x22, 0x00, 0x12, 0x8a, 0x01, 0x0a, 0x1d, 0x4c, 0x69, 0x73, 0x74, 0x4d, 0x69, 0x73, 0x73,
-	0x69, 0x6e, 0x67, 0x46, 0x58, 0x52, 0x61, 0x74, 0x65, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63,
-	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x32, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69,
-	0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x4d, 0x69, 0x73, 0x73, 0x69, 0x6e, 0x67,
-	0x46, 0x58, 0x52, 0x61, 0x74, 0x65, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f,
-	0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x33, 0x2e, 0x70, 0x6f, 0x72, 0x74,
-	0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x4d, 0x69, 0x73,
-	0x73, 0x69, 0x6e, 0x67, 0x46, 0x58, 0x52, 0x61, 0x74, 0x65, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61,
-	0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00,
-	0x12, 0x66, 0x0a, 0x11, 0x52, 0x65, 0x62, 0x75, 0x69, 0x6c, 0x64, 0x56, 0x61, 0x6c, 0x75, 0x61,
-	0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x26, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69,
-	0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x62, 0x75, 0x69, 0x6c, 0x64, 0x56, 0x61, 0x6c, 0x75,
-	0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x27, 0x2e,
-	0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x62,
-	0x75, 0x69, 0x6c, 0x64, 0x56, 0x61, 0x6c, 0x75, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65,
-	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x66, 0x0a, 0x11, 0x47, 0x65, 0x74, 0x43,
-	0x61, 0x73, 0x68, 0x46, 0x6c, 0x6f, 0x77, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x12, 0x26, 0x2e,
-	0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74,
-	0x43, 0x61, 0x73, 0x68, 0x46, 0x6c, 0x6f, 0x77, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x27, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69,
-	0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x43, 0x61, 0x73, 0x68, 0x46, 0x6c, 0x6f, 0x77,
-	0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00,
-	0x12, 0x75, 0x0a, 0x16, 0x47, 0x65, 0x74, 0x4d, 0x6f, 0x64, 0x69, 0x66, 0x69, 0x65, 0x64, 0x44,
-	0x69, 0x65, 0x74, 0x7a, 0x52, 0x65, 0x74, 0x75, 0x72, 0x6e, 0x12, 0x2b, 0x2e, 0x70, 0x6f, 0x72,
-	0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x4d, 0x6f, 0x64,
-	0x69, 0x66, 0x69, 0x65, 0x64, 0x44, 0x69, 0x65, 0x74, 0x7a, 0x52, 0x65, 0x74, 0x75, 0x72, 0x6e,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2c, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f,
-	0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x4d, 0x6f, 0x64, 0x69, 0x66, 0x69,
-	0x65, 0x64, 0x44, 0x69, 0x65, 0x74, 0x7a, 0x52, 0x65, 0x74, 0x75, 0x72, 0x6e, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x5d, 0x0a, 0x0e, 0x4c, 0x69, 0x73, 0x74, 0x42,
-	0x65, 0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x73, 0x12, 0x23, 0x2e, 0x70, 0x6f, 0x72, 0x74,
-	0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x42, 0x65, 0x6e,
-	0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x24,
-	0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69,
-	0x73, 0x74, 0x42, 0x65, 0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x73, 0x52, 0x65, 0x73, 0x70,
-	0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x75, 0x0a, 0x16, 0x47, 0x65, 0x74, 0x42, 0x65, 0x6e,
-	0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x43, 0x6f, 0x6d, 0x70, 0x61, 0x72, 0x69, 0x73, 0x6f, 0x6e,
-	0x12, 0x2b, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e,
-	0x47, 0x65, 0x74, 0x42, 0x65, 0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x43, 0x6f, 0x6d, 0x70,
-	0x61, 0x72, 0x69, 0x73, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2c, 0x2e,
-	0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74,
-	0x42, 0x65, 0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x43, 0x6f, 0x6d, 0x70, 0x61, 0x72, 0x69,
-	0x73, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x2b, 0x5a,
-	0x29, 0x67, 0x72, 0x61, 0x70, 0x68, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2f, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x2f, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2f, 0x76, 0x31, 0x3b, 0x70,
-	0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
-	0x6f, 0x33,
+	0x52, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x21, 0x2e, 0x70,
+	0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74,
+	0x46, 0x58, 0x52, 0x61, 0x74, 0x65, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22,
+	0x00, 0x12, 0x75, 0x0a, 0x16, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65, 0x6e, 0x63, 0x79,
+	0x50, 0x61, 0x69, 0x72, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x79, 0x12, 0x2b, 0x2e, 0x70, 0x6f,
+	0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x43, 0x75,
+	0x72, 0x72, 0x65, 0x6e, 0x63, 0x79, 0x50, 0x61, 0x69, 0x72, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72,
+	0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2c, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66,
+	0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x43, 0x75, 0x72, 0x72, 0x65,
+	0x6e, 0x63, 0x79, 0x50, 0x61, 0x69, 0x72, 0x48, 0x69, 0x73, 0x74, 0x6f, 0x72, 0x79, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x6f, 0x0a, 0x14, 0x52, 0x65, 0x63, 0x6f,
+	0x72, 0x64, 0x46, 0x58, 0x52, 0x61, 0x74, 0x65, 0x4f, 0x76, 0x65, 0x72, 0x72, 0x69, 0x64, 0x65,
+	0x12, 0x29, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e,
+	0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x46, 0x58, 0x52, 0x61, 0x74, 0x65, 0x4f, 0x76, 0x65, 0x72,
+	0x72, 0x69, 0x64, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2a, 0x2e, 0x70, 0x6f,
+	0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x63, 0x6f, 0x72,
+	0x64, 0x46, 0x58, 0x52, 0x61, 0x74, 0x65, 0x4f, 0x76, 0x65, 0x72, 0x72, 0x69, 0x64, 0x65, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x60, 0x0a, 0x0f, 0x54, 0x72, 0x69,
+	0x67, 0x67, 0x65, 0x72, 0x42, 0x61, 0x63, 0x6b, 0x66, 0x69, 0x6c, 0x6c, 0x12, 0x24, 0x2e, 0x70,
+	0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x54, 0x72, 0x69, 0x67,
+	0x67, 0x65, 0x72, 0x42, 0x61, 0x63, 0x6b, 0x66, 0x69, 0x6c, 0x6c, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x25, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76,
+	0x31, 0x2e, 0x54, 0x72, 0x69, 0x67, 0x67, 0x65, 0x72, 0x42, 0x61, 0x63, 0x6b, 0x66, 0x69, 0x6c,
+	0x6c, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x87, 0x01, 0x0a, 0x1c,
+	0x4c, 0x69, 0x73, 0x74, 0x4d, 0x69, 0x73, 0x73, 0x69, 0x6e, 0x67, 0x50, 0x72, 0x69, 0x63, 0x65,
+	0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x31, 0x2e, 0x70,
+	0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74,
+	0x4d, 0x69, 0x73, 0x73, 0x69, 0x6e, 0x67, 0x50, 0x72, 0x69, 0x63, 0x65, 0x54, 0x72, 0x61, 0x6e,
+	0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x32, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c,
+	0x69, 0x73, 0x74, 0x4d, 0x69, 0x73, 0x73, 0x69, 0x6e, 0x67, 0x50, 0x72, 0x69, 0x63, 0x65, 0x54,
+	0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x8a, 0x01, 0x0a, 0x1d, 0x4c, 0x69, 0x73, 0x74, 0x4d, 0x69,
+	0x73, 0x73, 0x69, 0x6e, 0x67, 0x46, 0x58, 0x52, 0x61, 0x74, 0x65, 0x54, 0x72, 0x61, 0x6e, 0x73,
+	0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x32, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f,
+	0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x4d, 0x69, 0x73, 0x73, 0x69,
+	0x6e, 0x67, 0x46, 0x58, 0x52, 0x61, 0x74, 0x65, 0x54, 0x72, 0x61, 0x6e, 0x73, 0x61, 0x63, 0x74,
+	0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x33, 0x2e, 0x70, 0x6f,
+	0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x4d,
+	0x69, 0x73, 0x73, 0x69, 0x6e, 0x67, 0x46, 0x58, 0x52, 0x61, 0x74, 0x65, 0x54, 0x72, 0x61, 0x6e,
+	0x73, 0x61, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x22, 0x00, 0x12, 0x66, 0x0a, 0x11, 0x52, 0x65, 0x62, 0x75, 0x69, 0x6c, 0x64, 0x56, 0x61, 0x6c,
+	0x75, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x12, 0x26, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f,
+	0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x52, 0x65, 0x62, 0x75, 0x69, 0x6c, 0x64, 0x56, 0x61,
+	0x6c, 0x75, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x27, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x52,
+	0x65, 0x62, 0x75, 0x69, 0x6c, 0x64, 0x56, 0x61, 0x6c, 0x75, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x73,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x66, 0x0a, 0x11, 0x47, 0x65,
+	0x74, 0x43, 0x61, 0x73, 0x68, 0x46, 0x6c, 0x6f, 0x77, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x12,
+	0x26, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x47,
+	0x65, 0x74, 0x43, 0x61, 0x73, 0x68, 0x46, 0x6c, 0x6f, 0x77, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x27, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f,
+	0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x43, 0x61, 0x73, 0x68, 0x46, 0x6c,
+	0x6f, 0x77, 0x52, 0x65, 0x70, 0x6f, 0x72, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x22, 0x00, 0x12, 0x75, 0x0a, 0x16, 0x47, 0x65, 0x74, 0x4d, 0x6f, 0x64, 0x69, 0x66, 0x69, 0x65,
+	0x64, 0x44, 0x69, 0x65, 0x74, 0x7a, 0x52, 0x65, 0x74, 0x75, 0x72, 0x6e, 0x12, 0x2b, 0x2e, 0x70,
+	0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x4d,
+	0x6f, 0x64, 0x69, 0x66, 0x69, 0x65, 0x64, 0x44, 0x69, 0x65, 0x74, 0x7a, 0x52, 0x65, 0x74, 0x75,
+	0x72, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x2c, 0x2e, 0x70, 0x6f, 0x72, 0x74,
+	0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x47, 0x65, 0x74, 0x4d, 0x6f, 0x64, 0x69,
+	0x66, 0x69, 0x65, 0x64, 0x44, 0x69, 0x65, 0x74, 0x7a, 0x52, 0x65, 0x74, 0x75, 0x72, 0x6e, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x5d, 0x0a, 0x0e, 0x4c, 0x69, 0x73,
+	0x74, 0x42, 0x65, 0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x73, 0x12, 0x23, 0x2e, 0x70, 0x6f,
+	0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x42,
+	0x65, 0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x24, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e,
+	0x4c, 0x69, 0x73, 0x74, 0x42, 0x65, 0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x73, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12, 0x75, 0x0a, 0x16, 0x47, 0x65, 0x74, 0x42,
+	0x65, 0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x43, 0x6f, 0x6d, 0x70, 0x61, 0x72, 0x69, 0x73,
+	0x6f, 0x6e, 0x12, 0x2b, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76,
+	0x31, 0x2e, 0x47, 0x65, 0x74, 0x42, 0x65, 0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x43, 0x6f,
+	0x6d, 0x70, 0x61, 0x72, 0x69, 0x73, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x2c, 0x2e, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2e, 0x76, 0x31, 0x2e, 0x47,
+	0x65, 0x74, 0x42, 0x65, 0x6e, 0x63, 0x68, 0x6d, 0x61, 0x72, 0x6b, 0x43, 0x6f, 0x6d, 0x70, 0x61,
+	0x72, 0x69, 0x73, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42,
+	0x2b, 0x5a, 0x29, 0x67, 0x72, 0x61, 0x70, 0x68, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2f, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x2f, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x2f, 0x76, 0x31,
+	0x3b, 0x70, 0x6f, 0x72, 0x74, 0x66, 0x6f, 0x6c, 0x69, 0x6f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72,
+	0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -7983,7 +8140,7 @@ func file_portfolio_v1_portfolio_proto_rawDescGZIP() []byte {
 }
 
 var file_portfolio_v1_portfolio_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_portfolio_v1_portfolio_proto_msgTypes = make([]protoimpl.MessageInfo, 81)
+var file_portfolio_v1_portfolio_proto_msgTypes = make([]protoimpl.MessageInfo, 83)
 var file_portfolio_v1_portfolio_proto_goTypes = []any{
 	(TransactionType)(0),                          // 0: portfolio.v1.TransactionType
 	(HistoryTimeframe)(0),                         // 1: portfolio.v1.HistoryTimeframe
@@ -7995,297 +8152,301 @@ var file_portfolio_v1_portfolio_proto_goTypes = []any{
 	(*GetPortfolioResponse)(nil),                  // 7: portfolio.v1.GetPortfolioResponse
 	(*UpdatePortfolioBaseCurrencyRequest)(nil),    // 8: portfolio.v1.UpdatePortfolioBaseCurrencyRequest
 	(*UpdatePortfolioBaseCurrencyResponse)(nil),   // 9: portfolio.v1.UpdatePortfolioBaseCurrencyResponse
-	(*AddTransactionRequest)(nil),                 // 10: portfolio.v1.AddTransactionRequest
-	(*AddTransactionResponse)(nil),                // 11: portfolio.v1.AddTransactionResponse
-	(*Instrument)(nil),                            // 12: portfolio.v1.Instrument
-	(*ListInstrumentsRequest)(nil),                // 13: portfolio.v1.ListInstrumentsRequest
-	(*ListInstrumentsResponse)(nil),               // 14: portfolio.v1.ListInstrumentsResponse
-	(*Portfolio)(nil),                             // 15: portfolio.v1.Portfolio
-	(*Investment)(nil),                            // 16: portfolio.v1.Investment
-	(*ValuationPoint)(nil),                        // 17: portfolio.v1.ValuationPoint
-	(*GetPortfolioHistoryRequest)(nil),            // 18: portfolio.v1.GetPortfolioHistoryRequest
-	(*GetPortfolioHistoryResponse)(nil),           // 19: portfolio.v1.GetPortfolioHistoryResponse
-	(*TransactionItem)(nil),                       // 20: portfolio.v1.TransactionItem
-	(*ListTransactionsRequest)(nil),               // 21: portfolio.v1.ListTransactionsRequest
-	(*ListTransactionsResponse)(nil),              // 22: portfolio.v1.ListTransactionsResponse
-	(*DeleteTransactionRequest)(nil),              // 23: portfolio.v1.DeleteTransactionRequest
-	(*DeleteTransactionResponse)(nil),             // 24: portfolio.v1.DeleteTransactionResponse
-	(*ListAllInstrumentsRequest)(nil),             // 25: portfolio.v1.ListAllInstrumentsRequest
-	(*ListAllInstrumentsResponse)(nil),            // 26: portfolio.v1.ListAllInstrumentsResponse
-	(*CreateInstrumentRequest)(nil),               // 27: portfolio.v1.CreateInstrumentRequest
-	(*CreateInstrumentResponse)(nil),              // 28: portfolio.v1.CreateInstrumentResponse
-	(*UpdateInstrumentRequest)(nil),               // 29: portfolio.v1.UpdateInstrumentRequest
-	(*UpdateInstrumentResponse)(nil),              // 30: portfolio.v1.UpdateInstrumentResponse
-	(*DeleteInstrumentRequest)(nil),               // 31: portfolio.v1.DeleteInstrumentRequest
-	(*DeleteInstrumentResponse)(nil),              // 32: portfolio.v1.DeleteInstrumentResponse
-	(*Exchange)(nil),                              // 33: portfolio.v1.Exchange
-	(*ListExchangesRequest)(nil),                  // 34: portfolio.v1.ListExchangesRequest
-	(*ListExchangesResponse)(nil),                 // 35: portfolio.v1.ListExchangesResponse
-	(*InstrumentPriceItem)(nil),                   // 36: portfolio.v1.InstrumentPriceItem
-	(*ListInstrumentPricesRequest)(nil),           // 37: portfolio.v1.ListInstrumentPricesRequest
-	(*ListInstrumentPricesResponse)(nil),          // 38: portfolio.v1.ListInstrumentPricesResponse
-	(*RecordPriceOverrideRequest)(nil),            // 39: portfolio.v1.RecordPriceOverrideRequest
-	(*RecordPriceOverrideResponse)(nil),           // 40: portfolio.v1.RecordPriceOverrideResponse
-	(*FeedHealthStatus)(nil),                      // 41: portfolio.v1.FeedHealthStatus
-	(*GetIngestionStatusRequest)(nil),             // 42: portfolio.v1.GetIngestionStatusRequest
-	(*GetIngestionStatusResponse)(nil),            // 43: portfolio.v1.GetIngestionStatusResponse
-	(*TriggerMarketSyncRequest)(nil),              // 44: portfolio.v1.TriggerMarketSyncRequest
-	(*TriggerMarketSyncResponse)(nil),             // 45: portfolio.v1.TriggerMarketSyncResponse
-	(*CurrencyPairItem)(nil),                      // 46: portfolio.v1.CurrencyPairItem
-	(*ListCurrencyPairsRequest)(nil),              // 47: portfolio.v1.ListCurrencyPairsRequest
-	(*ListCurrencyPairsResponse)(nil),             // 48: portfolio.v1.ListCurrencyPairsResponse
-	(*FXRateItem)(nil),                            // 49: portfolio.v1.FXRateItem
-	(*ListFXRatesRequest)(nil),                    // 50: portfolio.v1.ListFXRatesRequest
-	(*ListFXRatesResponse)(nil),                   // 51: portfolio.v1.ListFXRatesResponse
-	(*FXHistoryPoint)(nil),                        // 52: portfolio.v1.FXHistoryPoint
-	(*GetCurrencyPairHistoryRequest)(nil),         // 53: portfolio.v1.GetCurrencyPairHistoryRequest
-	(*GetCurrencyPairHistoryResponse)(nil),        // 54: portfolio.v1.GetCurrencyPairHistoryResponse
-	(*RecordFXRateOverrideRequest)(nil),           // 55: portfolio.v1.RecordFXRateOverrideRequest
-	(*RecordFXRateOverrideResponse)(nil),          // 56: portfolio.v1.RecordFXRateOverrideResponse
-	(*TriggerBackfillRequest)(nil),                // 57: portfolio.v1.TriggerBackfillRequest
-	(*TriggerBackfillResponse)(nil),               // 58: portfolio.v1.TriggerBackfillResponse
-	(*CheckTransactionDuplicatesRequest)(nil),     // 59: portfolio.v1.CheckTransactionDuplicatesRequest
-	(*CheckTransactionDuplicatesResponse)(nil),    // 60: portfolio.v1.CheckTransactionDuplicatesResponse
-	(*ImportTransactionItem)(nil),                 // 61: portfolio.v1.ImportTransactionItem
-	(*BatchImportTransactionsRequest)(nil),        // 62: portfolio.v1.BatchImportTransactionsRequest
-	(*BatchImportTransactionsResponse)(nil),       // 63: portfolio.v1.BatchImportTransactionsResponse
-	(*GetCashFlowReportRequest)(nil),              // 64: portfolio.v1.GetCashFlowReportRequest
-	(*CashFlowSummary)(nil),                       // 65: portfolio.v1.CashFlowSummary
-	(*CashFlowCategoryBreakdown)(nil),             // 66: portfolio.v1.CashFlowCategoryBreakdown
-	(*CashFlowItem)(nil),                          // 67: portfolio.v1.CashFlowItem
-	(*GetCashFlowReportResponse)(nil),             // 68: portfolio.v1.GetCashFlowReportResponse
-	(*MissingPriceTransactionItem)(nil),           // 69: portfolio.v1.MissingPriceTransactionItem
-	(*ListMissingPriceTransactionsRequest)(nil),   // 70: portfolio.v1.ListMissingPriceTransactionsRequest
-	(*ListMissingPriceTransactionsResponse)(nil),  // 71: portfolio.v1.ListMissingPriceTransactionsResponse
-	(*MissingFXRateTransactionItem)(nil),          // 72: portfolio.v1.MissingFXRateTransactionItem
-	(*ListMissingFXRateTransactionsRequest)(nil),  // 73: portfolio.v1.ListMissingFXRateTransactionsRequest
-	(*ListMissingFXRateTransactionsResponse)(nil), // 74: portfolio.v1.ListMissingFXRateTransactionsResponse
-	(*GetModifiedDietzReturnRequest)(nil),         // 75: portfolio.v1.GetModifiedDietzReturnRequest
-	(*ExternalCashFlowWeight)(nil),                // 76: portfolio.v1.ExternalCashFlowWeight
-	(*GetModifiedDietzReturnResponse)(nil),        // 77: portfolio.v1.GetModifiedDietzReturnResponse
-	(*Benchmark)(nil),                             // 78: portfolio.v1.Benchmark
-	(*ListBenchmarksRequest)(nil),                 // 79: portfolio.v1.ListBenchmarksRequest
-	(*ListBenchmarksResponse)(nil),                // 80: portfolio.v1.ListBenchmarksResponse
-	(*BenchmarkComparisonPoint)(nil),              // 81: portfolio.v1.BenchmarkComparisonPoint
-	(*BenchmarkMetrics)(nil),                      // 82: portfolio.v1.BenchmarkMetrics
-	(*GetBenchmarkComparisonRequest)(nil),         // 83: portfolio.v1.GetBenchmarkComparisonRequest
-	(*GetBenchmarkComparisonResponse)(nil),        // 84: portfolio.v1.GetBenchmarkComparisonResponse
-	(*v1.Decimal)(nil),                            // 85: common.v1.Decimal
-	(*v1.Money)(nil),                              // 86: common.v1.Money
+	(*CreatePortfolioRequest)(nil),                // 10: portfolio.v1.CreatePortfolioRequest
+	(*CreatePortfolioResponse)(nil),               // 11: portfolio.v1.CreatePortfolioResponse
+	(*AddTransactionRequest)(nil),                 // 12: portfolio.v1.AddTransactionRequest
+	(*AddTransactionResponse)(nil),                // 13: portfolio.v1.AddTransactionResponse
+	(*Instrument)(nil),                            // 14: portfolio.v1.Instrument
+	(*ListInstrumentsRequest)(nil),                // 15: portfolio.v1.ListInstrumentsRequest
+	(*ListInstrumentsResponse)(nil),               // 16: portfolio.v1.ListInstrumentsResponse
+	(*Portfolio)(nil),                             // 17: portfolio.v1.Portfolio
+	(*Investment)(nil),                            // 18: portfolio.v1.Investment
+	(*ValuationPoint)(nil),                        // 19: portfolio.v1.ValuationPoint
+	(*GetPortfolioHistoryRequest)(nil),            // 20: portfolio.v1.GetPortfolioHistoryRequest
+	(*GetPortfolioHistoryResponse)(nil),           // 21: portfolio.v1.GetPortfolioHistoryResponse
+	(*TransactionItem)(nil),                       // 22: portfolio.v1.TransactionItem
+	(*ListTransactionsRequest)(nil),               // 23: portfolio.v1.ListTransactionsRequest
+	(*ListTransactionsResponse)(nil),              // 24: portfolio.v1.ListTransactionsResponse
+	(*DeleteTransactionRequest)(nil),              // 25: portfolio.v1.DeleteTransactionRequest
+	(*DeleteTransactionResponse)(nil),             // 26: portfolio.v1.DeleteTransactionResponse
+	(*ListAllInstrumentsRequest)(nil),             // 27: portfolio.v1.ListAllInstrumentsRequest
+	(*ListAllInstrumentsResponse)(nil),            // 28: portfolio.v1.ListAllInstrumentsResponse
+	(*CreateInstrumentRequest)(nil),               // 29: portfolio.v1.CreateInstrumentRequest
+	(*CreateInstrumentResponse)(nil),              // 30: portfolio.v1.CreateInstrumentResponse
+	(*UpdateInstrumentRequest)(nil),               // 31: portfolio.v1.UpdateInstrumentRequest
+	(*UpdateInstrumentResponse)(nil),              // 32: portfolio.v1.UpdateInstrumentResponse
+	(*DeleteInstrumentRequest)(nil),               // 33: portfolio.v1.DeleteInstrumentRequest
+	(*DeleteInstrumentResponse)(nil),              // 34: portfolio.v1.DeleteInstrumentResponse
+	(*Exchange)(nil),                              // 35: portfolio.v1.Exchange
+	(*ListExchangesRequest)(nil),                  // 36: portfolio.v1.ListExchangesRequest
+	(*ListExchangesResponse)(nil),                 // 37: portfolio.v1.ListExchangesResponse
+	(*InstrumentPriceItem)(nil),                   // 38: portfolio.v1.InstrumentPriceItem
+	(*ListInstrumentPricesRequest)(nil),           // 39: portfolio.v1.ListInstrumentPricesRequest
+	(*ListInstrumentPricesResponse)(nil),          // 40: portfolio.v1.ListInstrumentPricesResponse
+	(*RecordPriceOverrideRequest)(nil),            // 41: portfolio.v1.RecordPriceOverrideRequest
+	(*RecordPriceOverrideResponse)(nil),           // 42: portfolio.v1.RecordPriceOverrideResponse
+	(*FeedHealthStatus)(nil),                      // 43: portfolio.v1.FeedHealthStatus
+	(*GetIngestionStatusRequest)(nil),             // 44: portfolio.v1.GetIngestionStatusRequest
+	(*GetIngestionStatusResponse)(nil),            // 45: portfolio.v1.GetIngestionStatusResponse
+	(*TriggerMarketSyncRequest)(nil),              // 46: portfolio.v1.TriggerMarketSyncRequest
+	(*TriggerMarketSyncResponse)(nil),             // 47: portfolio.v1.TriggerMarketSyncResponse
+	(*CurrencyPairItem)(nil),                      // 48: portfolio.v1.CurrencyPairItem
+	(*ListCurrencyPairsRequest)(nil),              // 49: portfolio.v1.ListCurrencyPairsRequest
+	(*ListCurrencyPairsResponse)(nil),             // 50: portfolio.v1.ListCurrencyPairsResponse
+	(*FXRateItem)(nil),                            // 51: portfolio.v1.FXRateItem
+	(*ListFXRatesRequest)(nil),                    // 52: portfolio.v1.ListFXRatesRequest
+	(*ListFXRatesResponse)(nil),                   // 53: portfolio.v1.ListFXRatesResponse
+	(*FXHistoryPoint)(nil),                        // 54: portfolio.v1.FXHistoryPoint
+	(*GetCurrencyPairHistoryRequest)(nil),         // 55: portfolio.v1.GetCurrencyPairHistoryRequest
+	(*GetCurrencyPairHistoryResponse)(nil),        // 56: portfolio.v1.GetCurrencyPairHistoryResponse
+	(*RecordFXRateOverrideRequest)(nil),           // 57: portfolio.v1.RecordFXRateOverrideRequest
+	(*RecordFXRateOverrideResponse)(nil),          // 58: portfolio.v1.RecordFXRateOverrideResponse
+	(*TriggerBackfillRequest)(nil),                // 59: portfolio.v1.TriggerBackfillRequest
+	(*TriggerBackfillResponse)(nil),               // 60: portfolio.v1.TriggerBackfillResponse
+	(*CheckTransactionDuplicatesRequest)(nil),     // 61: portfolio.v1.CheckTransactionDuplicatesRequest
+	(*CheckTransactionDuplicatesResponse)(nil),    // 62: portfolio.v1.CheckTransactionDuplicatesResponse
+	(*ImportTransactionItem)(nil),                 // 63: portfolio.v1.ImportTransactionItem
+	(*BatchImportTransactionsRequest)(nil),        // 64: portfolio.v1.BatchImportTransactionsRequest
+	(*BatchImportTransactionsResponse)(nil),       // 65: portfolio.v1.BatchImportTransactionsResponse
+	(*GetCashFlowReportRequest)(nil),              // 66: portfolio.v1.GetCashFlowReportRequest
+	(*CashFlowSummary)(nil),                       // 67: portfolio.v1.CashFlowSummary
+	(*CashFlowCategoryBreakdown)(nil),             // 68: portfolio.v1.CashFlowCategoryBreakdown
+	(*CashFlowItem)(nil),                          // 69: portfolio.v1.CashFlowItem
+	(*GetCashFlowReportResponse)(nil),             // 70: portfolio.v1.GetCashFlowReportResponse
+	(*MissingPriceTransactionItem)(nil),           // 71: portfolio.v1.MissingPriceTransactionItem
+	(*ListMissingPriceTransactionsRequest)(nil),   // 72: portfolio.v1.ListMissingPriceTransactionsRequest
+	(*ListMissingPriceTransactionsResponse)(nil),  // 73: portfolio.v1.ListMissingPriceTransactionsResponse
+	(*MissingFXRateTransactionItem)(nil),          // 74: portfolio.v1.MissingFXRateTransactionItem
+	(*ListMissingFXRateTransactionsRequest)(nil),  // 75: portfolio.v1.ListMissingFXRateTransactionsRequest
+	(*ListMissingFXRateTransactionsResponse)(nil), // 76: portfolio.v1.ListMissingFXRateTransactionsResponse
+	(*GetModifiedDietzReturnRequest)(nil),         // 77: portfolio.v1.GetModifiedDietzReturnRequest
+	(*ExternalCashFlowWeight)(nil),                // 78: portfolio.v1.ExternalCashFlowWeight
+	(*GetModifiedDietzReturnResponse)(nil),        // 79: portfolio.v1.GetModifiedDietzReturnResponse
+	(*Benchmark)(nil),                             // 80: portfolio.v1.Benchmark
+	(*ListBenchmarksRequest)(nil),                 // 81: portfolio.v1.ListBenchmarksRequest
+	(*ListBenchmarksResponse)(nil),                // 82: portfolio.v1.ListBenchmarksResponse
+	(*BenchmarkComparisonPoint)(nil),              // 83: portfolio.v1.BenchmarkComparisonPoint
+	(*BenchmarkMetrics)(nil),                      // 84: portfolio.v1.BenchmarkMetrics
+	(*GetBenchmarkComparisonRequest)(nil),         // 85: portfolio.v1.GetBenchmarkComparisonRequest
+	(*GetBenchmarkComparisonResponse)(nil),        // 86: portfolio.v1.GetBenchmarkComparisonResponse
+	(*v1.Decimal)(nil),                            // 87: common.v1.Decimal
+	(*v1.Money)(nil),                              // 88: common.v1.Money
 }
 var file_portfolio_v1_portfolio_proto_depIdxs = []int32{
-	15,  // 0: portfolio.v1.GetPortfolioResponse.portfolio:type_name -> portfolio.v1.Portfolio
-	15,  // 1: portfolio.v1.UpdatePortfolioBaseCurrencyResponse.portfolio:type_name -> portfolio.v1.Portfolio
+	17,  // 0: portfolio.v1.GetPortfolioResponse.portfolio:type_name -> portfolio.v1.Portfolio
+	17,  // 1: portfolio.v1.UpdatePortfolioBaseCurrencyResponse.portfolio:type_name -> portfolio.v1.Portfolio
 	0,   // 2: portfolio.v1.AddTransactionRequest.type:type_name -> portfolio.v1.TransactionType
-	85,  // 3: portfolio.v1.AddTransactionRequest.quantity:type_name -> common.v1.Decimal
-	86,  // 4: portfolio.v1.AddTransactionRequest.price:type_name -> common.v1.Money
-	86,  // 5: portfolio.v1.AddTransactionRequest.amount:type_name -> common.v1.Money
-	86,  // 6: portfolio.v1.AddTransactionRequest.fee:type_name -> common.v1.Money
-	15,  // 7: portfolio.v1.AddTransactionResponse.portfolio:type_name -> portfolio.v1.Portfolio
-	12,  // 8: portfolio.v1.ListInstrumentsResponse.instruments:type_name -> portfolio.v1.Instrument
-	86,  // 9: portfolio.v1.Portfolio.total_value:type_name -> common.v1.Money
-	86,  // 10: portfolio.v1.Portfolio.today_return_amount:type_name -> common.v1.Money
-	85,  // 11: portfolio.v1.Portfolio.today_return_percent:type_name -> common.v1.Decimal
-	85,  // 12: portfolio.v1.Portfolio.annualized_return_percent:type_name -> common.v1.Decimal
-	86,  // 13: portfolio.v1.Portfolio.cash_balance:type_name -> common.v1.Money
-	16,  // 14: portfolio.v1.Portfolio.investments:type_name -> portfolio.v1.Investment
-	86,  // 15: portfolio.v1.Investment.price:type_name -> common.v1.Money
-	85,  // 16: portfolio.v1.Investment.quantity:type_name -> common.v1.Decimal
-	86,  // 17: portfolio.v1.Investment.total_value:type_name -> common.v1.Money
-	86,  // 18: portfolio.v1.Investment.today_return_amount:type_name -> common.v1.Money
-	85,  // 19: portfolio.v1.Investment.today_return_percent:type_name -> common.v1.Decimal
-	86,  // 20: portfolio.v1.Investment.total_return_amount:type_name -> common.v1.Money
-	85,  // 21: portfolio.v1.Investment.total_return_percent:type_name -> common.v1.Decimal
-	86,  // 22: portfolio.v1.Investment.capital_gain_amount:type_name -> common.v1.Money
-	85,  // 23: portfolio.v1.Investment.capital_gain_percent:type_name -> common.v1.Decimal
-	86,  // 24: portfolio.v1.Investment.income_amount:type_name -> common.v1.Money
-	85,  // 25: portfolio.v1.Investment.income_yield_percent:type_name -> common.v1.Decimal
-	86,  // 26: portfolio.v1.Investment.currency_gain_amount:type_name -> common.v1.Money
-	85,  // 27: portfolio.v1.Investment.currency_gain_percent:type_name -> common.v1.Decimal
-	86,  // 28: portfolio.v1.Investment.average_buy_price:type_name -> common.v1.Money
-	86,  // 29: portfolio.v1.ValuationPoint.total_value:type_name -> common.v1.Money
-	86,  // 30: portfolio.v1.ValuationPoint.market_value:type_name -> common.v1.Money
-	86,  // 31: portfolio.v1.ValuationPoint.cash_value:type_name -> common.v1.Money
-	85,  // 32: portfolio.v1.ValuationPoint.twr_index:type_name -> common.v1.Decimal
-	85,  // 33: portfolio.v1.ValuationPoint.daily_return:type_name -> common.v1.Decimal
+	87,  // 3: portfolio.v1.AddTransactionRequest.quantity:type_name -> common.v1.Decimal
+	88,  // 4: portfolio.v1.AddTransactionRequest.price:type_name -> common.v1.Money
+	88,  // 5: portfolio.v1.AddTransactionRequest.amount:type_name -> common.v1.Money
+	88,  // 6: portfolio.v1.AddTransactionRequest.fee:type_name -> common.v1.Money
+	17,  // 7: portfolio.v1.AddTransactionResponse.portfolio:type_name -> portfolio.v1.Portfolio
+	14,  // 8: portfolio.v1.ListInstrumentsResponse.instruments:type_name -> portfolio.v1.Instrument
+	88,  // 9: portfolio.v1.Portfolio.total_value:type_name -> common.v1.Money
+	88,  // 10: portfolio.v1.Portfolio.today_return_amount:type_name -> common.v1.Money
+	87,  // 11: portfolio.v1.Portfolio.today_return_percent:type_name -> common.v1.Decimal
+	87,  // 12: portfolio.v1.Portfolio.annualized_return_percent:type_name -> common.v1.Decimal
+	88,  // 13: portfolio.v1.Portfolio.cash_balance:type_name -> common.v1.Money
+	18,  // 14: portfolio.v1.Portfolio.investments:type_name -> portfolio.v1.Investment
+	88,  // 15: portfolio.v1.Investment.price:type_name -> common.v1.Money
+	87,  // 16: portfolio.v1.Investment.quantity:type_name -> common.v1.Decimal
+	88,  // 17: portfolio.v1.Investment.total_value:type_name -> common.v1.Money
+	88,  // 18: portfolio.v1.Investment.today_return_amount:type_name -> common.v1.Money
+	87,  // 19: portfolio.v1.Investment.today_return_percent:type_name -> common.v1.Decimal
+	88,  // 20: portfolio.v1.Investment.total_return_amount:type_name -> common.v1.Money
+	87,  // 21: portfolio.v1.Investment.total_return_percent:type_name -> common.v1.Decimal
+	88,  // 22: portfolio.v1.Investment.capital_gain_amount:type_name -> common.v1.Money
+	87,  // 23: portfolio.v1.Investment.capital_gain_percent:type_name -> common.v1.Decimal
+	88,  // 24: portfolio.v1.Investment.income_amount:type_name -> common.v1.Money
+	87,  // 25: portfolio.v1.Investment.income_yield_percent:type_name -> common.v1.Decimal
+	88,  // 26: portfolio.v1.Investment.currency_gain_amount:type_name -> common.v1.Money
+	87,  // 27: portfolio.v1.Investment.currency_gain_percent:type_name -> common.v1.Decimal
+	88,  // 28: portfolio.v1.Investment.average_buy_price:type_name -> common.v1.Money
+	88,  // 29: portfolio.v1.ValuationPoint.total_value:type_name -> common.v1.Money
+	88,  // 30: portfolio.v1.ValuationPoint.market_value:type_name -> common.v1.Money
+	88,  // 31: portfolio.v1.ValuationPoint.cash_value:type_name -> common.v1.Money
+	87,  // 32: portfolio.v1.ValuationPoint.twr_index:type_name -> common.v1.Decimal
+	87,  // 33: portfolio.v1.ValuationPoint.daily_return:type_name -> common.v1.Decimal
 	1,   // 34: portfolio.v1.GetPortfolioHistoryRequest.timeframe:type_name -> portfolio.v1.HistoryTimeframe
-	17,  // 35: portfolio.v1.GetPortfolioHistoryResponse.points:type_name -> portfolio.v1.ValuationPoint
-	86,  // 36: portfolio.v1.GetPortfolioHistoryResponse.start_value:type_name -> common.v1.Money
-	86,  // 37: portfolio.v1.GetPortfolioHistoryResponse.end_value:type_name -> common.v1.Money
-	86,  // 38: portfolio.v1.GetPortfolioHistoryResponse.return_amount:type_name -> common.v1.Money
-	85,  // 39: portfolio.v1.GetPortfolioHistoryResponse.return_percent:type_name -> common.v1.Decimal
+	19,  // 35: portfolio.v1.GetPortfolioHistoryResponse.points:type_name -> portfolio.v1.ValuationPoint
+	88,  // 36: portfolio.v1.GetPortfolioHistoryResponse.start_value:type_name -> common.v1.Money
+	88,  // 37: portfolio.v1.GetPortfolioHistoryResponse.end_value:type_name -> common.v1.Money
+	88,  // 38: portfolio.v1.GetPortfolioHistoryResponse.return_amount:type_name -> common.v1.Money
+	87,  // 39: portfolio.v1.GetPortfolioHistoryResponse.return_percent:type_name -> common.v1.Decimal
 	0,   // 40: portfolio.v1.TransactionItem.type:type_name -> portfolio.v1.TransactionType
-	85,  // 41: portfolio.v1.TransactionItem.quantity:type_name -> common.v1.Decimal
-	86,  // 42: portfolio.v1.TransactionItem.price:type_name -> common.v1.Money
-	86,  // 43: portfolio.v1.TransactionItem.amount:type_name -> common.v1.Money
-	86,  // 44: portfolio.v1.TransactionItem.fee:type_name -> common.v1.Money
+	87,  // 41: portfolio.v1.TransactionItem.quantity:type_name -> common.v1.Decimal
+	88,  // 42: portfolio.v1.TransactionItem.price:type_name -> common.v1.Money
+	88,  // 43: portfolio.v1.TransactionItem.amount:type_name -> common.v1.Money
+	88,  // 44: portfolio.v1.TransactionItem.fee:type_name -> common.v1.Money
 	0,   // 45: portfolio.v1.ListTransactionsRequest.type:type_name -> portfolio.v1.TransactionType
-	20,  // 46: portfolio.v1.ListTransactionsResponse.transactions:type_name -> portfolio.v1.TransactionItem
-	15,  // 47: portfolio.v1.DeleteTransactionResponse.portfolio:type_name -> portfolio.v1.Portfolio
-	12,  // 48: portfolio.v1.ListAllInstrumentsResponse.instruments:type_name -> portfolio.v1.Instrument
-	12,  // 49: portfolio.v1.CreateInstrumentResponse.instrument:type_name -> portfolio.v1.Instrument
-	12,  // 50: portfolio.v1.UpdateInstrumentResponse.instrument:type_name -> portfolio.v1.Instrument
-	33,  // 51: portfolio.v1.ListExchangesResponse.exchanges:type_name -> portfolio.v1.Exchange
-	86,  // 52: portfolio.v1.InstrumentPriceItem.price:type_name -> common.v1.Money
-	36,  // 53: portfolio.v1.ListInstrumentPricesResponse.prices:type_name -> portfolio.v1.InstrumentPriceItem
-	85,  // 54: portfolio.v1.RecordPriceOverrideRequest.price:type_name -> common.v1.Decimal
-	36,  // 55: portfolio.v1.RecordPriceOverrideResponse.price:type_name -> portfolio.v1.InstrumentPriceItem
-	41,  // 56: portfolio.v1.GetIngestionStatusResponse.feeds:type_name -> portfolio.v1.FeedHealthStatus
-	85,  // 57: portfolio.v1.CurrencyPairItem.latest_rate:type_name -> common.v1.Decimal
-	85,  // 58: portfolio.v1.CurrencyPairItem.previous_rate:type_name -> common.v1.Decimal
-	85,  // 59: portfolio.v1.CurrencyPairItem.change_1d_amount:type_name -> common.v1.Decimal
-	85,  // 60: portfolio.v1.CurrencyPairItem.change_1d_pct:type_name -> common.v1.Decimal
-	46,  // 61: portfolio.v1.ListCurrencyPairsResponse.pairs:type_name -> portfolio.v1.CurrencyPairItem
-	85,  // 62: portfolio.v1.FXRateItem.rate:type_name -> common.v1.Decimal
-	85,  // 63: portfolio.v1.FXRateItem.inverted_rate:type_name -> common.v1.Decimal
-	49,  // 64: portfolio.v1.ListFXRatesResponse.rates:type_name -> portfolio.v1.FXRateItem
-	85,  // 65: portfolio.v1.FXHistoryPoint.rate:type_name -> common.v1.Decimal
-	85,  // 66: portfolio.v1.FXHistoryPoint.inverted_rate:type_name -> common.v1.Decimal
+	22,  // 46: portfolio.v1.ListTransactionsResponse.transactions:type_name -> portfolio.v1.TransactionItem
+	17,  // 47: portfolio.v1.DeleteTransactionResponse.portfolio:type_name -> portfolio.v1.Portfolio
+	14,  // 48: portfolio.v1.ListAllInstrumentsResponse.instruments:type_name -> portfolio.v1.Instrument
+	14,  // 49: portfolio.v1.CreateInstrumentResponse.instrument:type_name -> portfolio.v1.Instrument
+	14,  // 50: portfolio.v1.UpdateInstrumentResponse.instrument:type_name -> portfolio.v1.Instrument
+	35,  // 51: portfolio.v1.ListExchangesResponse.exchanges:type_name -> portfolio.v1.Exchange
+	88,  // 52: portfolio.v1.InstrumentPriceItem.price:type_name -> common.v1.Money
+	38,  // 53: portfolio.v1.ListInstrumentPricesResponse.prices:type_name -> portfolio.v1.InstrumentPriceItem
+	87,  // 54: portfolio.v1.RecordPriceOverrideRequest.price:type_name -> common.v1.Decimal
+	38,  // 55: portfolio.v1.RecordPriceOverrideResponse.price:type_name -> portfolio.v1.InstrumentPriceItem
+	43,  // 56: portfolio.v1.GetIngestionStatusResponse.feeds:type_name -> portfolio.v1.FeedHealthStatus
+	87,  // 57: portfolio.v1.CurrencyPairItem.latest_rate:type_name -> common.v1.Decimal
+	87,  // 58: portfolio.v1.CurrencyPairItem.previous_rate:type_name -> common.v1.Decimal
+	87,  // 59: portfolio.v1.CurrencyPairItem.change_1d_amount:type_name -> common.v1.Decimal
+	87,  // 60: portfolio.v1.CurrencyPairItem.change_1d_pct:type_name -> common.v1.Decimal
+	48,  // 61: portfolio.v1.ListCurrencyPairsResponse.pairs:type_name -> portfolio.v1.CurrencyPairItem
+	87,  // 62: portfolio.v1.FXRateItem.rate:type_name -> common.v1.Decimal
+	87,  // 63: portfolio.v1.FXRateItem.inverted_rate:type_name -> common.v1.Decimal
+	51,  // 64: portfolio.v1.ListFXRatesResponse.rates:type_name -> portfolio.v1.FXRateItem
+	87,  // 65: portfolio.v1.FXHistoryPoint.rate:type_name -> common.v1.Decimal
+	87,  // 66: portfolio.v1.FXHistoryPoint.inverted_rate:type_name -> common.v1.Decimal
 	1,   // 67: portfolio.v1.GetCurrencyPairHistoryRequest.timeframe:type_name -> portfolio.v1.HistoryTimeframe
-	52,  // 68: portfolio.v1.GetCurrencyPairHistoryResponse.points:type_name -> portfolio.v1.FXHistoryPoint
-	85,  // 69: portfolio.v1.GetCurrencyPairHistoryResponse.start_rate:type_name -> common.v1.Decimal
-	85,  // 70: portfolio.v1.GetCurrencyPairHistoryResponse.end_rate:type_name -> common.v1.Decimal
-	85,  // 71: portfolio.v1.GetCurrencyPairHistoryResponse.period_change:type_name -> common.v1.Decimal
-	85,  // 72: portfolio.v1.GetCurrencyPairHistoryResponse.period_change_pct:type_name -> common.v1.Decimal
-	85,  // 73: portfolio.v1.GetCurrencyPairHistoryResponse.period_high:type_name -> common.v1.Decimal
-	85,  // 74: portfolio.v1.GetCurrencyPairHistoryResponse.period_low:type_name -> common.v1.Decimal
-	85,  // 75: portfolio.v1.RecordFXRateOverrideRequest.rate:type_name -> common.v1.Decimal
-	49,  // 76: portfolio.v1.RecordFXRateOverrideResponse.rate:type_name -> portfolio.v1.FXRateItem
+	54,  // 68: portfolio.v1.GetCurrencyPairHistoryResponse.points:type_name -> portfolio.v1.FXHistoryPoint
+	87,  // 69: portfolio.v1.GetCurrencyPairHistoryResponse.start_rate:type_name -> common.v1.Decimal
+	87,  // 70: portfolio.v1.GetCurrencyPairHistoryResponse.end_rate:type_name -> common.v1.Decimal
+	87,  // 71: portfolio.v1.GetCurrencyPairHistoryResponse.period_change:type_name -> common.v1.Decimal
+	87,  // 72: portfolio.v1.GetCurrencyPairHistoryResponse.period_change_pct:type_name -> common.v1.Decimal
+	87,  // 73: portfolio.v1.GetCurrencyPairHistoryResponse.period_high:type_name -> common.v1.Decimal
+	87,  // 74: portfolio.v1.GetCurrencyPairHistoryResponse.period_low:type_name -> common.v1.Decimal
+	87,  // 75: portfolio.v1.RecordFXRateOverrideRequest.rate:type_name -> common.v1.Decimal
+	51,  // 76: portfolio.v1.RecordFXRateOverrideResponse.rate:type_name -> portfolio.v1.FXRateItem
 	0,   // 77: portfolio.v1.ImportTransactionItem.type:type_name -> portfolio.v1.TransactionType
-	85,  // 78: portfolio.v1.ImportTransactionItem.quantity:type_name -> common.v1.Decimal
-	86,  // 79: portfolio.v1.ImportTransactionItem.price:type_name -> common.v1.Money
-	86,  // 80: portfolio.v1.ImportTransactionItem.amount:type_name -> common.v1.Money
-	86,  // 81: portfolio.v1.ImportTransactionItem.fee:type_name -> common.v1.Money
-	61,  // 82: portfolio.v1.BatchImportTransactionsRequest.transactions:type_name -> portfolio.v1.ImportTransactionItem
-	15,  // 83: portfolio.v1.BatchImportTransactionsResponse.portfolio:type_name -> portfolio.v1.Portfolio
+	87,  // 78: portfolio.v1.ImportTransactionItem.quantity:type_name -> common.v1.Decimal
+	88,  // 79: portfolio.v1.ImportTransactionItem.price:type_name -> common.v1.Money
+	88,  // 80: portfolio.v1.ImportTransactionItem.amount:type_name -> common.v1.Money
+	88,  // 81: portfolio.v1.ImportTransactionItem.fee:type_name -> common.v1.Money
+	63,  // 82: portfolio.v1.BatchImportTransactionsRequest.transactions:type_name -> portfolio.v1.ImportTransactionItem
+	17,  // 83: portfolio.v1.BatchImportTransactionsResponse.portfolio:type_name -> portfolio.v1.Portfolio
 	2,   // 84: portfolio.v1.GetCashFlowReportRequest.timeframe:type_name -> portfolio.v1.CashFlowTimeframe
-	86,  // 85: portfolio.v1.CashFlowSummary.starting_cash_balance:type_name -> common.v1.Money
-	86,  // 86: portfolio.v1.CashFlowSummary.total_inflows:type_name -> common.v1.Money
-	86,  // 87: portfolio.v1.CashFlowSummary.total_outflows:type_name -> common.v1.Money
-	86,  // 88: portfolio.v1.CashFlowSummary.net_cash_flow:type_name -> common.v1.Money
-	86,  // 89: portfolio.v1.CashFlowSummary.ending_cash_balance:type_name -> common.v1.Money
-	86,  // 90: portfolio.v1.CashFlowCategoryBreakdown.deposits:type_name -> common.v1.Money
-	86,  // 91: portfolio.v1.CashFlowCategoryBreakdown.dividends:type_name -> common.v1.Money
-	86,  // 92: portfolio.v1.CashFlowCategoryBreakdown.interest:type_name -> common.v1.Money
-	86,  // 93: portfolio.v1.CashFlowCategoryBreakdown.sales_proceeds:type_name -> common.v1.Money
-	86,  // 94: portfolio.v1.CashFlowCategoryBreakdown.withdrawals:type_name -> common.v1.Money
-	86,  // 95: portfolio.v1.CashFlowCategoryBreakdown.purchases:type_name -> common.v1.Money
-	86,  // 96: portfolio.v1.CashFlowCategoryBreakdown.fees:type_name -> common.v1.Money
-	86,  // 97: portfolio.v1.CashFlowCategoryBreakdown.taxes:type_name -> common.v1.Money
+	88,  // 85: portfolio.v1.CashFlowSummary.starting_cash_balance:type_name -> common.v1.Money
+	88,  // 86: portfolio.v1.CashFlowSummary.total_inflows:type_name -> common.v1.Money
+	88,  // 87: portfolio.v1.CashFlowSummary.total_outflows:type_name -> common.v1.Money
+	88,  // 88: portfolio.v1.CashFlowSummary.net_cash_flow:type_name -> common.v1.Money
+	88,  // 89: portfolio.v1.CashFlowSummary.ending_cash_balance:type_name -> common.v1.Money
+	88,  // 90: portfolio.v1.CashFlowCategoryBreakdown.deposits:type_name -> common.v1.Money
+	88,  // 91: portfolio.v1.CashFlowCategoryBreakdown.dividends:type_name -> common.v1.Money
+	88,  // 92: portfolio.v1.CashFlowCategoryBreakdown.interest:type_name -> common.v1.Money
+	88,  // 93: portfolio.v1.CashFlowCategoryBreakdown.sales_proceeds:type_name -> common.v1.Money
+	88,  // 94: portfolio.v1.CashFlowCategoryBreakdown.withdrawals:type_name -> common.v1.Money
+	88,  // 95: portfolio.v1.CashFlowCategoryBreakdown.purchases:type_name -> common.v1.Money
+	88,  // 96: portfolio.v1.CashFlowCategoryBreakdown.fees:type_name -> common.v1.Money
+	88,  // 97: portfolio.v1.CashFlowCategoryBreakdown.taxes:type_name -> common.v1.Money
 	0,   // 98: portfolio.v1.CashFlowItem.type:type_name -> portfolio.v1.TransactionType
-	86,  // 99: portfolio.v1.CashFlowItem.net_amount:type_name -> common.v1.Money
-	86,  // 100: portfolio.v1.CashFlowItem.running_balance:type_name -> common.v1.Money
-	86,  // 101: portfolio.v1.CashFlowItem.local_amount:type_name -> common.v1.Money
-	86,  // 102: portfolio.v1.CashFlowItem.fee:type_name -> common.v1.Money
-	86,  // 103: portfolio.v1.CashFlowItem.withholding_tax:type_name -> common.v1.Money
-	65,  // 104: portfolio.v1.GetCashFlowReportResponse.summary:type_name -> portfolio.v1.CashFlowSummary
-	66,  // 105: portfolio.v1.GetCashFlowReportResponse.breakdown:type_name -> portfolio.v1.CashFlowCategoryBreakdown
-	67,  // 106: portfolio.v1.GetCashFlowReportResponse.items:type_name -> portfolio.v1.CashFlowItem
+	88,  // 99: portfolio.v1.CashFlowItem.net_amount:type_name -> common.v1.Money
+	88,  // 100: portfolio.v1.CashFlowItem.running_balance:type_name -> common.v1.Money
+	88,  // 101: portfolio.v1.CashFlowItem.local_amount:type_name -> common.v1.Money
+	88,  // 102: portfolio.v1.CashFlowItem.fee:type_name -> common.v1.Money
+	88,  // 103: portfolio.v1.CashFlowItem.withholding_tax:type_name -> common.v1.Money
+	67,  // 104: portfolio.v1.GetCashFlowReportResponse.summary:type_name -> portfolio.v1.CashFlowSummary
+	68,  // 105: portfolio.v1.GetCashFlowReportResponse.breakdown:type_name -> portfolio.v1.CashFlowCategoryBreakdown
+	69,  // 106: portfolio.v1.GetCashFlowReportResponse.items:type_name -> portfolio.v1.CashFlowItem
 	0,   // 107: portfolio.v1.MissingPriceTransactionItem.type:type_name -> portfolio.v1.TransactionType
-	85,  // 108: portfolio.v1.MissingPriceTransactionItem.quantity:type_name -> common.v1.Decimal
-	86,  // 109: portfolio.v1.MissingPriceTransactionItem.execution_price:type_name -> common.v1.Money
-	69,  // 110: portfolio.v1.ListMissingPriceTransactionsResponse.items:type_name -> portfolio.v1.MissingPriceTransactionItem
+	87,  // 108: portfolio.v1.MissingPriceTransactionItem.quantity:type_name -> common.v1.Decimal
+	88,  // 109: portfolio.v1.MissingPriceTransactionItem.execution_price:type_name -> common.v1.Money
+	71,  // 110: portfolio.v1.ListMissingPriceTransactionsResponse.items:type_name -> portfolio.v1.MissingPriceTransactionItem
 	0,   // 111: portfolio.v1.MissingFXRateTransactionItem.type:type_name -> portfolio.v1.TransactionType
-	86,  // 112: portfolio.v1.MissingFXRateTransactionItem.amount:type_name -> common.v1.Money
-	85,  // 113: portfolio.v1.MissingFXRateTransactionItem.recorded_fx_rate:type_name -> common.v1.Decimal
+	88,  // 112: portfolio.v1.MissingFXRateTransactionItem.amount:type_name -> common.v1.Money
+	87,  // 113: portfolio.v1.MissingFXRateTransactionItem.recorded_fx_rate:type_name -> common.v1.Decimal
 	0,   // 114: portfolio.v1.ListMissingFXRateTransactionsRequest.type:type_name -> portfolio.v1.TransactionType
-	72,  // 115: portfolio.v1.ListMissingFXRateTransactionsResponse.items:type_name -> portfolio.v1.MissingFXRateTransactionItem
+	74,  // 115: portfolio.v1.ListMissingFXRateTransactionsResponse.items:type_name -> portfolio.v1.MissingFXRateTransactionItem
 	0,   // 116: portfolio.v1.ExternalCashFlowWeight.type:type_name -> portfolio.v1.TransactionType
-	86,  // 117: portfolio.v1.ExternalCashFlowWeight.amount:type_name -> common.v1.Money
-	85,  // 118: portfolio.v1.ExternalCashFlowWeight.weight:type_name -> common.v1.Decimal
-	86,  // 119: portfolio.v1.ExternalCashFlowWeight.weighted_amount:type_name -> common.v1.Money
-	86,  // 120: portfolio.v1.ExternalCashFlowWeight.local_amount:type_name -> common.v1.Money
-	86,  // 121: portfolio.v1.GetModifiedDietzReturnResponse.start_valuation:type_name -> common.v1.Money
-	86,  // 122: portfolio.v1.GetModifiedDietzReturnResponse.end_valuation:type_name -> common.v1.Money
-	86,  // 123: portfolio.v1.GetModifiedDietzReturnResponse.net_external_flows:type_name -> common.v1.Money
-	86,  // 124: portfolio.v1.GetModifiedDietzReturnResponse.net_investment_gain:type_name -> common.v1.Money
-	86,  // 125: portfolio.v1.GetModifiedDietzReturnResponse.weighted_capital_employed:type_name -> common.v1.Money
-	85,  // 126: portfolio.v1.GetModifiedDietzReturnResponse.cumulative_return_percent:type_name -> common.v1.Decimal
-	85,  // 127: portfolio.v1.GetModifiedDietzReturnResponse.annualized_return_percent:type_name -> common.v1.Decimal
-	76,  // 128: portfolio.v1.GetModifiedDietzReturnResponse.cash_flow_weights:type_name -> portfolio.v1.ExternalCashFlowWeight
-	78,  // 129: portfolio.v1.ListBenchmarksResponse.benchmarks:type_name -> portfolio.v1.Benchmark
-	85,  // 130: portfolio.v1.BenchmarkComparisonPoint.portfolio_return_percent:type_name -> common.v1.Decimal
-	85,  // 131: portfolio.v1.BenchmarkComparisonPoint.benchmark_return_percent:type_name -> common.v1.Decimal
-	85,  // 132: portfolio.v1.BenchmarkComparisonPoint.active_return_percent:type_name -> common.v1.Decimal
-	86,  // 133: portfolio.v1.BenchmarkComparisonPoint.portfolio_value:type_name -> common.v1.Money
-	86,  // 134: portfolio.v1.BenchmarkComparisonPoint.benchmark_price_adjusted:type_name -> common.v1.Money
-	85,  // 135: portfolio.v1.BenchmarkMetrics.portfolio_cumulative_return_percent:type_name -> common.v1.Decimal
-	85,  // 136: portfolio.v1.BenchmarkMetrics.benchmark_cumulative_return_percent:type_name -> common.v1.Decimal
-	85,  // 137: portfolio.v1.BenchmarkMetrics.active_cumulative_return_percent:type_name -> common.v1.Decimal
-	85,  // 138: portfolio.v1.BenchmarkMetrics.portfolio_annualized_return_percent:type_name -> common.v1.Decimal
-	85,  // 139: portfolio.v1.BenchmarkMetrics.benchmark_annualized_return_percent:type_name -> common.v1.Decimal
-	85,  // 140: portfolio.v1.BenchmarkMetrics.active_annualized_return_percent:type_name -> common.v1.Decimal
-	85,  // 141: portfolio.v1.BenchmarkMetrics.beta:type_name -> common.v1.Decimal
-	85,  // 142: portfolio.v1.BenchmarkMetrics.tracking_error_percent:type_name -> common.v1.Decimal
-	85,  // 143: portfolio.v1.BenchmarkMetrics.information_ratio:type_name -> common.v1.Decimal
+	88,  // 117: portfolio.v1.ExternalCashFlowWeight.amount:type_name -> common.v1.Money
+	87,  // 118: portfolio.v1.ExternalCashFlowWeight.weight:type_name -> common.v1.Decimal
+	88,  // 119: portfolio.v1.ExternalCashFlowWeight.weighted_amount:type_name -> common.v1.Money
+	88,  // 120: portfolio.v1.ExternalCashFlowWeight.local_amount:type_name -> common.v1.Money
+	88,  // 121: portfolio.v1.GetModifiedDietzReturnResponse.start_valuation:type_name -> common.v1.Money
+	88,  // 122: portfolio.v1.GetModifiedDietzReturnResponse.end_valuation:type_name -> common.v1.Money
+	88,  // 123: portfolio.v1.GetModifiedDietzReturnResponse.net_external_flows:type_name -> common.v1.Money
+	88,  // 124: portfolio.v1.GetModifiedDietzReturnResponse.net_investment_gain:type_name -> common.v1.Money
+	88,  // 125: portfolio.v1.GetModifiedDietzReturnResponse.weighted_capital_employed:type_name -> common.v1.Money
+	87,  // 126: portfolio.v1.GetModifiedDietzReturnResponse.cumulative_return_percent:type_name -> common.v1.Decimal
+	87,  // 127: portfolio.v1.GetModifiedDietzReturnResponse.annualized_return_percent:type_name -> common.v1.Decimal
+	78,  // 128: portfolio.v1.GetModifiedDietzReturnResponse.cash_flow_weights:type_name -> portfolio.v1.ExternalCashFlowWeight
+	80,  // 129: portfolio.v1.ListBenchmarksResponse.benchmarks:type_name -> portfolio.v1.Benchmark
+	87,  // 130: portfolio.v1.BenchmarkComparisonPoint.portfolio_return_percent:type_name -> common.v1.Decimal
+	87,  // 131: portfolio.v1.BenchmarkComparisonPoint.benchmark_return_percent:type_name -> common.v1.Decimal
+	87,  // 132: portfolio.v1.BenchmarkComparisonPoint.active_return_percent:type_name -> common.v1.Decimal
+	88,  // 133: portfolio.v1.BenchmarkComparisonPoint.portfolio_value:type_name -> common.v1.Money
+	88,  // 134: portfolio.v1.BenchmarkComparisonPoint.benchmark_price_adjusted:type_name -> common.v1.Money
+	87,  // 135: portfolio.v1.BenchmarkMetrics.portfolio_cumulative_return_percent:type_name -> common.v1.Decimal
+	87,  // 136: portfolio.v1.BenchmarkMetrics.benchmark_cumulative_return_percent:type_name -> common.v1.Decimal
+	87,  // 137: portfolio.v1.BenchmarkMetrics.active_cumulative_return_percent:type_name -> common.v1.Decimal
+	87,  // 138: portfolio.v1.BenchmarkMetrics.portfolio_annualized_return_percent:type_name -> common.v1.Decimal
+	87,  // 139: portfolio.v1.BenchmarkMetrics.benchmark_annualized_return_percent:type_name -> common.v1.Decimal
+	87,  // 140: portfolio.v1.BenchmarkMetrics.active_annualized_return_percent:type_name -> common.v1.Decimal
+	87,  // 141: portfolio.v1.BenchmarkMetrics.beta:type_name -> common.v1.Decimal
+	87,  // 142: portfolio.v1.BenchmarkMetrics.tracking_error_percent:type_name -> common.v1.Decimal
+	87,  // 143: portfolio.v1.BenchmarkMetrics.information_ratio:type_name -> common.v1.Decimal
 	1,   // 144: portfolio.v1.GetBenchmarkComparisonRequest.timeframe:type_name -> portfolio.v1.HistoryTimeframe
 	3,   // 145: portfolio.v1.GetBenchmarkComparisonRequest.currency_mode:type_name -> portfolio.v1.BenchmarkCurrencyMode
-	78,  // 146: portfolio.v1.GetBenchmarkComparisonResponse.benchmark:type_name -> portfolio.v1.Benchmark
+	80,  // 146: portfolio.v1.GetBenchmarkComparisonResponse.benchmark:type_name -> portfolio.v1.Benchmark
 	3,   // 147: portfolio.v1.GetBenchmarkComparisonResponse.currency_mode:type_name -> portfolio.v1.BenchmarkCurrencyMode
-	81,  // 148: portfolio.v1.GetBenchmarkComparisonResponse.points:type_name -> portfolio.v1.BenchmarkComparisonPoint
-	82,  // 149: portfolio.v1.GetBenchmarkComparisonResponse.metrics:type_name -> portfolio.v1.BenchmarkMetrics
+	83,  // 148: portfolio.v1.GetBenchmarkComparisonResponse.points:type_name -> portfolio.v1.BenchmarkComparisonPoint
+	84,  // 149: portfolio.v1.GetBenchmarkComparisonResponse.metrics:type_name -> portfolio.v1.BenchmarkMetrics
 	6,   // 150: portfolio.v1.PortfolioService.GetPortfolio:input_type -> portfolio.v1.GetPortfolioRequest
-	8,   // 151: portfolio.v1.PortfolioService.UpdatePortfolioBaseCurrency:input_type -> portfolio.v1.UpdatePortfolioBaseCurrencyRequest
-	10,  // 152: portfolio.v1.PortfolioService.AddTransaction:input_type -> portfolio.v1.AddTransactionRequest
-	13,  // 153: portfolio.v1.PortfolioService.ListInstruments:input_type -> portfolio.v1.ListInstrumentsRequest
-	18,  // 154: portfolio.v1.PortfolioService.GetPortfolioHistory:input_type -> portfolio.v1.GetPortfolioHistoryRequest
-	21,  // 155: portfolio.v1.PortfolioService.ListTransactions:input_type -> portfolio.v1.ListTransactionsRequest
-	23,  // 156: portfolio.v1.PortfolioService.DeleteTransaction:input_type -> portfolio.v1.DeleteTransactionRequest
-	59,  // 157: portfolio.v1.PortfolioService.CheckTransactionDuplicates:input_type -> portfolio.v1.CheckTransactionDuplicatesRequest
-	62,  // 158: portfolio.v1.PortfolioService.BatchImportTransactions:input_type -> portfolio.v1.BatchImportTransactionsRequest
-	25,  // 159: portfolio.v1.PortfolioService.ListAllInstruments:input_type -> portfolio.v1.ListAllInstrumentsRequest
-	27,  // 160: portfolio.v1.PortfolioService.CreateInstrument:input_type -> portfolio.v1.CreateInstrumentRequest
-	29,  // 161: portfolio.v1.PortfolioService.UpdateInstrument:input_type -> portfolio.v1.UpdateInstrumentRequest
-	31,  // 162: portfolio.v1.PortfolioService.DeleteInstrument:input_type -> portfolio.v1.DeleteInstrumentRequest
-	34,  // 163: portfolio.v1.PortfolioService.ListExchanges:input_type -> portfolio.v1.ListExchangesRequest
-	37,  // 164: portfolio.v1.PortfolioService.ListInstrumentPrices:input_type -> portfolio.v1.ListInstrumentPricesRequest
-	39,  // 165: portfolio.v1.PortfolioService.RecordPriceOverride:input_type -> portfolio.v1.RecordPriceOverrideRequest
-	42,  // 166: portfolio.v1.PortfolioService.GetIngestionStatus:input_type -> portfolio.v1.GetIngestionStatusRequest
-	44,  // 167: portfolio.v1.PortfolioService.TriggerMarketSync:input_type -> portfolio.v1.TriggerMarketSyncRequest
-	47,  // 168: portfolio.v1.PortfolioService.ListCurrencyPairs:input_type -> portfolio.v1.ListCurrencyPairsRequest
-	50,  // 169: portfolio.v1.PortfolioService.ListFXRates:input_type -> portfolio.v1.ListFXRatesRequest
-	53,  // 170: portfolio.v1.PortfolioService.GetCurrencyPairHistory:input_type -> portfolio.v1.GetCurrencyPairHistoryRequest
-	55,  // 171: portfolio.v1.PortfolioService.RecordFXRateOverride:input_type -> portfolio.v1.RecordFXRateOverrideRequest
-	57,  // 172: portfolio.v1.PortfolioService.TriggerBackfill:input_type -> portfolio.v1.TriggerBackfillRequest
-	70,  // 173: portfolio.v1.PortfolioService.ListMissingPriceTransactions:input_type -> portfolio.v1.ListMissingPriceTransactionsRequest
-	73,  // 174: portfolio.v1.PortfolioService.ListMissingFXRateTransactions:input_type -> portfolio.v1.ListMissingFXRateTransactionsRequest
-	4,   // 175: portfolio.v1.PortfolioService.RebuildValuations:input_type -> portfolio.v1.RebuildValuationsRequest
-	64,  // 176: portfolio.v1.PortfolioService.GetCashFlowReport:input_type -> portfolio.v1.GetCashFlowReportRequest
-	75,  // 177: portfolio.v1.PortfolioService.GetModifiedDietzReturn:input_type -> portfolio.v1.GetModifiedDietzReturnRequest
-	79,  // 178: portfolio.v1.PortfolioService.ListBenchmarks:input_type -> portfolio.v1.ListBenchmarksRequest
-	83,  // 179: portfolio.v1.PortfolioService.GetBenchmarkComparison:input_type -> portfolio.v1.GetBenchmarkComparisonRequest
-	7,   // 180: portfolio.v1.PortfolioService.GetPortfolio:output_type -> portfolio.v1.GetPortfolioResponse
-	9,   // 181: portfolio.v1.PortfolioService.UpdatePortfolioBaseCurrency:output_type -> portfolio.v1.UpdatePortfolioBaseCurrencyResponse
-	11,  // 182: portfolio.v1.PortfolioService.AddTransaction:output_type -> portfolio.v1.AddTransactionResponse
-	14,  // 183: portfolio.v1.PortfolioService.ListInstruments:output_type -> portfolio.v1.ListInstrumentsResponse
-	19,  // 184: portfolio.v1.PortfolioService.GetPortfolioHistory:output_type -> portfolio.v1.GetPortfolioHistoryResponse
-	22,  // 185: portfolio.v1.PortfolioService.ListTransactions:output_type -> portfolio.v1.ListTransactionsResponse
-	24,  // 186: portfolio.v1.PortfolioService.DeleteTransaction:output_type -> portfolio.v1.DeleteTransactionResponse
-	60,  // 187: portfolio.v1.PortfolioService.CheckTransactionDuplicates:output_type -> portfolio.v1.CheckTransactionDuplicatesResponse
-	63,  // 188: portfolio.v1.PortfolioService.BatchImportTransactions:output_type -> portfolio.v1.BatchImportTransactionsResponse
-	26,  // 189: portfolio.v1.PortfolioService.ListAllInstruments:output_type -> portfolio.v1.ListAllInstrumentsResponse
-	28,  // 190: portfolio.v1.PortfolioService.CreateInstrument:output_type -> portfolio.v1.CreateInstrumentResponse
-	30,  // 191: portfolio.v1.PortfolioService.UpdateInstrument:output_type -> portfolio.v1.UpdateInstrumentResponse
-	32,  // 192: portfolio.v1.PortfolioService.DeleteInstrument:output_type -> portfolio.v1.DeleteInstrumentResponse
-	35,  // 193: portfolio.v1.PortfolioService.ListExchanges:output_type -> portfolio.v1.ListExchangesResponse
-	38,  // 194: portfolio.v1.PortfolioService.ListInstrumentPrices:output_type -> portfolio.v1.ListInstrumentPricesResponse
-	40,  // 195: portfolio.v1.PortfolioService.RecordPriceOverride:output_type -> portfolio.v1.RecordPriceOverrideResponse
-	43,  // 196: portfolio.v1.PortfolioService.GetIngestionStatus:output_type -> portfolio.v1.GetIngestionStatusResponse
-	45,  // 197: portfolio.v1.PortfolioService.TriggerMarketSync:output_type -> portfolio.v1.TriggerMarketSyncResponse
-	48,  // 198: portfolio.v1.PortfolioService.ListCurrencyPairs:output_type -> portfolio.v1.ListCurrencyPairsResponse
-	51,  // 199: portfolio.v1.PortfolioService.ListFXRates:output_type -> portfolio.v1.ListFXRatesResponse
-	54,  // 200: portfolio.v1.PortfolioService.GetCurrencyPairHistory:output_type -> portfolio.v1.GetCurrencyPairHistoryResponse
-	56,  // 201: portfolio.v1.PortfolioService.RecordFXRateOverride:output_type -> portfolio.v1.RecordFXRateOverrideResponse
-	58,  // 202: portfolio.v1.PortfolioService.TriggerBackfill:output_type -> portfolio.v1.TriggerBackfillResponse
-	71,  // 203: portfolio.v1.PortfolioService.ListMissingPriceTransactions:output_type -> portfolio.v1.ListMissingPriceTransactionsResponse
-	74,  // 204: portfolio.v1.PortfolioService.ListMissingFXRateTransactions:output_type -> portfolio.v1.ListMissingFXRateTransactionsResponse
-	5,   // 205: portfolio.v1.PortfolioService.RebuildValuations:output_type -> portfolio.v1.RebuildValuationsResponse
-	68,  // 206: portfolio.v1.PortfolioService.GetCashFlowReport:output_type -> portfolio.v1.GetCashFlowReportResponse
-	77,  // 207: portfolio.v1.PortfolioService.GetModifiedDietzReturn:output_type -> portfolio.v1.GetModifiedDietzReturnResponse
-	80,  // 208: portfolio.v1.PortfolioService.ListBenchmarks:output_type -> portfolio.v1.ListBenchmarksResponse
-	84,  // 209: portfolio.v1.PortfolioService.GetBenchmarkComparison:output_type -> portfolio.v1.GetBenchmarkComparisonResponse
-	180, // [180:210] is the sub-list for method output_type
-	150, // [150:180] is the sub-list for method input_type
+	10,  // 151: portfolio.v1.PortfolioService.CreatePortfolio:input_type -> portfolio.v1.CreatePortfolioRequest
+	8,   // 152: portfolio.v1.PortfolioService.UpdatePortfolioBaseCurrency:input_type -> portfolio.v1.UpdatePortfolioBaseCurrencyRequest
+	12,  // 153: portfolio.v1.PortfolioService.AddTransaction:input_type -> portfolio.v1.AddTransactionRequest
+	15,  // 154: portfolio.v1.PortfolioService.ListInstruments:input_type -> portfolio.v1.ListInstrumentsRequest
+	20,  // 155: portfolio.v1.PortfolioService.GetPortfolioHistory:input_type -> portfolio.v1.GetPortfolioHistoryRequest
+	23,  // 156: portfolio.v1.PortfolioService.ListTransactions:input_type -> portfolio.v1.ListTransactionsRequest
+	25,  // 157: portfolio.v1.PortfolioService.DeleteTransaction:input_type -> portfolio.v1.DeleteTransactionRequest
+	61,  // 158: portfolio.v1.PortfolioService.CheckTransactionDuplicates:input_type -> portfolio.v1.CheckTransactionDuplicatesRequest
+	64,  // 159: portfolio.v1.PortfolioService.BatchImportTransactions:input_type -> portfolio.v1.BatchImportTransactionsRequest
+	27,  // 160: portfolio.v1.PortfolioService.ListAllInstruments:input_type -> portfolio.v1.ListAllInstrumentsRequest
+	29,  // 161: portfolio.v1.PortfolioService.CreateInstrument:input_type -> portfolio.v1.CreateInstrumentRequest
+	31,  // 162: portfolio.v1.PortfolioService.UpdateInstrument:input_type -> portfolio.v1.UpdateInstrumentRequest
+	33,  // 163: portfolio.v1.PortfolioService.DeleteInstrument:input_type -> portfolio.v1.DeleteInstrumentRequest
+	36,  // 164: portfolio.v1.PortfolioService.ListExchanges:input_type -> portfolio.v1.ListExchangesRequest
+	39,  // 165: portfolio.v1.PortfolioService.ListInstrumentPrices:input_type -> portfolio.v1.ListInstrumentPricesRequest
+	41,  // 166: portfolio.v1.PortfolioService.RecordPriceOverride:input_type -> portfolio.v1.RecordPriceOverrideRequest
+	44,  // 167: portfolio.v1.PortfolioService.GetIngestionStatus:input_type -> portfolio.v1.GetIngestionStatusRequest
+	46,  // 168: portfolio.v1.PortfolioService.TriggerMarketSync:input_type -> portfolio.v1.TriggerMarketSyncRequest
+	49,  // 169: portfolio.v1.PortfolioService.ListCurrencyPairs:input_type -> portfolio.v1.ListCurrencyPairsRequest
+	52,  // 170: portfolio.v1.PortfolioService.ListFXRates:input_type -> portfolio.v1.ListFXRatesRequest
+	55,  // 171: portfolio.v1.PortfolioService.GetCurrencyPairHistory:input_type -> portfolio.v1.GetCurrencyPairHistoryRequest
+	57,  // 172: portfolio.v1.PortfolioService.RecordFXRateOverride:input_type -> portfolio.v1.RecordFXRateOverrideRequest
+	59,  // 173: portfolio.v1.PortfolioService.TriggerBackfill:input_type -> portfolio.v1.TriggerBackfillRequest
+	72,  // 174: portfolio.v1.PortfolioService.ListMissingPriceTransactions:input_type -> portfolio.v1.ListMissingPriceTransactionsRequest
+	75,  // 175: portfolio.v1.PortfolioService.ListMissingFXRateTransactions:input_type -> portfolio.v1.ListMissingFXRateTransactionsRequest
+	4,   // 176: portfolio.v1.PortfolioService.RebuildValuations:input_type -> portfolio.v1.RebuildValuationsRequest
+	66,  // 177: portfolio.v1.PortfolioService.GetCashFlowReport:input_type -> portfolio.v1.GetCashFlowReportRequest
+	77,  // 178: portfolio.v1.PortfolioService.GetModifiedDietzReturn:input_type -> portfolio.v1.GetModifiedDietzReturnRequest
+	81,  // 179: portfolio.v1.PortfolioService.ListBenchmarks:input_type -> portfolio.v1.ListBenchmarksRequest
+	85,  // 180: portfolio.v1.PortfolioService.GetBenchmarkComparison:input_type -> portfolio.v1.GetBenchmarkComparisonRequest
+	7,   // 181: portfolio.v1.PortfolioService.GetPortfolio:output_type -> portfolio.v1.GetPortfolioResponse
+	11,  // 182: portfolio.v1.PortfolioService.CreatePortfolio:output_type -> portfolio.v1.CreatePortfolioResponse
+	9,   // 183: portfolio.v1.PortfolioService.UpdatePortfolioBaseCurrency:output_type -> portfolio.v1.UpdatePortfolioBaseCurrencyResponse
+	13,  // 184: portfolio.v1.PortfolioService.AddTransaction:output_type -> portfolio.v1.AddTransactionResponse
+	16,  // 185: portfolio.v1.PortfolioService.ListInstruments:output_type -> portfolio.v1.ListInstrumentsResponse
+	21,  // 186: portfolio.v1.PortfolioService.GetPortfolioHistory:output_type -> portfolio.v1.GetPortfolioHistoryResponse
+	24,  // 187: portfolio.v1.PortfolioService.ListTransactions:output_type -> portfolio.v1.ListTransactionsResponse
+	26,  // 188: portfolio.v1.PortfolioService.DeleteTransaction:output_type -> portfolio.v1.DeleteTransactionResponse
+	62,  // 189: portfolio.v1.PortfolioService.CheckTransactionDuplicates:output_type -> portfolio.v1.CheckTransactionDuplicatesResponse
+	65,  // 190: portfolio.v1.PortfolioService.BatchImportTransactions:output_type -> portfolio.v1.BatchImportTransactionsResponse
+	28,  // 191: portfolio.v1.PortfolioService.ListAllInstruments:output_type -> portfolio.v1.ListAllInstrumentsResponse
+	30,  // 192: portfolio.v1.PortfolioService.CreateInstrument:output_type -> portfolio.v1.CreateInstrumentResponse
+	32,  // 193: portfolio.v1.PortfolioService.UpdateInstrument:output_type -> portfolio.v1.UpdateInstrumentResponse
+	34,  // 194: portfolio.v1.PortfolioService.DeleteInstrument:output_type -> portfolio.v1.DeleteInstrumentResponse
+	37,  // 195: portfolio.v1.PortfolioService.ListExchanges:output_type -> portfolio.v1.ListExchangesResponse
+	40,  // 196: portfolio.v1.PortfolioService.ListInstrumentPrices:output_type -> portfolio.v1.ListInstrumentPricesResponse
+	42,  // 197: portfolio.v1.PortfolioService.RecordPriceOverride:output_type -> portfolio.v1.RecordPriceOverrideResponse
+	45,  // 198: portfolio.v1.PortfolioService.GetIngestionStatus:output_type -> portfolio.v1.GetIngestionStatusResponse
+	47,  // 199: portfolio.v1.PortfolioService.TriggerMarketSync:output_type -> portfolio.v1.TriggerMarketSyncResponse
+	50,  // 200: portfolio.v1.PortfolioService.ListCurrencyPairs:output_type -> portfolio.v1.ListCurrencyPairsResponse
+	53,  // 201: portfolio.v1.PortfolioService.ListFXRates:output_type -> portfolio.v1.ListFXRatesResponse
+	56,  // 202: portfolio.v1.PortfolioService.GetCurrencyPairHistory:output_type -> portfolio.v1.GetCurrencyPairHistoryResponse
+	58,  // 203: portfolio.v1.PortfolioService.RecordFXRateOverride:output_type -> portfolio.v1.RecordFXRateOverrideResponse
+	60,  // 204: portfolio.v1.PortfolioService.TriggerBackfill:output_type -> portfolio.v1.TriggerBackfillResponse
+	73,  // 205: portfolio.v1.PortfolioService.ListMissingPriceTransactions:output_type -> portfolio.v1.ListMissingPriceTransactionsResponse
+	76,  // 206: portfolio.v1.PortfolioService.ListMissingFXRateTransactions:output_type -> portfolio.v1.ListMissingFXRateTransactionsResponse
+	5,   // 207: portfolio.v1.PortfolioService.RebuildValuations:output_type -> portfolio.v1.RebuildValuationsResponse
+	70,  // 208: portfolio.v1.PortfolioService.GetCashFlowReport:output_type -> portfolio.v1.GetCashFlowReportResponse
+	79,  // 209: portfolio.v1.PortfolioService.GetModifiedDietzReturn:output_type -> portfolio.v1.GetModifiedDietzReturnResponse
+	82,  // 210: portfolio.v1.PortfolioService.ListBenchmarks:output_type -> portfolio.v1.ListBenchmarksResponse
+	86,  // 211: portfolio.v1.PortfolioService.GetBenchmarkComparison:output_type -> portfolio.v1.GetBenchmarkComparisonResponse
+	181, // [181:212] is the sub-list for method output_type
+	150, // [150:181] is the sub-list for method input_type
 	150, // [150:150] is the sub-list for extension type_name
 	150, // [150:150] is the sub-list for extension extendee
 	0,   // [0:150] is the sub-list for field type_name
@@ -8370,7 +8531,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[6].Exporter = func(v any, i int) any {
-			switch v := v.(*AddTransactionRequest); i {
+			switch v := v.(*CreatePortfolioRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8382,7 +8543,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[7].Exporter = func(v any, i int) any {
-			switch v := v.(*AddTransactionResponse); i {
+			switch v := v.(*CreatePortfolioResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8394,7 +8555,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[8].Exporter = func(v any, i int) any {
-			switch v := v.(*Instrument); i {
+			switch v := v.(*AddTransactionRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8406,7 +8567,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[9].Exporter = func(v any, i int) any {
-			switch v := v.(*ListInstrumentsRequest); i {
+			switch v := v.(*AddTransactionResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8418,7 +8579,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[10].Exporter = func(v any, i int) any {
-			switch v := v.(*ListInstrumentsResponse); i {
+			switch v := v.(*Instrument); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8430,7 +8591,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[11].Exporter = func(v any, i int) any {
-			switch v := v.(*Portfolio); i {
+			switch v := v.(*ListInstrumentsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8442,7 +8603,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[12].Exporter = func(v any, i int) any {
-			switch v := v.(*Investment); i {
+			switch v := v.(*ListInstrumentsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8454,7 +8615,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[13].Exporter = func(v any, i int) any {
-			switch v := v.(*ValuationPoint); i {
+			switch v := v.(*Portfolio); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8466,7 +8627,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[14].Exporter = func(v any, i int) any {
-			switch v := v.(*GetPortfolioHistoryRequest); i {
+			switch v := v.(*Investment); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8478,7 +8639,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[15].Exporter = func(v any, i int) any {
-			switch v := v.(*GetPortfolioHistoryResponse); i {
+			switch v := v.(*ValuationPoint); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8490,7 +8651,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[16].Exporter = func(v any, i int) any {
-			switch v := v.(*TransactionItem); i {
+			switch v := v.(*GetPortfolioHistoryRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8502,7 +8663,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[17].Exporter = func(v any, i int) any {
-			switch v := v.(*ListTransactionsRequest); i {
+			switch v := v.(*GetPortfolioHistoryResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8514,7 +8675,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[18].Exporter = func(v any, i int) any {
-			switch v := v.(*ListTransactionsResponse); i {
+			switch v := v.(*TransactionItem); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8526,7 +8687,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[19].Exporter = func(v any, i int) any {
-			switch v := v.(*DeleteTransactionRequest); i {
+			switch v := v.(*ListTransactionsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8538,7 +8699,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[20].Exporter = func(v any, i int) any {
-			switch v := v.(*DeleteTransactionResponse); i {
+			switch v := v.(*ListTransactionsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8550,7 +8711,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[21].Exporter = func(v any, i int) any {
-			switch v := v.(*ListAllInstrumentsRequest); i {
+			switch v := v.(*DeleteTransactionRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8562,7 +8723,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[22].Exporter = func(v any, i int) any {
-			switch v := v.(*ListAllInstrumentsResponse); i {
+			switch v := v.(*DeleteTransactionResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8574,7 +8735,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[23].Exporter = func(v any, i int) any {
-			switch v := v.(*CreateInstrumentRequest); i {
+			switch v := v.(*ListAllInstrumentsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8586,7 +8747,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[24].Exporter = func(v any, i int) any {
-			switch v := v.(*CreateInstrumentResponse); i {
+			switch v := v.(*ListAllInstrumentsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8598,7 +8759,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[25].Exporter = func(v any, i int) any {
-			switch v := v.(*UpdateInstrumentRequest); i {
+			switch v := v.(*CreateInstrumentRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8610,7 +8771,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[26].Exporter = func(v any, i int) any {
-			switch v := v.(*UpdateInstrumentResponse); i {
+			switch v := v.(*CreateInstrumentResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8622,7 +8783,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[27].Exporter = func(v any, i int) any {
-			switch v := v.(*DeleteInstrumentRequest); i {
+			switch v := v.(*UpdateInstrumentRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8634,7 +8795,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[28].Exporter = func(v any, i int) any {
-			switch v := v.(*DeleteInstrumentResponse); i {
+			switch v := v.(*UpdateInstrumentResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8646,7 +8807,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[29].Exporter = func(v any, i int) any {
-			switch v := v.(*Exchange); i {
+			switch v := v.(*DeleteInstrumentRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8658,7 +8819,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[30].Exporter = func(v any, i int) any {
-			switch v := v.(*ListExchangesRequest); i {
+			switch v := v.(*DeleteInstrumentResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8670,7 +8831,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[31].Exporter = func(v any, i int) any {
-			switch v := v.(*ListExchangesResponse); i {
+			switch v := v.(*Exchange); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8682,7 +8843,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[32].Exporter = func(v any, i int) any {
-			switch v := v.(*InstrumentPriceItem); i {
+			switch v := v.(*ListExchangesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8694,7 +8855,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[33].Exporter = func(v any, i int) any {
-			switch v := v.(*ListInstrumentPricesRequest); i {
+			switch v := v.(*ListExchangesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8706,7 +8867,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[34].Exporter = func(v any, i int) any {
-			switch v := v.(*ListInstrumentPricesResponse); i {
+			switch v := v.(*InstrumentPriceItem); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8718,7 +8879,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[35].Exporter = func(v any, i int) any {
-			switch v := v.(*RecordPriceOverrideRequest); i {
+			switch v := v.(*ListInstrumentPricesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8730,7 +8891,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[36].Exporter = func(v any, i int) any {
-			switch v := v.(*RecordPriceOverrideResponse); i {
+			switch v := v.(*ListInstrumentPricesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8742,7 +8903,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[37].Exporter = func(v any, i int) any {
-			switch v := v.(*FeedHealthStatus); i {
+			switch v := v.(*RecordPriceOverrideRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8754,7 +8915,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[38].Exporter = func(v any, i int) any {
-			switch v := v.(*GetIngestionStatusRequest); i {
+			switch v := v.(*RecordPriceOverrideResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8766,7 +8927,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[39].Exporter = func(v any, i int) any {
-			switch v := v.(*GetIngestionStatusResponse); i {
+			switch v := v.(*FeedHealthStatus); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8778,7 +8939,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[40].Exporter = func(v any, i int) any {
-			switch v := v.(*TriggerMarketSyncRequest); i {
+			switch v := v.(*GetIngestionStatusRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8790,7 +8951,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[41].Exporter = func(v any, i int) any {
-			switch v := v.(*TriggerMarketSyncResponse); i {
+			switch v := v.(*GetIngestionStatusResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8802,7 +8963,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[42].Exporter = func(v any, i int) any {
-			switch v := v.(*CurrencyPairItem); i {
+			switch v := v.(*TriggerMarketSyncRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8814,7 +8975,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[43].Exporter = func(v any, i int) any {
-			switch v := v.(*ListCurrencyPairsRequest); i {
+			switch v := v.(*TriggerMarketSyncResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8826,7 +8987,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[44].Exporter = func(v any, i int) any {
-			switch v := v.(*ListCurrencyPairsResponse); i {
+			switch v := v.(*CurrencyPairItem); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8838,7 +8999,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[45].Exporter = func(v any, i int) any {
-			switch v := v.(*FXRateItem); i {
+			switch v := v.(*ListCurrencyPairsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8850,7 +9011,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[46].Exporter = func(v any, i int) any {
-			switch v := v.(*ListFXRatesRequest); i {
+			switch v := v.(*ListCurrencyPairsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8862,7 +9023,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[47].Exporter = func(v any, i int) any {
-			switch v := v.(*ListFXRatesResponse); i {
+			switch v := v.(*FXRateItem); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8874,7 +9035,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[48].Exporter = func(v any, i int) any {
-			switch v := v.(*FXHistoryPoint); i {
+			switch v := v.(*ListFXRatesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8886,7 +9047,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[49].Exporter = func(v any, i int) any {
-			switch v := v.(*GetCurrencyPairHistoryRequest); i {
+			switch v := v.(*ListFXRatesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8898,7 +9059,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[50].Exporter = func(v any, i int) any {
-			switch v := v.(*GetCurrencyPairHistoryResponse); i {
+			switch v := v.(*FXHistoryPoint); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8910,7 +9071,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[51].Exporter = func(v any, i int) any {
-			switch v := v.(*RecordFXRateOverrideRequest); i {
+			switch v := v.(*GetCurrencyPairHistoryRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8922,7 +9083,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[52].Exporter = func(v any, i int) any {
-			switch v := v.(*RecordFXRateOverrideResponse); i {
+			switch v := v.(*GetCurrencyPairHistoryResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8934,7 +9095,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[53].Exporter = func(v any, i int) any {
-			switch v := v.(*TriggerBackfillRequest); i {
+			switch v := v.(*RecordFXRateOverrideRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8946,7 +9107,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[54].Exporter = func(v any, i int) any {
-			switch v := v.(*TriggerBackfillResponse); i {
+			switch v := v.(*RecordFXRateOverrideResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8958,7 +9119,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[55].Exporter = func(v any, i int) any {
-			switch v := v.(*CheckTransactionDuplicatesRequest); i {
+			switch v := v.(*TriggerBackfillRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8970,7 +9131,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[56].Exporter = func(v any, i int) any {
-			switch v := v.(*CheckTransactionDuplicatesResponse); i {
+			switch v := v.(*TriggerBackfillResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8982,7 +9143,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[57].Exporter = func(v any, i int) any {
-			switch v := v.(*ImportTransactionItem); i {
+			switch v := v.(*CheckTransactionDuplicatesRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -8994,7 +9155,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[58].Exporter = func(v any, i int) any {
-			switch v := v.(*BatchImportTransactionsRequest); i {
+			switch v := v.(*CheckTransactionDuplicatesResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9006,7 +9167,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[59].Exporter = func(v any, i int) any {
-			switch v := v.(*BatchImportTransactionsResponse); i {
+			switch v := v.(*ImportTransactionItem); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9018,7 +9179,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[60].Exporter = func(v any, i int) any {
-			switch v := v.(*GetCashFlowReportRequest); i {
+			switch v := v.(*BatchImportTransactionsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9030,7 +9191,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[61].Exporter = func(v any, i int) any {
-			switch v := v.(*CashFlowSummary); i {
+			switch v := v.(*BatchImportTransactionsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9042,7 +9203,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[62].Exporter = func(v any, i int) any {
-			switch v := v.(*CashFlowCategoryBreakdown); i {
+			switch v := v.(*GetCashFlowReportRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9054,7 +9215,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[63].Exporter = func(v any, i int) any {
-			switch v := v.(*CashFlowItem); i {
+			switch v := v.(*CashFlowSummary); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9066,7 +9227,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[64].Exporter = func(v any, i int) any {
-			switch v := v.(*GetCashFlowReportResponse); i {
+			switch v := v.(*CashFlowCategoryBreakdown); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9078,7 +9239,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[65].Exporter = func(v any, i int) any {
-			switch v := v.(*MissingPriceTransactionItem); i {
+			switch v := v.(*CashFlowItem); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9090,7 +9251,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[66].Exporter = func(v any, i int) any {
-			switch v := v.(*ListMissingPriceTransactionsRequest); i {
+			switch v := v.(*GetCashFlowReportResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9102,7 +9263,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[67].Exporter = func(v any, i int) any {
-			switch v := v.(*ListMissingPriceTransactionsResponse); i {
+			switch v := v.(*MissingPriceTransactionItem); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9114,7 +9275,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[68].Exporter = func(v any, i int) any {
-			switch v := v.(*MissingFXRateTransactionItem); i {
+			switch v := v.(*ListMissingPriceTransactionsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9126,7 +9287,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[69].Exporter = func(v any, i int) any {
-			switch v := v.(*ListMissingFXRateTransactionsRequest); i {
+			switch v := v.(*ListMissingPriceTransactionsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9138,7 +9299,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[70].Exporter = func(v any, i int) any {
-			switch v := v.(*ListMissingFXRateTransactionsResponse); i {
+			switch v := v.(*MissingFXRateTransactionItem); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9150,7 +9311,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[71].Exporter = func(v any, i int) any {
-			switch v := v.(*GetModifiedDietzReturnRequest); i {
+			switch v := v.(*ListMissingFXRateTransactionsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9162,7 +9323,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[72].Exporter = func(v any, i int) any {
-			switch v := v.(*ExternalCashFlowWeight); i {
+			switch v := v.(*ListMissingFXRateTransactionsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9174,7 +9335,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[73].Exporter = func(v any, i int) any {
-			switch v := v.(*GetModifiedDietzReturnResponse); i {
+			switch v := v.(*GetModifiedDietzReturnRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9186,7 +9347,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[74].Exporter = func(v any, i int) any {
-			switch v := v.(*Benchmark); i {
+			switch v := v.(*ExternalCashFlowWeight); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9198,7 +9359,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[75].Exporter = func(v any, i int) any {
-			switch v := v.(*ListBenchmarksRequest); i {
+			switch v := v.(*GetModifiedDietzReturnResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9210,7 +9371,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[76].Exporter = func(v any, i int) any {
-			switch v := v.(*ListBenchmarksResponse); i {
+			switch v := v.(*Benchmark); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9222,7 +9383,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[77].Exporter = func(v any, i int) any {
-			switch v := v.(*BenchmarkComparisonPoint); i {
+			switch v := v.(*ListBenchmarksRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9234,7 +9395,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[78].Exporter = func(v any, i int) any {
-			switch v := v.(*BenchmarkMetrics); i {
+			switch v := v.(*ListBenchmarksResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9246,7 +9407,7 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[79].Exporter = func(v any, i int) any {
-			switch v := v.(*GetBenchmarkComparisonRequest); i {
+			switch v := v.(*BenchmarkComparisonPoint); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -9258,6 +9419,30 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 		file_portfolio_v1_portfolio_proto_msgTypes[80].Exporter = func(v any, i int) any {
+			switch v := v.(*BenchmarkMetrics); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_portfolio_v1_portfolio_proto_msgTypes[81].Exporter = func(v any, i int) any {
+			switch v := v.(*GetBenchmarkComparisonRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_portfolio_v1_portfolio_proto_msgTypes[82].Exporter = func(v any, i int) any {
 			switch v := v.(*GetBenchmarkComparisonResponse); i {
 			case 0:
 				return &v.state
@@ -9270,25 +9455,25 @@ func file_portfolio_v1_portfolio_proto_init() {
 			}
 		}
 	}
-	file_portfolio_v1_portfolio_proto_msgTypes[21].OneofWrappers = []any{}
 	file_portfolio_v1_portfolio_proto_msgTypes[23].OneofWrappers = []any{}
 	file_portfolio_v1_portfolio_proto_msgTypes[25].OneofWrappers = []any{}
-	file_portfolio_v1_portfolio_proto_msgTypes[33].OneofWrappers = []any{}
+	file_portfolio_v1_portfolio_proto_msgTypes[27].OneofWrappers = []any{}
 	file_portfolio_v1_portfolio_proto_msgTypes[35].OneofWrappers = []any{}
-	file_portfolio_v1_portfolio_proto_msgTypes[46].OneofWrappers = []any{}
-	file_portfolio_v1_portfolio_proto_msgTypes[51].OneofWrappers = []any{}
-	file_portfolio_v1_portfolio_proto_msgTypes[66].OneofWrappers = []any{}
-	file_portfolio_v1_portfolio_proto_msgTypes[67].OneofWrappers = []any{}
+	file_portfolio_v1_portfolio_proto_msgTypes[37].OneofWrappers = []any{}
+	file_portfolio_v1_portfolio_proto_msgTypes[48].OneofWrappers = []any{}
+	file_portfolio_v1_portfolio_proto_msgTypes[53].OneofWrappers = []any{}
 	file_portfolio_v1_portfolio_proto_msgTypes[68].OneofWrappers = []any{}
 	file_portfolio_v1_portfolio_proto_msgTypes[69].OneofWrappers = []any{}
 	file_portfolio_v1_portfolio_proto_msgTypes[70].OneofWrappers = []any{}
+	file_portfolio_v1_portfolio_proto_msgTypes[71].OneofWrappers = []any{}
+	file_portfolio_v1_portfolio_proto_msgTypes[72].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_portfolio_v1_portfolio_proto_rawDesc,
 			NumEnums:      4,
-			NumMessages:   81,
+			NumMessages:   83,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

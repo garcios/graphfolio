@@ -25,6 +25,128 @@ func NewUserServer(svc service.UserService) *UserServer {
 	return &UserServer{svc: svc}
 }
 
+// Register registers a new user with credentials and issues initial session tokens.
+func (s *UserServer) Register(
+	ctx context.Context,
+	req *userpb.RegisterRequest,
+) (*userpb.RegisterResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "user service unavailable")
+	}
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
+	}
+
+	result, err := s.svc.Register(ctx, req.GetEmail(), req.GetPassword(), req.GetDisplayName(), req.GetDisplayCurrency())
+	if err != nil {
+		return nil, mapServiceError(err)
+	}
+
+	return &userpb.RegisterResponse{
+		User:         domainUserToProto(result.User),
+		AccessToken:  result.AccessToken,
+		RefreshToken: result.RefreshToken,
+		ExpiresIn:    result.ExpiresIn,
+	}, nil
+}
+
+// Login authenticates an investor with credentials and issues session tokens.
+func (s *UserServer) Login(
+	ctx context.Context,
+	req *userpb.LoginRequest,
+) (*userpb.LoginResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "user service unavailable")
+	}
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
+	}
+
+	result, err := s.svc.Login(ctx, req.GetEmail(), req.GetPassword(), req.GetRememberMe())
+	if err != nil {
+		return nil, mapServiceError(err)
+	}
+
+	return &userpb.LoginResponse{
+		User:         domainUserToProto(result.User),
+		AccessToken:  result.AccessToken,
+		RefreshToken: result.RefreshToken,
+		ExpiresIn:    result.ExpiresIn,
+	}, nil
+}
+
+// RefreshToken renews an access token using a valid refresh token.
+func (s *UserServer) RefreshToken(
+	ctx context.Context,
+	req *userpb.RefreshTokenRequest,
+) (*userpb.RefreshTokenResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "user service unavailable")
+	}
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
+	}
+
+	result, err := s.svc.RefreshToken(ctx, req.GetRefreshToken())
+	if err != nil {
+		return nil, mapServiceError(err)
+	}
+
+	return &userpb.RefreshTokenResponse{
+		AccessToken:  result.AccessToken,
+		RefreshToken: result.RefreshToken,
+		ExpiresIn:    result.ExpiresIn,
+		User:         domainUserToProto(result.User),
+	}, nil
+}
+
+// Logout revokes an active session refresh token.
+func (s *UserServer) Logout(
+	ctx context.Context,
+	req *userpb.LogoutRequest,
+) (*userpb.LogoutResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "user service unavailable")
+	}
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
+	}
+
+	err := s.svc.Logout(ctx, req.GetRefreshToken())
+	if err != nil {
+		return nil, mapServiceError(err)
+	}
+
+	return &userpb.LogoutResponse{
+		Success: true,
+	}, nil
+}
+
+// GetMe retrieves profile and preferences for the authenticated user.
+func (s *UserServer) GetMe(
+	ctx context.Context,
+	req *userpb.GetMeRequest,
+) (*userpb.GetMeResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "user service unavailable")
+	}
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
+	}
+	if req.GetUserId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+
+	user, err := s.svc.GetMe(ctx, req.GetUserId())
+	if err != nil {
+		return nil, mapServiceError(err)
+	}
+
+	return &userpb.GetMeResponse{
+		User: domainUserToProto(user),
+	}, nil
+}
+
 // GetUserPreferences retrieves preferences for a specified user.
 func (s *UserServer) GetUserPreferences(
 	ctx context.Context,
@@ -114,8 +236,17 @@ func mapServiceError(err error) error {
 	case errors.Is(err, service.ErrInvalidUserID),
 		errors.Is(err, service.ErrInvalidDisplayName),
 		errors.Is(err, service.ErrInvalidCurrency),
-		errors.Is(err, service.ErrInvalidTheme):
+		errors.Is(err, service.ErrInvalidTheme),
+		errors.Is(err, service.ErrInvalidEmail),
+		errors.Is(err, service.ErrInvalidPassword):
 		return status.Error(codes.InvalidArgument, err.Error())
+	case errors.Is(err, service.ErrEmailAlreadyRegistered):
+		return status.Error(codes.AlreadyExists, err.Error())
+	case errors.Is(err, service.ErrInvalidCredentials),
+		errors.Is(err, service.ErrInvalidSession):
+		return status.Error(codes.Unauthenticated, err.Error())
+	case errors.Is(err, service.ErrAccountInactive):
+		return status.Error(codes.PermissionDenied, err.Error())
 	case errors.Is(err, service.ErrUserNotFound):
 		return status.Error(codes.NotFound, "user not found")
 	default:

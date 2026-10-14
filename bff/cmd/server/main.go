@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"bff/graph"
+	"bff/internal/auth"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -71,10 +72,16 @@ func main() {
 		Cache: lru.New[string](100),
 	})
 
-	// Add CORS middleware
+	// Add CORS middleware with credentials support
 	corsMiddleware := func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Access-Control-Allow-Origin", "*")
+			origin := r.Header.Get("Origin")
+			if origin != "" {
+				w.Header().Set("Access-Control-Allow-Origin", origin)
+				w.Header().Set("Access-Control-Allow-Credentials", "true")
+			} else {
+				w.Header().Set("Access-Control-Allow-Origin", "*")
+			}
 			w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 			w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
 			if r.Method == "OPTIONS" {
@@ -85,8 +92,10 @@ func main() {
 		})
 	}
 
+	authMiddleware := auth.Middleware(auth.GetJWTSecret())
+
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", corsMiddleware(srv))
+	http.Handle("/query", corsMiddleware(authMiddleware(srv)))
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))

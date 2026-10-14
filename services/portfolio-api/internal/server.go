@@ -63,6 +63,34 @@ func (s *PortfolioServer) GetPortfolio(ctx context.Context, req *pb.GetPortfolio
 	}, nil
 }
 
+func (s *PortfolioServer) CreatePortfolio(ctx context.Context, req *pb.CreatePortfolioRequest) (*pb.CreatePortfolioResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+	if req.GetUserId() == "" {
+		return nil, status.Error(codes.InvalidArgument, "user_id is required")
+	}
+	name := req.GetName()
+	if name == "" {
+		name = "Main Portfolio"
+	}
+	curr := req.GetBaseCurrency()
+	if curr == "" {
+		curr = "USD"
+	}
+
+	p, err := s.svc.CreatePortfolio(ctx, req.GetUserId(), name, curr, req.GetCostBasisMethod())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to create portfolio: %v", err)
+	}
+
+	return &pb.CreatePortfolioResponse{
+		PortfolioId:  p.ID.String(),
+		Name:         p.Name,
+		BaseCurrency: p.BaseCurrency,
+	}, nil
+}
+
 func (s *PortfolioServer) UpdatePortfolioBaseCurrency(ctx context.Context, req *pb.UpdatePortfolioBaseCurrencyRequest) (*pb.UpdatePortfolioBaseCurrencyResponse, error) {
 	if s.svc == nil {
 		return nil, status.Error(codes.Unavailable, "service not initialized")

@@ -9,6 +9,7 @@ import { TransactionLedger } from './TransactionLedger';
 import { ReportsView } from './ReportsView';
 import { UserPreferencesModal, type UserPreferencesData, type CurrencyItem } from './UserPreferencesModal';
 import { ModifiedDietzModal } from './ModifiedDietzModal';
+import { UserProfileMenu } from './UserProfileMenu';
 
 type SortField = 'ticker' | 'price' | 'averageBuyPrice' | 'quantity' | 'totalValue' | 'capitalGain' | 'income' | 'currencyGain' | 'totalReturn' | 'todayReturn';
 type SortDirection = 'asc' | 'desc';
@@ -159,14 +160,6 @@ export const Dashboard = () => {
         </div>
       </th>
     );
-  };
-
-  const getInitials = (name: string): string => {
-    const parts = name.trim().split(/\s+/);
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-    return name.slice(0, 2).toUpperCase() || 'OG';
   };
 
   useEffect(() => {
@@ -398,25 +391,7 @@ export const Dashboard = () => {
           >
             + Add Transaction
           </Button>
-          <button
-            type="button"
-            className="user-profile-btn"
-            onClick={() => setIsPreferencesOpen(true)}
-            title="Investor Preferences"
-            aria-label="Open investor preferences"
-          >
-            <div className="avatar">
-              {getInitials(userPrefs?.displayName || 'Oscar Garcia')}
-            </div>
-            <div className="user-profile-details">
-              <span className="user-profile-name">
-                {userPrefs?.displayName || 'Oscar Garcia'}
-              </span>
-              <span className="user-profile-currency">
-                {userPrefs?.displayCurrency || 'USD'}
-              </span>
-            </div>
-          </button>
+          <UserProfileMenu onOpenPreferences={() => setIsPreferencesOpen(true)} />
         </div>
       </header>
 

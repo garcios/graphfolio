@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion7
 
 const (
 	PortfolioService_GetPortfolio_FullMethodName                  = "/portfolio.v1.PortfolioService/GetPortfolio"
+	PortfolioService_CreatePortfolio_FullMethodName               = "/portfolio.v1.PortfolioService/CreatePortfolio"
 	PortfolioService_UpdatePortfolioBaseCurrency_FullMethodName   = "/portfolio.v1.PortfolioService/UpdatePortfolioBaseCurrency"
 	PortfolioService_AddTransaction_FullMethodName                = "/portfolio.v1.PortfolioService/AddTransaction"
 	PortfolioService_ListInstruments_FullMethodName               = "/portfolio.v1.PortfolioService/ListInstruments"
@@ -56,6 +57,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type PortfolioServiceClient interface {
 	GetPortfolio(ctx context.Context, in *GetPortfolioRequest, opts ...grpc.CallOption) (*GetPortfolioResponse, error)
+	CreatePortfolio(ctx context.Context, in *CreatePortfolioRequest, opts ...grpc.CallOption) (*CreatePortfolioResponse, error)
 	UpdatePortfolioBaseCurrency(ctx context.Context, in *UpdatePortfolioBaseCurrencyRequest, opts ...grpc.CallOption) (*UpdatePortfolioBaseCurrencyResponse, error)
 	AddTransaction(ctx context.Context, in *AddTransactionRequest, opts ...grpc.CallOption) (*AddTransactionResponse, error)
 	ListInstruments(ctx context.Context, in *ListInstrumentsRequest, opts ...grpc.CallOption) (*ListInstrumentsResponse, error)
@@ -110,6 +112,15 @@ func NewPortfolioServiceClient(cc grpc.ClientConnInterface) PortfolioServiceClie
 func (c *portfolioServiceClient) GetPortfolio(ctx context.Context, in *GetPortfolioRequest, opts ...grpc.CallOption) (*GetPortfolioResponse, error) {
 	out := new(GetPortfolioResponse)
 	err := c.cc.Invoke(ctx, PortfolioService_GetPortfolio_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portfolioServiceClient) CreatePortfolio(ctx context.Context, in *CreatePortfolioRequest, opts ...grpc.CallOption) (*CreatePortfolioResponse, error) {
+	out := new(CreatePortfolioResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_CreatePortfolio_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -382,6 +393,7 @@ func (c *portfolioServiceClient) GetBenchmarkComparison(ctx context.Context, in 
 // for forward compatibility
 type PortfolioServiceServer interface {
 	GetPortfolio(context.Context, *GetPortfolioRequest) (*GetPortfolioResponse, error)
+	CreatePortfolio(context.Context, *CreatePortfolioRequest) (*CreatePortfolioResponse, error)
 	UpdatePortfolioBaseCurrency(context.Context, *UpdatePortfolioBaseCurrencyRequest) (*UpdatePortfolioBaseCurrencyResponse, error)
 	AddTransaction(context.Context, *AddTransactionRequest) (*AddTransactionResponse, error)
 	ListInstruments(context.Context, *ListInstrumentsRequest) (*ListInstrumentsResponse, error)
@@ -432,6 +444,9 @@ type UnimplementedPortfolioServiceServer struct {
 
 func (UnimplementedPortfolioServiceServer) GetPortfolio(context.Context, *GetPortfolioRequest) (*GetPortfolioResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPortfolio not implemented")
+}
+func (UnimplementedPortfolioServiceServer) CreatePortfolio(context.Context, *CreatePortfolioRequest) (*CreatePortfolioResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreatePortfolio not implemented")
 }
 func (UnimplementedPortfolioServiceServer) UpdatePortfolioBaseCurrency(context.Context, *UpdatePortfolioBaseCurrencyRequest) (*UpdatePortfolioBaseCurrencyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdatePortfolioBaseCurrency not implemented")
@@ -547,6 +562,24 @@ func _PortfolioService_GetPortfolio_Handler(srv interface{}, ctx context.Context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PortfolioServiceServer).GetPortfolio(ctx, req.(*GetPortfolioRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortfolioService_CreatePortfolio_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreatePortfolioRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).CreatePortfolio(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_CreatePortfolio_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).CreatePortfolio(ctx, req.(*CreatePortfolioRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1083,6 +1116,10 @@ var PortfolioService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPortfolio",
 			Handler:    _PortfolioService_GetPortfolio_Handler,
+		},
+		{
+			MethodName: "CreatePortfolio",
+			Handler:    _PortfolioService_CreatePortfolio_Handler,
 		},
 		{
 			MethodName: "UpdatePortfolioBaseCurrency",

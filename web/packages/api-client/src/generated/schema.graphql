@@ -67,6 +67,7 @@ type Query {
   exchanges: [Exchange!]!
   instrumentPrices(symbol: String, fromDate: String, toDate: String, limit: Int = 50, offset: Int = 0): InstrumentPricesConnection!
   ingestionStatus: IngestionStatus!
+  me: UserPreferences!
   userPreferences: UserPreferences!
   supportedCurrencies: [Currency!]!
   currencyPairs: [CurrencyPair!]!
@@ -149,6 +150,29 @@ type Mutation {
   updateUserPreferences(input: UpdateUserPreferencesInput!): UpdateUserPreferencesPayload!
   recordFXRateOverride(input: RecordFXRateOverrideInput!): RecordFXRateOverridePayload!
   importTransactions(input: BatchImportTransactionsInput!): BatchImportTransactionsPayload!
+  register(input: RegisterInput!): AuthPayload!
+  login(input: LoginInput!): AuthPayload!
+  refreshToken: AuthPayload!
+  logout: Boolean!
+}
+
+type AuthPayload {
+  user: UserPreferences!
+  accessToken: String!
+  expiresIn: Int!
+}
+
+input RegisterInput {
+  email: String!
+  password: String!
+  displayName: String!
+  displayCurrency: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+  rememberMe: Boolean
 }
 
 input ImportTransactionInput {

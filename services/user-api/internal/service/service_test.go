@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"user-api/internal/crypto"
 	"user-api/internal/domain"
 	"user-api/internal/repository"
 	mocks "user-api/internal/repository/mocks"
@@ -396,3 +397,162 @@ func TestUserService_ListSupportedCurrencies(t *testing.T) {
 		t.Errorf("expected EUR in supported currencies")
 	}
 }
+
+func TestUserService_Register(t *testing.T) {
+	ctx := context.Background()
+	secret := []byte("test-secret-key-for-unit-tests-32")
+
+	t.Run("success", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := NewUserService(mockRepo, secret)
+
+		newUser := &domain.User{
+			ID:              uuid.New(),
+			Email:           "new@example.com",
+			DisplayName:     "New User",
+			DisplayCurrency: "AUD",
+			Theme:           "DARK",
+			IsActive:        true,
+			CreatedAt:       time.Now(),
+			UpdatedAt:       time.Now(),
+		}
+
+		mockRepo.EXPECT().
+			CreateUser(ctx, "new@example.com", gomock.Any(), "New User", "AUD").
+			Return(newUser, nil)
+
+		mockRepo.EXPECT().
+			CreateSession(ctx, gomock.Any()).
+			Return(nil)
+
+		res, err := svc.Register(ctx, "new@example.com", "Secret#2026!", "New User", "AUD")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res.User == nil || res.User.Email != "new@example.com" {
+			t.Errorf("unexpected user in result: %+v", res.User)
+		}
+		if res.AccessToken == "" || res.RefreshToken == "" {
+			t.Errorf("expected access and refresh tokens, got empty")
+		}
+	})
+
+	t.Run("invalid password complexity", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := NewUserService(mockRepo, secret)
+
+		_, err := svc.Register(ctx, "new@example.com", "simple", "New User", "AUD")
+		if !errors.Is(err, ErrInvalidPassword) {
+			t.Errorf("expected ErrInvalidPassword, got: %v", err)
+		}
+	})
+
+	t.Run("duplicate email", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := NewUserService(mockRepo, secret)
+
+		mockRepo.EXPECT().
+			CreateUser(ctx, "existing@example.com", gomock.Any(), "User", "USD").
+			Return(nil, repository.ErrEmailAlreadyExists)
+
+		_, err := svc.Register(ctx, "existing@example.com", "Password#123", "User", "USD")
+		if !errors.Is(err, ErrEmailAlreadyRegistered) {
+			t.Errorf("expected ErrEmailAlreadyRegistered, got: %v", err)
+		}
+	})
+}
+
+func TestUserService_Login(t *testing.T) {
+	ctx := context.Background()
+	secret := []byte("test-secret-key-for-unit-tests-32")
+
+	testParams := crypto.Argon2Params{
+		Memory:      8 * 1024,
+		Iterations:  1,
+		Parallelism: 2,
+		SaltLength:  16,
+		KeyLength:   32,
+	}
+	hashed, _ := crypto.HashPassword("Correct#Pass2026", testParams)
+
+	user := &domain.User{
+		ID:              uuid.New(),
+		Email:           "investor@example.com",
+		PasswordHash:    hashed,
+		DisplayName:     "Investor",
+		DisplayCurrency: "USD",
+		IsActive:        true,
+	}
+
+	t.Run("success", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := NewUserService(mockRepo, secret)
+
+		mockRepo.EXPECT().
+			GetUserByEmail(ctx, "investor@example.com").
+			Return(user, nil)
+
+		mockRepo.EXPECT().
+			UpdateLastLogin(ctx, user.ID).
+			Return(nil)
+
+		mockRepo.EXPECT().
+			CreateSession(ctx, gomock.Any()).
+			Return(nil)
+
+		res, err := svc.Login(ctx, "investor@example.com", "Correct#Pass2026", false)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res.User.ID != user.ID {
+			t.Errorf("expected user id %s, got %s", user.ID, res.User.ID)
+		}
+	})
+
+	t.Run("wrong password", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := NewUserService(mockRepo, secret)
+
+		mockRepo.EXPECT().
+			GetUserByEmail(ctx, "investor@example.com").
+			Return(user, nil)
+
+		_, err := svc.Login(ctx, "investor@example.com", "WrongPassword#1", false)
+		if !errors.Is(err, ErrInvalidCredentials) {
+			t.Errorf("expected ErrInvalidCredentials, got: %v", err)
+		}
+	})
+
+	t.Run("user not found", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := NewUserService(mockRepo, secret)
+
+		mockRepo.EXPECT().
+			GetUserByEmail(ctx, "unknown@example.com").
+			Return(nil, repository.ErrUserNotFound)
+
+		_, err := svc.Login(ctx, "unknown@example.com", "Correct#Pass2026", false)
+		if !errors.Is(err, ErrInvalidCredentials) {
+			t.Errorf("expected ErrInvalidCredentials, got: %v", err)
+		}
+	})
+}
+

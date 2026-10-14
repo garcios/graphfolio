@@ -41,6 +41,13 @@ A modern portfolio tracker built for serious investors. GraphFolio accurately me
   - **GIPS Sub-1-Year Annualization Protection**: Enforces GIPS Standard 2.A.20, strictly prohibiting compound annualization for periods under 365 calendar days ($CD < 365$) while geometrically compounding multi-year horizons ($CD \ge 365$).
   - **Active Risk Attribution & Metrics Strip**: Computes Active Return / Alpha ($R_p - R_b$), Portfolio Beta ($\beta$), Annualized Tracking Error ($\text{TE}$), and Information Ratio ($\text{IR}$) for horizons with $\ge 30$ trading days, displayed in an interactive metrics strip with glowing outperformance/underperformance badges.
   - **Interactive Dual-Line SVG Chart & Synchronized Crosshairs**: Renders a secondary dashed benchmark curve alongside the solid portfolio curve, dual-metric hover inspection crosshairs, benchmark selector dropdown, currency mode toggle, and `localStorage` persistence.
+- **User Registration, Credential Authentication & Multi-Tenant Session Management**: Institutional-grade authentication and session security conforming to OWASP ASVS v4.0 Level 2, NIST SP 800-63B, and RFC 9106:
+  - **Argon2id Cryptographic Password Hashing**: Passwords hashed using RFC 9106 Argon2id ($m=64\text{MB}, t=3\text{ iterations}, p=4\text{ lanes}$) with 16-byte random salts, constant-time verification, and automatic dummy hash evaluation to protect against user enumeration timing attacks. Real-time complexity validation requires $\ge 10$ characters, upper and lowercase letters, numbers, and special symbols.
+  - **Dual-Token Architecture**: Short-lived (15-minute) standard-library HMAC-SHA256 JWT access tokens stored exclusively in browser memory (`AuthContext`), paired with long-lived (7- to 30-day) cryptographically hashed opaque refresh tokens transmitted via `httpOnly`, `Secure`, `SameSite=Strict` cookies.
+  - **Token Family Rotation & Reuse Detection**: Every refresh invalidates the current token and issues a new pair. If a revoked or replayed refresh token is detected, the entire session family is revoked immediately to prevent session hijacking.
+  - **Automatic Default Portfolio Auto-Provisioning**: Registering a new account atomically provisions an initial default portfolio (`"Main Portfolio"`) in `services/portfolio-api`, anchored to the investor's selected base currency (`USD`, `EUR`, `AUD`, `GBP`, `CAD`, `JPY`, `CHF`).
+  - **Decoupled Multi-Tenant BFF**: Contextual HTTP authorization middleware extracts and verifies bearer JWTs, injecting `ctx.UserID` to scope all portfolio, cash flow, benchmark, and preference resolvers to the authenticated tenant.
+  - **Dark Glassmorphic UI & Session Lifecycle**: Centered `AuthView` with `[ Sign In | Create Account ]` tabs, live `PasswordStrengthMeter` checklist, silent background token renewal 60 seconds prior to expiration, and an investor `UserProfileMenu` dropdown with profile details, preferences shortcut, and one-click sign out.
 - **Clean Microservice Monorepo**: Contract-first gRPC services with a Go GraphQL Backend-for-Frontend (BFF) and strongly-typed frontend queries.
 - **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, Vite, modal transaction entry (`AddTransactionModal`), statement import (`ImportTransactionsModal`), investor preferences dialog (`UserPreferencesModal`), reports hub (`ReportsView`), return calculator (`ModifiedDietzModal`), and instant reactive state refresh.
 
@@ -53,8 +60,9 @@ A modern portfolio tracker built for serious investors. GraphFolio accurately me
 | Layer | Technologies |
 | --- | --- |
 | **Frontend** | React 19, TypeScript, Vite, Vanilla CSS, GenQL |
-| **Backend-for-Frontend (BFF)** | Go 1.26+, GraphQL (`gqlgen`), gRPC Client |
+| **Backend-for-Frontend (BFF)** | Go 1.26+, GraphQL (`gqlgen`), gRPC Client, HTTP JWT Auth Middleware |
 | **Core Microservices** | Go 1.26+, gRPC, Protocol Buffers (`protoc-gen-go`, `protoc-gen-go-grpc`) |
+| **Authentication & Security** | Argon2id (RFC 9106), HMAC-SHA256 JWT, SHA-256 session token hashing, `httpOnly` `SameSite=Strict` cookies |
 | **Database & Persistence** | PostgreSQL 17+ (18+ supported), `pgx/v5`, `golang-migrate` |
 | **Mocking & Testing** | `go.uber.org/mock` (`mockgen`), standard library Go test runner with `-race` |
 | **Orchestration** | GNU Make, Go Workspaces (`go.work`) |
@@ -97,6 +105,7 @@ PG_ADMIN_URL=postgres://$(USER)@localhost:5432/postgres
 PORTFOLIO_DB_URL=postgres://portfolio_svc:portfolio@localhost:5432/graphfolio?sslmode=disable
 USER_DB_URL=postgres://user_svc:user@localhost:5432/graphfolio?sslmode=disable
 MIGRATE_ON_START=false
+JWT_SECRET=graphfolio-default-dev-secret-key-256bit-ok!
 ```
 
 ### 3. Install Dependencies
@@ -149,6 +158,10 @@ make run
 - **Portfolio gRPC API**: `localhost:50051`
 - **User gRPC API**: `localhost:50052`
 
+> 💡 **Default Development Credentials** (seeded via `make db-seed`):
+> - **Email**: `oscar@graphfolio.com` (or `tom@cruz.com`)
+> - **Password**: `Password123!` *(Note: case-sensitive with capital `P` and exclamation mark `!`)*
+
 ---
 
 ## Architecture & Data Flow
@@ -156,10 +169,11 @@ make run
 GraphFolio enforces a strict separation of concerns across layered boundaries:
 
 ```text
-React Components (Dashboard, PerformanceChart, ModifiedDietzModal, TransactionLedger, ReportsView, CashFlowReport, UserPreferencesModal)
+React Components (AuthView, LoginForm, RegisterForm, Dashboard, PerformanceChart, ModifiedDietzModal, UserProfileMenu)
       │
-      ▼  (Typed queries & mutations via GenQL)
+      ▼  (Typed queries & mutations via GenQL with Bearer token & httpOnly cookies)
 GraphQL Backend-for-Frontend (BFF)  [localhost:8080]
+      ├── HTTP Auth Middleware (HMAC-SHA256 JWT validation, cookie management, ctx.UserID injection)
       ├── gRPC (proto/portfolio/v1)
       │   ▼
       │   Portfolio API Service  [localhost:50051]
@@ -168,7 +182,8 @@ GraphQL Backend-for-Frontend (BFF)  [localhost:8080]
       └── gRPC (proto/user/v1)
           ▼
           User API Service  [localhost:50052]
-          └── pgxpool -> PostgreSQL [localhost:5432/graphfolio] -> users schema
+          ├── Argon2id Hasher (RFC 9106), JWT generator, session tracker
+          └── pgxpool -> PostgreSQL [localhost:5432/graphfolio] -> users schema (users & sessions)
 ```
 
 ### Exact Decimal Precision
@@ -203,6 +218,24 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
    - The GraphQL mutation returns the re-calculated portfolio, instantly updating all cards, tables, and metrics without floating-point error.
 3. **Query-Level Consistency**: The GraphQL `portfolio` query automatically verifies the investor's preferred display currency with `user-api` and aligns `portfolio-api`'s base currency if necessary.
 
+### User Authentication, Multi-Tenancy & Session Management
+
+1. **Cryptographic Identity Protection**:
+   - `services/user-api` hashes passwords using **Argon2id** (RFC 9106: 64 MB memory, 3 iterations, 4 parallelism lanes, 16-byte cryptographically secure random salt).
+   - Verifications execute in constant time (`subtle.ConstantTimeCompare`). To prevent user enumeration via timing discrepancies, login requests for non-existent emails compute a dummy Argon2id hash before returning generic credential errors.
+2. **Dual-Token Session Lifecycle**:
+   - **Access Token (JWT)**: Short-lived (15 minutes), signed with standard-library HMAC-SHA256 containing `sub` (User UUID), `email`, `display_name`, and `base_currency`. Held exclusively in frontend memory (`AuthContext`); never stored in `localStorage` or `sessionStorage` (mitigating XSS extraction).
+   - **Refresh Token**: Long-lived (7 days by default, 30 days if "Remember me" is checked), cryptographically secure opaque token (32 random bytes, base64url-encoded). The SHA-256 hash is recorded in `users.sessions` alongside token family identifiers (`family_id`).
+   - **Cookie Transport**: Stored in a browser cookie (`graphfolio_refresh`) with `HttpOnly`, `Secure`, `SameSite=Strict`, and `Path=/`.
+3. **Token Family Rotation & Hijack Detection**:
+   - Every invocation of the `refreshToken` mutation generates a new refresh token and rotates the session record.
+   - If an already-rotated or revoked refresh token is presented (indicating a potential replay attack or token leak), the system revokes all sessions in that `family_id` immediately, requiring re-authentication across all compromised devices.
+4. **Tenant Isolation & Contextual Authorization**:
+   - BFF's `auth.Middleware` extracts incoming `Authorization: Bearer <token>` headers, verifies token signatures and expiration, and binds the authenticated user ID into the Go request context (`ctx.UserID`).
+   - All portfolio queries and mutations resolve user identity strictly from `r.resolveUserID(ctx)`, ensuring complete tenant isolation and multi-user data segregation.
+5. **Initial Portfolio Auto-Provisioning**:
+   - When a new investor completes registration via `register`, the BFF coordinates with `portfolio-api`'s `CreatePortfolio` gRPC endpoint to automatically instantiate an initial default `"Main Portfolio"` anchored in the investor's designated base currency.
+
 ---
 
 ## Directory Structure
@@ -210,8 +243,8 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 ```text
 ├── proto/                        # Single Source of Truth for APIs (Protobuf definitions)
 │   ├── common/v1/decimal.proto   # Decimal and Money contracts
-│   ├── portfolio/v1/             # Portfolio gRPC service (GetPortfolio, UpdatePortfolioBaseCurrency, AddTransaction, GetCashFlowReport, ListMissingFXRateTransactions, DeleteInstrument, TriggerBackfill, etc.)
-│   └── user/v1/user.proto        # User gRPC service (GetUserPreferences, UpdateUserPreferences, ListSupportedCurrencies)
+│   ├── portfolio/v1/             # Portfolio gRPC service (GetPortfolio, CreatePortfolio, UpdatePortfolioBaseCurrency, AddTransaction, GetCashFlowReport, ListMissingFXRateTransactions, DeleteInstrument, TriggerBackfill, etc.)
+│   └── user/v1/user.proto        # User gRPC service (Register, Login, RefreshToken, Logout, GetMe, GetUserPreferences, UpdateUserPreferences, ListSupportedCurrencies)
 ├── pkg/                          # Shared Go infrastructure
 │   ├── database/                 # pgx connection pooling, auto .env loading, migration runner
 │   └── decimalpb/                # Decimal/Money conversions between proto and shopspring
@@ -222,24 +255,26 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── cmd/worker/           # Scheduled EOD & on-demand valuation worker (make run-valuation-job)
 │   │   ├── cmd/market-ingest/    # Market data ingestion & historical backfill CLI (make ingest-market-data)
 │   │   ├── internal/             # Domain entities (incl. missing_fx.go), repository, service (incl. cash flow report & engine), and gRPC server
-│   │   ├── migrations/           # Versioned schema migrations (000001 - 000009)
+│   │   ├── migrations/           # Versioned schema migrations (000001 - 000010)
 │   │   └── seeds/                # Seed fixtures (dev_seed.sql with 365-day history)
 │   └── user-api/                 # User domain microservice (:50052)
 │       ├── cmd/server/           # Application entrypoint (:50052)
-│       ├── internal/             # User domain, repository (pgx), service, and gRPC server
-│       ├── migrations/           # Versioned schema migrations (000001, 000002_add_theme)
-│       └── seeds/                # User dev fixtures (dev_seed.sql with demo investor)
+│       ├── internal/             # User domain, crypto (Argon2id), auth (JWT/hashing), repository (pgx), service, and gRPC server
+│       ├── migrations/           # Versioned schema migrations (000001, 000002_add_theme, 000003_add_auth_and_sessions)
+│       └── seeds/                # User dev fixtures (dev_seed.sql with demo investor & Argon2id hash)
 ├── bff/                          # GraphQL Backend-for-Frontend (gqlgen on :8080)
-│   ├── graph/                    # Schema, resolvers, helpers, model
-│   └── cmd/server/               # BFF entrypoint
+│   ├── cmd/server/               # BFF entrypoint
+│   ├── internal/auth/            # JWT authorization middleware and httpOnly cookie management
+│   └── graph/                    # Schema, resolvers, helpers, model
 ├── web/                          # Frontend Workspace Monorepo
 │   │   ├── main-app/             # Primary Investor React App (:5173)
-│   │   │   └── src/components/   # Dashboard, PerformanceChart, ModifiedDietzModal, TransactionLedger, ReportsView, CashFlowReport, AddTransactionModal, ImportTransactionsModal, UserPreferencesModal
+│   │   │   ├── src/context/      # AuthContext.tsx (in-memory access token, silent refresh, session state)
+│   │   │   └── src/components/   # AuthView, LoginForm, RegisterForm, PasswordStrengthMeter, UserProfileMenu, Dashboard, PerformanceChart, ModifiedDietzModal, TransactionLedger, ReportsView, CashFlowReport, AddTransactionModal, ImportTransactionsModal, UserPreferencesModal
 │   │   └── admin-app/            # Internal Operations Portal (:5174)
 │   │       └── src/components/   # AssetManagement, DeleteAssetModal, PriceManagement, MissingPricesReport, MissingFXRatesReport, FXManagement, FXTrendChart, FXOverrideModal, BackfillModal, IngestionPipeline
 │   └── packages/
 │       ├── ui/                   # Shared Design System (@graphfolio/ui)
-│       └── api-client/           # Shared GraphQL Client (@graphfolio/api-client)
+│       └── api-client/           # Shared GraphQL Client (@graphfolio/api-client with dynamic access token & credentials)
 ├── docs/                         # Implementation plans and guides
 │   ├── plans/                    # System implementation plans
 │   │   ├── db-implementation-plan.md
@@ -266,6 +301,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── portfolio-cash-flow-report-implementation-plan.md
 │   │   ├── include-closed-positions-implementation-plan.md
 │   │   ├── annualized-return-modified-dietz-implementation-plan.md
+│   │   ├── user-registration-and-login-implementation-plan.md
 │   │   └── web-workspace-refactoring-plan.md
 │   ├── user-stories/             # Product specifications & acceptance criteria
 │   │   ├── investment-holding-capital-gain-income-currency.md
@@ -273,7 +309,8 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── admin-missing-prices-report.md
 │   │   ├── admin-missing-fx-rates-report.md
 │   │   ├── include-closed-positions-dashboard.md
-│   │   └── annualized-return-modified-dietz.md
+│   │   ├── annualized-return-modified-dietz.md
+│   │   └── user-registration-and-login.md
 │   ├── negative-cash-balance-investigation-report.md # Cash ledger overdraft root cause & remediation report
 │   ├── competitive-analysis.md
 │   └── genql-usage.md
@@ -370,6 +407,8 @@ make generate
 - **Include Closed Positions User Story**: [`docs/user-stories/include-closed-positions-dashboard.md`](./docs/user-stories/include-closed-positions-dashboard.md)
 - **Modified Dietz Annualized Return Implementation Plan**: [`docs/plans/annualized-return-modified-dietz-implementation-plan.md`](./docs/plans/annualized-return-modified-dietz-implementation-plan.md)
 - **Modified Dietz Annualized Return User Story**: [`docs/user-stories/annualized-return-modified-dietz.md`](./docs/user-stories/annualized-return-modified-dietz.md)
+- **User Registration & Login Implementation Plan**: [`docs/plans/user-registration-and-login-implementation-plan.md`](./docs/plans/user-registration-and-login-implementation-plan.md)
+- **User Registration & Login User Story**: [`docs/user-stories/user-registration-and-login.md`](./docs/user-stories/user-registration-and-login.md)
 - **Negative Cash Balance Investigation Report**: [`docs/negative-cash-balance-investigation-report.md`](./docs/negative-cash-balance-investigation-report.md)
 - **Competitive Strategy Analysis**: [`docs/competitive-analysis.md`](./docs/competitive-analysis.md)
 - **Frontend GraphQL Setup**: [`docs/genql-usage.md`](./docs/genql-usage.md)

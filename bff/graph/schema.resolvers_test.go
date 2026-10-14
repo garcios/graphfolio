@@ -3,9 +3,12 @@ package graph
 import (
 	"context"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"bff/graph/model"
+	"bff/internal/auth"
 
 	commonpb "graphfolio/proto/common/v1"
 	pb "graphfolio/proto/portfolio/v1"
@@ -21,6 +24,46 @@ type fakeUserClient struct {
 	getUserPreferencesFn      func(ctx context.Context, in *userpb.GetUserPreferencesRequest) (*userpb.GetUserPreferencesResponse, error)
 	updateUserPreferencesFn   func(ctx context.Context, in *userpb.UpdateUserPreferencesRequest) (*userpb.UpdateUserPreferencesResponse, error)
 	listSupportedCurrenciesFn func(ctx context.Context, in *userpb.ListSupportedCurrenciesRequest) (*userpb.ListSupportedCurrenciesResponse, error)
+	registerFn                func(ctx context.Context, in *userpb.RegisterRequest) (*userpb.RegisterResponse, error)
+	loginFn                   func(ctx context.Context, in *userpb.LoginRequest) (*userpb.LoginResponse, error)
+	refreshTokenFn            func(ctx context.Context, in *userpb.RefreshTokenRequest) (*userpb.RefreshTokenResponse, error)
+	logoutFn                  func(ctx context.Context, in *userpb.LogoutRequest) (*userpb.LogoutResponse, error)
+	getMeFn                   func(ctx context.Context, in *userpb.GetMeRequest) (*userpb.GetMeResponse, error)
+}
+
+func (f *fakeUserClient) Register(ctx context.Context, in *userpb.RegisterRequest, opts ...grpc.CallOption) (*userpb.RegisterResponse, error) {
+	if f.registerFn != nil {
+		return f.registerFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakeUserClient) Login(ctx context.Context, in *userpb.LoginRequest, opts ...grpc.CallOption) (*userpb.LoginResponse, error) {
+	if f.loginFn != nil {
+		return f.loginFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakeUserClient) RefreshToken(ctx context.Context, in *userpb.RefreshTokenRequest, opts ...grpc.CallOption) (*userpb.RefreshTokenResponse, error) {
+	if f.refreshTokenFn != nil {
+		return f.refreshTokenFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakeUserClient) Logout(ctx context.Context, in *userpb.LogoutRequest, opts ...grpc.CallOption) (*userpb.LogoutResponse, error) {
+	if f.logoutFn != nil {
+		return f.logoutFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakeUserClient) GetMe(ctx context.Context, in *userpb.GetMeRequest, opts ...grpc.CallOption) (*userpb.GetMeResponse, error) {
+	if f.getMeFn != nil {
+		return f.getMeFn(ctx, in)
+	}
+	return nil, nil
 }
 
 func (f *fakeUserClient) GetUserPreferences(ctx context.Context, in *userpb.GetUserPreferencesRequest, opts ...grpc.CallOption) (*userpb.GetUserPreferencesResponse, error) {
@@ -75,8 +118,15 @@ type fakePortfolioClient struct {
 	getModifiedDietzReturnFn        func(ctx context.Context, in *pb.GetModifiedDietzReturnRequest) (*pb.GetModifiedDietzReturnResponse, error)
 	listBenchmarksFn                func(ctx context.Context, in *pb.ListBenchmarksRequest) (*pb.ListBenchmarksResponse, error)
 	getBenchmarkComparisonFn        func(ctx context.Context, in *pb.GetBenchmarkComparisonRequest) (*pb.GetBenchmarkComparisonResponse, error)
+	createPortfolioFn               func(ctx context.Context, in *pb.CreatePortfolioRequest) (*pb.CreatePortfolioResponse, error)
 }
 
+func (f *fakePortfolioClient) CreatePortfolio(ctx context.Context, in *pb.CreatePortfolioRequest, opts ...grpc.CallOption) (*pb.CreatePortfolioResponse, error) {
+	if f.createPortfolioFn != nil {
+		return f.createPortfolioFn(ctx, in)
+	}
+	return nil, nil
+}
 
 func (f *fakePortfolioClient) GetPortfolio(ctx context.Context, in *pb.GetPortfolioRequest, opts ...grpc.CallOption) (*pb.GetPortfolioResponse, error) {
 	if f.getPortfolioFn != nil {
@@ -642,8 +692,8 @@ func TestQueryResolver_PortfolioHistory(t *testing.T) {
 	t.Run("successfully maps valuation time series and returns", func(t *testing.T) {
 		fakeClient := &fakePortfolioClient{
 			getPortfolioHistoryFn: func(ctx context.Context, in *pb.GetPortfolioHistoryRequest) (*pb.GetPortfolioHistoryResponse, error) {
-				if in.GetUserId() != "1" {
-					t.Errorf("expected user_id 1, got %s", in.GetUserId())
+				if in.GetUserId() != "1" && in.GetUserId() != defaultUserID {
+					t.Errorf("expected user_id 1 or defaultUserID, got %s", in.GetUserId())
 				}
 				if in.GetTimeframe() != pb.HistoryTimeframe_HISTORY_TIMEFRAME_1M {
 					t.Errorf("expected timeframe 1M, got %v", in.GetTimeframe())
@@ -769,8 +819,8 @@ func TestQueryResolver_Transactions(t *testing.T) {
 
 		fakeClient := &fakePortfolioClient{
 			listTransactionsFn: func(ctx context.Context, in *pb.ListTransactionsRequest) (*pb.ListTransactionsResponse, error) {
-				if in.GetUserId() != "1" {
-					t.Errorf("expected user_id 1, got %s", in.GetUserId())
+				if in.GetUserId() != "1" && in.GetUserId() != defaultUserID {
+					t.Errorf("expected user_id 1 or defaultUserID, got %s", in.GetUserId())
 				}
 				if in.GetType() != pb.TransactionType_TRANSACTION_TYPE_BUY {
 					t.Errorf("expected type BUY, got %v", in.GetType())
@@ -899,8 +949,8 @@ func TestMutationResolver_DeleteTransaction(t *testing.T) {
 	t.Run("success deletes transaction and returns updated portfolio", func(t *testing.T) {
 		fakeClient := &fakePortfolioClient{
 			deleteTransactionFn: func(ctx context.Context, in *pb.DeleteTransactionRequest) (*pb.DeleteTransactionResponse, error) {
-				if in.GetUserId() != "1" {
-					t.Errorf("expected user_id 1, got %s", in.GetUserId())
+				if in.GetUserId() != "1" && in.GetUserId() != defaultUserID {
+					t.Errorf("expected user_id 1 or defaultUserID, got %s", in.GetUserId())
 				}
 				if in.GetTransactionId() != "tx-to-delete-456" {
 					t.Errorf("expected tx ID tx-to-delete-456, got %s", in.GetTransactionId())
@@ -2005,8 +2055,8 @@ func TestQueryResolver_CheckTransactionDuplicates(t *testing.T) {
 	t.Run("successfully returns existing external refs", func(t *testing.T) {
 		fakeClient := &fakePortfolioClient{
 			checkTransactionDuplicatesFn: func(ctx context.Context, in *pb.CheckTransactionDuplicatesRequest) (*pb.CheckTransactionDuplicatesResponse, error) {
-				if in.GetUserId() != "1" {
-					t.Errorf("expected user_id 1, got %s", in.GetUserId())
+				if in.GetUserId() != "1" && in.GetUserId() != defaultUserID {
+					t.Errorf("expected user_id 1 or defaultUserID, got %s", in.GetUserId())
 				}
 				return &pb.CheckTransactionDuplicatesResponse{
 					ExistingExternalRefs: []string{"cs_123"},
@@ -2125,8 +2175,8 @@ func TestQueryResolver_CashFlowReport(t *testing.T) {
 		name := "BHP Group"
 		fakeClient := &fakePortfolioClient{
 			getCashFlowReportFn: func(ctx context.Context, in *pb.GetCashFlowReportRequest) (*pb.GetCashFlowReportResponse, error) {
-				if in.GetUserId() != "1" {
-					t.Errorf("expected user_id 1, got %s", in.GetUserId())
+				if in.GetUserId() != "1" && in.GetUserId() != defaultUserID {
+					t.Errorf("expected user_id 1 or defaultUserID, got %s", in.GetUserId())
 				}
 				if in.GetTimeframe() != pb.CashFlowTimeframe_CASH_FLOW_TIMEFRAME_MTD {
 					t.Errorf("expected MTD timeframe, got %v", in.GetTimeframe())
@@ -2421,8 +2471,8 @@ func TestQueryResolver_ModifiedDietzReturn(t *testing.T) {
 	t.Run("successfully resolves modified dietz return", func(t *testing.T) {
 		fakeClient := &fakePortfolioClient{
 			getModifiedDietzReturnFn: func(ctx context.Context, in *pb.GetModifiedDietzReturnRequest) (*pb.GetModifiedDietzReturnResponse, error) {
-				if in.GetUserId() != "1" {
-					t.Errorf("expected user_id 1, got %s", in.GetUserId())
+				if in.GetUserId() != "1" && in.GetUserId() != defaultUserID {
+					t.Errorf("expected user_id 1 or defaultUserID, got %s", in.GetUserId())
 				}
 				if in.GetStartDate() != "2025-01-01" {
 					t.Errorf("expected start date 2025-01-01, got %s", in.GetStartDate())
@@ -2664,4 +2714,335 @@ func TestQueryResolver_BenchmarkComparison(t *testing.T) {
 		}
 	})
 }
+
+func TestMutationResolver_Register(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully registers user and creates portfolio", func(t *testing.T) {
+		fakeUser := &fakeUserClient{
+			registerFn: func(ctx context.Context, in *userpb.RegisterRequest) (*userpb.RegisterResponse, error) {
+				if in.Email != "newuser@example.com" {
+					t.Errorf("expected email newuser@example.com, got %s", in.Email)
+				}
+				if in.Password != "Password123!" {
+					t.Errorf("expected password Password123!, got %s", in.Password)
+				}
+				if in.DisplayName != "New Investor" {
+					t.Errorf("expected displayName New Investor, got %s", in.DisplayName)
+				}
+				if in.DisplayCurrency != "USD" {
+					t.Errorf("expected displayCurrency USD, got %s", in.DisplayCurrency)
+				}
+				return &userpb.RegisterResponse{
+					User: &userpb.UserPreferences{
+						UserId:          "user-reg-1",
+						Email:           in.Email,
+						DisplayName:     in.DisplayName,
+						DisplayCurrency: in.DisplayCurrency,
+						Theme:           "DARK",
+					},
+					AccessToken:  "at-reg-123",
+					RefreshToken: "rt-reg-456",
+				}, nil
+			},
+		}
+
+		portfolioCreated := false
+		fakePortfolio := &fakePortfolioClient{
+			createPortfolioFn: func(ctx context.Context, in *pb.CreatePortfolioRequest) (*pb.CreatePortfolioResponse, error) {
+				if in.UserId != "user-reg-1" {
+					t.Errorf("expected user_id user-reg-1, got %s", in.UserId)
+				}
+				if in.BaseCurrency != "USD" {
+					t.Errorf("expected baseCurrency USD, got %s", in.BaseCurrency)
+				}
+				portfolioCreated = true
+				return &pb.CreatePortfolioResponse{PortfolioId: "port-reg-1", BaseCurrency: in.BaseCurrency}, nil
+			},
+		}
+
+		w := httptest.NewRecorder()
+		r := httptest.NewRequest("POST", "/query", nil)
+		testCtx := context.WithValue(ctx, auth.ResponseWriterKey, w)
+		testCtx = context.WithValue(testCtx, auth.RequestKey, r)
+
+		resolver := &Resolver{UserClient: fakeUser, PortfolioClient: fakePortfolio}
+		mResolver := resolver.Mutation()
+
+		res, err := mResolver.Register(testCtx, model.RegisterInput{
+			Email:           "newuser@example.com",
+			Password:        "Password123!",
+			DisplayName:     "New Investor",
+			DisplayCurrency: "USD",
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res.AccessToken != "at-reg-123" {
+			t.Errorf("expected access token at-reg-123, got %s", res.AccessToken)
+		}
+		if res.User.UserID != "user-reg-1" || res.User.Email != "newuser@example.com" {
+			t.Errorf("unexpected user in payload: %+v", res.User)
+		}
+		if !portfolioCreated {
+			t.Errorf("expected portfolio to be created")
+		}
+
+		cookies := w.Result().Cookies()
+		foundCookie := false
+		for _, c := range cookies {
+			if c.Name == auth.RefreshCookieName && c.Value == "rt-reg-456" {
+				foundCookie = true
+			}
+		}
+		if !foundCookie {
+			t.Errorf("expected refresh cookie to be set in response writer")
+		}
+	})
+
+	t.Run("handles user client error", func(t *testing.T) {
+		fakeUser := &fakeUserClient{
+			registerFn: func(ctx context.Context, in *userpb.RegisterRequest) (*userpb.RegisterResponse, error) {
+				return nil, errors.New("email already registered")
+			},
+		}
+
+		resolver := &Resolver{UserClient: fakeUser, PortfolioClient: &fakePortfolioClient{}}
+		mResolver := resolver.Mutation()
+
+		_, err := mResolver.Register(ctx, model.RegisterInput{
+			Email:           "exists@example.com",
+			Password:        "Password123!",
+			DisplayName:     "Existing",
+			DisplayCurrency: "USD",
+		})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+	})
+}
+
+func TestMutationResolver_Login(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully logs in user and sets cookie", func(t *testing.T) {
+		fakeUser := &fakeUserClient{
+			loginFn: func(ctx context.Context, in *userpb.LoginRequest) (*userpb.LoginResponse, error) {
+				if in.Email != "login@example.com" || in.Password != "secret" {
+					return nil, errors.New("invalid credentials")
+				}
+				return &userpb.LoginResponse{
+					User: &userpb.UserPreferences{
+						UserId:          "user-log-1",
+						Email:           in.Email,
+						DisplayName:     "Logged In User",
+						DisplayCurrency: "USD",
+						Theme:           "DARK",
+					},
+					AccessToken:  "at-log-123",
+					RefreshToken: "rt-log-456",
+				}, nil
+			},
+		}
+
+		w := httptest.NewRecorder()
+		r := httptest.NewRequest("POST", "/query", nil)
+		testCtx := context.WithValue(ctx, auth.ResponseWriterKey, w)
+		testCtx = context.WithValue(testCtx, auth.RequestKey, r)
+
+		resolver := &Resolver{UserClient: fakeUser}
+		mResolver := resolver.Mutation()
+
+		res, err := mResolver.Login(testCtx, model.LoginInput{
+			Email:    "login@example.com",
+			Password: "secret",
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res.AccessToken != "at-log-123" {
+			t.Errorf("expected access token at-log-123, got %s", res.AccessToken)
+		}
+		if res.User.UserID != "user-log-1" {
+			t.Errorf("expected user-log-1, got %s", res.User.UserID)
+		}
+	})
+
+	t.Run("handles invalid credentials error", func(t *testing.T) {
+		fakeUser := &fakeUserClient{
+			loginFn: func(ctx context.Context, in *userpb.LoginRequest) (*userpb.LoginResponse, error) {
+				return nil, errors.New("invalid email or password")
+			},
+		}
+
+		resolver := &Resolver{UserClient: fakeUser}
+		mResolver := resolver.Mutation()
+
+		_, err := mResolver.Login(ctx, model.LoginInput{
+			Email:    "wrong@example.com",
+			Password: "wrong",
+		})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+	})
+}
+
+func TestMutationResolver_RefreshToken(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully refreshes token with cookie", func(t *testing.T) {
+		fakeUser := &fakeUserClient{
+			refreshTokenFn: func(ctx context.Context, in *userpb.RefreshTokenRequest) (*userpb.RefreshTokenResponse, error) {
+				if in.RefreshToken != "valid-rt-cookie" {
+					t.Errorf("expected valid-rt-cookie, got %s", in.RefreshToken)
+				}
+				return &userpb.RefreshTokenResponse{
+					User: &userpb.UserPreferences{
+						UserId:          "user-ref-1",
+						Email:           "ref@example.com",
+						DisplayName:     "Refresh User",
+						DisplayCurrency: "USD",
+						Theme:           "DARK",
+					},
+					AccessToken:  "at-new-123",
+					RefreshToken: "rt-new-456",
+				}, nil
+			},
+		}
+
+		w := httptest.NewRecorder()
+		r := httptest.NewRequest("POST", "/query", nil)
+		r.AddCookie(&http.Cookie{
+			Name:  auth.RefreshCookieName,
+			Value: "valid-rt-cookie",
+		})
+		testCtx := context.WithValue(ctx, auth.ResponseWriterKey, w)
+		testCtx = context.WithValue(testCtx, auth.RequestKey, r)
+
+		resolver := &Resolver{UserClient: fakeUser}
+		mResolver := resolver.Mutation()
+
+		res, err := mResolver.RefreshToken(testCtx)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res.AccessToken != "at-new-123" {
+			t.Errorf("expected at-new-123, got %s", res.AccessToken)
+		}
+	})
+
+	t.Run("fails when refresh cookie is missing", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		r := httptest.NewRequest("POST", "/query", nil)
+		testCtx := context.WithValue(ctx, auth.ResponseWriterKey, w)
+		testCtx = context.WithValue(testCtx, auth.RequestKey, r)
+
+		resolver := &Resolver{UserClient: &fakeUserClient{}}
+		mResolver := resolver.Mutation()
+
+		_, err := mResolver.RefreshToken(testCtx)
+		if err == nil {
+			t.Fatal("expected error for missing cookie, got nil")
+		}
+	})
+}
+
+func TestMutationResolver_Logout(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully logs out and clears cookie", func(t *testing.T) {
+		logoutCalled := false
+		fakeUser := &fakeUserClient{
+			logoutFn: func(ctx context.Context, in *userpb.LogoutRequest) (*userpb.LogoutResponse, error) {
+				if in.RefreshToken != "token-to-revoke" {
+					t.Errorf("expected token-to-revoke, got %s", in.RefreshToken)
+				}
+				logoutCalled = true
+				return &userpb.LogoutResponse{Success: true}, nil
+			},
+		}
+
+		w := httptest.NewRecorder()
+		r := httptest.NewRequest("POST", "/query", nil)
+		r.AddCookie(&http.Cookie{
+			Name:  auth.RefreshCookieName,
+			Value: "token-to-revoke",
+		})
+		testCtx := context.WithValue(ctx, auth.ResponseWriterKey, w)
+		testCtx = context.WithValue(testCtx, auth.RequestKey, r)
+
+		resolver := &Resolver{UserClient: fakeUser}
+		mResolver := resolver.Mutation()
+
+		ok, err := mResolver.Logout(testCtx)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !ok {
+			t.Errorf("expected true")
+		}
+		if !logoutCalled {
+			t.Errorf("expected logout to be called")
+		}
+
+		cookies := w.Result().Cookies()
+		foundCleared := false
+		for _, c := range cookies {
+			if c.Name == auth.RefreshCookieName && c.MaxAge == -1 {
+				foundCleared = true
+			}
+		}
+		if !foundCleared {
+			t.Errorf("expected cookie to be cleared with MaxAge -1")
+		}
+	})
+}
+
+func TestQueryResolver_Me(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully returns authenticated user", func(t *testing.T) {
+		fakeUser := &fakeUserClient{
+			getMeFn: func(ctx context.Context, in *userpb.GetMeRequest) (*userpb.GetMeResponse, error) {
+				if in.UserId != "user-authenticated-123" {
+					t.Errorf("expected user-authenticated-123, got %s", in.UserId)
+				}
+				return &userpb.GetMeResponse{
+					User: &userpb.UserPreferences{
+						UserId:          in.UserId,
+						Email:           "authed@example.com",
+						DisplayName:     "Authed User",
+						DisplayCurrency: "AUD",
+						Theme:           "DARK",
+					},
+				}, nil
+			},
+		}
+
+		testCtx := context.WithValue(ctx, auth.UserIDKey, "user-authenticated-123")
+		resolver := &Resolver{UserClient: fakeUser}
+		qResolver := resolver.Query()
+
+		user, err := qResolver.Me(testCtx)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if user.UserID != "user-authenticated-123" || user.Email != "authed@example.com" {
+			t.Errorf("unexpected user: %+v", user)
+		}
+	})
+
+	t.Run("handles unauthenticated error", func(t *testing.T) {
+		resolver := &Resolver{UserClient: &fakeUserClient{}}
+		qResolver := resolver.Query()
+
+		_, err := qResolver.Me(ctx)
+		if err == nil {
+			t.Fatal("expected error for unauthenticated user, got nil")
+		}
+	})
+}
+
+
 

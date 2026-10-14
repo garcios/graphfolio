@@ -42,6 +42,65 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
+// CreateSession mocks base method.
+func (m *MockRepository) CreateSession(ctx context.Context, session *domain.Session) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateSession", ctx, session)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CreateSession indicates an expected call of CreateSession.
+func (mr *MockRepositoryMockRecorder) CreateSession(ctx, session any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSession", reflect.TypeOf((*MockRepository)(nil).CreateSession), ctx, session)
+}
+
+// CreateUser mocks base method.
+func (m *MockRepository) CreateUser(ctx context.Context, email, passwordHash, displayName, baseCurrency string) (*domain.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateUser", ctx, email, passwordHash, displayName, baseCurrency)
+	ret0, _ := ret[0].(*domain.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateUser indicates an expected call of CreateUser.
+func (mr *MockRepositoryMockRecorder) CreateUser(ctx, email, passwordHash, displayName, baseCurrency any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockRepository)(nil).CreateUser), ctx, email, passwordHash, displayName, baseCurrency)
+}
+
+// GetSessionByHash mocks base method.
+func (m *MockRepository) GetSessionByHash(ctx context.Context, hash string) (*domain.Session, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetSessionByHash", ctx, hash)
+	ret0, _ := ret[0].(*domain.Session)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSessionByHash indicates an expected call of GetSessionByHash.
+func (mr *MockRepositoryMockRecorder) GetSessionByHash(ctx, hash any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSessionByHash", reflect.TypeOf((*MockRepository)(nil).GetSessionByHash), ctx, hash)
+}
+
+// GetUserByEmail mocks base method.
+func (m *MockRepository) GetUserByEmail(ctx context.Context, email string) (*domain.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUserByEmail", ctx, email)
+	ret0, _ := ret[0].(*domain.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUserByEmail indicates an expected call of GetUserByEmail.
+func (mr *MockRepositoryMockRecorder) GetUserByEmail(ctx, email any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByEmail", reflect.TypeOf((*MockRepository)(nil).GetUserByEmail), ctx, email)
+}
+
 // GetUserByID mocks base method.
 func (m *MockRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error) {
 	m.ctrl.T.Helper()
@@ -55,6 +114,48 @@ func (m *MockRepository) GetUserByID(ctx context.Context, id uuid.UUID) (*domain
 func (mr *MockRepositoryMockRecorder) GetUserByID(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByID", reflect.TypeOf((*MockRepository)(nil).GetUserByID), ctx, id)
+}
+
+// RevokeSession mocks base method.
+func (m *MockRepository) RevokeSession(ctx context.Context, id uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RevokeSession", ctx, id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RevokeSession indicates an expected call of RevokeSession.
+func (mr *MockRepositoryMockRecorder) RevokeSession(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RevokeSession", reflect.TypeOf((*MockRepository)(nil).RevokeSession), ctx, id)
+}
+
+// RevokeSessionFamily mocks base method.
+func (m *MockRepository) RevokeSessionFamily(ctx context.Context, familyID uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RevokeSessionFamily", ctx, familyID)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RevokeSessionFamily indicates an expected call of RevokeSessionFamily.
+func (mr *MockRepositoryMockRecorder) RevokeSessionFamily(ctx, familyID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RevokeSessionFamily", reflect.TypeOf((*MockRepository)(nil).RevokeSessionFamily), ctx, familyID)
+}
+
+// UpdateLastLogin mocks base method.
+func (m *MockRepository) UpdateLastLogin(ctx context.Context, id uuid.UUID) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateLastLogin", ctx, id)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdateLastLogin indicates an expected call of UpdateLastLogin.
+func (mr *MockRepositoryMockRecorder) UpdateLastLogin(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateLastLogin", reflect.TypeOf((*MockRepository)(nil).UpdateLastLogin), ctx, id)
 }
 
 // UpdateUserPreferences mocks base method.
