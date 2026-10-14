@@ -29,6 +29,14 @@ type fakeUserClient struct {
 	refreshTokenFn            func(ctx context.Context, in *userpb.RefreshTokenRequest) (*userpb.RefreshTokenResponse, error)
 	logoutFn                  func(ctx context.Context, in *userpb.LogoutRequest) (*userpb.LogoutResponse, error)
 	getMeFn                   func(ctx context.Context, in *userpb.GetMeRequest) (*userpb.GetMeResponse, error)
+	changePasswordFn          func(ctx context.Context, in *userpb.ChangePasswordRequest) (*userpb.ChangePasswordResponse, error)
+}
+
+func (f *fakeUserClient) ChangePassword(ctx context.Context, in *userpb.ChangePasswordRequest, opts ...grpc.CallOption) (*userpb.ChangePasswordResponse, error) {
+	if f.changePasswordFn != nil {
+		return f.changePasswordFn(ctx, in)
+	}
+	return nil, nil
 }
 
 func (f *fakeUserClient) Register(ctx context.Context, in *userpb.RegisterRequest, opts ...grpc.CallOption) (*userpb.RegisterResponse, error) {
@@ -3043,6 +3051,71 @@ func TestQueryResolver_Me(t *testing.T) {
 		}
 	})
 }
+
+func TestMutationResolver_ChangePassword(t *testing.T) {
+	ctx := context.Background()
+	testUserID := "018f0000-0000-7000-8000-000000000001"
+	authedCtx := context.WithValue(ctx, auth.UserIDKey, testUserID)
+
+	t.Run("success", func(t *testing.T) {
+		fakeUser := &fakeUserClient{
+			changePasswordFn: func(ctx context.Context, in *userpb.ChangePasswordRequest) (*userpb.ChangePasswordResponse, error) {
+				if in.UserId != testUserID {
+					t.Errorf("expected user ID %s, got %s", testUserID, in.UserId)
+				}
+				if in.CurrentPassword != "OldPass#123" {
+					t.Errorf("expected current password OldPass#123, got %s", in.CurrentPassword)
+				}
+				if in.NewPassword != "NewPass#456" {
+					t.Errorf("expected new password NewPass#456, got %s", in.NewPassword)
+				}
+				if !in.RevokeOtherSessions {
+					t.Errorf("expected RevokeOtherSessions true")
+				}
+				return &userpb.ChangePasswordResponse{
+					Success: true,
+					Message: "Password updated successfully",
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{UserClient: fakeUser}
+		mResolver := resolver.Mutation()
+
+		revokeOthers := true
+		res, err := mResolver.ChangePassword(authedCtx, model.ChangePasswordInput{
+			CurrentPassword:     "OldPass#123",
+			NewPassword:         "NewPass#456",
+			RevokeOtherSessions: &revokeOthers,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !res.Success {
+			t.Errorf("expected success true")
+		}
+	})
+
+	t.Run("gRPC error forwarded", func(t *testing.T) {
+		fakeUser := &fakeUserClient{
+			changePasswordFn: func(ctx context.Context, in *userpb.ChangePasswordRequest) (*userpb.ChangePasswordResponse, error) {
+				return nil, errors.New("current password is incorrect")
+			},
+		}
+
+		resolver := &Resolver{UserClient: fakeUser}
+		mResolver := resolver.Mutation()
+
+		_, err := mResolver.ChangePassword(authedCtx, model.ChangePasswordInput{
+			CurrentPassword: "WrongPassword#123",
+			NewPassword:     "NewPass#456",
+		})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+	})
+}
+
 
 
 

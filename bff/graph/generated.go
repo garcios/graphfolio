@@ -152,6 +152,11 @@ type ComplexityRoot struct {
 		TotalOutflows       func(childComplexity int) int
 	}
 
+	ChangePasswordPayload struct {
+		Message func(childComplexity int) int
+		Success func(childComplexity int) int
+	}
+
 	Currency struct {
 		Code   func(childComplexity int) int
 		Name   func(childComplexity int) int
@@ -381,6 +386,7 @@ type ComplexityRoot struct {
 
 	Mutation struct {
 		AddTransaction        func(childComplexity int, input model.AddTransactionInput) int
+		ChangePassword        func(childComplexity int, input model.ChangePasswordInput) int
 		CreateInstrument      func(childComplexity int, input model.CreateInstrumentInput) int
 		DeleteInstrument      func(childComplexity int, id string) int
 		DeleteTransaction     func(childComplexity int, id string) int
@@ -515,6 +521,7 @@ type MutationResolver interface {
 	Login(ctx context.Context, input model.LoginInput) (*model.AuthPayload, error)
 	RefreshToken(ctx context.Context) (*model.AuthPayload, error)
 	Logout(ctx context.Context) (bool, error)
+	ChangePassword(ctx context.Context, input model.ChangePasswordInput) (*model.ChangePasswordPayload, error)
 }
 type QueryResolver interface {
 	Portfolio(ctx context.Context, includeClosed *bool) (*model.Portfolio, error)
@@ -1043,6 +1050,19 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.CashFlowSummary.TotalOutflows(childComplexity), true
+
+	case "ChangePasswordPayload.message":
+		if e.ComplexityRoot.ChangePasswordPayload.Message == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ChangePasswordPayload.Message(childComplexity), true
+	case "ChangePasswordPayload.success":
+		if e.ComplexityRoot.ChangePasswordPayload.Success == nil {
+			break
+		}
+
+		return e.ComplexityRoot.ChangePasswordPayload.Success(childComplexity), true
 
 	case "Currency.code":
 		if e.ComplexityRoot.Currency.Code == nil {
@@ -2026,6 +2046,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.AddTransaction(childComplexity, args["input"].(model.AddTransactionInput)), true
+	case "Mutation.changePassword":
+		if e.ComplexityRoot.Mutation.ChangePassword == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_changePassword_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.ChangePassword(childComplexity, args["input"].(model.ChangePasswordInput)), true
 	case "Mutation.createInstrument":
 		if e.ComplexityRoot.Mutation.CreateInstrument == nil {
 			break
@@ -2660,6 +2691,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputAddTransactionInput,
 		ec.unmarshalInputBatchImportTransactionsInput,
 		ec.unmarshalInputCashFlowFilterInput,
+		ec.unmarshalInputChangePasswordInput,
 		ec.unmarshalInputCreateInstrumentInput,
 		ec.unmarshalInputImportTransactionInput,
 		ec.unmarshalInputLoginInput,
@@ -2991,6 +3023,16 @@ func (ec *executionContext) childFields_CashFlowSummary(ctx context.Context, fie
 		return ec.fieldContext_CashFlowSummary_endingCashBalance(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type CashFlowSummary", field.Name)
+}
+
+func (ec *executionContext) childFields_ChangePasswordPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "success":
+		return ec.fieldContext_ChangePasswordPayload_success(ctx, field)
+	case "message":
+		return ec.fieldContext_ChangePasswordPayload_message(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type ChangePasswordPayload", field.Name)
 }
 
 func (ec *executionContext) childFields_Currency(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -3715,6 +3757,20 @@ func (ec *executionContext) field_Mutation_addTransaction_args(ctx context.Conte
 	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
 		func(ctx context.Context, v any) (model.AddTransactionInput, error) {
 			return ec.unmarshalNAddTransactionInput2bffᚋgraphᚋmodelᚐAddTransactionInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_changePassword_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.ChangePasswordInput, error) {
+			return ec.unmarshalNChangePasswordInput2bffᚋgraphᚋmodelᚐChangePasswordInput(ctx, v)
 		})
 	if err != nil {
 		return nil, err
@@ -6455,6 +6511,52 @@ func (ec *executionContext) fieldContext_CashFlowSummary_endingCashBalance(_ con
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _ChangePasswordPayload_success(ctx context.Context, field graphql.CollectedField, obj *model.ChangePasswordPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ChangePasswordPayload_success(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Success, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ChangePasswordPayload_success(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ChangePasswordPayload", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _ChangePasswordPayload_message(ctx context.Context, field graphql.CollectedField, obj *model.ChangePasswordPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_ChangePasswordPayload_message(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Message, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_ChangePasswordPayload_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("ChangePasswordPayload", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _Currency_code(ctx context.Context, field graphql.CollectedField, obj *model.Currency) (ret graphql.Marshaler) {
@@ -10961,6 +11063,50 @@ func (ec *executionContext) fieldContext_Mutation_logout(_ context.Context, fiel
 	return graphql.NewScalarFieldContext("Mutation", field, true, true, errors.New("field of type Boolean does not have child fields"))
 }
 
+func (ec *executionContext) _Mutation_changePassword(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_changePassword(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().ChangePassword(ctx, fc.Args["input"].(model.ChangePasswordInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.ChangePasswordPayload) graphql.Marshaler {
+			return ec.marshalNChangePasswordPayload2ᚖbffᚋgraphᚋmodelᚐChangePasswordPayload(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_changePassword(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_ChangePasswordPayload(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_changePassword_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Portfolio_totalValue(ctx context.Context, field graphql.CollectedField, obj *model.Portfolio) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -14338,6 +14484,50 @@ func (ec *executionContext) unmarshalInputCashFlowFilterInput(ctx context.Contex
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputChangePasswordInput(ctx context.Context, obj any) (model.ChangePasswordInput, error) {
+	var it model.ChangePasswordInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"currentPassword", "newPassword", "revokeOtherSessions"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "currentPassword":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("currentPassword"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CurrentPassword = data
+		case "newPassword":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("newPassword"))
+			data, err := ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.NewPassword = data
+		case "revokeOtherSessions":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("revokeOtherSessions"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.RevokeOtherSessions = data
+		}
+	}
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputCreateInstrumentInput(ctx context.Context, obj any) (model.CreateInstrumentInput, error) {
 	var it model.CreateInstrumentInput
 	if obj == nil {
@@ -15670,6 +15860,49 @@ func (ec *executionContext) _CashFlowSummary(ctx context.Context, sel ast.Select
 			}
 		case "endingCashBalance":
 			out.Values[i] = ec._CashFlowSummary_endingCashBalance(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var changePasswordPayloadImplementors = []string{"ChangePasswordPayload"}
+
+func (ec *executionContext) _ChangePasswordPayload(ctx context.Context, sel ast.SelectionSet, obj *model.ChangePasswordPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, changePasswordPayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ChangePasswordPayload")
+		case "success":
+			out.Values[i] = ec._ChangePasswordPayload_success(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "message":
+			out.Values[i] = ec._ChangePasswordPayload_message(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -17368,6 +17601,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "changePassword":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_changePassword(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -19062,6 +19302,21 @@ func (ec *executionContext) unmarshalNCashFlowTimeframe2bffᚋgraphᚋmodelᚐCa
 
 func (ec *executionContext) marshalNCashFlowTimeframe2bffᚋgraphᚋmodelᚐCashFlowTimeframe(ctx context.Context, sel ast.SelectionSet, v model.CashFlowTimeframe) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) unmarshalNChangePasswordInput2bffᚋgraphᚋmodelᚐChangePasswordInput(ctx context.Context, v any) (model.ChangePasswordInput, error) {
+	res, err := ec.unmarshalInputChangePasswordInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNChangePasswordPayload2ᚖbffᚋgraphᚋmodelᚐChangePasswordPayload(ctx context.Context, sel ast.SelectionSet, v *model.ChangePasswordPayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._ChangePasswordPayload(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNCreateInstrumentInput2bffᚋgraphᚋmodelᚐCreateInstrumentInput(ctx context.Context, v any) (model.CreateInstrumentInput, error) {

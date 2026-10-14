@@ -15,6 +15,7 @@ service UserService {
   rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse) {}
   rpc Logout(LogoutRequest) returns (LogoutResponse) {}
   rpc GetMe(GetMeRequest) returns (GetMeResponse) {}
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse) {}
 }
 
 message UserPreferences {
@@ -110,4 +111,17 @@ message GetMeRequest {
 
 message GetMeResponse {
   UserPreferences user    = 1;
+}
+
+message ChangePasswordRequest {
+  string user_id               = 1;
+  string current_password      = 2;
+  string new_password          = 3;
+  bool revoke_other_sessions   = 4;
+  string current_refresh_token = 5;
+}
+
+message ChangePasswordResponse {
+  bool success                 = 1;
+  string message               = 2;
 }

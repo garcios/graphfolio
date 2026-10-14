@@ -149,6 +149,17 @@ type CashFlowSummary struct {
 	EndingCashBalance   *Money `json:"endingCashBalance"`
 }
 
+type ChangePasswordInput struct {
+	CurrentPassword     string `json:"currentPassword"`
+	NewPassword         string `json:"newPassword"`
+	RevokeOtherSessions *bool  `json:"revokeOtherSessions,omitempty"`
+}
+
+type ChangePasswordPayload struct {
+	Success bool   `json:"success"`
+	Message string `json:"message"`
+}
+
 type CreateInstrumentInput struct {
 	Symbol       string  `json:"symbol"`
 	ExchangeCode string  `json:"exchangeCode"`

@@ -116,6 +116,20 @@ func (mr *MockRepositoryMockRecorder) GetUserByID(ctx, id any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUserByID", reflect.TypeOf((*MockRepository)(nil).GetUserByID), ctx, id)
 }
 
+// RevokeOtherUserSessions mocks base method.
+func (m *MockRepository) RevokeOtherUserSessions(ctx context.Context, userID uuid.UUID, currentTokenHash string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RevokeOtherUserSessions", ctx, userID, currentTokenHash)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RevokeOtherUserSessions indicates an expected call of RevokeOtherUserSessions.
+func (mr *MockRepositoryMockRecorder) RevokeOtherUserSessions(ctx, userID, currentTokenHash any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RevokeOtherUserSessions", reflect.TypeOf((*MockRepository)(nil).RevokeOtherUserSessions), ctx, userID, currentTokenHash)
+}
+
 // RevokeSession mocks base method.
 func (m *MockRepository) RevokeSession(ctx context.Context, id uuid.UUID) error {
 	m.ctrl.T.Helper()
@@ -156,6 +170,20 @@ func (m *MockRepository) UpdateLastLogin(ctx context.Context, id uuid.UUID) erro
 func (mr *MockRepositoryMockRecorder) UpdateLastLogin(ctx, id any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateLastLogin", reflect.TypeOf((*MockRepository)(nil).UpdateLastLogin), ctx, id)
+}
+
+// UpdatePassword mocks base method.
+func (m *MockRepository) UpdatePassword(ctx context.Context, id uuid.UUID, passwordHash string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdatePassword", ctx, id, passwordHash)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// UpdatePassword indicates an expected call of UpdatePassword.
+func (mr *MockRepositoryMockRecorder) UpdatePassword(ctx, id, passwordHash any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePassword", reflect.TypeOf((*MockRepository)(nil).UpdatePassword), ctx, id, passwordHash)
 }
 
 // UpdateUserPreferences mocks base method.

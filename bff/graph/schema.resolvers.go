@@ -445,6 +445,37 @@ func (r *mutationResolver) Logout(ctx context.Context) (bool, error) {
 	return true, nil
 }
 
+// ChangePassword is the resolver for the changePassword field.
+func (r *mutationResolver) ChangePassword(ctx context.Context, input model.ChangePasswordInput) (*model.ChangePasswordPayload, error) {
+	userID := r.resolveUserID(ctx)
+	if userID == "" {
+		return nil, fmt.Errorf("unauthenticated: missing user context")
+	}
+
+	revokeOthers := true
+	if input.RevokeOtherSessions != nil {
+		revokeOthers = *input.RevokeOtherSessions
+	}
+
+	cookieToken, _ := auth.GetRefreshCookie(ctx)
+
+	resp, err := r.UserClient.ChangePassword(ctx, &userpb.ChangePasswordRequest{
+		UserId:              userID,
+		CurrentPassword:     input.CurrentPassword,
+		NewPassword:         input.NewPassword,
+		RevokeOtherSessions: revokeOthers,
+		CurrentRefreshToken: cookieToken,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.ChangePasswordPayload{
+		Success: resp.GetSuccess(),
+		Message: resp.GetMessage(),
+	}, nil
+}
+
 // Portfolio is the resolver for the portfolio field.
 func (r *queryResolver) Portfolio(ctx context.Context, includeClosed *bool) (*model.Portfolio, error) {
 	incClosed := false

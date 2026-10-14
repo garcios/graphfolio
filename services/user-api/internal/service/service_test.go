@@ -556,3 +556,147 @@ func TestUserService_Login(t *testing.T) {
 	})
 }
 
+func TestChangePassword(t *testing.T) {
+	ctx := context.Background()
+	secret := []byte("test-secret-key-32-bytes-long!")
+
+	currentPassword := "OldPassword#123"
+	currentHash, err := crypto.HashPassword(currentPassword, crypto.DefaultParams)
+	if err != nil {
+		t.Fatalf("failed to hash password: %v", err)
+	}
+
+	validUser := &domain.User{
+		ID:              uuid.MustParse("018f0000-0000-7000-8000-000000000001"),
+		Email:           "investor@example.com",
+		PasswordHash:    currentHash,
+		IsActive:        true,
+		DisplayName:     "Investor",
+		DisplayCurrency: "USD",
+		Theme:           "DARK",
+	}
+
+	t.Run("successful password change with revoke other sessions", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := NewUserService(mockRepo, secret)
+
+		mockRepo.EXPECT().
+			GetUserByID(ctx, validUser.ID).
+			Return(validUser, nil)
+
+		mockRepo.EXPECT().
+			UpdatePassword(ctx, validUser.ID, gomock.Any()).
+			DoAndReturn(func(_ context.Context, _ uuid.UUID, newHash string) error {
+				match, err := crypto.VerifyPassword("NewPassword#456", newHash)
+				if err != nil || !match {
+					t.Errorf("expected new hash to match NewPassword#456")
+				}
+				return nil
+			})
+
+		mockRepo.EXPECT().
+			RevokeOtherUserSessions(ctx, validUser.ID, gomock.Any()).
+			Return(nil)
+
+		err := svc.ChangePassword(ctx, validUser.ID.String(), currentPassword, "NewPassword#456", true, "refresh-token-raw")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
+	t.Run("wrong current password", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := NewUserService(mockRepo, secret)
+
+		mockRepo.EXPECT().
+			GetUserByID(ctx, validUser.ID).
+			Return(validUser, nil)
+
+		err := svc.ChangePassword(ctx, validUser.ID.String(), "IncorrectOldPass#1", "NewPassword#456", false, "")
+		if !errors.Is(err, ErrInvalidCurrentPassword) {
+			t.Errorf("expected ErrInvalidCurrentPassword, got: %v", err)
+		}
+	})
+
+	t.Run("new password same as current password", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := NewUserService(mockRepo, secret)
+
+		mockRepo.EXPECT().
+			GetUserByID(ctx, validUser.ID).
+			Return(validUser, nil)
+
+		err := svc.ChangePassword(ctx, validUser.ID.String(), currentPassword, currentPassword, false, "")
+		if !errors.Is(err, ErrSamePassword) {
+			t.Errorf("expected ErrSamePassword, got: %v", err)
+		}
+	})
+
+	t.Run("new password fails complexity", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := NewUserService(mockRepo, secret)
+
+		mockRepo.EXPECT().
+			GetUserByID(ctx, validUser.ID).
+			Return(validUser, nil)
+
+		err := svc.ChangePassword(ctx, validUser.ID.String(), currentPassword, "simplepassword", false, "")
+		if !errors.Is(err, ErrPasswordComplexityFailed) {
+			t.Errorf("expected ErrPasswordComplexityFailed, got: %v", err)
+		}
+	})
+
+	t.Run("user not found executes dummy verification", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := NewUserService(mockRepo, secret)
+
+		mockRepo.EXPECT().
+			GetUserByID(ctx, validUser.ID).
+			Return(nil, repository.ErrUserNotFound)
+
+		err := svc.ChangePassword(ctx, validUser.ID.String(), currentPassword, "NewPassword#456", false, "")
+		if !errors.Is(err, ErrInvalidCredentials) {
+			t.Errorf("expected ErrInvalidCredentials, got: %v", err)
+		}
+	})
+
+	t.Run("inactive account", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := NewUserService(mockRepo, secret)
+
+		inactiveUser := &domain.User{
+			ID:           validUser.ID,
+			PasswordHash: currentHash,
+			IsActive:     false,
+		}
+
+		mockRepo.EXPECT().
+			GetUserByID(ctx, validUser.ID).
+			Return(inactiveUser, nil)
+
+		err := svc.ChangePassword(ctx, validUser.ID.String(), currentPassword, "NewPassword#456", false, "")
+		if !errors.Is(err, ErrAccountInactive) {
+			t.Errorf("expected ErrAccountInactive, got: %v", err)
+		}
+	})
+}
+
+

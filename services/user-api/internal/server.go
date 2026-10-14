@@ -147,6 +147,36 @@ func (s *UserServer) GetMe(
 	}, nil
 }
 
+// ChangePassword updates an authenticated user's password and optionally revokes other sessions.
+func (s *UserServer) ChangePassword(
+	ctx context.Context,
+	req *userpb.ChangePasswordRequest,
+) (*userpb.ChangePasswordResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "user service unavailable")
+	}
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "request cannot be nil")
+	}
+
+	err := s.svc.ChangePassword(
+		ctx,
+		req.GetUserId(),
+		req.GetCurrentPassword(),
+		req.GetNewPassword(),
+		req.GetRevokeOtherSessions(),
+		req.GetCurrentRefreshToken(),
+	)
+	if err != nil {
+		return nil, mapServiceError(err)
+	}
+
+	return &userpb.ChangePasswordResponse{
+		Success: true,
+		Message: "Password updated successfully",
+	}, nil
+}
+
 // GetUserPreferences retrieves preferences for a specified user.
 func (s *UserServer) GetUserPreferences(
 	ctx context.Context,
@@ -238,11 +268,14 @@ func mapServiceError(err error) error {
 		errors.Is(err, service.ErrInvalidCurrency),
 		errors.Is(err, service.ErrInvalidTheme),
 		errors.Is(err, service.ErrInvalidEmail),
-		errors.Is(err, service.ErrInvalidPassword):
+		errors.Is(err, service.ErrInvalidPassword),
+		errors.Is(err, service.ErrSamePassword),
+		errors.Is(err, service.ErrPasswordComplexityFailed):
 		return status.Error(codes.InvalidArgument, err.Error())
 	case errors.Is(err, service.ErrEmailAlreadyRegistered):
 		return status.Error(codes.AlreadyExists, err.Error())
 	case errors.Is(err, service.ErrInvalidCredentials),
+		errors.Is(err, service.ErrInvalidCurrentPassword),
 		errors.Is(err, service.ErrInvalidSession):
 		return status.Error(codes.Unauthenticated, err.Error())
 	case errors.Is(err, service.ErrAccountInactive):

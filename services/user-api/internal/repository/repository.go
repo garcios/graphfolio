@@ -29,4 +29,6 @@ type Repository interface {
 	GetSessionByHash(ctx context.Context, hash string) (*domain.Session, error)
 	RevokeSession(ctx context.Context, id uuid.UUID) error
 	RevokeSessionFamily(ctx context.Context, familyID uuid.UUID) error
+	UpdatePassword(ctx context.Context, id uuid.UUID, passwordHash string) error
+	RevokeOtherUserSessions(ctx context.Context, userID uuid.UUID, currentTokenHash string) error
 }

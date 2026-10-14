@@ -364,3 +364,89 @@ func TestUserServer_ListSupportedCurrencies(t *testing.T) {
 		}
 	})
 }
+
+func TestUserServer_ChangePassword(t *testing.T) {
+	ctx := context.Background()
+	userID := "018f0000-0000-7000-8000-000000000001"
+
+	t.Run("success", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockSvc := mocks.NewMockUserService(ctrl)
+		mockSvc.EXPECT().
+			ChangePassword(ctx, userID, "OldPassword#123", "NewPassword#456", true, "refresh-token").
+			Return(nil)
+
+		server := NewUserServer(mockSvc)
+		resp, err := server.ChangePassword(ctx, &userpb.ChangePasswordRequest{
+			UserId:              userID,
+			CurrentPassword:     "OldPassword#123",
+			NewPassword:         "NewPassword#456",
+			RevokeOtherSessions: true,
+			CurrentRefreshToken: "refresh-token",
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if !resp.Success {
+			t.Errorf("expected success true")
+		}
+	})
+
+	t.Run("invalid current password", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockSvc := mocks.NewMockUserService(ctrl)
+		mockSvc.EXPECT().
+			ChangePassword(ctx, userID, "WrongPass#123", "NewPassword#456", false, "").
+			Return(service.ErrInvalidCurrentPassword)
+
+		server := NewUserServer(mockSvc)
+		_, err := server.ChangePassword(ctx, &userpb.ChangePasswordRequest{
+			UserId:          userID,
+			CurrentPassword: "WrongPass#123",
+			NewPassword:     "NewPassword#456",
+		})
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.Unauthenticated {
+			t.Fatalf("expected Unauthenticated, got: %v", err)
+		}
+	})
+
+	t.Run("same password invalid argument", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockSvc := mocks.NewMockUserService(ctrl)
+		mockSvc.EXPECT().
+			ChangePassword(ctx, userID, "OldPassword#123", "OldPassword#123", false, "").
+			Return(service.ErrSamePassword)
+
+		server := NewUserServer(mockSvc)
+		_, err := server.ChangePassword(ctx, &userpb.ChangePasswordRequest{
+			UserId:          userID,
+			CurrentPassword: "OldPassword#123",
+			NewPassword:     "OldPassword#123",
+		})
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Fatalf("expected InvalidArgument, got: %v", err)
+		}
+	})
+
+	t.Run("nil request", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockSvc := mocks.NewMockUserService(ctrl)
+		server := NewUserServer(mockSvc)
+		_, err := server.ChangePassword(ctx, nil)
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Fatalf("expected InvalidArgument, got: %v", err)
+		}
+	})
+}
+

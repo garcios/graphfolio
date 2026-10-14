@@ -71,6 +71,20 @@ SET is_revoked = true, updated_at = now()
 WHERE family_id = $1;
 `
 
+const updatePasswordSQL = `
+UPDATE users.users
+SET password_hash = $1, updated_at = now()
+WHERE id = $2 AND is_active = true;
+`
+
+const revokeOtherUserSessionsSQL = `
+UPDATE users.sessions
+SET is_revoked = true, updated_at = now()
+WHERE user_id = $1
+  AND is_revoked = false
+  AND ($2 = '' OR refresh_token_hash != $2);
+`
+
 type PostgresRepository struct {
 	pool *pgxpool.Pool
 }
@@ -232,3 +246,23 @@ func (r *PostgresRepository) RevokeSessionFamily(ctx context.Context, familyID u
 	}
 	return nil
 }
+
+func (r *PostgresRepository) UpdatePassword(ctx context.Context, id uuid.UUID, passwordHash string) error {
+	res, err := r.pool.Exec(ctx, updatePasswordSQL, passwordHash, id)
+	if err != nil {
+		return fmt.Errorf("repository: failed to update password: %w", err)
+	}
+	if res.RowsAffected() == 0 {
+		return ErrUserNotFound
+	}
+	return nil
+}
+
+func (r *PostgresRepository) RevokeOtherUserSessions(ctx context.Context, userID uuid.UUID, currentTokenHash string) error {
+	_, err := r.pool.Exec(ctx, revokeOtherUserSessionsSQL, userID, currentTokenHash)
+	if err != nil {
+		return fmt.Errorf("repository: failed to revoke other user sessions: %w", err)
+	}
+	return nil
+}
+

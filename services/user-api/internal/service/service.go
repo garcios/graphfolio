@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 	"time"
@@ -16,17 +17,20 @@ import (
 )
 
 var (
-	ErrInvalidUserID          = errors.New("invalid user ID")
-	ErrUserNotFound           = repository.ErrUserNotFound
-	ErrEmailAlreadyRegistered = repository.ErrEmailAlreadyExists
-	ErrInvalidCurrency        = errors.New("unsupported currency code")
-	ErrInvalidDisplayName     = errors.New("display name must be between 1 and 100 characters")
-	ErrInvalidTheme           = errors.New("theme must be DARK, LIGHT, or SYSTEM")
-	ErrInvalidCredentials     = errors.New("invalid email or password")
-	ErrAccountInactive        = errors.New("account is inactive")
-	ErrInvalidEmail           = errors.New("invalid email address")
-	ErrInvalidPassword        = errors.New("password must be between 8 and 128 characters and include uppercase, lowercase, digit, and symbol")
-	ErrInvalidSession         = errors.New("invalid or expired session")
+	ErrInvalidUserID            = errors.New("invalid user ID")
+	ErrUserNotFound             = repository.ErrUserNotFound
+	ErrEmailAlreadyRegistered   = repository.ErrEmailAlreadyExists
+	ErrInvalidCurrency          = errors.New("unsupported currency code")
+	ErrInvalidDisplayName       = errors.New("display name must be between 1 and 100 characters")
+	ErrInvalidTheme             = errors.New("theme must be DARK, LIGHT, or SYSTEM")
+	ErrInvalidCredentials       = errors.New("invalid email or password")
+	ErrAccountInactive          = errors.New("account is inactive")
+	ErrInvalidEmail             = errors.New("invalid email address")
+	ErrInvalidPassword          = errors.New("password must be between 8 and 128 characters and include uppercase, lowercase, digit, and symbol")
+	ErrInvalidSession           = errors.New("invalid or expired session")
+	ErrInvalidCurrentPassword   = errors.New("invalid current password")
+	ErrSamePassword             = errors.New("new password cannot be the same as current password")
+	ErrPasswordComplexityFailed = errors.New("new password does not meet complexity requirements")
 )
 
 const (
@@ -61,6 +65,7 @@ type UserService interface {
 	RefreshToken(ctx context.Context, rawRefreshToken string) (*AuthResult, error)
 	Logout(ctx context.Context, rawRefreshToken string) error
 	GetMe(ctx context.Context, userID string) (*domain.User, error)
+	ChangePassword(ctx context.Context, userID, currentPassword, newPassword string, revokeOtherSessions bool, currentRefreshToken string) error
 
 	GetUserPreferences(ctx context.Context, userID string) (*domain.User, error)
 	UpdateUserPreferences(ctx context.Context, input UpdatePreferencesInput) (*domain.User, error)
@@ -288,6 +293,68 @@ func (s *userService) Logout(ctx context.Context, rawRefreshToken string) error 
 func (s *userService) GetMe(ctx context.Context, userID string) (*domain.User, error) {
 	return s.GetUserPreferences(ctx, userID)
 }
+
+func (s *userService) ChangePassword(
+	ctx context.Context,
+	userID string,
+	currentPassword string,
+	newPassword string,
+	revokeOtherSessions bool,
+	currentRefreshToken string,
+) error {
+	uid, err := parseUserID(userID)
+	if err != nil {
+		return ErrInvalidUserID
+	}
+
+	user, err := s.repo.GetUserByID(ctx, uid)
+	if err != nil {
+		if errors.Is(err, repository.ErrUserNotFound) {
+			// Timing-attack mitigation: compute dummy verification
+			_, _ = crypto.VerifyPassword(currentPassword, crypto.DummyHash)
+			return ErrInvalidCredentials
+		}
+		return err
+	}
+
+	if !user.IsActive {
+		return ErrAccountInactive
+	}
+
+	match, err := crypto.VerifyPassword(currentPassword, user.PasswordHash)
+	if err != nil || !match {
+		return ErrInvalidCurrentPassword
+	}
+
+	if currentPassword == newPassword {
+		return ErrSamePassword
+	}
+
+	if err := validatePassword(newPassword); err != nil {
+		return ErrPasswordComplexityFailed
+	}
+
+	newHashedPassword, err := crypto.HashPassword(newPassword, crypto.DefaultParams)
+	if err != nil {
+		return fmt.Errorf("failed to hash new password: %w", err)
+	}
+
+	if err := s.repo.UpdatePassword(ctx, uid, newHashedPassword); err != nil {
+		return err
+	}
+
+	if revokeOtherSessions {
+		var currentHash string
+		trimmedToken := strings.TrimSpace(currentRefreshToken)
+		if trimmedToken != "" {
+			currentHash = auth.HashRefreshToken(trimmedToken)
+		}
+		_ = s.repo.RevokeOtherUserSessions(ctx, uid, currentHash)
+	}
+
+	return nil
+}
+
 
 func (s *userService) issueTokens(ctx context.Context, user *domain.User, refreshDuration time.Duration) (*AuthResult, error) {
 	rawRefreshToken, hashHex, err := auth.GenerateRefreshToken()

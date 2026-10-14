@@ -226,12 +226,24 @@ type Mutation {
   login(input: LoginInput!): AuthPayload!
   refreshToken: AuthPayload!
   logout: Boolean!
+  changePassword(input: ChangePasswordInput!): ChangePasswordPayload!
 }
 
 type AuthPayload {
   user: UserPreferences!
   accessToken: String!
   expiresIn: Int!
+}
+
+type ChangePasswordPayload {
+  success: Boolean!
+  message: String!
+}
+
+input ChangePasswordInput {
+  currentPassword: String!
+  newPassword: String!
+  revokeOtherSessions: Boolean
 }
 
 input RegisterInput {
@@ -246,6 +258,7 @@ input LoginInput {
   password: String!
   rememberMe: Boolean
 }
+
 
 input ImportTransactionInput {
   externalRef: String!

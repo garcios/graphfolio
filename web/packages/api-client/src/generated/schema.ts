@@ -144,6 +144,7 @@ export interface Mutation {
     login: AuthPayload
     refreshToken: AuthPayload
     logout: Scalars['Boolean']
+    changePassword: ChangePasswordPayload
     __typename: 'Mutation'
 }
 
@@ -152,6 +153,12 @@ export interface AuthPayload {
     accessToken: Scalars['String']
     expiresIn: Scalars['Int']
     __typename: 'AuthPayload'
+}
+
+export interface ChangePasswordPayload {
+    success: Scalars['Boolean']
+    message: Scalars['String']
+    __typename: 'ChangePasswordPayload'
 }
 
 export interface BatchImportTransactionsPayload {
@@ -670,6 +677,7 @@ export interface MutationGenqlSelection{
     login?: (AuthPayloadGenqlSelection & { __args: {input: LoginInput} })
     refreshToken?: AuthPayloadGenqlSelection
     logout?: boolean | number
+    changePassword?: (ChangePasswordPayloadGenqlSelection & { __args: {input: ChangePasswordInput} })
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -681,6 +689,15 @@ export interface AuthPayloadGenqlSelection{
     __typename?: boolean | number
     __scalar?: boolean | number
 }
+
+export interface ChangePasswordPayloadGenqlSelection{
+    success?: boolean | number
+    message?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface ChangePasswordInput {currentPassword: Scalars['String'],newPassword: Scalars['String'],revokeOtherSessions?: (Scalars['Boolean'] | null)}
 
 export interface RegisterInput {email: Scalars['String'],password: Scalars['String'],displayName: Scalars['String'],displayCurrency: Scalars['String']}
 
@@ -1204,6 +1221,14 @@ export interface BenchmarkComparisonPayloadGenqlSelection{
     export const isAuthPayload = (obj?: { __typename?: any } | null): obj is AuthPayload => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isAuthPayload"')
       return AuthPayload_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const ChangePasswordPayload_possibleTypes: string[] = ['ChangePasswordPayload']
+    export const isChangePasswordPayload = (obj?: { __typename?: any } | null): obj is ChangePasswordPayload => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isChangePasswordPayload"')
+      return ChangePasswordPayload_possibleTypes.includes(obj.__typename)
     }
     
 

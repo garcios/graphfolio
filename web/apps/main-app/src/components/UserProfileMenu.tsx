@@ -4,6 +4,7 @@ import './UserProfileMenu.css';
 
 interface UserProfileMenuProps {
   onOpenPreferences: () => void;
+  onOpenChangePassword: () => void;
 }
 
 function getInitials(name: string): string {
@@ -15,7 +16,10 @@ function getInitials(name: string): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({ onOpenPreferences }) => {
+export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({
+  onOpenPreferences,
+  onOpenChangePassword,
+}) => {
   const { user, logout } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -91,6 +95,19 @@ export const UserProfileMenu: React.FC<UserProfileMenuProps> = ({ onOpenPreferen
           >
             <span className="item-icon">⚙️</span>
             <span>Investor Preferences</span>
+          </button>
+
+          <button
+            type="button"
+            className="dropdown-item"
+            role="menuitem"
+            onClick={() => {
+              setIsOpen(false);
+              onOpenChangePassword();
+            }}
+          >
+            <span className="item-icon">🔑</span>
+            <span>Change Password</span>
           </button>
 
           <div className="dropdown-divider" />

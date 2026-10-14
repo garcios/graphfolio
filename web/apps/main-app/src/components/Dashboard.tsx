@@ -10,6 +10,7 @@ import { ReportsView } from './ReportsView';
 import { UserPreferencesModal, type UserPreferencesData, type CurrencyItem } from './UserPreferencesModal';
 import { ModifiedDietzModal } from './ModifiedDietzModal';
 import { UserProfileMenu } from './UserProfileMenu';
+import { ChangePasswordModal } from './ChangePasswordModal';
 
 type SortField = 'ticker' | 'price' | 'averageBuyPrice' | 'quantity' | 'totalValue' | 'capitalGain' | 'income' | 'currencyGain' | 'totalReturn' | 'todayReturn';
 type SortDirection = 'asc' | 'desc';
@@ -24,6 +25,7 @@ export const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [isDietzModalOpen, setIsDietzModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'ledger' | 'reports'>('overview');
@@ -391,7 +393,10 @@ export const Dashboard = () => {
           >
             + Add Transaction
           </Button>
-          <UserProfileMenu onOpenPreferences={() => setIsPreferencesOpen(true)} />
+          <UserProfileMenu
+            onOpenPreferences={() => setIsPreferencesOpen(true)}
+            onOpenChangePassword={() => setIsChangePasswordOpen(true)}
+          />
         </div>
       </header>
 
@@ -776,6 +781,11 @@ export const Dashboard = () => {
         onClose={() => setIsDietzModalOpen(false)}
         portfolioCurrency={userPrefs?.displayCurrency || 'USD'}
         inceptionDate={data?.inceptionDate || undefined}
+      />
+
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
       />
 
       {toastMessage && (
