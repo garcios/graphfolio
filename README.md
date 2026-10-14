@@ -167,24 +167,75 @@ make run
 
 ## Architecture & Data Flow
 
-GraphFolio enforces a strict separation of concerns across layered boundaries:
+GraphFolio enforces a strict separation of concerns across contract-first, microservice, and frontend boundaries:
 
-```text
-React Components (AuthView, LoginForm, RegisterForm, Dashboard, PerformanceChart, ModifiedDietzModal, UserProfileMenu)
-      │
-      ▼  (Typed queries & mutations via GenQL with Bearer token & httpOnly cookies)
-GraphQL Backend-for-Frontend (BFF)  [localhost:8080]
-      ├── HTTP Auth Middleware (HMAC-SHA256 JWT validation, cookie management, ctx.UserID injection)
-      ├── gRPC (proto/portfolio/v1)
-      │   ▼
-      │   Portfolio API Service  [localhost:50051]
-      │   └── pgxpool -> PostgreSQL [localhost:5432/graphfolio] -> portfolio schema
-      │
-      └── gRPC (proto/user/v1)
-          ▼
-          User API Service  [localhost:50052]
-          ├── Argon2id Hasher (RFC 9106), JWT generator, session tracker
-          └── pgxpool -> PostgreSQL [localhost:5432/graphfolio] -> users schema (users & sessions)
+```mermaid
+flowchart TB
+    subgraph WebMonorepo ["Frontend Workspace Monorepo (web/)"]
+        subgraph MainApp ["Primary Investor Application (:5173)"]
+            MAIN_UI["Investor Views and Dashboards<br/>• AuthView (Login and Register)<br/>• 10-Col Holdings Return Attribution<br/>• Benchmark SVG Chart and Metrics Strip<br/>• Cash Flow Report and Modified Dietz Modal<br/>• User Preferences and Change Password Modal"]
+            AUTH_CTX["AuthContext and State<br/>• In-Memory Bearer Token<br/>• Silent Refresh Timer (~60s Pre-Expiry)"]
+        end
+
+        subgraph AdminApp ["Internal Operations Portal (:5174)"]
+            ADMIN_UI["Administrative Portals<br/>• Price Management and Override Presets<br/>• Missing Price and FX Diagnostics<br/>• FX Rates and Backfill Range Dispatcher"]
+        end
+
+        subgraph SharedPackages ["Shared Workspace Packages"]
+            CLIENT_PKG["@graphfolio/api-client<br/>• Typed GenQL Client<br/>• Dynamic Bearer Token Injection<br/>• Automatic Cookie Credentials"]
+            UI_PKG["@graphfolio/ui<br/>• Dark Glassmorphic Design System<br/>• Atomic Components and Formatters"]
+        end
+    end
+
+    subgraph BFFLayer ["GraphQL Backend-for-Frontend (:8080)"]
+        BFF_MW["HTTP Auth Middleware<br/>• HMAC-SHA256 JWT Verification<br/>• httpOnly Cookie Management<br/>• Scoped ctx.UserID Injection"]
+        BFF_RESOLVER["GraphQL Resolvers and Orchestrator<br/>• Auth: register, login, refresh, changePassword<br/>• Portfolio: holdings, transactions, CSV import<br/>• Performance: history, Dietz, benchmarks<br/>• Admin: prices, FX, diagnostics, backfills<br/>• Dynamic Base Currency Re-anchoring"]
+    end
+
+    subgraph ProtoLayer ["Protocol Buffers Contract Layer (proto/)"]
+        COMMON_PB["common/v1/decimal.proto<br/>• Exact Decimal and Money Contracts"]
+        PORT_PB["portfolio/v1/portfolio.proto<br/>• Portfolio, Benchmarks and Ledger RPCs"]
+        USER_PB["user/v1/user.proto<br/>• User Auth, Sessions and Preferences RPCs"]
+    end
+
+    subgraph ServiceLayer ["Core Domain Microservices (services/)"]
+        subgraph PortService ["Portfolio API (:50051) and Worker"]
+            PORT_SERVER["Portfolio gRPC Server<br/>• Deterministic Ledger Replay Engine<br/>• 3-Pillar Return Attribution Calculator<br/>• Benchmark Comparison and Risk Engine<br/>• Modified Dietz Actual/Actual Engine<br/>• Cash Flow Reconciliation Engine<br/>• Historical Valuation Snapshots and Backfill"]
+        end
+
+        subgraph UserService ["User API (:50052)"]
+            USER_SERVER["User gRPC Server<br/>• Argon2id Cryptographic Hasher (RFC 9106)<br/>• Session Family Rotation and Reuse Detection<br/>• Credential Rotation and Multi-Session Revocation<br/>• User Preferences and Supported Currencies"]
+        end
+    end
+
+    subgraph DBLayer ["PostgreSQL 17 Database (:5432/graphfolio)"]
+        PORT_DB["Portfolio Schema [portfolio_svc]<br/>• portfolios, transactions, holding_projections<br/>• tax_lots, lot_disposals, portfolio_valuations<br/>• daily_prices, fx_rates, benchmarks"]
+        USER_DB["Users Schema [user_svc]<br/>• users (password_hash, preferences, theme)<br/>• sessions (token_hash, family_id, is_revoked)"]
+    end
+
+    %% Web Monorepo Internal Bindings
+    MAIN_UI --> CLIENT_PKG
+    ADMIN_UI --> CLIENT_PKG
+    MAIN_UI -.-> UI_PKG
+    ADMIN_UI -.-> UI_PKG
+    MAIN_UI --- AUTH_CTX
+
+    %% Frontend to BFF Communication
+    CLIENT_PKG -->|"GraphQL HTTP"| BFF_MW
+    BFF_MW --> BFF_RESOLVER
+
+    %% BFF to Microservices gRPC
+    BFF_RESOLVER -->|"gRPC on :50051"| PORT_SERVER
+    BFF_RESOLVER -->|"gRPC on :50052"| USER_SERVER
+
+    %% Protobuf Contract Implementations
+    PORT_SERVER -.-> PORT_PB
+    PORT_SERVER -.-> COMMON_PB
+    USER_SERVER -.-> USER_PB
+
+    %% Microservices to Database
+    PORT_SERVER -->|"pgxpool / SQL"| PORT_DB
+    USER_SERVER -->|"pgxpool / SQL"| USER_DB
 ```
 
 ### Exact Decimal Precision
