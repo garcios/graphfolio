@@ -768,4 +768,50 @@ WHERE t.portfolio_id = $1
   AND t.type IN ('DEPOSIT', 'WITHDRAWAL', 'TRANSFER_IN', 'TRANSFER_OUT')
   AND t.trade_date >= $2 AND t.trade_date <= $3
 ORDER BY t.trade_date ASC, t.id ASC;`
+
+	listBenchmarksSQL = `
+SELECT 
+    b.id, b.name, b.index_type, b.is_default, b.display_order, b.instrument_id,
+    i.symbol, i.exchange_code, i.currency_code
+FROM portfolio.benchmarks b
+JOIN portfolio.instruments i ON b.instrument_id = i.id
+ORDER BY b.display_order ASC;`
+
+	getBenchmarkByIDSQL = `
+SELECT 
+    b.id, b.name, b.index_type, b.is_default, b.display_order, b.instrument_id,
+    i.symbol, i.exchange_code, i.currency_code
+FROM portfolio.benchmarks b
+JOIN portfolio.instruments i ON b.instrument_id = i.id
+WHERE b.id = $1;`
+
+	getBenchmarkPricesWithFXSQL = `
+SELECT 
+    p.price_date,
+    p.close AS close_price,
+    COALESCE(
+        CASE WHEN $2 = $3 THEN 1.0 ELSE NULL END,
+        direct_fx.rate,
+        CASE WHEN inverse_fx.rate > 0 THEN 1.0 / inverse_fx.rate ELSE NULL END,
+        1.0
+    ) AS fx_rate_to_base
+FROM portfolio.instrument_prices p
+LEFT JOIN LATERAL (
+    SELECT rate 
+    FROM portfolio.fx_rates 
+    WHERE base_currency = $2 AND quote_currency = $3 
+      AND rate_date <= p.price_date
+    ORDER BY rate_date DESC LIMIT 1
+) direct_fx ON ($2 <> $3)
+LEFT JOIN LATERAL (
+    SELECT rate 
+    FROM portfolio.fx_rates 
+    WHERE base_currency = $3 AND quote_currency = $2 
+      AND rate_date <= p.price_date
+    ORDER BY rate_date DESC LIMIT 1
+) inverse_fx ON ($2 <> $3)
+WHERE p.instrument_id = $1
+  AND ($4::date IS NULL OR p.price_date >= $4)
+  AND ($5::date IS NULL OR p.price_date <= $5)
+ORDER BY p.price_date ASC;`
 )

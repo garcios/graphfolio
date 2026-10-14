@@ -1149,6 +1149,162 @@ func (s *PortfolioServer) GetModifiedDietzReturn(ctx context.Context, req *pb.Ge
 	}, nil
 }
 
+func (s *PortfolioServer) ListBenchmarks(ctx context.Context, req *pb.ListBenchmarksRequest) (*pb.ListBenchmarksResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	benchmarks, err := s.svc.ListBenchmarks(ctx)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to list benchmarks: %v", err)
+	}
+
+	benchmarksProto := make([]*pb.Benchmark, len(benchmarks))
+	for i, b := range benchmarks {
+		benchmarksProto[i] = &pb.Benchmark{
+			Id:           b.ID,
+			Symbol:       b.Symbol,
+			Name:         b.Name,
+			ExchangeCode: b.ExchangeCode,
+			CurrencyCode: b.CurrencyCode,
+			IndexType:    b.IndexType,
+			IsDefault:    b.IsDefault,
+		}
+	}
+
+	return &pb.ListBenchmarksResponse{
+		Benchmarks: benchmarksProto,
+	}, nil
+}
+
+func (s *PortfolioServer) GetBenchmarkComparison(ctx context.Context, req *pb.GetBenchmarkComparisonRequest) (*pb.GetBenchmarkComparisonResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	userID := req.GetUserId()
+	if userID == "" {
+		userID = "1"
+	}
+
+	benchmarkID := req.GetBenchmarkId()
+	if benchmarkID == "" {
+		return nil, status.Error(codes.InvalidArgument, "benchmark_id cannot be empty")
+	}
+
+	var timeframe domain.HistoryTimeframe
+	switch req.GetTimeframe() {
+	case pb.HistoryTimeframe_HISTORY_TIMEFRAME_1D:
+		timeframe = domain.Timeframe1D
+	case pb.HistoryTimeframe_HISTORY_TIMEFRAME_1W:
+		timeframe = domain.Timeframe1W
+	case pb.HistoryTimeframe_HISTORY_TIMEFRAME_1M:
+		timeframe = domain.Timeframe1M
+	case pb.HistoryTimeframe_HISTORY_TIMEFRAME_1Y:
+		timeframe = domain.Timeframe1Y
+	case pb.HistoryTimeframe_HISTORY_TIMEFRAME_ALL:
+		timeframe = domain.TimeframeAll
+	default:
+		timeframe = domain.TimeframeAll
+	}
+
+	var currencyMode domain.BenchmarkCurrencyMode
+	switch req.GetCurrencyMode() {
+	case pb.BenchmarkCurrencyMode_BENCHMARK_CURRENCY_MODE_BENCHMARK_NATIVE:
+		currencyMode = domain.BenchmarkCurrencyModeBenchmarkNative
+	default:
+		currencyMode = domain.BenchmarkCurrencyModePortfolioBase
+	}
+
+	result, err := s.svc.GetBenchmarkComparison(ctx, userID, benchmarkID, timeframe, currencyMode)
+	if err != nil {
+		if errors.Is(err, repository.ErrPortfolioNotFound) || strings.Contains(err.Error(), "portfolio not found") {
+			return nil, status.Errorf(codes.NotFound, "portfolio not found for user: %s", userID)
+		}
+		if strings.Contains(err.Error(), "not found") {
+			return nil, status.Errorf(codes.NotFound, "benchmark not found: %s", benchmarkID)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get benchmark comparison: %v", err)
+	}
+
+	pointsProto := make([]*pb.BenchmarkComparisonPoint, len(result.Points))
+	for i, pt := range result.Points {
+		pointsProto[i] = &pb.BenchmarkComparisonPoint{
+			Date:                   pt.Date.Format("2006-01-02"),
+			PortfolioReturnPercent: decimalpb.ToProto(pt.PortfolioReturnPercent),
+			BenchmarkReturnPercent: decimalpb.ToProto(pt.BenchmarkReturnPercent),
+			ActiveReturnPercent:    decimalpb.ToProto(pt.ActiveReturnPercent),
+			PortfolioValue:         decimalpb.MoneyToProto(pt.PortfolioValue.Amount, pt.PortfolioValue.CurrencyCode),
+			BenchmarkPriceAdjusted: decimalpb.MoneyToProto(pt.BenchmarkPriceAdjusted.Amount, pt.BenchmarkPriceAdjusted.CurrencyCode),
+		}
+	}
+
+	var portAnn, benchAnn, activeAnn, beta, te, ir *commonpb.Decimal
+	if result.Metrics.PortfolioAnnualizedReturnPercent != nil {
+		portAnn = decimalpb.ToProto(*result.Metrics.PortfolioAnnualizedReturnPercent)
+	}
+	if result.Metrics.BenchmarkAnnualizedReturnPercent != nil {
+		benchAnn = decimalpb.ToProto(*result.Metrics.BenchmarkAnnualizedReturnPercent)
+	}
+	if result.Metrics.ActiveAnnualizedReturnPercent != nil {
+		activeAnn = decimalpb.ToProto(*result.Metrics.ActiveAnnualizedReturnPercent)
+	}
+	if result.Metrics.Beta != nil {
+		beta = decimalpb.ToProto(*result.Metrics.Beta)
+	}
+	if result.Metrics.TrackingErrorPercent != nil {
+		te = decimalpb.ToProto(*result.Metrics.TrackingErrorPercent)
+	}
+	if result.Metrics.InformationRatio != nil {
+		ir = decimalpb.ToProto(*result.Metrics.InformationRatio)
+	}
+
+	metricsProto := &pb.BenchmarkMetrics{
+		PortfolioCumulativeReturnPercent: decimalpb.ToProto(result.Metrics.PortfolioCumulativeReturnPercent),
+		BenchmarkCumulativeReturnPercent: decimalpb.ToProto(result.Metrics.BenchmarkCumulativeReturnPercent),
+		ActiveCumulativeReturnPercent:    decimalpb.ToProto(result.Metrics.ActiveCumulativeReturnPercent),
+		PortfolioAnnualizedReturnPercent: portAnn,
+		BenchmarkAnnualizedReturnPercent: benchAnn,
+		ActiveAnnualizedReturnPercent:    activeAnn,
+		IsAnnualized:                     result.Metrics.IsAnnualized,
+		Beta:                             beta,
+		TrackingErrorPercent:             te,
+		InformationRatio:                 ir,
+	}
+
+	benchProto := &pb.Benchmark{
+		Id:           result.Benchmark.ID,
+		Symbol:       result.Benchmark.Symbol,
+		Name:         result.Benchmark.Name,
+		ExchangeCode: result.Benchmark.ExchangeCode,
+		CurrencyCode: result.Benchmark.CurrencyCode,
+		IndexType:    result.Benchmark.IndexType,
+		IsDefault:    result.Benchmark.IsDefault,
+	}
+
+	var protoCurrencyMode pb.BenchmarkCurrencyMode
+	if result.CurrencyMode == domain.BenchmarkCurrencyModeBenchmarkNative {
+		protoCurrencyMode = pb.BenchmarkCurrencyMode_BENCHMARK_CURRENCY_MODE_BENCHMARK_NATIVE
+	} else {
+		protoCurrencyMode = pb.BenchmarkCurrencyMode_BENCHMARK_CURRENCY_MODE_PORTFOLIO_BASE
+	}
+
+	startDateStr := result.StartDate.Format("2006-01-02")
+	endDateStr := result.EndDate.Format("2006-01-02")
+
+	return &pb.GetBenchmarkComparisonResponse{
+		PortfolioId:  result.PortfolioID.String(),
+		BaseCurrency: result.BaseCurrency,
+		Benchmark:    benchProto,
+		CurrencyMode: protoCurrencyMode,
+		StartDate:    startDateStr,
+		EndDate:      endDateStr,
+		ElapsedDays:  int32(result.ElapsedDays),
+		Points:       pointsProto,
+		Metrics:      metricsProto,
+	}, nil
+}
+
 func mapTxTypeStringToProto(t string) pb.TransactionType {
 	switch strings.ToUpper(t) {
 	case "DEPOSIT":

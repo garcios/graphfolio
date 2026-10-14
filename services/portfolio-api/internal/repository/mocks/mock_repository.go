@@ -205,6 +205,36 @@ func (mr *MockRepositoryMockRecorder) FindPortfoliosHoldingInstrument(ctx, instr
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindPortfoliosHoldingInstrument", reflect.TypeOf((*MockRepository)(nil).FindPortfoliosHoldingInstrument), ctx, instrumentID)
 }
 
+// GetBenchmarkByID mocks base method.
+func (m *MockRepository) GetBenchmarkByID(ctx context.Context, id string) (*domain.Benchmark, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBenchmarkByID", ctx, id)
+	ret0, _ := ret[0].(*domain.Benchmark)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBenchmarkByID indicates an expected call of GetBenchmarkByID.
+func (mr *MockRepositoryMockRecorder) GetBenchmarkByID(ctx, id any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBenchmarkByID", reflect.TypeOf((*MockRepository)(nil).GetBenchmarkByID), ctx, id)
+}
+
+// GetBenchmarkPricesWithFX mocks base method.
+func (m *MockRepository) GetBenchmarkPricesWithFX(ctx context.Context, instrumentID uuid.UUID, quoteCurrency, baseCurrency string, fromDate, toDate time.Time) ([]domain.RawBenchmarkQuote, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBenchmarkPricesWithFX", ctx, instrumentID, quoteCurrency, baseCurrency, fromDate, toDate)
+	ret0, _ := ret[0].([]domain.RawBenchmarkQuote)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBenchmarkPricesWithFX indicates an expected call of GetBenchmarkPricesWithFX.
+func (mr *MockRepositoryMockRecorder) GetBenchmarkPricesWithFX(ctx, instrumentID, quoteCurrency, baseCurrency, fromDate, toDate any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBenchmarkPricesWithFX", reflect.TypeOf((*MockRepository)(nil).GetBenchmarkPricesWithFX), ctx, instrumentID, quoteCurrency, baseCurrency, fromDate, toDate)
+}
+
 // GetCashBalances mocks base method.
 func (m *MockRepository) GetCashBalances(ctx context.Context, portfolioID uuid.UUID) ([]domain.CashBalance, error) {
 	m.ctrl.T.Helper()
@@ -553,6 +583,21 @@ func (m *MockRepository) ListAllInstruments(ctx context.Context, isActive *bool,
 func (mr *MockRepositoryMockRecorder) ListAllInstruments(ctx, isActive, search any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllInstruments", reflect.TypeOf((*MockRepository)(nil).ListAllInstruments), ctx, isActive, search)
+}
+
+// ListBenchmarks mocks base method.
+func (m *MockRepository) ListBenchmarks(ctx context.Context) ([]domain.Benchmark, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListBenchmarks", ctx)
+	ret0, _ := ret[0].([]domain.Benchmark)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListBenchmarks indicates an expected call of ListBenchmarks.
+func (mr *MockRepositoryMockRecorder) ListBenchmarks(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBenchmarks", reflect.TypeOf((*MockRepository)(nil).ListBenchmarks), ctx)
 }
 
 // ListCurrencyPairs mocks base method.

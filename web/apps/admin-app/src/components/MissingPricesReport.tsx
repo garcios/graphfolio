@@ -513,12 +513,12 @@ export const MissingPricesReport: React.FC<MissingPricesReportProps> = ({ onNoti
       </Card>
 
       {/* 3. Diagnostic Ledger Table */}
-      <Card>
-        {loading && items.length === 0 ? (
-          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary, #a1a1aa)' }}>
-            Loading diagnostic report…
-          </div>
-        ) : totalCount === 0 ? (
+      {loading && items.length === 0 ? (
+        <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary, #a1a1aa)' }}>
+          Loading diagnostic report…
+        </div>
+      ) : totalCount === 0 ? (
+        <Card>
           <div className="missing-prices-report__empty">
             <div className="missing-prices-report__empty-icon">🛡️</div>
             <div className="missing-prices-report__empty-title">All Transactions Fully Priced</div>
@@ -530,9 +530,10 @@ export const MissingPricesReport: React.FC<MissingPricesReportProps> = ({ onNoti
               Re-verify Missing Prices
             </Button>
           </div>
-        ) : (
-          <>
-            <Table>
+        </Card>
+      ) : (
+        <>
+          <Table hoverable striped>
               <TableHead>
                 <TableRow>
                   <TableHeaderCell>Trade Date</TableHeaderCell>
@@ -636,7 +637,6 @@ export const MissingPricesReport: React.FC<MissingPricesReportProps> = ({ onNoti
             </div>
           </>
         )}
-      </Card>
 
       {/* 5. Historical Backfill Modal */}
       <BackfillModal

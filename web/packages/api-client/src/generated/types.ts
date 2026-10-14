@@ -9,7 +9,8 @@ export default {
         12,
         47,
         48,
-        49
+        49,
+        61
     ],
     "types": {
         "Decimal": {},
@@ -318,6 +319,25 @@ export default {
                     ],
                     "useMonthlyLinking": [
                         8
+                    ]
+                }
+            ],
+            "benchmarks": [
+                62
+            ],
+            "benchmarkComparison": [
+                65,
+                {
+                    "benchmarkId": [
+                        7,
+                        "ID!"
+                    ],
+                    "timeframe": [
+                        12,
+                        "HistoryTimeframe!"
+                    ],
+                    "currencyMode": [
+                        61
                     ]
                 }
             ],
@@ -1495,6 +1515,123 @@ export default {
             ],
             "localAmount": [
                 1
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "BenchmarkCurrencyMode": {},
+        "Benchmark": {
+            "id": [
+                7
+            ],
+            "symbol": [
+                2
+            ],
+            "name": [
+                2
+            ],
+            "exchangeCode": [
+                2
+            ],
+            "currencyCode": [
+                2
+            ],
+            "indexType": [
+                2
+            ],
+            "isDefault": [
+                8
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "BenchmarkComparisonPoint": {
+            "date": [
+                2
+            ],
+            "portfolioReturnPercent": [
+                0
+            ],
+            "benchmarkReturnPercent": [
+                0
+            ],
+            "activeReturnPercent": [
+                0
+            ],
+            "portfolioValue": [
+                1
+            ],
+            "benchmarkPriceAdjusted": [
+                1
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "BenchmarkMetrics": {
+            "portfolioCumulativeReturnPercent": [
+                0
+            ],
+            "benchmarkCumulativeReturnPercent": [
+                0
+            ],
+            "activeCumulativeReturnPercent": [
+                0
+            ],
+            "portfolioAnnualizedReturnPercent": [
+                0
+            ],
+            "benchmarkAnnualizedReturnPercent": [
+                0
+            ],
+            "activeAnnualizedReturnPercent": [
+                0
+            ],
+            "isAnnualized": [
+                8
+            ],
+            "beta": [
+                0
+            ],
+            "trackingErrorPercent": [
+                0
+            ],
+            "informationRatio": [
+                0
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "BenchmarkComparisonPayload": {
+            "portfolioId": [
+                7
+            ],
+            "baseCurrency": [
+                2
+            ],
+            "benchmark": [
+                62
+            ],
+            "currencyMode": [
+                61
+            ],
+            "startDate": [
+                2
+            ],
+            "endDate": [
+                2
+            ],
+            "elapsedDays": [
+                11
+            ],
+            "points": [
+                63
+            ],
+            "metrics": [
+                64
             ],
             "__typename": [
                 2

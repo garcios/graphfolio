@@ -673,7 +673,6 @@ func (r *queryResolver) MissingFXRateTransactions(ctx context.Context, currencyP
 	return toModelMissingFXRatesReport(resp), nil
 }
 
-
 // ModifiedDietzReturn is the resolver for the modifiedDietzReturn field.
 func (r *queryResolver) ModifiedDietzReturn(ctx context.Context, startDate string, endDate string, useMonthlyLinking *bool) (*model.ModifiedDietzReturnPayload, error) {
 	req := &pb.GetModifiedDietzReturnRequest{
@@ -690,6 +689,35 @@ func (r *queryResolver) ModifiedDietzReturn(ctx context.Context, startDate strin
 		return nil, err
 	}
 	return toModelModifiedDietzReturn(resp), nil
+}
+
+// Benchmarks is the resolver for the benchmarks field.
+func (r *queryResolver) Benchmarks(ctx context.Context) ([]*model.Benchmark, error) {
+	resp, err := r.PortfolioClient.ListBenchmarks(ctx, &pb.ListBenchmarksRequest{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list benchmarks: %w", err)
+	}
+
+	benchmarks := make([]*model.Benchmark, len(resp.GetBenchmarks()))
+	for i, b := range resp.GetBenchmarks() {
+		benchmarks[i] = toModelBenchmark(b)
+	}
+	return benchmarks, nil
+}
+
+// BenchmarkComparison is the resolver for the benchmarkComparison field.
+func (r *queryResolver) BenchmarkComparison(ctx context.Context, benchmarkID string, timeframe model.HistoryTimeframe, currencyMode *model.BenchmarkCurrencyMode) (*model.BenchmarkComparisonPayload, error) {
+	resp, err := r.PortfolioClient.GetBenchmarkComparison(ctx, &pb.GetBenchmarkComparisonRequest{
+		UserId:       "1",
+		BenchmarkId:  benchmarkID,
+		Timeframe:    toProtoHistoryTimeframe(timeframe),
+		CurrencyMode: toProtoBenchmarkCurrencyMode(currencyMode),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get benchmark comparison: %w", err)
+	}
+
+	return toModelBenchmarkComparison(resp), nil
 }
 
 // Mutation returns MutationResolver implementation.

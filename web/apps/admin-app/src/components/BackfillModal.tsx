@@ -36,37 +36,55 @@ export interface BackfillModalProps {
   onSuccess?: (result: BackfillModalResult) => void;
 }
 
-type PresetKey = '30D' | '90D' | 'YTD' | '1Y' | 'MAX';
+export type PresetKey = 'Yesterday' | '30D' | '90D' | 'YTD' | '1Y' | 'MAX';
 
-function formatISODate(d: Date): string {
-  return d.toISOString().split('T')[0];
+export function formatISODate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
-function calculatePresetDate(preset: PresetKey): string {
-  const now = new Date();
+export function calculatePresetDates(preset: PresetKey, refDate: Date = new Date()): { from: string; to: string } {
+  const todayISO = formatISODate(refDate);
   switch (preset) {
+    case 'Yesterday': {
+      const d = new Date(refDate);
+      d.setDate(d.getDate() - 1);
+      const yesterdayISO = formatISODate(d);
+      return { from: yesterdayISO, to: yesterdayISO };
+    }
     case '30D': {
-      const d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      return formatISODate(d);
+      const d = new Date(refDate);
+      d.setDate(d.getDate() - 30);
+      return { from: formatISODate(d), to: todayISO };
     }
     case '90D': {
-      const d = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-      return formatISODate(d);
+      const d = new Date(refDate);
+      d.setDate(d.getDate() - 90);
+      return { from: formatISODate(d), to: todayISO };
     }
     case 'YTD': {
-      const d = new Date(now.getFullYear(), 0, 1);
-      return formatISODate(d);
+      const d = new Date(refDate.getFullYear(), 0, 1);
+      return { from: formatISODate(d), to: todayISO };
     }
     case '1Y': {
-      const d = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-      return formatISODate(d);
+      const d = new Date(refDate);
+      d.setDate(d.getDate() - 365);
+      return { from: formatISODate(d), to: todayISO };
     }
     case 'MAX': {
-      const d = new Date(now.getFullYear() - 5, now.getMonth(), now.getDate());
-      return formatISODate(d);
+      const d = new Date(refDate.getFullYear() - 5, refDate.getMonth(), refDate.getDate());
+      return { from: formatISODate(d), to: todayISO };
     }
   }
 }
+
+export function calculatePresetDate(preset: PresetKey, refDate: Date = new Date()): string {
+  return calculatePresetDates(preset, refDate).from;
+}
+
+export const PRESET_OPTIONS: PresetKey[] = ['Yesterday', '30D', '90D', 'YTD', '1Y', 'MAX'];
 
 export const BackfillModal: React.FC<BackfillModalProps> = ({
   isOpen,
@@ -85,9 +103,11 @@ export const BackfillModal: React.FC<BackfillModalProps> = ({
 }) => {
   const [today] = useState(() => formatISODate(new Date()));
 
-  const [fromDate, setFromDate] = useState(() => initialFromDate || calculatePresetDate('30D'));
+  const [fromDate, setFromDate] = useState(() => initialFromDate || calculatePresetDates('30D').from);
   const [toDate, setToDate] = useState(() => initialToDate || formatISODate(new Date()));
-  const [activePreset, setActivePreset] = useState<PresetKey | 'CUSTOM'>('30D');
+  const [activePreset, setActivePreset] = useState<PresetKey | 'CUSTOM'>(() =>
+    initialFromDate || initialToDate ? 'CUSTOM' : '30D'
+  );
 
   const [backfillAssets, setBackfillAssets] = useState(initialBackfillAssets);
   const [assetScope, setAssetScope] = useState<'all' | 'specific'>(() =>
@@ -112,9 +132,9 @@ export const BackfillModal: React.FC<BackfillModalProps> = ({
   const [prevIsOpen, setPrevIsOpen] = useState(isOpen);
   if (isOpen && !prevIsOpen) {
     setPrevIsOpen(true);
-    setFromDate(initialFromDate || calculatePresetDate('30D'));
+    setFromDate(initialFromDate || calculatePresetDates('30D').from);
     setToDate(initialToDate || today);
-    setActivePreset('30D');
+    setActivePreset(initialFromDate || initialToDate ? 'CUSTOM' : '30D');
     setBackfillAssets(initialBackfillAssets);
     setAssetScope(initialSymbols.length > 0 ? 'specific' : 'all');
     setSymbols(initialSymbols);
@@ -130,8 +150,9 @@ export const BackfillModal: React.FC<BackfillModalProps> = ({
 
   const handlePresetClick = (preset: PresetKey) => {
     setActivePreset(preset);
-    setFromDate(calculatePresetDate(preset));
-    setToDate(today);
+    const dates = calculatePresetDates(preset);
+    setFromDate(dates.from);
+    setToDate(dates.to);
   };
 
   const handleFromDateChange = (val: string) => {
@@ -328,7 +349,7 @@ export const BackfillModal: React.FC<BackfillModalProps> = ({
               {/* Quick Presets */}
               <div className="backfill-modal__presets">
                 <span className="backfill-modal__presets-label">Presets:</span>
-                {(['30D', '90D', 'YTD', '1Y', 'MAX'] as PresetKey[]).map((preset) => (
+                {PRESET_OPTIONS.map((preset) => (
                   <button
                     key={preset}
                     type="button"

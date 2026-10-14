@@ -47,6 +47,8 @@ const (
 	PortfolioService_RebuildValuations_FullMethodName             = "/portfolio.v1.PortfolioService/RebuildValuations"
 	PortfolioService_GetCashFlowReport_FullMethodName             = "/portfolio.v1.PortfolioService/GetCashFlowReport"
 	PortfolioService_GetModifiedDietzReturn_FullMethodName        = "/portfolio.v1.PortfolioService/GetModifiedDietzReturn"
+	PortfolioService_ListBenchmarks_FullMethodName                = "/portfolio.v1.PortfolioService/ListBenchmarks"
+	PortfolioService_GetBenchmarkComparison_FullMethodName        = "/portfolio.v1.PortfolioService/GetBenchmarkComparison"
 )
 
 // PortfolioServiceClient is the client API for PortfolioService service.
@@ -92,6 +94,9 @@ type PortfolioServiceClient interface {
 	GetCashFlowReport(ctx context.Context, in *GetCashFlowReportRequest, opts ...grpc.CallOption) (*GetCashFlowReportResponse, error)
 	// Return Analytics: Modified Dietz Method
 	GetModifiedDietzReturn(ctx context.Context, in *GetModifiedDietzReturnRequest, opts ...grpc.CallOption) (*GetModifiedDietzReturnResponse, error)
+	// Benchmark Comparison & Relative Performance Analytics
+	ListBenchmarks(ctx context.Context, in *ListBenchmarksRequest, opts ...grpc.CallOption) (*ListBenchmarksResponse, error)
+	GetBenchmarkComparison(ctx context.Context, in *GetBenchmarkComparisonRequest, opts ...grpc.CallOption) (*GetBenchmarkComparisonResponse, error)
 }
 
 type portfolioServiceClient struct {
@@ -354,6 +359,24 @@ func (c *portfolioServiceClient) GetModifiedDietzReturn(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *portfolioServiceClient) ListBenchmarks(ctx context.Context, in *ListBenchmarksRequest, opts ...grpc.CallOption) (*ListBenchmarksResponse, error) {
+	out := new(ListBenchmarksResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_ListBenchmarks_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portfolioServiceClient) GetBenchmarkComparison(ctx context.Context, in *GetBenchmarkComparisonRequest, opts ...grpc.CallOption) (*GetBenchmarkComparisonResponse, error) {
+	out := new(GetBenchmarkComparisonResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_GetBenchmarkComparison_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PortfolioServiceServer is the server API for PortfolioService service.
 // All implementations must embed UnimplementedPortfolioServiceServer
 // for forward compatibility
@@ -397,6 +420,9 @@ type PortfolioServiceServer interface {
 	GetCashFlowReport(context.Context, *GetCashFlowReportRequest) (*GetCashFlowReportResponse, error)
 	// Return Analytics: Modified Dietz Method
 	GetModifiedDietzReturn(context.Context, *GetModifiedDietzReturnRequest) (*GetModifiedDietzReturnResponse, error)
+	// Benchmark Comparison & Relative Performance Analytics
+	ListBenchmarks(context.Context, *ListBenchmarksRequest) (*ListBenchmarksResponse, error)
+	GetBenchmarkComparison(context.Context, *GetBenchmarkComparisonRequest) (*GetBenchmarkComparisonResponse, error)
 	mustEmbedUnimplementedPortfolioServiceServer()
 }
 
@@ -487,6 +513,12 @@ func (UnimplementedPortfolioServiceServer) GetCashFlowReport(context.Context, *G
 }
 func (UnimplementedPortfolioServiceServer) GetModifiedDietzReturn(context.Context, *GetModifiedDietzReturnRequest) (*GetModifiedDietzReturnResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetModifiedDietzReturn not implemented")
+}
+func (UnimplementedPortfolioServiceServer) ListBenchmarks(context.Context, *ListBenchmarksRequest) (*ListBenchmarksResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListBenchmarks not implemented")
+}
+func (UnimplementedPortfolioServiceServer) GetBenchmarkComparison(context.Context, *GetBenchmarkComparisonRequest) (*GetBenchmarkComparisonResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetBenchmarkComparison not implemented")
 }
 func (UnimplementedPortfolioServiceServer) mustEmbedUnimplementedPortfolioServiceServer() {}
 
@@ -1005,6 +1037,42 @@ func _PortfolioService_GetModifiedDietzReturn_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortfolioService_ListBenchmarks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListBenchmarksRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).ListBenchmarks(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_ListBenchmarks_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).ListBenchmarks(ctx, req.(*ListBenchmarksRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortfolioService_GetBenchmarkComparison_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetBenchmarkComparisonRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).GetBenchmarkComparison(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_GetBenchmarkComparison_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).GetBenchmarkComparison(ctx, req.(*GetBenchmarkComparisonRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PortfolioService_ServiceDesc is the grpc.ServiceDesc for PortfolioService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1123,6 +1191,14 @@ var PortfolioService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetModifiedDietzReturn",
 			Handler:    _PortfolioService_GetModifiedDietzReturn_Handler,
+		},
+		{
+			MethodName: "ListBenchmarks",
+			Handler:    _PortfolioService_ListBenchmarks_Handler,
+		},
+		{
+			MethodName: "GetBenchmarkComparison",
+			Handler:    _PortfolioService_GetBenchmarkComparison_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

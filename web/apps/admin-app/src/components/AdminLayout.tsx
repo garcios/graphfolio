@@ -36,8 +36,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             className={`admin-nav-item ${currentTab === 'assets' ? 'admin-nav-item--active' : ''}`}
             onClick={() => onTabChange('assets')}
           >
-            <span>📊</span>
-            <span>Asset Management</span>
+            <span className="admin-nav-item__icon">📊</span>
+            <span className="admin-nav-item__label">Asset Management</span>
           </button>
 
           <button
@@ -45,8 +45,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             className={`admin-nav-item ${currentTab === 'prices' ? 'admin-nav-item--active' : ''}`}
             onClick={() => onTabChange('prices')}
           >
-            <span>📈</span>
-            <span>Market Prices</span>
+            <span className="admin-nav-item__icon">📈</span>
+            <span className="admin-nav-item__label">Market Prices</span>
           </button>
 
           <button
@@ -54,8 +54,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             className={`admin-nav-item ${currentTab === 'missing-prices' ? 'admin-nav-item--active' : ''}`}
             onClick={() => onTabChange('missing-prices')}
           >
-            <span>⚠️</span>
-            <span>Missing Prices</span>
+            <span className="admin-nav-item__icon">⚠️</span>
+            <span className="admin-nav-item__label">Missing Prices</span>
             {typeof missingPriceCount === 'number' && missingPriceCount > 0 && (
               <Badge variant="warning">{missingPriceCount}</Badge>
             )}
@@ -66,8 +66,11 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             className={`admin-nav-item ${currentTab === 'missing-fx' ? 'admin-nav-item--active' : ''}`}
             onClick={() => onTabChange('missing-fx')}
           >
-            <span>💱⚠️</span>
-            <span>Missing FX Rates</span>
+            <span className="admin-nav-item__icon admin-nav-item__icon--composite">
+              <span className="admin-nav-item__icon-base">💱</span>
+              <span className="admin-nav-item__icon-badge">⚠️</span>
+            </span>
+            <span className="admin-nav-item__label">Missing FX Rates</span>
             {typeof missingFXCount === 'number' && missingFXCount > 0 && (
               <Badge variant="warning">{missingFXCount}</Badge>
             )}
@@ -78,8 +81,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             className={`admin-nav-item ${currentTab === 'fx' ? 'admin-nav-item--active' : ''}`}
             onClick={() => onTabChange('fx')}
           >
-            <span>💱</span>
-            <span>Currency Pairs (FX)</span>
+            <span className="admin-nav-item__icon">💱</span>
+            <span className="admin-nav-item__label">Currency Pairs (FX)</span>
           </button>
 
           <button
@@ -87,8 +90,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             className={`admin-nav-item ${currentTab === 'ingestion' ? 'admin-nav-item--active' : ''}`}
             onClick={() => onTabChange('ingestion')}
           >
-            <span>⚡</span>
-            <span>Ingestion Pipeline</span>
+            <span className="admin-nav-item__icon">⚡</span>
+            <span className="admin-nav-item__label">Ingestion Pipeline</span>
           </button>
         </nav>
 
