@@ -10,10 +10,12 @@ import (
 
 // InstrumentRef represents an authoritative reference to an instrument for market data queries.
 type InstrumentRef struct {
-	ID       uuid.UUID
-	Symbol   string
-	Exchange string
-	Currency string
+	ID             uuid.UUID
+	Symbol         string
+	Exchange       string
+	Currency       string
+	ProviderSymbol string // Optional provider-specific ticker override
+	IsTotalReturn  bool   // Whether to prioritize adjusted close (adjclose) for total return
 }
 
 // CurrencyPair represents an ISO 4217 base and quote currency tuple (e.g. Base: USD, Quote: EUR).

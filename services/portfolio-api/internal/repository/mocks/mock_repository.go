@@ -585,6 +585,21 @@ func (mr *MockRepositoryMockRecorder) ListAllInstruments(ctx, isActive, search a
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListAllInstruments", reflect.TypeOf((*MockRepository)(nil).ListAllInstruments), ctx, isActive, search)
 }
 
+// ListBenchmarkInstruments mocks base method.
+func (m *MockRepository) ListBenchmarkInstruments(ctx context.Context) ([]domain.Instrument, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListBenchmarkInstruments", ctx)
+	ret0, _ := ret[0].([]domain.Instrument)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListBenchmarkInstruments indicates an expected call of ListBenchmarkInstruments.
+func (mr *MockRepositoryMockRecorder) ListBenchmarkInstruments(ctx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListBenchmarkInstruments", reflect.TypeOf((*MockRepository)(nil).ListBenchmarkInstruments), ctx)
+}
+
 // ListBenchmarks mocks base method.
 func (m *MockRepository) ListBenchmarks(ctx context.Context) ([]domain.Benchmark, error) {
 	m.ctrl.T.Helper()

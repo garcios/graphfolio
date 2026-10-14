@@ -299,7 +299,23 @@ func (s *portfolioService) TriggerBackfill(ctx context.Context, input domain.Bac
 			if err != nil {
 				return nil, fmt.Errorf("failed to list active instruments: %w", err)
 			}
-			instrumentsToBackfill = activeInsts
+			benchInsts, err := s.repo.ListBenchmarkInstruments(ctx)
+			if err != nil {
+				warnings = append(warnings, fmt.Sprintf("failed to list benchmark instruments: %v", err))
+			}
+			seen := make(map[uuid.UUID]bool)
+			for _, inst := range activeInsts {
+				if !seen[inst.ID] {
+					seen[inst.ID] = true
+					instrumentsToBackfill = append(instrumentsToBackfill, inst)
+				}
+			}
+			for _, inst := range benchInsts {
+				if !seen[inst.ID] {
+					seen[inst.ID] = true
+					instrumentsToBackfill = append(instrumentsToBackfill, inst)
+				}
+			}
 		}
 
 		for _, inst := range instrumentsToBackfill {
@@ -464,4 +480,3 @@ func (s *portfolioService) ListMissingFXRateTransactions(ctx context.Context, fi
 	}
 	return report, nil
 }
-

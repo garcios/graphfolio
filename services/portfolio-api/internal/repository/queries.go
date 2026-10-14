@@ -814,4 +814,13 @@ WHERE p.instrument_id = $1
   AND ($4::date IS NULL OR p.price_date >= $4)
   AND ($5::date IS NULL OR p.price_date <= $5)
 ORDER BY p.price_date ASC;`
+
+	listBenchmarkInstrumentsSQL = `
+SELECT 
+    i.id, i.symbol, i.exchange_code, i.name, i.asset_class, 
+    i.currency_code, i.isin, i.is_active
+FROM portfolio.benchmarks b
+JOIN portfolio.instruments i ON b.instrument_id = i.id
+WHERE i.is_active = true
+ORDER BY b.display_order ASC;`
 )

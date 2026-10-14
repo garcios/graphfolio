@@ -1,7 +1,9 @@
 package marketdata
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -329,6 +331,196 @@ func TestResilientPriceProvider(t *testing.T) {
 		}
 		if records[0].Symbol != "MSFT" {
 			t.Errorf("expected MSFT record, got %s", records[0].Symbol)
+		}
+	})
+}
+
+func TestBenchmarkSymbologyResolution(t *testing.T) {
+	t.Run("TwelveData resolves SP500TR to SPY", func(t *testing.T) {
+		inst := InstrumentRef{Symbol: "SP500TR", Exchange: "XNYS"}
+		sym := resolveTwelveDataSymbol(inst)
+		if sym != "SPY" {
+			t.Errorf("expected SPY, got %s", sym)
+		}
+	})
+
+	t.Run("TwelveData preserves standard symbols", func(t *testing.T) {
+		inst := InstrumentRef{Symbol: "AAPL", Exchange: "XNAS"}
+		sym := resolveTwelveDataSymbol(inst)
+		if sym != "AAPL" {
+			t.Errorf("expected AAPL, got %s", sym)
+		}
+	})
+
+	t.Run("TwelveData respects ProviderSymbol override", func(t *testing.T) {
+		inst := InstrumentRef{Symbol: "CUSTOM_INDEX", ProviderSymbol: "IDX_PROXY"}
+		sym := resolveTwelveDataSymbol(inst)
+		if sym != "IDX_PROXY" {
+			t.Errorf("expected IDX_PROXY, got %s", sym)
+		}
+	})
+
+	t.Run("Yahoo resolves SP500TR to ^SP500TR", func(t *testing.T) {
+		inst := InstrumentRef{Symbol: "SP500TR"}
+		sym := resolveYahooSymbol(inst)
+		if sym != "^SP500TR" {
+			t.Errorf("expected ^SP500TR, got %s", sym)
+		}
+	})
+
+	t.Run("Yahoo resolves international exchanges correctly", func(t *testing.T) {
+		tests := []struct {
+			symbol   string
+			exchange string
+			expected string
+		}{
+			{"VAS", "XASX", "VAS.AX"},
+			{"VAS", "ASX", "VAS.AX"},
+			{"VAS.AX", "XASX", "VAS.AX"},
+			{"SHEL", "XLON", "SHEL.L"},
+			{"SHEL", "LSE", "SHEL.L"},
+			{"SAP", "XFRA", "SAP.DE"},
+			{"SAP", "XETR", "SAP.DE"},
+			{"SHOP", "XTSE", "SHOP.TO"},
+			{"SHOP", "TSX", "SHOP.TO"},
+			{"AAPL", "XNAS", "AAPL"},
+		}
+
+		for _, tc := range tests {
+			inst := InstrumentRef{Symbol: tc.symbol, Exchange: tc.exchange}
+			got := resolveYahooSymbol(inst)
+			if got != tc.expected {
+				t.Errorf("for %s on %s: expected %s, got %s", tc.symbol, tc.exchange, tc.expected, got)
+			}
+		}
+	})
+
+	t.Run("Yahoo respects ProviderSymbol override", func(t *testing.T) {
+		inst := InstrumentRef{Symbol: "VAS", Exchange: "XASX", ProviderSymbol: "CUSTOM.AX"}
+		sym := resolveYahooSymbol(inst)
+		if sym != "CUSTOM.AX" {
+			t.Errorf("expected CUSTOM.AX, got %s", sym)
+		}
+	})
+}
+
+func TestTwelveDataExchangeParam(t *testing.T) {
+	tests := []struct {
+		exchange string
+		wantKey  string
+		wantVal  string
+	}{
+		{"XASX", "mic_code", "XASX"},
+		{"XNYS", "mic_code", "XNYS"},
+		{"ASX", "exchange", "ASX"},
+		{"NASDAQ", "exchange", "NASDAQ"},
+		{"", "", ""},
+	}
+
+	for _, tc := range tests {
+		k, v := twelveDataExchangeParam(tc.exchange)
+		if k != tc.wantKey || v != tc.wantVal {
+			t.Errorf("for exchange %q: got (%q, %q), want (%q, %q)", tc.exchange, k, v, tc.wantKey, tc.wantVal)
+		}
+	}
+}
+
+type roundTripperFunc func(*http.Request) (*http.Response, error)
+
+func (f roundTripperFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req)
+}
+
+func TestYahooFinanceProvider_AdjCloseForTotalReturn(t *testing.T) {
+	chartJSON := `{
+  "chart": {
+    "result": [
+      {
+        "meta": {
+          "currency": "USD",
+          "symbol": "SPY"
+        },
+        "timestamp": [1790947200],
+        "indicators": {
+          "quote": [
+            {
+              "close": [500.00]
+            }
+          ],
+          "adjclose": [
+            {
+              "adjclose": [580.50]
+            }
+          ]
+        }
+      }
+    ],
+    "error": null
+  }
+}`
+
+	mockClient := &http.Client{
+		Transport: roundTripperFunc(func(req *http.Request) (*http.Response, error) {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Status:     "200 OK",
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+				Body:       io.NopCloser(bytes.NewReader([]byte(chartJSON))),
+			}, nil
+		}),
+	}
+
+	provider := NewYahooFinanceProvider(YahooFinanceConfig{
+		BaseURL:    "https://query1.finance.yahoo.com",
+		HTTPClient: mockClient,
+		RetryCfg: RetryConfig{
+			MaxRetries: 0,
+		},
+	})
+
+	tradeDate := time.Unix(1790947200, 0).UTC().Truncate(24 * time.Hour)
+
+	t.Run("extracts adjclose when IsTotalReturn is true", func(t *testing.T) {
+		inst := InstrumentRef{
+			ID:            uuid.New(),
+			Symbol:        "SPY",
+			Exchange:      "XNYS",
+			Currency:      "USD",
+			IsTotalReturn: true,
+		}
+
+		records, err := provider.FetchHistoricalPrices(context.Background(), inst, tradeDate, tradeDate)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(records) != 1 {
+			t.Fatalf("expected 1 record, got %d", len(records))
+		}
+		expected := decimal.RequireFromString("580.50")
+		if !records[0].ClosePrice.Equal(expected) {
+			t.Errorf("expected total return adjclose %s, got %s", expected, records[0].ClosePrice)
+		}
+	})
+
+	t.Run("extracts unadjusted close when IsTotalReturn is false", func(t *testing.T) {
+		inst := InstrumentRef{
+			ID:            uuid.New(),
+			Symbol:        "SPY",
+			Exchange:      "XNYS",
+			Currency:      "USD",
+			IsTotalReturn: false,
+		}
+
+		records, err := provider.FetchHistoricalPrices(context.Background(), inst, tradeDate, tradeDate)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(records) != 1 {
+			t.Fatalf("expected 1 record, got %d", len(records))
+		}
+		expected := decimal.RequireFromString("500.00")
+		if !records[0].ClosePrice.Equal(expected) {
+			t.Errorf("expected unadjusted close %s, got %s", expected, records[0].ClosePrice)
 		}
 	})
 }

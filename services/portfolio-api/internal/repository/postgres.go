@@ -1923,3 +1923,32 @@ func (r *PostgresRepository) GetBenchmarkPricesWithFX(
 
 	return quotes, rows.Err()
 }
+
+func (r *PostgresRepository) ListBenchmarkInstruments(ctx context.Context) ([]domain.Instrument, error) {
+	rows, err := r.pool.Query(ctx, listBenchmarkInstrumentsSQL)
+	if err != nil {
+		return nil, fmt.Errorf("repository: list benchmark instruments failed: %w", err)
+	}
+	defer rows.Close()
+
+	var insts []domain.Instrument
+	for rows.Next() {
+		var inst domain.Instrument
+		err := rows.Scan(
+			&inst.ID,
+			&inst.Symbol,
+			&inst.ExchangeCode,
+			&inst.Name,
+			&inst.AssetClass,
+			&inst.CurrencyCode,
+			&inst.ISIN,
+			&inst.IsActive,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("repository: scan benchmark instrument failed: %w", err)
+		}
+		insts = append(insts, inst)
+	}
+
+	return insts, rows.Err()
+}

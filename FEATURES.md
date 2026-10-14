@@ -41,6 +41,7 @@ This document catalogs all implemented features, in-progress components, and pla
 | **31** | **Modified Dietz Annualized Return & Cash-Flow Weighting** | **DONE** | Proto, Svc, BFF, Web | [annualized-return-modified-dietz-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/annualized-return-modified-dietz-implementation-plan.md) |
 | **32** | **Missing FX Rates Report & Date Range Backfill (Admin Portal)** | **DONE** | Proto, Svc, BFF, Web | [admin-missing-fx-rates-report-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-missing-fx-rates-report-implementation-plan.md) |
 | **33** | **Portfolio Benchmark Comparison & Relative Performance Analytics (S&P 500, NASDAQ-100, ASX 200)** | **DONE** | Database, Proto, Svc, BFF, Web | [benchmark-performance-comparison-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/benchmark-performance-comparison-implementation-plan.md) |
+| **34** | **Benchmark Instrument Market Price Ingestion & Historical Backfill** | **PLANNED** | Market Data, Database, Svc, Worker, Admin | [benchmark-instrument-price-ingestion-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/benchmark-instrument-price-ingestion-plan.md) |
 
 
 
@@ -531,6 +532,18 @@ This document catalogs all implemented features, in-progress components, and pla
   - Granular record split metrics displaying successful vs failed rows (`420 ok / 12 fail`).
   - Single-pass `COUNT(*) OVER()` pagination with server-side sorting by start date.
   - Interactive drawer/modal to inspect error diagnostics, stack traces, and execution parameters for failed imports.
+
+### 3.4 Benchmark Instrument Market Price Ingestion & Historical Backfill
+- **Status**: **PLANNED**
+- **User Story**: [benchmark-instrument-price-ingestion.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/benchmark-instrument-price-ingestion.md) (`US-MKT-016`)
+- **Plan Reference**: [benchmark-instrument-price-ingestion-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/benchmark-instrument-price-ingestion-plan.md)
+- **Scope**: Market Data (`services/portfolio-api/internal/marketdata`), Database (`portfolio.benchmarks`, `portfolio.instrument_prices`), CLI Worker (`cmd/market-ingest/`), Admin Portal (`web/apps/admin-app`)
+- **Highlights**:
+  - Dedicated benchmark discovery query integrating all `portfolio.benchmarks` rows into the daily EOD sync workflow, regardless of whether any user holds them.
+  - Multi-provider ticker and symbol resolution (e.g. mapping internal `SP500TR` to Yahoo `^SP500TR` or ETF proxy `SPY`, and `VAS` with `XASX` to `VAS.AX`).
+  - Total Return adjusted close (`adjclose`) ingestion for ETF proxies to ensure multi-year reinvested dividend comparability and eliminate dividend bias.
+  - Multi-year historical backfill capability via CLI (`cmd/market-ingest -symbol SP500TR -from 2020-01-01`) and Admin backfill triggers.
+  - Integration with Admin Portal `MissingPricesReport` to identify and backfill missing benchmark quotes with a single click.
 
 ---
 
