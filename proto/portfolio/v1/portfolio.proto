@@ -15,6 +15,7 @@ service PortfolioService {
   rpc GetPortfolioHistory(GetPortfolioHistoryRequest) returns (GetPortfolioHistoryResponse) {}
   rpc ListTransactions(ListTransactionsRequest) returns (ListTransactionsResponse) {}
   rpc DeleteTransaction(DeleteTransactionRequest) returns (DeleteTransactionResponse) {}
+  rpc UpdateTransaction(UpdateTransactionRequest) returns (UpdateTransactionResponse) {}
 
   // Multi-Broker CSV Ingestion & Deduplication
   rpc CheckTransactionDuplicates(CheckTransactionDuplicatesRequest) returns (CheckTransactionDuplicatesResponse) {}
@@ -255,6 +256,28 @@ message DeleteTransactionRequest {
 message DeleteTransactionResponse {
   bool      success   = 1;
   Portfolio portfolio = 2; // Recomputed portfolio metrics
+}
+
+message UpdateTransactionRequest {
+  string                    user_id           = 1;
+  string                    transaction_id    = 2;
+  TransactionType           type              = 3;
+  string                    trade_date        = 4; // YYYY-MM-DD
+  optional string           symbol            = 5; // e.g. "AAPL" (optional for DEPOSIT/WITHDRAWAL)
+  optional common.v1.Decimal quantity         = 6; // Required for BUY/SELL/SPLIT
+  optional common.v1.Money  price             = 7; // Unit price
+  common.v1.Money           amount            = 8; // Total cash flow / value
+  optional common.v1.Money  fee               = 9; // Brokerage fee
+  optional string           notes             = 10;
+  optional common.v1.Decimal fx_rate_to_base  = 11; // Optional manual override
+  optional string           currency_code     = 12; // Cash or execution currency code
+  optional string           fee_currency_code = 13;
+}
+
+message UpdateTransactionResponse {
+  bool            success     = 1;
+  TransactionItem transaction = 2;
+  Portfolio       portfolio   = 3; // Recomputed portfolio snapshot
 }
 
 // ------------------------------------------------------------------

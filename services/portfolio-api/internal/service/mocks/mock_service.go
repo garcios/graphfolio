@@ -531,3 +531,19 @@ func (mr *MockPortfolioServiceMockRecorder) UpdatePortfolioBaseCurrency(ctx, use
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePortfolioBaseCurrency", reflect.TypeOf((*MockPortfolioService)(nil).UpdatePortfolioBaseCurrency), ctx, userID, baseCurrency)
 }
+
+// UpdateTransaction mocks base method.
+func (m *MockPortfolioService) UpdateTransaction(ctx context.Context, input domain.UpdateTransactionInput) (*domain.TransactionWithInstrument, *domain.PortfolioSummary, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateTransaction", ctx, input)
+	ret0, _ := ret[0].(*domain.TransactionWithInstrument)
+	ret1, _ := ret[1].(*domain.PortfolioSummary)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// UpdateTransaction indicates an expected call of UpdateTransaction.
+func (mr *MockPortfolioServiceMockRecorder) UpdateTransaction(ctx, input any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTransaction", reflect.TypeOf((*MockPortfolioService)(nil).UpdateTransaction), ctx, input)
+}

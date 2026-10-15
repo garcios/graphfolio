@@ -104,6 +104,7 @@ type fakePortfolioClient struct {
 	getPortfolioHistoryFn          func(ctx context.Context, in *pb.GetPortfolioHistoryRequest) (*pb.GetPortfolioHistoryResponse, error)
 	listTransactionsFn             func(ctx context.Context, in *pb.ListTransactionsRequest) (*pb.ListTransactionsResponse, error)
 	deleteTransactionFn            func(ctx context.Context, in *pb.DeleteTransactionRequest) (*pb.DeleteTransactionResponse, error)
+	updateTransactionFn            func(ctx context.Context, in *pb.UpdateTransactionRequest) (*pb.UpdateTransactionResponse, error)
 	listAllInstrumentsFn           func(ctx context.Context, in *pb.ListAllInstrumentsRequest) (*pb.ListAllInstrumentsResponse, error)
 	createInstrumentFn             func(ctx context.Context, in *pb.CreateInstrumentRequest) (*pb.CreateInstrumentResponse, error)
 	updateInstrumentFn             func(ctx context.Context, in *pb.UpdateInstrumentRequest) (*pb.UpdateInstrumentResponse, error)
@@ -181,6 +182,13 @@ func (f *fakePortfolioClient) ListTransactions(ctx context.Context, in *pb.ListT
 func (f *fakePortfolioClient) DeleteTransaction(ctx context.Context, in *pb.DeleteTransactionRequest, opts ...grpc.CallOption) (*pb.DeleteTransactionResponse, error) {
 	if f.deleteTransactionFn != nil {
 		return f.deleteTransactionFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakePortfolioClient) UpdateTransaction(ctx context.Context, in *pb.UpdateTransactionRequest, opts ...grpc.CallOption) (*pb.UpdateTransactionResponse, error) {
+	if f.updateTransactionFn != nil {
+		return f.updateTransactionFn(ctx, in)
 	}
 	return nil, nil
 }
@@ -1016,6 +1024,85 @@ func TestMutationResolver_DeleteTransaction(t *testing.T) {
 		}
 		if err != context.DeadlineExceeded {
 			t.Errorf("expected DeadlineExceeded, got %v", err)
+		}
+	})
+}
+
+func TestMutationResolver_UpdateTransaction(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully updates transaction and returns payload", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			updateTransactionFn: func(ctx context.Context, in *pb.UpdateTransactionRequest) (*pb.UpdateTransactionResponse, error) {
+				if in.TransactionId != "tx-123" {
+					t.Errorf("expected transaction id tx-123, got %s", in.TransactionId)
+				}
+				if in.Type != pb.TransactionType_TRANSACTION_TYPE_BUY {
+					t.Errorf("expected BUY, got %v", in.Type)
+				}
+				return &pb.UpdateTransactionResponse{
+					Success: true,
+					Transaction: &pb.TransactionItem{
+						Id:        "tx-123",
+						Type:      pb.TransactionType_TRANSACTION_TYPE_BUY,
+						Symbol:    "AAPL",
+						TradeDate: "2025-04-12",
+						Amount:    &commonpb.Money{Amount: &commonpb.Decimal{Value: "9000.00"}, CurrencyCode: "USD"},
+						Fee:       &commonpb.Money{Amount: &commonpb.Decimal{Value: "5.00"}, CurrencyCode: "USD"},
+					},
+					Portfolio: &pb.Portfolio{
+						TotalValue: &commonpb.Money{Amount: &commonpb.Decimal{Value: "150000.00"}, CurrencyCode: "USD"},
+					},
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		mResolver := resolver.Mutation()
+
+		sym := "AAPL"
+		qty := model.FromDecimal(decimal.RequireFromString("50"))
+		price := model.FromDecimal(decimal.RequireFromString("180.00"))
+		amount := model.FromDecimal(decimal.RequireFromString("9000.00"))
+		fee := model.FromDecimal(decimal.RequireFromString("5.00"))
+
+		payload, err := mResolver.UpdateTransaction(ctx, "tx-123", model.UpdateTransactionInput{
+			Type:      model.TransactionTypeBuy,
+			Symbol:    &sym,
+			TradeDate: "2025-04-12",
+			Quantity:  &qty,
+			Price:     &price,
+			Amount:    amount,
+			Fee:       &fee,
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if payload == nil || !payload.Success {
+			t.Fatalf("expected success payload")
+		}
+		if *payload.Transaction.Symbol != "AAPL" {
+			t.Errorf("expected symbol AAPL, got %s", *payload.Transaction.Symbol)
+		}
+	})
+
+	t.Run("propagates error on failure", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			updateTransactionFn: func(ctx context.Context, in *pb.UpdateTransactionRequest) (*pb.UpdateTransactionResponse, error) {
+				return nil, errors.New("negative share inventory")
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		mResolver := resolver.Mutation()
+
+		_, err := mResolver.UpdateTransaction(ctx, "tx-123", model.UpdateTransactionInput{
+			Type:      model.TransactionTypeBuy,
+			TradeDate: "2025-04-12",
+			Amount:    model.FromDecimal(decimal.RequireFromString("100")),
+		})
+		if err == nil {
+			t.Fatal("expected error, got nil")
 		}
 	})
 }

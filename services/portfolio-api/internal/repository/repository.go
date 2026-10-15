@@ -36,6 +36,8 @@ type Repository interface {
 	ListTransactions(ctx context.Context, portfolioID uuid.UUID, filter domain.TransactionFilter) ([]domain.TransactionWithInstrument, int, error)
 	GetCashFlowTransactions(ctx context.Context, portfolioID uuid.UUID, toDate time.Time) ([]domain.TransactionWithInstrument, error)
 	DeleteTransaction(ctx context.Context, portfolioID uuid.UUID, transactionID uuid.UUID) error
+	GetTransactionByID(ctx context.Context, portfolioID uuid.UUID, transactionID uuid.UUID) (*domain.Transaction, error)
+	UpdateTransaction(ctx context.Context, portfolioID uuid.UUID, tx domain.Transaction) (*domain.Transaction, error)
 	FindInstrumentBySymbol(ctx context.Context, symbol string) (*domain.Instrument, error)
 	ListActiveInstruments(ctx context.Context) ([]domain.Instrument, error)
 	GetFXRate(ctx context.Context, fromCurrency, toCurrency string) (decimal.Decimal, error)

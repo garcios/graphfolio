@@ -332,6 +332,32 @@ LIMIT $4 OFFSET $5;`
 DELETE FROM portfolio.transactions
 WHERE id = $1 AND portfolio_id = $2;`
 
+	getTransactionByIDSQL = `
+SELECT 
+    id, portfolio_id, instrument_id, type, trade_date, quantity, price, amount,
+    currency_code, fee, withholding_tax, fx_rate_to_base, external_ref, notes,
+    fee_currency_code
+FROM portfolio.transactions
+WHERE id = $1 AND portfolio_id = $2;`
+
+	updateTransactionSQL = `
+UPDATE portfolio.transactions
+SET 
+    instrument_id     = $1,
+    type              = $2::portfolio.transaction_type,
+    trade_date        = $3,
+    quantity          = $4,
+    price             = $5,
+    amount            = $6,
+    currency_code     = $7,
+    fee               = $8,
+    fee_currency_code = $9,
+    fx_rate_to_base   = $10,
+    notes             = $11
+WHERE id = $12 AND portfolio_id = $13
+RETURNING id, portfolio_id, instrument_id, type, trade_date, quantity, price, amount,
+          currency_code, fee, withholding_tax, fx_rate_to_base, external_ref, notes, fee_currency_code;`
+
 	listAllInstrumentsSQL = `
 SELECT id, symbol, exchange_code, name, asset_class, currency_code, isin, is_active
 FROM portfolio.instruments

@@ -6,8 +6,8 @@
 export type Scalars = {
     Decimal: any,
     String: string,
-    ID: string,
     Boolean: boolean,
+    ID: string,
     Int: number,
 }
 
@@ -23,6 +23,13 @@ export interface AddTransactionPayload {
     transactionId: Scalars['String']
     portfolio: Portfolio
     __typename: 'AddTransactionPayload'
+}
+
+export interface UpdateTransactionPayload {
+    success: Scalars['Boolean']
+    transaction: TransactionItem
+    portfolio: Portfolio
+    __typename: 'UpdateTransactionPayload'
 }
 
 export interface Instrument {
@@ -131,6 +138,7 @@ export interface DeleteInstrumentPayload {
 export interface Mutation {
     addTransaction: AddTransactionPayload
     deleteTransaction: DeleteTransactionPayload
+    updateTransaction: UpdateTransactionPayload
     createInstrument: Instrument
     updateInstrument: Instrument
     deleteInstrument: DeleteInstrumentPayload
@@ -551,6 +559,16 @@ export interface AddTransactionPayloadGenqlSelection{
     __scalar?: boolean | number
 }
 
+export interface UpdateTransactionInput {type: TransactionType,symbol?: (Scalars['String'] | null),tradeDate: Scalars['String'],quantity?: (Scalars['Decimal'] | null),price?: (Scalars['Decimal'] | null),amount: Scalars['Decimal'],currencyCode?: (Scalars['String'] | null),fee?: (Scalars['Decimal'] | null),feeCurrencyCode?: (Scalars['String'] | null),notes?: (Scalars['String'] | null)}
+
+export interface UpdateTransactionPayloadGenqlSelection{
+    success?: boolean | number
+    transaction?: TransactionItemGenqlSelection
+    portfolio?: PortfolioGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
 export interface InstrumentGenqlSelection{
     id?: boolean | number
     symbol?: boolean | number
@@ -664,6 +682,7 @@ export interface DeleteInstrumentPayloadGenqlSelection{
 export interface MutationGenqlSelection{
     addTransaction?: (AddTransactionPayloadGenqlSelection & { __args: {input: AddTransactionInput} })
     deleteTransaction?: (DeleteTransactionPayloadGenqlSelection & { __args: {id: Scalars['ID']} })
+    updateTransaction?: (UpdateTransactionPayloadGenqlSelection & { __args: {id: Scalars['ID'], input: UpdateTransactionInput} })
     createInstrument?: (InstrumentGenqlSelection & { __args: {input: CreateInstrumentInput} })
     updateInstrument?: (InstrumentGenqlSelection & { __args: {input: UpdateInstrumentInput} })
     deleteInstrument?: (DeleteInstrumentPayloadGenqlSelection & { __args: {id: Scalars['ID']} })
@@ -1133,6 +1152,14 @@ export interface BenchmarkComparisonPayloadGenqlSelection{
     export const isAddTransactionPayload = (obj?: { __typename?: any } | null): obj is AddTransactionPayload => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isAddTransactionPayload"')
       return AddTransactionPayload_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const UpdateTransactionPayload_possibleTypes: string[] = ['UpdateTransactionPayload']
+    export const isUpdateTransactionPayload = (obj?: { __typename?: any } | null): obj is UpdateTransactionPayload => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isUpdateTransactionPayload"')
+      return UpdateTransactionPayload_possibleTypes.includes(obj.__typename)
     }
     
 

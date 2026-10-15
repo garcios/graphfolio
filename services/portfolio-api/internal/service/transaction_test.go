@@ -1195,3 +1195,185 @@ func TestPortfolioService_BatchImportTransactions(t *testing.T) {
 		}
 	})
 }
+
+func TestPortfolioService_UpdateTransaction(t *testing.T) {
+	ctx := context.Background()
+	userID := "user-123"
+	portfolioID := uuid.New()
+	instrumentID := uuid.New()
+	txID := uuid.New()
+
+	mockPortfolio := &domain.Portfolio{
+		ID:              portfolioID,
+		UserID:          uuid.New(),
+		Name:            "Core Portfolio",
+		BaseCurrency:    "USD",
+		CostBasisMethod: domain.CostBasisMethodFIFO,
+		CreatedAt:       time.Now().UTC().Add(-200 * time.Hour),
+	}
+
+	mockInstrument := &domain.Instrument{
+		ID:           instrumentID,
+		Symbol:       "AAPL",
+		ExchangeCode: "XNAS",
+		Name:         "Apple Inc.",
+		AssetClass:   "EQUITY",
+		CurrencyCode: "USD",
+		IsActive:     true,
+	}
+
+	tradeDate := time.Date(2025, 4, 10, 0, 0, 0, 0, time.UTC)
+	oldQty := decimal.NewFromInt(100)
+	oldPrice := decimal.RequireFromString("150.00")
+	oldAmount := decimal.RequireFromString("15000.00")
+	oldFee := decimal.RequireFromString("9.95")
+	notes := "Initial buy"
+	extRef := "commsec:trade:999"
+
+	oldTx := &domain.Transaction{
+		ID:           txID,
+		PortfolioID:  portfolioID,
+		InstrumentID: &instrumentID,
+		Type:         domain.TxTypeBuy,
+		TradeDate:    tradeDate,
+		Quantity:     &oldQty,
+		Price:        &oldPrice,
+		Amount:       oldAmount,
+		CurrencyCode: "USD",
+		Fee:          oldFee,
+		ExternalRef:  &extRef,
+		Notes:        &notes,
+	}
+
+	t.Run("successful BUY update", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		mockValuation := serviceMocks.NewMockValuationService(ctrl)
+		svc := service.NewPortfolioService(mockRepo, service.WithValuationService(mockValuation))
+
+		newQty := decimal.NewFromInt(120)
+		newPrice := decimal.RequireFromString("155.00")
+		symbol := "AAPL"
+		newNotes := "Corrected quantity"
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetTransactionByID(ctx, portfolioID, txID).Return(oldTx, nil)
+		mockRepo.EXPECT().FindInstrumentBySymbol(ctx, "AAPL").Return(mockInstrument, nil)
+		mockRepo.EXPECT().GetTransactions(ctx, portfolioID).Return([]domain.Transaction{*oldTx}, nil)
+		mockRepo.EXPECT().UpdateTransaction(ctx, portfolioID, gomock.Any()).DoAndReturn(
+			func(ctx context.Context, pid uuid.UUID, tx domain.Transaction) (*domain.Transaction, error) {
+				return &tx, nil
+			},
+		)
+
+		// Post update: rebuild projections
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetTransactions(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetCorporateActions(ctx, gomock.Any()).Return([]domain.CorporateAction{}, nil)
+		mockRepo.EXPECT().SaveProjectionsTx(ctx, portfolioID, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+		// Valuation backfill
+		mockValuation.EXPECT().BackfillPortfolioValuations(ctx, portfolioID, tradeDate).Return(nil)
+
+		// Summary
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetHoldingsWithMarketData(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetCashBalances(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetLatestValuation(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetCashFXRates(ctx, "USD").Return(map[string]decimal.Decimal{}, nil)
+
+		input := domain.UpdateTransactionInput{
+			UserID:        userID,
+			TransactionID: txID.String(),
+			Type:          domain.TxTypeBuy,
+			Symbol:        &symbol,
+			TradeDate:     tradeDate,
+			Quantity:      &newQty,
+			Price:         &newPrice,
+			Notes:         &newNotes,
+		}
+
+		res, summary, err := svc.UpdateTransaction(ctx, input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res == nil || summary == nil {
+			t.Fatal("expected non-nil response and summary")
+		}
+		if res.Quantity == nil || !res.Quantity.Equal(newQty) {
+			t.Errorf("expected quantity %v, got %v", newQty, res.Quantity)
+		}
+		if *res.Symbol != "AAPL" {
+			t.Errorf("expected symbol AAPL, got %s", *res.Symbol)
+		}
+	})
+
+	t.Run("negative inventory guard rejects update", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		// Subsequent SELL transaction of 80 shares on 2025-04-15
+		sellDate := time.Date(2025, 4, 15, 0, 0, 0, 0, time.UTC)
+		sellQty := decimal.NewFromInt(80)
+		sellTx := domain.Transaction{
+			ID:           uuid.New(),
+			PortfolioID:  portfolioID,
+			InstrumentID: &instrumentID,
+			Type:         domain.TxTypeSell,
+			TradeDate:    sellDate,
+			Quantity:     &sellQty,
+			Price:        &oldPrice,
+			Amount:       decimal.RequireFromString("12000.00"),
+			CurrencyCode: "USD",
+		}
+
+		// Proposed edit: reduce BUY from 100 to 50 shares
+		reducedQty := decimal.NewFromInt(50)
+		symbol := "AAPL"
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetTransactionByID(ctx, portfolioID, txID).Return(oldTx, nil)
+		mockRepo.EXPECT().FindInstrumentBySymbol(ctx, "AAPL").Return(mockInstrument, nil)
+		mockRepo.EXPECT().GetTransactions(ctx, portfolioID).Return([]domain.Transaction{*oldTx, sellTx}, nil)
+
+		input := domain.UpdateTransactionInput{
+			UserID:        userID,
+			TransactionID: txID.String(),
+			Type:          domain.TxTypeBuy,
+			Symbol:        &symbol,
+			TradeDate:     tradeDate,
+			Quantity:      &reducedQty,
+			Price:         &oldPrice,
+		}
+
+		_, _, err := svc.UpdateTransaction(ctx, input)
+		if err == nil {
+			t.Fatal("expected error due to negative inventory, got nil")
+		}
+		if !errors.Is(err, errors.New("negative share inventory")) && err.Error() == "" {
+			t.Fatalf("expected negative share inventory error message, got: %v", err)
+		}
+	})
+
+	t.Run("invalid transaction ID returns ErrTransactionNotFound", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		input := domain.UpdateTransactionInput{
+			UserID:        userID,
+			TransactionID: "invalid-uuid",
+			Type:          domain.TxTypeBuy,
+		}
+
+		_, _, err := svc.UpdateTransaction(ctx, input)
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		if !errors.Is(err, repository.ErrTransactionNotFound) {
+			t.Errorf("expected ErrTransactionNotFound, got: %v", err)
+		}
+	})
+}
+

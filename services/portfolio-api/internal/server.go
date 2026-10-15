@@ -477,6 +477,199 @@ func (s *PortfolioServer) DeleteTransaction(ctx context.Context, req *pb.DeleteT
 	}, nil
 }
 
+func (s *PortfolioServer) UpdateTransaction(ctx context.Context, req *pb.UpdateTransactionRequest) (*pb.UpdateTransactionResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	if req.GetTransactionId() == "" {
+		return nil, status.Errorf(codes.InvalidArgument, "transaction id is required")
+	}
+
+	userID := req.GetUserId()
+	if userID == "" {
+		userID = "1"
+	}
+
+	var txType domain.TransactionType
+	switch req.GetType() {
+	case pb.TransactionType_TRANSACTION_TYPE_BUY:
+		txType = domain.TxTypeBuy
+	case pb.TransactionType_TRANSACTION_TYPE_SELL:
+		txType = domain.TxTypeSell
+	case pb.TransactionType_TRANSACTION_TYPE_DIVIDEND:
+		txType = domain.TxTypeDividend
+	case pb.TransactionType_TRANSACTION_TYPE_DEPOSIT:
+		txType = domain.TxTypeDeposit
+	case pb.TransactionType_TRANSACTION_TYPE_WITHDRAWAL:
+		txType = domain.TxTypeWithdrawal
+	case pb.TransactionType_TRANSACTION_TYPE_INTEREST:
+		txType = domain.TxTypeInterest
+	case pb.TransactionType_TRANSACTION_TYPE_FEE:
+		txType = domain.TxTypeFee
+	case pb.TransactionType_TRANSACTION_TYPE_TAX:
+		txType = domain.TxTypeTax
+	case pb.TransactionType_TRANSACTION_TYPE_TRANSFER_IN:
+		txType = domain.TxTypeTransferIn
+	case pb.TransactionType_TRANSACTION_TYPE_TRANSFER_OUT:
+		txType = domain.TxTypeTransferOut
+	case pb.TransactionType_TRANSACTION_TYPE_FX_CONVERSION:
+		txType = domain.TxTypeFXConversion
+	case pb.TransactionType_TRANSACTION_TYPE_SPLIT:
+		txType = domain.TxTypeSplit
+	default:
+		return nil, status.Errorf(codes.InvalidArgument, "invalid transaction type: %v", req.GetType())
+	}
+
+	var tradeDate time.Time
+	if req.GetTradeDate() != "" {
+		parsedDate, err := time.Parse("2006-01-02", req.GetTradeDate())
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid trade date format (expected YYYY-MM-DD): %v", err)
+		}
+		tradeDate = parsedDate
+	}
+
+	var qty *decimal.Decimal
+	if req.GetQuantity() != nil && req.GetQuantity().GetValue() != "" {
+		q, err := decimalpb.FromProto(req.GetQuantity())
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid quantity: %v", err)
+		}
+		qty = &q
+	}
+
+	var price *decimal.Decimal
+	if req.GetPrice() != nil && req.GetPrice().GetAmount() != nil {
+		p, _, err := decimalpb.MoneyFromProto(req.GetPrice())
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid price: %v", err)
+		}
+		price = &p
+	}
+
+	var amount *decimal.Decimal
+	var ccy *string
+	if req.GetAmount() != nil && req.GetAmount().GetAmount() != nil {
+		a, c, err := decimalpb.MoneyFromProto(req.GetAmount())
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid amount: %v", err)
+		}
+		amount = &a
+		if c != "" {
+			ccy = &c
+		}
+	}
+	if req.GetCurrencyCode() != "" {
+		c := req.GetCurrencyCode()
+		ccy = &c
+	}
+
+	var fee *decimal.Decimal
+	var feeCurrency *string
+	if req.GetFee() != nil && req.GetFee().GetAmount() != nil {
+		f, c, err := decimalpb.MoneyFromProto(req.GetFee())
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid fee: %v", err)
+		}
+		fee = &f
+		if c != "" {
+			feeCurrency = &c
+		}
+	}
+	if req.GetFeeCurrencyCode() != "" {
+		fc := req.GetFeeCurrencyCode()
+		feeCurrency = &fc
+	}
+
+	var fxRate *decimal.Decimal
+	if req.GetFxRateToBase() != nil && req.GetFxRateToBase().GetValue() != "" {
+		fx, err := decimalpb.FromProto(req.GetFxRateToBase())
+		if err == nil {
+			fxRate = &fx
+		}
+	}
+
+	var symbol *string
+	if req.GetSymbol() != "" {
+		s := req.GetSymbol()
+		symbol = &s
+	}
+
+	var notes *string
+	if req.GetNotes() != "" {
+		n := req.GetNotes()
+		notes = &n
+	}
+
+	input := domain.UpdateTransactionInput{
+		UserID:          userID,
+		TransactionID:   req.GetTransactionId(),
+		Type:            txType,
+		TradeDate:       tradeDate,
+		Symbol:          symbol,
+		Quantity:        qty,
+		Price:           price,
+		Amount:          amount,
+		CurrencyCode:    ccy,
+		Fee:             fee,
+		FeeCurrencyCode: feeCurrency,
+		Notes:           notes,
+		FXRateToBase:    fxRate,
+	}
+
+	item, summary, err := s.svc.UpdateTransaction(ctx, input)
+	if err != nil {
+		if errors.Is(err, repository.ErrTransactionNotFound) || errors.Is(err, repository.ErrPortfolioNotFound) {
+			return nil, status.Errorf(codes.NotFound, "transaction not found: %v", err)
+		}
+		if strings.Contains(err.Error(), "negative share inventory") {
+			return nil, status.Errorf(codes.FailedPrecondition, "%v", err)
+		}
+		if strings.HasPrefix(err.Error(), "service:") {
+			return nil, status.Errorf(codes.InvalidArgument, "%v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to update transaction: %v", err)
+	}
+
+	feeCurr := item.CurrencyCode
+	if item.FeeCurrencyCode != nil && *item.FeeCurrencyCode != "" {
+		feeCurr = *item.FeeCurrencyCode
+	}
+	protoItem := &pb.TransactionItem{
+		Id:        item.ID.String(),
+		Type:      mapDomainTxTypeToProto(item.Type),
+		TradeDate: item.TradeDate.Format("2006-01-02"),
+		Amount:    decimalpb.MoneyToProto(item.Amount, item.CurrencyCode),
+		Fee:       decimalpb.MoneyToProto(item.Fee, feeCurr),
+		CreatedAt: "",
+	}
+	if !item.CreatedAt.IsZero() {
+		protoItem.CreatedAt = item.CreatedAt.Format(time.RFC3339)
+	}
+	if item.Symbol != nil {
+		protoItem.Symbol = *item.Symbol
+	}
+	if item.InstrumentName != nil {
+		protoItem.InstrumentName = *item.InstrumentName
+	}
+	if item.Notes != nil {
+		protoItem.Notes = *item.Notes
+	}
+	if item.Quantity != nil {
+		protoItem.Quantity = decimalpb.ToProto(*item.Quantity)
+	}
+	if item.Price != nil {
+		protoItem.Price = decimalpb.MoneyToProto(*item.Price, item.CurrencyCode)
+	}
+
+	return &pb.UpdateTransactionResponse{
+		Success:     true,
+		Transaction: protoItem,
+		Portfolio:   mapSummaryToProto(summary),
+	}, nil
+}
+
 func (s *PortfolioServer) CheckTransactionDuplicates(ctx context.Context, req *pb.CheckTransactionDuplicatesRequest) (*pb.CheckTransactionDuplicatesResponse, error) {
 	if s.svc == nil {
 		return nil, status.Error(codes.Unavailable, "service not initialized")

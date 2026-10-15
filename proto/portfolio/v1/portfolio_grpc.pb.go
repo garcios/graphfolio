@@ -27,6 +27,7 @@ const (
 	PortfolioService_GetPortfolioHistory_FullMethodName           = "/portfolio.v1.PortfolioService/GetPortfolioHistory"
 	PortfolioService_ListTransactions_FullMethodName              = "/portfolio.v1.PortfolioService/ListTransactions"
 	PortfolioService_DeleteTransaction_FullMethodName             = "/portfolio.v1.PortfolioService/DeleteTransaction"
+	PortfolioService_UpdateTransaction_FullMethodName             = "/portfolio.v1.PortfolioService/UpdateTransaction"
 	PortfolioService_CheckTransactionDuplicates_FullMethodName    = "/portfolio.v1.PortfolioService/CheckTransactionDuplicates"
 	PortfolioService_BatchImportTransactions_FullMethodName       = "/portfolio.v1.PortfolioService/BatchImportTransactions"
 	PortfolioService_ListAllInstruments_FullMethodName            = "/portfolio.v1.PortfolioService/ListAllInstruments"
@@ -64,6 +65,7 @@ type PortfolioServiceClient interface {
 	GetPortfolioHistory(ctx context.Context, in *GetPortfolioHistoryRequest, opts ...grpc.CallOption) (*GetPortfolioHistoryResponse, error)
 	ListTransactions(ctx context.Context, in *ListTransactionsRequest, opts ...grpc.CallOption) (*ListTransactionsResponse, error)
 	DeleteTransaction(ctx context.Context, in *DeleteTransactionRequest, opts ...grpc.CallOption) (*DeleteTransactionResponse, error)
+	UpdateTransaction(ctx context.Context, in *UpdateTransactionRequest, opts ...grpc.CallOption) (*UpdateTransactionResponse, error)
 	// Multi-Broker CSV Ingestion & Deduplication
 	CheckTransactionDuplicates(ctx context.Context, in *CheckTransactionDuplicatesRequest, opts ...grpc.CallOption) (*CheckTransactionDuplicatesResponse, error)
 	BatchImportTransactions(ctx context.Context, in *BatchImportTransactionsRequest, opts ...grpc.CallOption) (*BatchImportTransactionsResponse, error)
@@ -175,6 +177,15 @@ func (c *portfolioServiceClient) ListTransactions(ctx context.Context, in *ListT
 func (c *portfolioServiceClient) DeleteTransaction(ctx context.Context, in *DeleteTransactionRequest, opts ...grpc.CallOption) (*DeleteTransactionResponse, error) {
 	out := new(DeleteTransactionResponse)
 	err := c.cc.Invoke(ctx, PortfolioService_DeleteTransaction_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portfolioServiceClient) UpdateTransaction(ctx context.Context, in *UpdateTransactionRequest, opts ...grpc.CallOption) (*UpdateTransactionResponse, error) {
+	out := new(UpdateTransactionResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_UpdateTransaction_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -400,6 +411,7 @@ type PortfolioServiceServer interface {
 	GetPortfolioHistory(context.Context, *GetPortfolioHistoryRequest) (*GetPortfolioHistoryResponse, error)
 	ListTransactions(context.Context, *ListTransactionsRequest) (*ListTransactionsResponse, error)
 	DeleteTransaction(context.Context, *DeleteTransactionRequest) (*DeleteTransactionResponse, error)
+	UpdateTransaction(context.Context, *UpdateTransactionRequest) (*UpdateTransactionResponse, error)
 	// Multi-Broker CSV Ingestion & Deduplication
 	CheckTransactionDuplicates(context.Context, *CheckTransactionDuplicatesRequest) (*CheckTransactionDuplicatesResponse, error)
 	BatchImportTransactions(context.Context, *BatchImportTransactionsRequest) (*BatchImportTransactionsResponse, error)
@@ -465,6 +477,9 @@ func (UnimplementedPortfolioServiceServer) ListTransactions(context.Context, *Li
 }
 func (UnimplementedPortfolioServiceServer) DeleteTransaction(context.Context, *DeleteTransactionRequest) (*DeleteTransactionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTransaction not implemented")
+}
+func (UnimplementedPortfolioServiceServer) UpdateTransaction(context.Context, *UpdateTransactionRequest) (*UpdateTransactionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateTransaction not implemented")
 }
 func (UnimplementedPortfolioServiceServer) CheckTransactionDuplicates(context.Context, *CheckTransactionDuplicatesRequest) (*CheckTransactionDuplicatesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckTransactionDuplicates not implemented")
@@ -688,6 +703,24 @@ func _PortfolioService_DeleteTransaction_Handler(srv interface{}, ctx context.Co
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PortfolioServiceServer).DeleteTransaction(ctx, req.(*DeleteTransactionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortfolioService_UpdateTransaction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateTransactionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).UpdateTransaction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_UpdateTransaction_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).UpdateTransaction(ctx, req.(*UpdateTransactionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1144,6 +1177,10 @@ var PortfolioService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteTransaction",
 			Handler:    _PortfolioService_DeleteTransaction_Handler,
+		},
+		{
+			MethodName: "UpdateTransaction",
+			Handler:    _PortfolioService_UpdateTransaction_Handler,
 		},
 		{
 			MethodName: "CheckTransactionDuplicates",

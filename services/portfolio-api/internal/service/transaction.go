@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -362,6 +363,383 @@ func (s *portfolioService) DeleteTransaction(ctx context.Context, userID string,
 	}
 
 	return summary, nil
+}
+
+func (s *portfolioService) UpdateTransaction(ctx context.Context, input domain.UpdateTransactionInput) (*domain.TransactionWithInstrument, *domain.PortfolioSummary, error) {
+	userID := input.UserID
+	if userID == "" {
+		userID = "1"
+	}
+
+	txUUID, err := uuid.Parse(input.TransactionID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("%w: invalid transaction id %q", repository.ErrTransactionNotFound, input.TransactionID)
+	}
+
+	portfolio, err := s.repo.FindPortfolioByUser(ctx, userID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("service: find portfolio: %w", err)
+	}
+
+	oldTx, err := s.repo.GetTransactionByID(ctx, portfolio.ID, txUUID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("service: find transaction: %w", err)
+	}
+
+	tradeDate := input.TradeDate
+	if tradeDate.IsZero() {
+		tradeDate = oldTx.TradeDate
+	}
+
+	fee := decimal.Zero
+	if input.Fee != nil {
+		if input.Fee.IsNegative() {
+			return nil, nil, fmt.Errorf("service: fee cannot be negative")
+		}
+		fee = *input.Fee
+	}
+
+	var instID *uuid.UUID
+	var currencyCode string
+	var fxRateToBase *decimal.Decimal
+	var symbol string
+	var instName string
+
+	switch input.Type {
+	case domain.TxTypeBuy, domain.TxTypeSell:
+		if input.Symbol == nil || *input.Symbol == "" {
+			return nil, nil, fmt.Errorf("service: symbol is required for %s", input.Type)
+		}
+		if input.Quantity == nil || !input.Quantity.IsPositive() {
+			return nil, nil, fmt.Errorf("service: positive quantity is required for %s", input.Type)
+		}
+		if input.Price == nil || input.Price.IsNegative() {
+			return nil, nil, fmt.Errorf("service: price cannot be negative for %s", input.Type)
+		}
+
+		inst, err := s.repo.FindInstrumentBySymbol(ctx, *input.Symbol)
+		if err != nil {
+			return nil, nil, fmt.Errorf("service: find instrument %s: %w", *input.Symbol, err)
+		}
+		instID = &inst.ID
+		currencyCode = inst.CurrencyCode
+		symbol = inst.Symbol
+		instName = inst.Name
+
+		amount := input.Quantity.Mul(*input.Price)
+		if input.Amount != nil && input.Amount.IsPositive() {
+			amount = *input.Amount
+		}
+
+		if inst.CurrencyCode != portfolio.BaseCurrency {
+			rate, err := s.repo.GetFXRate(ctx, inst.CurrencyCode, portfolio.BaseCurrency)
+			if err == nil && rate.IsPositive() {
+				fxRateToBase = &rate
+			}
+		}
+
+		feeCurrencyCode := currencyCode
+		if input.FeeCurrencyCode != nil && *input.FeeCurrencyCode != "" {
+			feeCurrencyCode = *input.FeeCurrencyCode
+		}
+
+		proposedTx := domain.Transaction{
+			ID:              oldTx.ID,
+			PortfolioID:     portfolio.ID,
+			InstrumentID:    instID,
+			Type:            input.Type,
+			TradeDate:       tradeDate,
+			Quantity:        input.Quantity,
+			Price:           input.Price,
+			Amount:          amount,
+			CurrencyCode:    currencyCode,
+			Fee:             fee,
+			FeeCurrencyCode: &feeCurrencyCode,
+			FXRateToBase:    fxRateToBase,
+			ExternalRef:     oldTx.ExternalRef,
+			Notes:           input.Notes,
+		}
+
+		if err := s.guardNegativeInventory(ctx, portfolio.ID, proposedTx, inst.Symbol); err != nil {
+			return nil, nil, err
+		}
+
+		updatedTx, err := s.repo.UpdateTransaction(ctx, portfolio.ID, proposedTx)
+		if err != nil {
+			return nil, nil, fmt.Errorf("service: update transaction: %w", err)
+		}
+
+		earliestDate := oldTx.TradeDate
+		if tradeDate.Before(earliestDate) {
+			earliestDate = tradeDate
+		}
+		summary, err := s.postTransactionUpdate(ctx, userID, portfolio.ID, earliestDate)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		return &domain.TransactionWithInstrument{
+			Transaction:    *updatedTx,
+			Symbol:         &symbol,
+			InstrumentName: &instName,
+		}, summary, nil
+
+	case domain.TxTypeDeposit, domain.TxTypeWithdrawal:
+		if input.Amount == nil || !input.Amount.IsPositive() {
+			return nil, nil, fmt.Errorf("service: positive amount is required for %s", input.Type)
+		}
+		currencyCode = portfolio.BaseCurrency
+		if input.CurrencyCode != nil && *input.CurrencyCode != "" {
+			currencyCode = *input.CurrencyCode
+		}
+
+		feeCurrencyCode := currencyCode
+		if input.FeeCurrencyCode != nil && *input.FeeCurrencyCode != "" {
+			feeCurrencyCode = *input.FeeCurrencyCode
+		}
+
+		if currencyCode != portfolio.BaseCurrency {
+			rate, err := s.repo.GetFXRate(ctx, currencyCode, portfolio.BaseCurrency)
+			if err == nil && rate.IsPositive() {
+				fxRateToBase = &rate
+			}
+		}
+
+		proposedTx := domain.Transaction{
+			ID:              oldTx.ID,
+			PortfolioID:     portfolio.ID,
+			InstrumentID:    nil,
+			Type:            input.Type,
+			TradeDate:       tradeDate,
+			Amount:          *input.Amount,
+			CurrencyCode:    currencyCode,
+			Fee:             fee,
+			FeeCurrencyCode: &feeCurrencyCode,
+			FXRateToBase:    fxRateToBase,
+			ExternalRef:     oldTx.ExternalRef,
+			Notes:           input.Notes,
+		}
+
+		if oldTx.InstrumentID != nil {
+			if err := s.guardNegativeInventory(ctx, portfolio.ID, proposedTx, ""); err != nil {
+				return nil, nil, err
+			}
+		}
+
+		updatedTx, err := s.repo.UpdateTransaction(ctx, portfolio.ID, proposedTx)
+		if err != nil {
+			return nil, nil, fmt.Errorf("service: update transaction: %w", err)
+		}
+
+		earliestDate := oldTx.TradeDate
+		if tradeDate.Before(earliestDate) {
+			earliestDate = tradeDate
+		}
+		summary, err := s.postTransactionUpdate(ctx, userID, portfolio.ID, earliestDate)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		return &domain.TransactionWithInstrument{
+			Transaction: *updatedTx,
+		}, summary, nil
+
+	case domain.TxTypeDividend:
+		if input.Symbol == nil || *input.Symbol == "" {
+			return nil, nil, fmt.Errorf("service: symbol is required for DIVIDEND")
+		}
+		if input.Amount == nil || !input.Amount.IsPositive() {
+			return nil, nil, fmt.Errorf("service: positive amount is required for DIVIDEND")
+		}
+
+		inst, err := s.repo.FindInstrumentBySymbol(ctx, *input.Symbol)
+		if err != nil {
+			return nil, nil, fmt.Errorf("service: find instrument %s: %w", *input.Symbol, err)
+		}
+		instID = &inst.ID
+		currencyCode = inst.CurrencyCode
+		symbol = inst.Symbol
+		instName = inst.Name
+		if input.CurrencyCode != nil && *input.CurrencyCode != "" {
+			currencyCode = *input.CurrencyCode
+		}
+
+		if currencyCode != portfolio.BaseCurrency {
+			rate, err := s.repo.GetFXRate(ctx, currencyCode, portfolio.BaseCurrency)
+			if err == nil && rate.IsPositive() {
+				fxRateToBase = &rate
+			}
+		}
+
+		feeCurrencyCode := currencyCode
+		if input.FeeCurrencyCode != nil && *input.FeeCurrencyCode != "" {
+			feeCurrencyCode = *input.FeeCurrencyCode
+		}
+
+		proposedTx := domain.Transaction{
+			ID:              oldTx.ID,
+			PortfolioID:     portfolio.ID,
+			InstrumentID:    instID,
+			Type:            input.Type,
+			TradeDate:       tradeDate,
+			Amount:          *input.Amount,
+			CurrencyCode:    currencyCode,
+			Fee:             fee,
+			FeeCurrencyCode: &feeCurrencyCode,
+			FXRateToBase:    fxRateToBase,
+			ExternalRef:     oldTx.ExternalRef,
+			Notes:           input.Notes,
+		}
+
+		if oldTx.Type == domain.TxTypeBuy {
+			if err := s.guardNegativeInventory(ctx, portfolio.ID, proposedTx, inst.Symbol); err != nil {
+				return nil, nil, err
+			}
+		}
+
+		updatedTx, err := s.repo.UpdateTransaction(ctx, portfolio.ID, proposedTx)
+		if err != nil {
+			return nil, nil, fmt.Errorf("service: update transaction: %w", err)
+		}
+
+		earliestDate := oldTx.TradeDate
+		if tradeDate.Before(earliestDate) {
+			earliestDate = tradeDate
+		}
+		summary, err := s.postTransactionUpdate(ctx, userID, portfolio.ID, earliestDate)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		return &domain.TransactionWithInstrument{
+			Transaction:    *updatedTx,
+			Symbol:         &symbol,
+			InstrumentName: &instName,
+		}, summary, nil
+
+	case domain.TxTypeSplit:
+		if input.Symbol == nil || *input.Symbol == "" {
+			return nil, nil, fmt.Errorf("service: symbol is required for SPLIT")
+		}
+		if input.Quantity == nil || !input.Quantity.IsPositive() {
+			return nil, nil, fmt.Errorf("service: positive split ratio/quantity is required for SPLIT")
+		}
+
+		inst, err := s.repo.FindInstrumentBySymbol(ctx, *input.Symbol)
+		if err != nil {
+			return nil, nil, fmt.Errorf("service: find instrument %s: %w", *input.Symbol, err)
+		}
+		instID = &inst.ID
+		currencyCode = inst.CurrencyCode
+		symbol = inst.Symbol
+		instName = inst.Name
+
+		price := input.Price
+		if price != nil && price.IsNegative() {
+			return nil, nil, fmt.Errorf("service: price ratio cannot be negative for SPLIT")
+		}
+
+		proposedTx := domain.Transaction{
+			ID:           oldTx.ID,
+			PortfolioID:  portfolio.ID,
+			InstrumentID: instID,
+			Type:         input.Type,
+			TradeDate:    tradeDate,
+			Quantity:     input.Quantity,
+			Price:        price,
+			Amount:       decimal.Zero,
+			CurrencyCode: currencyCode,
+			Fee:          fee,
+			ExternalRef:  oldTx.ExternalRef,
+			Notes:        input.Notes,
+		}
+
+		if err := s.guardNegativeInventory(ctx, portfolio.ID, proposedTx, inst.Symbol); err != nil {
+			return nil, nil, err
+		}
+
+		updatedTx, err := s.repo.UpdateTransaction(ctx, portfolio.ID, proposedTx)
+		if err != nil {
+			return nil, nil, fmt.Errorf("service: update transaction: %w", err)
+		}
+
+		earliestDate := oldTx.TradeDate
+		if tradeDate.Before(earliestDate) {
+			earliestDate = tradeDate
+		}
+		summary, err := s.postTransactionUpdate(ctx, userID, portfolio.ID, earliestDate)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		return &domain.TransactionWithInstrument{
+			Transaction:    *updatedTx,
+			Symbol:         &symbol,
+			InstrumentName: &instName,
+		}, summary, nil
+
+	default:
+		return nil, nil, fmt.Errorf("service: unsupported transaction type: %s", input.Type)
+	}
+}
+
+func (s *portfolioService) guardNegativeInventory(ctx context.Context, portfolioID uuid.UUID, proposedTx domain.Transaction, fallbackSymbol string) error {
+	allTxs, err := s.repo.GetTransactions(ctx, portfolioID)
+	if err != nil {
+		return fmt.Errorf("service: check inventory: %w", err)
+	}
+
+	simulated := make([]domain.Transaction, len(allTxs))
+	found := false
+	for i, t := range allTxs {
+		if t.ID == proposedTx.ID {
+			simulated[i] = proposedTx
+			found = true
+		} else {
+			simulated[i] = t
+		}
+	}
+	if !found {
+		simulated = append(simulated, proposedTx)
+	}
+
+	sort.SliceStable(simulated, func(i, j int) bool {
+		if simulated[i].TradeDate.Equal(simulated[j].TradeDate) {
+			return simulated[i].ID.String() < simulated[j].ID.String()
+		}
+		return simulated[i].TradeDate.Before(simulated[j].TradeDate)
+	})
+
+	runningQty := make(map[uuid.UUID]decimal.Decimal)
+	for _, tx := range simulated {
+		if tx.InstrumentID == nil || tx.Quantity == nil {
+			continue
+		}
+		instID := *tx.InstrumentID
+		curr := runningQty[instID]
+
+		switch tx.Type {
+		case domain.TxTypeBuy, domain.TxTypeTransferIn:
+			runningQty[instID] = curr.Add(*tx.Quantity)
+		case domain.TxTypeSplit:
+			if tx.Quantity.IsPositive() {
+				runningQty[instID] = curr.Mul(*tx.Quantity)
+			}
+		case domain.TxTypeSell, domain.TxTypeTransferOut:
+			newQty := curr.Sub(*tx.Quantity)
+			if newQty.IsNegative() {
+				sym := fallbackSymbol
+				if sym == "" {
+					sym = instID.String()
+				}
+				return fmt.Errorf("trade modification causes negative share inventory (%s shares of %s on %s)",
+					newQty.String(), sym, tx.TradeDate.Format("2006-01-02"))
+			}
+			runningQty[instID] = newQty
+		}
+	}
+
+	return nil
 }
 
 func (s *portfolioService) CheckTransactionDuplicates(ctx context.Context, userID string, externalRefs []string) ([]string, error) {

@@ -39,6 +39,25 @@ type AddTransactionPayload {
   portfolio: Portfolio!
 }
 
+input UpdateTransactionInput {
+  type: TransactionType!
+  symbol: String
+  tradeDate: String!
+  quantity: Decimal
+  price: Decimal
+  amount: Decimal!
+  currencyCode: String
+  fee: Decimal
+  feeCurrencyCode: String
+  notes: String
+}
+
+type UpdateTransactionPayload {
+  success: Boolean!
+  transaction: TransactionItem!
+  portfolio: Portfolio!
+}
+
 type Instrument {
   id: ID!
   symbol: String!
@@ -141,6 +160,7 @@ type DeleteInstrumentPayload {
 type Mutation {
   addTransaction(input: AddTransactionInput!): AddTransactionPayload!
   deleteTransaction(id: ID!): DeleteTransactionPayload!
+  updateTransaction(id: ID!, input: UpdateTransactionInput!): UpdateTransactionPayload!
   createInstrument(input: CreateInstrumentInput!): Instrument!
   updateInstrument(input: UpdateInstrumentInput!): Instrument!
   deleteInstrument(id: ID!): DeleteInstrumentPayload!

@@ -514,6 +514,25 @@ type UpdateInstrumentInput struct {
 	Isin     *string `json:"isin,omitempty"`
 }
 
+type UpdateTransactionInput struct {
+	Type            TransactionType `json:"type"`
+	Symbol          *string         `json:"symbol,omitempty"`
+	TradeDate       string          `json:"tradeDate"`
+	Quantity        *Decimal        `json:"quantity,omitempty"`
+	Price           *Decimal        `json:"price,omitempty"`
+	Amount          Decimal         `json:"amount"`
+	CurrencyCode    *string         `json:"currencyCode,omitempty"`
+	Fee             *Decimal        `json:"fee,omitempty"`
+	FeeCurrencyCode *string         `json:"feeCurrencyCode,omitempty"`
+	Notes           *string         `json:"notes,omitempty"`
+}
+
+type UpdateTransactionPayload struct {
+	Success     bool             `json:"success"`
+	Transaction *TransactionItem `json:"transaction"`
+	Portfolio   *Portfolio       `json:"portfolio"`
+}
+
 type UpdateUserPreferencesInput struct {
 	DisplayName     *string `json:"displayName,omitempty"`
 	DisplayCurrency *string `json:"displayCurrency,omitempty"`
