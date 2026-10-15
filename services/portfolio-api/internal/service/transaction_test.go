@@ -498,6 +498,38 @@ func TestPortfolioService_ListTransactions(t *testing.T) {
 		}
 	})
 
+	t.Run("unpaginated export mode with ascending sort", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		filter := domain.TransactionFilter{
+			PageSize:      -1,
+			SortDirection: domain.SortDirectionAsc,
+		}
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().ListTransactions(ctx, portfolioID, gomock.Any()).DoAndReturn(
+			func(_ context.Context, pid uuid.UUID, f domain.TransactionFilter) ([]domain.TransactionWithInstrument, int, error) {
+				if f.PageSize != 0 {
+					t.Fatalf("expected PageSize 0 for unpaginated export; got %d", f.PageSize)
+				}
+				if f.Page != 1 {
+					t.Fatalf("expected Page 1; got %d", f.Page)
+				}
+				if f.SortDirection != domain.SortDirectionAsc {
+					t.Fatalf("expected SortDirectionAsc; got %v", f.SortDirection)
+				}
+				return []domain.TransactionWithInstrument{}, 0, nil
+			},
+		)
+
+		_, _, err := svc.ListTransactions(ctx, userID, filter)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+
 	t.Run("portfolio not found returns error", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mockRepo := repoMocks.NewMockRepository(ctrl)

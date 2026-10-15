@@ -328,6 +328,46 @@ WHERE t.portfolio_id = $1
 ORDER BY t.trade_date DESC, t.created_at DESC, t.id DESC
 LIMIT $4 OFFSET $5;`
 
+	listTransactionsAscSQL = `
+SELECT 
+    t.id, t.portfolio_id, t.instrument_id, t.type, t.trade_date,
+    t.quantity, t.price, t.amount, t.currency_code, t.fee,
+    t.withholding_tax, t.fx_rate_to_base, t.external_ref, t.notes,
+    t.created_at, i.symbol, i.name AS instrument_name,
+    t.fee_currency_code,
+    COUNT(*) OVER() AS total_count
+FROM portfolio.transactions t
+LEFT JOIN portfolio.instruments i ON i.id = t.instrument_id
+WHERE t.portfolio_id = $1
+  AND ($2::text IS NULL OR t.type::text = $2)
+  AND (
+    $3::text IS NULL 
+    OR UPPER(i.symbol) = UPPER($3)
+    OR UPPER(i.symbol) = UPPER($3) || '.AX'
+    OR (UPPER($3) LIKE '%.AX' AND UPPER(i.symbol) = UPPER(REPLACE($3, '.AX', '')))
+    OR (UPPER($3) LIKE '%.ASX' AND UPPER(i.symbol) = UPPER(REPLACE($3, '.ASX', '')) || '.AX')
+    OR (UPPER($3) LIKE '%.ASX' AND UPPER(i.symbol) = UPPER(REPLACE($3, '.ASX', '')))
+  )
+ORDER BY 
+    t.trade_date ASC,
+    CASE t.type
+        WHEN 'DEPOSIT' THEN 1
+        WHEN 'TRANSFER_IN' THEN 2
+        WHEN 'BUY' THEN 3
+        WHEN 'SPLIT' THEN 4
+        WHEN 'DIVIDEND' THEN 5
+        WHEN 'INTEREST' THEN 6
+        WHEN 'SELL' THEN 7
+        WHEN 'TRANSFER_OUT' THEN 8
+        WHEN 'FEE' THEN 9
+        WHEN 'TAX' THEN 10
+        WHEN 'WITHDRAWAL' THEN 11
+        ELSE 12
+    END,
+    t.created_at ASC,
+    t.id ASC
+LIMIT $4 OFFSET $5;`
+
 	deleteTransactionSQL = `
 DELETE FROM portfolio.transactions
 WHERE id = $1 AND portfolio_id = $2;`

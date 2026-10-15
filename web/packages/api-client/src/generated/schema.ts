@@ -19,6 +19,8 @@ export interface Money {
 
 export type TransactionType = 'BUY' | 'SELL' | 'DIVIDEND' | 'DEPOSIT' | 'WITHDRAWAL' | 'INTEREST' | 'FEE' | 'TAX' | 'TRANSFER_IN' | 'TRANSFER_OUT' | 'FX_CONVERSION' | 'SPLIT'
 
+export type SortDirection = 'ASC' | 'DESC'
+
 export interface AddTransactionPayload {
     transactionId: Scalars['String']
     portfolio: Portfolio
@@ -59,6 +61,7 @@ export interface Query {
     instruments: Instrument[]
     portfolioHistory: PortfolioHistory
     transactions: TransactionsConnection
+    exportTransactions: TransactionItem[]
     allInstruments: Instrument[]
     exchanges: Exchange[]
     instrumentPrices: InstrumentPricesConnection
@@ -112,6 +115,9 @@ export interface TransactionItem {
     fee: Money
     notes: (Scalars['String'] | null)
     createdAt: Scalars['String']
+    withholdingTax: (Money | null)
+    fxRateToBase: (Scalars['Decimal'] | null)
+    externalRef: (Scalars['String'] | null)
     __typename: 'TransactionItem'
 }
 
@@ -597,7 +603,8 @@ export interface QueryGenqlSelection{
     portfolio?: (PortfolioGenqlSelection & { __args?: {includeClosed?: (Scalars['Boolean'] | null)} })
     instruments?: InstrumentGenqlSelection
     portfolioHistory?: (PortfolioHistoryGenqlSelection & { __args: {timeframe: HistoryTimeframe} })
-    transactions?: (TransactionsConnectionGenqlSelection & { __args?: {type?: (TransactionType | null), symbol?: (Scalars['String'] | null), page?: (Scalars['Int'] | null), pageSize?: (Scalars['Int'] | null)} })
+    transactions?: (TransactionsConnectionGenqlSelection & { __args?: {type?: (TransactionType | null), symbol?: (Scalars['String'] | null), page?: (Scalars['Int'] | null), pageSize?: (Scalars['Int'] | null), sortDirection?: (SortDirection | null)} })
+    exportTransactions?: (TransactionItemGenqlSelection & { __args?: {type?: (TransactionType | null), symbol?: (Scalars['String'] | null)} })
     allInstruments?: (InstrumentGenqlSelection & { __args?: {isActive?: (Scalars['Boolean'] | null), search?: (Scalars['String'] | null)} })
     exchanges?: ExchangeGenqlSelection
     instrumentPrices?: (InstrumentPricesConnectionGenqlSelection & { __args?: {symbol?: (Scalars['String'] | null), fromDate?: (Scalars['String'] | null), toDate?: (Scalars['String'] | null), limit?: (Scalars['Int'] | null), offset?: (Scalars['Int'] | null)} })
@@ -652,6 +659,9 @@ export interface TransactionItemGenqlSelection{
     fee?: MoneyGenqlSelection
     notes?: boolean | number
     createdAt?: boolean | number
+    withholdingTax?: MoneyGenqlSelection
+    fxRateToBase?: boolean | number
+    externalRef?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1536,6 +1546,11 @@ export const enumTransactionType = {
    TRANSFER_OUT: 'TRANSFER_OUT' as const,
    FX_CONVERSION: 'FX_CONVERSION' as const,
    SPLIT: 'SPLIT' as const
+}
+
+export const enumSortDirection = {
+   ASC: 'ASC' as const,
+   DESC: 'DESC' as const
 }
 
 export const enumHistoryTimeframe = {

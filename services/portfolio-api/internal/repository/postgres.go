@@ -544,18 +544,25 @@ func (r *PostgresRepository) BatchInsertTransactions(ctx context.Context, txs []
 }
 
 func (r *PostgresRepository) ListTransactions(ctx context.Context, portfolioID uuid.UUID, filter domain.TransactionFilter) ([]domain.TransactionWithInstrument, int, error) {
-	page := filter.Page
-	if page < 1 {
-		page = 1
+	var limit int
+	var offset int
+
+	if filter.PageSize <= 0 {
+		// Unpaginated mode (e.g. export all matching transactions)
+		limit = 100000
+		offset = 0
+	} else {
+		page := filter.Page
+		if page < 1 {
+			page = 1
+		}
+		pageSize := filter.PageSize
+		if pageSize > 100 {
+			pageSize = 100
+		}
+		limit = pageSize
+		offset = (page - 1) * pageSize
 	}
-	pageSize := filter.PageSize
-	if pageSize <= 0 {
-		pageSize = 20
-	} else if pageSize > 100 {
-		pageSize = 100
-	}
-	limit := pageSize
-	offset := (page - 1) * pageSize
 
 	var typeFilter *string
 	if filter.Type != nil && *filter.Type != "" {
@@ -563,7 +570,12 @@ func (r *PostgresRepository) ListTransactions(ctx context.Context, portfolioID u
 		typeFilter = &s
 	}
 
-	rows, err := r.pool.Query(ctx, listTransactionsSQL, portfolioID, typeFilter, filter.Symbol, limit, offset)
+	query := listTransactionsSQL
+	if filter.SortDirection == domain.SortDirectionAsc {
+		query = listTransactionsAscSQL
+	}
+
+	rows, err := r.pool.Query(ctx, query, portfolioID, typeFilter, filter.Symbol, limit, offset)
 	if err != nil {
 		return nil, 0, fmt.Errorf("repository: list transactions failed: %w", err)
 	}

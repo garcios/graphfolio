@@ -559,6 +559,20 @@ This document catalogs all implemented features, in-progress components, and pla
   - Atomic ledger projection replay (`RebuildProjections`) deterministically re-evaluating FIFO tax-lot relief, open position cost basis, realized gains, and cash balance.
   - Automatic multi-day daily portfolio valuation backfill (`BackfillPortfolioValuations`) re-anchoring daily valuation snapshots from $\min(T_{\text{old}}, T_{\text{new}})$ through today.
 
+### 3.6 Download Transactions from Transaction Ledger (Ascending Order)
+- **Status**: **DONE**
+- **User Story**: [download-transactions-ledger.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/download-transactions-ledger.md) (`US-TX-103`)
+- **Plan Reference**: [download-transactions-ledger-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/download-transactions-ledger-implementation-plan.md)
+- **Scope**: Proto (`proto/portfolio/v1/portfolio.proto`), Database (`portfolio.transactions`), Portfolio Service (`services/portfolio-api`), BFF (`bff/`), Main App (`web/apps/main-app`)
+- **Highlights**:
+  - Direct CSV download action ("Export CSV") integrated into the `TransactionLedger.tsx` header toolbar alongside "Import CSV".
+  - Strict ascending chronological ordering (`trade_date ASC, created_at ASC, id ASC`) so financial events flow forward from inception, ensuring seamless ingestion into tax tools and external accounting engines without negative inventory errors.
+  - Complete dataset export across all pages, bypassing UI pagination limits (20 items/page).
+  - Filter-aware export respecting active transaction type filters (e.g. Dividend only) and symbol searches while maintaining chronological integrity.
+  - Comprehensive CSV schema including trade date, transaction type, ticker, company name, quantity, price, gross/net amounts, fee, fee currency, withholding tax, FX rate to base, external broker reference, and user notes.
+  - Robust security and formatting guards: RFC 4180 escaping, UTF-8 BOM encoding for Excel compatibility, and formula injection sanitization (CWE-1236) protecting against leading `=, +, -, @` characters.
+
+
 ### 2.34 User Registration, Authentication & Session Management (Main App)
 - **Status**: **DONE**
 - **User Story**: [user-registration-and-login.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/user-registration-and-login.md) (`US-AUTH-101`)

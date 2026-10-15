@@ -338,17 +338,22 @@ func (s *PortfolioServer) ListTransactions(ctx context.Context, req *pb.ListTran
 	if req.GetPage() < 0 {
 		return nil, status.Errorf(codes.InvalidArgument, "page cannot be negative")
 	}
-	if req.GetPageSize() < 0 || req.GetPageSize() > 100 {
-		return nil, status.Errorf(codes.InvalidArgument, "page size must be between 0 and 100")
+	if (req.GetPageSize() < 0 && req.GetPageSize() != -1) || req.GetPageSize() > 100 {
+		return nil, status.Errorf(codes.InvalidArgument, "page size must be between 0 and 100, or -1 for unpaginated export")
 	}
 
 	page := int(req.GetPage())
-	if page == 0 {
-		page = 1
-	}
 	pageSize := int(req.GetPageSize())
-	if pageSize == 0 {
-		pageSize = 20
+	if pageSize == -1 {
+		page = 1
+		pageSize = -1
+	} else {
+		if page == 0 {
+			page = 1
+		}
+		if pageSize == 0 {
+			pageSize = 20
+		}
 	}
 
 	var typeFilter *domain.TransactionType
@@ -391,11 +396,17 @@ func (s *PortfolioServer) ListTransactions(ctx context.Context, req *pb.ListTran
 		symbolFilter = &sym
 	}
 
+	sortDir := domain.SortDirectionDesc
+	if req.GetSortDirection() == pb.SortDirection_SORT_DIRECTION_ASC {
+		sortDir = domain.SortDirectionAsc
+	}
+
 	filter := domain.TransactionFilter{
-		Type:     typeFilter,
-		Symbol:   symbolFilter,
-		Page:     page,
-		PageSize: pageSize,
+		Type:          typeFilter,
+		Symbol:        symbolFilter,
+		Page:          page,
+		PageSize:      pageSize,
+		SortDirection: sortDir,
 	}
 
 	items, totalCount, err := s.svc.ListTransactions(ctx, userID, filter)
@@ -437,6 +448,15 @@ func (s *PortfolioServer) ListTransactions(ctx context.Context, req *pb.ListTran
 		}
 		if item.Price != nil {
 			protoItem.Price = decimalpb.MoneyToProto(*item.Price, item.CurrencyCode)
+		}
+		if item.WithholdingTax.IsPositive() {
+			protoItem.WithholdingTax = decimalpb.MoneyToProto(item.WithholdingTax, item.CurrencyCode)
+		}
+		if item.FXRateToBase != nil {
+			protoItem.FxRateToBase = decimalpb.ToProto(*item.FXRateToBase)
+		}
+		if item.ExternalRef != nil {
+			protoItem.ExternalRef = *item.ExternalRef
 		}
 		protoItems[i] = protoItem
 	}

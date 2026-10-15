@@ -231,6 +231,21 @@ func toModelTransactionItem(item *pb.TransactionItem) *model.TransactionItem {
 		notes = &n
 	}
 
+	var withholdingTax *model.Money
+	if item.WithholdingTax != nil {
+		withholdingTax = toModelMoney(item.WithholdingTax)
+	}
+	var fxRateToBase *model.Decimal
+	if item.FxRateToBase != nil {
+		d := toModelDecimal(item.FxRateToBase)
+		fxRateToBase = &d
+	}
+	var externalRef *string
+	if item.ExternalRef != "" {
+		ref := item.ExternalRef
+		externalRef = &ref
+	}
+
 	return &model.TransactionItem{
 		ID:             item.Id,
 		Type:           toModelTransactionType(item.Type),
@@ -243,6 +258,9 @@ func toModelTransactionItem(item *pb.TransactionItem) *model.TransactionItem {
 		Fee:            toModelMoney(item.Fee),
 		Notes:          notes,
 		CreatedAt:      item.CreatedAt,
+		WithholdingTax: withholdingTax,
+		FxRateToBase:   fxRateToBase,
+		ExternalRef:    externalRef,
 	}
 }
 
