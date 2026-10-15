@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { client } from '@graphfolio/api-client';
 import { formatMoney, formatQuantity } from '@graphfolio/ui';
 import { EditTransactionModal } from './EditTransactionModal';
+import { formatTransactionsCSV, downloadCSV } from '../services/csv/export';
 import './TransactionLedger.css';
 
 interface Money {
@@ -21,6 +22,9 @@ export interface TransactionItem {
   fee: Money;
   notes?: string | null;
   createdAt: string;
+  withholdingTax?: Money | null;
+  fxRateToBase?: string | null;
+  externalRef?: string | null;
 }
 
 interface TransactionLedgerProps {
@@ -62,6 +66,10 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Export state
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportNotice, setExportNotice] = useState<string | null>(null);
+
   // Edit modal state
   const [txToEdit, setTxToEdit] = useState<TransactionItem | null>(null);
 
@@ -102,6 +110,9 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
               price: { amount: true, currencyCode: true },
               amount: { amount: true, currencyCode: true },
               fee: { amount: true, currencyCode: true },
+              withholdingTax: { amount: true, currencyCode: true },
+              fxRateToBase: true,
+              externalRef: true,
               notes: true,
               createdAt: true,
             },
@@ -197,6 +208,68 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
     }
   };
 
+  const handleExportCSV = async () => {
+    if (isExporting || totalCount === 0) return;
+    setIsExporting(true);
+    setExportNotice(null);
+
+    try {
+      const args: any = {};
+      if (selectedType) {
+        args.type = selectedType;
+      }
+      const trimmed = symbolQuery.trim();
+      if (trimmed) {
+        args.symbol = trimmed.toUpperCase();
+      }
+
+      const res: any = await client.query({
+        exportTransactions: {
+          __args: args,
+          id: true,
+          type: true,
+          symbol: true,
+          instrumentName: true,
+          tradeDate: true,
+          quantity: true,
+          price: { amount: true, currencyCode: true },
+          amount: { amount: true, currencyCode: true },
+          fee: { amount: true, currencyCode: true },
+          withholdingTax: { amount: true, currencyCode: true },
+          fxRateToBase: true,
+          externalRef: true,
+          notes: true,
+          createdAt: true,
+        },
+      });
+
+      const items: TransactionItem[] = res.exportTransactions || [];
+      if (items.length === 0) {
+        setExportNotice('No transactions found to export.');
+        setTimeout(() => setExportNotice(null), 3000);
+        return;
+      }
+
+      const csvContent = formatTransactionsCSV(items);
+      const dateStr = new Date().toISOString().split('T')[0];
+      let filename = `graphfolio-transactions-${dateStr}.csv`;
+      if (trimmed) {
+        filename = `graphfolio-transactions-${trimmed.toLowerCase()}-${dateStr}.csv`;
+      } else if (selectedType) {
+        filename = `graphfolio-transactions-${selectedType.toLowerCase()}-${dateStr}.csv`;
+      }
+
+      downloadCSV(csvContent, filename);
+      setExportNotice(`Exported ${items.length} transaction${items.length === 1 ? '' : 's'} (oldest first).`);
+      setTimeout(() => setExportNotice(null), 4000);
+    } catch (err: any) {
+      console.error('Failed to export transactions:', err);
+      setError('Failed to export transactions. Please try again.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const startItem = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
   const endItem = Math.min(page * pageSize, totalCount);
@@ -228,17 +301,42 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
             <h3>Transaction Ledger</h3>
             <p>Authoritative record of all cash flows and trades with automatic projection replay</p>
           </div>
-          {onOpenImportModal && (
+          <div className="ledger-actions-group">
             <button
               type="button"
-              className="btn-import-csv"
-              onClick={onOpenImportModal}
-              title="Import trades from CommSec or nabtrade CSV"
+              className="btn-export-csv"
+              onClick={handleExportCSV}
+              disabled={isExporting || totalCount === 0}
+              title="Download transactions sorted chronologically (oldest first)"
             >
-              📥 Import CSV
+              {isExporting ? (
+                <>
+                  <span className="spinner-sm" /> Exporting...
+                </>
+              ) : (
+                <>
+                  <span className="btn-icon">📤</span> Export CSV
+                </>
+              )}
             </button>
-          )}
+            {onOpenImportModal && (
+              <button
+                type="button"
+                className="btn-import-csv"
+                onClick={onOpenImportModal}
+                title="Import trades from CommSec or nabtrade CSV"
+              >
+                📥 Import CSV
+              </button>
+            )}
+          </div>
         </div>
+
+        {exportNotice && (
+          <div className="ledger-toast-notice">
+            <span>✓ {exportNotice}</span>
+          </div>
+        )}
 
         {/* Toolbar: Filters and Search */}
         <div className="ledger-toolbar">

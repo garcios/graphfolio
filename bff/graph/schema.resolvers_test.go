@@ -886,7 +886,8 @@ func TestQueryResolver_Transactions(t *testing.T) {
 		resolver := &Resolver{PortfolioClient: fakeClient}
 		qResolver := resolver.Query()
 
-		res, err := qResolver.Transactions(ctx, &typeArg, &symbolArg, &pageArg, &pageSizeArg)
+		sortDir := model.SortDirectionAsc
+		res, err := qResolver.Transactions(ctx, &typeArg, &symbolArg, &pageArg, &pageSizeArg, &sortDir)
 		if err != nil {
 			t.Fatalf("unexpected error: %v", err)
 		}
@@ -949,12 +950,88 @@ func TestQueryResolver_Transactions(t *testing.T) {
 		resolver := &Resolver{PortfolioClient: fakeClient}
 		qResolver := resolver.Query()
 
-		_, err := qResolver.Transactions(ctx, nil, nil, nil, nil)
+		_, err := qResolver.Transactions(ctx, nil, nil, nil, nil, nil)
 		if err == nil {
 			t.Fatalf("expected error, got nil")
 		}
 		if err != context.DeadlineExceeded {
 			t.Errorf("expected DeadlineExceeded, got %v", err)
+		}
+	})
+}
+
+func TestQueryResolver_ExportTransactions(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("success requests unpaginated ascending transactions", func(t *testing.T) {
+		typeArg := model.TransactionTypeBuy
+		symbolArg := "AAPL"
+
+		fakeClient := &fakePortfolioClient{
+			listTransactionsFn: func(ctx context.Context, in *pb.ListTransactionsRequest) (*pb.ListTransactionsResponse, error) {
+				if in.PageSize != -1 {
+					t.Errorf("expected PageSize -1 for export, got %d", in.PageSize)
+				}
+				if in.SortDirection != pb.SortDirection_SORT_DIRECTION_ASC {
+					t.Errorf("expected SortDirectionAsc, got %v", in.SortDirection)
+				}
+				if in.Symbol != "AAPL" {
+					t.Errorf("expected symbol AAPL, got %s", in.Symbol)
+				}
+				return &pb.ListTransactionsResponse{
+					Transactions: []*pb.TransactionItem{
+						{
+							Id:             "tx-1",
+							Type:           pb.TransactionType_TRANSACTION_TYPE_BUY,
+							Symbol:         "AAPL",
+							InstrumentName: "Apple Inc.",
+							TradeDate:      "2023-01-15",
+							Quantity:       &commonpb.Decimal{Value: "10"},
+							Price: &commonpb.Money{
+								Amount:       &commonpb.Decimal{Value: "150.00"},
+								CurrencyCode: "USD",
+							},
+							Amount: &commonpb.Money{
+								Amount:       &commonpb.Decimal{Value: "1500.00"},
+								CurrencyCode: "USD",
+							},
+							Fee: &commonpb.Money{
+								Amount:       &commonpb.Decimal{Value: "5.00"},
+								CurrencyCode: "USD",
+							},
+							WithholdingTax: &commonpb.Money{
+								Amount:       &commonpb.Decimal{Value: "0.00"},
+								CurrencyCode: "USD",
+							},
+							FxRateToBase: &commonpb.Decimal{Value: "1.500000"},
+							ExternalRef:  "BROKER-123",
+							Notes:        "Inception purchase",
+							CreatedAt:    "2023-01-15T10:00:00Z",
+						},
+					},
+					TotalCount: 1,
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		qResolver := resolver.Query()
+
+		items, err := qResolver.ExportTransactions(ctx, &typeArg, &symbolArg)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(items) != 1 {
+			t.Fatalf("expected 1 item, got %d", len(items))
+		}
+		if items[0].ID != "tx-1" {
+			t.Errorf("expected tx-1, got %s", items[0].ID)
+		}
+		if items[0].ExternalRef == nil || *items[0].ExternalRef != "BROKER-123" {
+			t.Errorf("expected BROKER-123 external ref, got %v", items[0].ExternalRef)
+		}
+		if items[0].FxRateToBase == nil || (items[0].FxRateToBase.String() != "1.5" && items[0].FxRateToBase.String() != "1.500000") {
+			t.Errorf("expected fxRateToBase 1.5, got %v", items[0].FxRateToBase)
 		}
 	})
 }

@@ -431,6 +431,7 @@ type ComplexityRoot struct {
 		CurrencyPairHistory        func(childComplexity int, baseCurrency string, quoteCurrency string, timeframe model.HistoryTimeframe) int
 		CurrencyPairs              func(childComplexity int) int
 		Exchanges                  func(childComplexity int) int
+		ExportTransactions         func(childComplexity int, typeArg *model.TransactionType, symbol *string) int
 		FxRates                    func(childComplexity int, baseCurrency *string, quoteCurrency *string, fromDate *string, toDate *string, limit *int, offset *int) int
 		IngestionStatus            func(childComplexity int) int
 		InstrumentPrices           func(childComplexity int, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) int
@@ -442,7 +443,7 @@ type ComplexityRoot struct {
 		Portfolio                  func(childComplexity int, includeClosed *bool) int
 		PortfolioHistory           func(childComplexity int, timeframe model.HistoryTimeframe) int
 		SupportedCurrencies        func(childComplexity int) int
-		Transactions               func(childComplexity int, typeArg *model.TransactionType, symbol *string, page *int, pageSize *int) int
+		Transactions               func(childComplexity int, typeArg *model.TransactionType, symbol *string, page *int, pageSize *int, sortDirection *model.SortDirection) int
 		UserPreferences            func(childComplexity int) int
 	}
 
@@ -459,7 +460,9 @@ type ComplexityRoot struct {
 	TransactionItem struct {
 		Amount         func(childComplexity int) int
 		CreatedAt      func(childComplexity int) int
+		ExternalRef    func(childComplexity int) int
 		Fee            func(childComplexity int) int
+		FxRateToBase   func(childComplexity int) int
 		ID             func(childComplexity int) int
 		InstrumentName func(childComplexity int) int
 		Notes          func(childComplexity int) int
@@ -468,6 +471,7 @@ type ComplexityRoot struct {
 		Symbol         func(childComplexity int) int
 		TradeDate      func(childComplexity int) int
 		Type           func(childComplexity int) int
+		WithholdingTax func(childComplexity int) int
 	}
 
 	TransactionsConnection struct {
@@ -535,7 +539,8 @@ type QueryResolver interface {
 	Portfolio(ctx context.Context, includeClosed *bool) (*model.Portfolio, error)
 	Instruments(ctx context.Context) ([]*model.Instrument, error)
 	PortfolioHistory(ctx context.Context, timeframe model.HistoryTimeframe) (*model.PortfolioHistory, error)
-	Transactions(ctx context.Context, typeArg *model.TransactionType, symbol *string, page *int, pageSize *int) (*model.TransactionsConnection, error)
+	Transactions(ctx context.Context, typeArg *model.TransactionType, symbol *string, page *int, pageSize *int, sortDirection *model.SortDirection) (*model.TransactionsConnection, error)
+	ExportTransactions(ctx context.Context, typeArg *model.TransactionType, symbol *string) ([]*model.TransactionItem, error)
 	AllInstruments(ctx context.Context, isActive *bool, search *string) ([]*model.Instrument, error)
 	Exchanges(ctx context.Context) ([]*model.Exchange, error)
 	InstrumentPrices(ctx context.Context, symbol *string, fromDate *string, toDate *string, limit *int, offset *int) (*model.InstrumentPricesConnection, error)
@@ -2368,6 +2373,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.Exchanges(childComplexity), true
+	case "Query.exportTransactions":
+		if e.ComplexityRoot.Query.ExportTransactions == nil {
+			break
+		}
+
+		args, err := ec.field_Query_exportTransactions_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.ExportTransactions(childComplexity, args["type"].(*model.TransactionType), args["symbol"].(*string)), true
 	case "Query.fxRates":
 		if e.ComplexityRoot.Query.FxRates == nil {
 			break
@@ -2480,7 +2496,7 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 			return 0, false
 		}
 
-		return e.ComplexityRoot.Query.Transactions(childComplexity, args["type"].(*model.TransactionType), args["symbol"].(*string), args["page"].(*int), args["pageSize"].(*int)), true
+		return e.ComplexityRoot.Query.Transactions(childComplexity, args["type"].(*model.TransactionType), args["symbol"].(*string), args["page"].(*int), args["pageSize"].(*int), args["sortDirection"].(*model.SortDirection)), true
 	case "Query.userPreferences":
 		if e.ComplexityRoot.Query.UserPreferences == nil {
 			break
@@ -2526,12 +2542,24 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.TransactionItem.CreatedAt(childComplexity), true
+	case "TransactionItem.externalRef":
+		if e.ComplexityRoot.TransactionItem.ExternalRef == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TransactionItem.ExternalRef(childComplexity), true
 	case "TransactionItem.fee":
 		if e.ComplexityRoot.TransactionItem.Fee == nil {
 			break
 		}
 
 		return e.ComplexityRoot.TransactionItem.Fee(childComplexity), true
+	case "TransactionItem.fxRateToBase":
+		if e.ComplexityRoot.TransactionItem.FxRateToBase == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TransactionItem.FxRateToBase(childComplexity), true
 	case "TransactionItem.id":
 		if e.ComplexityRoot.TransactionItem.ID == nil {
 			break
@@ -2580,6 +2608,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.TransactionItem.Type(childComplexity), true
+	case "TransactionItem.withholdingTax":
+		if e.ComplexityRoot.TransactionItem.WithholdingTax == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TransactionItem.WithholdingTax(childComplexity), true
 
 	case "TransactionsConnection.items":
 		if e.ComplexityRoot.TransactionsConnection.Items == nil {
@@ -3608,6 +3642,12 @@ func (ec *executionContext) childFields_TransactionItem(ctx context.Context, fie
 		return ec.fieldContext_TransactionItem_notes(ctx, field)
 	case "createdAt":
 		return ec.fieldContext_TransactionItem_createdAt(ctx, field)
+	case "withholdingTax":
+		return ec.fieldContext_TransactionItem_withholdingTax(ctx, field)
+	case "fxRateToBase":
+		return ec.fieldContext_TransactionItem_fxRateToBase(ctx, field)
+	case "externalRef":
+		return ec.fieldContext_TransactionItem_externalRef(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type TransactionItem", field.Name)
 }
@@ -4152,6 +4192,28 @@ func (ec *executionContext) field_Query_currencyPairHistory_args(ctx context.Con
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_exportTransactions_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "type",
+		func(ctx context.Context, v any) (*model.TransactionType, error) {
+			return ec.unmarshalOTransactionType2ᚖbffᚋgraphᚋmodelᚐTransactionType(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["type"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "symbol",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["symbol"] = arg1
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_fxRates_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -4445,6 +4507,14 @@ func (ec *executionContext) field_Query_transactions_args(ctx context.Context, r
 		return nil, err
 	}
 	args["pageSize"] = arg3
+	arg4, err := graphql.ProcessArgField(ctx, rawArgs, "sortDirection",
+		func(ctx context.Context, v any) (*model.SortDirection, error) {
+			return ec.unmarshalOSortDirection2ᚖbffᚋgraphᚋmodelᚐSortDirection(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["sortDirection"] = arg4
 	return args, nil
 }
 
@@ -11702,7 +11772,7 @@ func (ec *executionContext) _Query_transactions(ctx context.Context, field graph
 		},
 		func(ctx context.Context) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
-			return ec.Resolvers.Query().Transactions(ctx, fc.Args["type"].(*model.TransactionType), fc.Args["symbol"].(*string), fc.Args["page"].(*int), fc.Args["pageSize"].(*int))
+			return ec.Resolvers.Query().Transactions(ctx, fc.Args["type"].(*model.TransactionType), fc.Args["symbol"].(*string), fc.Args["page"].(*int), fc.Args["pageSize"].(*int), fc.Args["sortDirection"].(*model.SortDirection))
 		},
 		nil,
 		func(ctx context.Context, selections ast.SelectionSet, v *model.TransactionsConnection) graphql.Marshaler {
@@ -11730,6 +11800,50 @@ func (ec *executionContext) fieldContext_Query_transactions(ctx context.Context,
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_transactions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_exportTransactions(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_exportTransactions(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().ExportTransactions(ctx, fc.Args["type"].(*model.TransactionType), fc.Args["symbol"].(*string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.TransactionItem) graphql.Marshaler {
+			return ec.marshalNTransactionItem2ᚕᚖbffᚋgraphᚋmodelᚐTransactionItemᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_exportTransactions(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_TransactionItem(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_exportTransactions_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -12863,6 +12977,84 @@ func (ec *executionContext) _TransactionItem_createdAt(ctx context.Context, fiel
 	)
 }
 func (ec *executionContext) fieldContext_TransactionItem_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TransactionItem", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _TransactionItem_withholdingTax(ctx context.Context, field graphql.CollectedField, obj *model.TransactionItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TransactionItem_withholdingTax(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.WithholdingTax, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalOMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_TransactionItem_withholdingTax(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TransactionItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TransactionItem_fxRateToBase(ctx context.Context, field graphql.CollectedField, obj *model.TransactionItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TransactionItem_fxRateToBase(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FxRateToBase, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Decimal) graphql.Marshaler {
+			return ec.marshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_TransactionItem_fxRateToBase(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TransactionItem", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _TransactionItem_externalRef(ctx context.Context, field graphql.CollectedField, obj *model.TransactionItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TransactionItem_externalRef(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ExternalRef, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_TransactionItem_externalRef(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("TransactionItem", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
@@ -18167,6 +18359,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "exportTransactions":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_exportTransactions(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "allInstruments":
 			field := field
 
@@ -18727,6 +18941,21 @@ func (ec *executionContext) _TransactionItem(ctx context.Context, sel ast.Select
 		case "createdAt":
 			out.Values[i] = ec._TransactionItem_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "withholdingTax":
+			out.Values[i] = ec._TransactionItem_withholdingTax(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "fxRateToBase":
+			out.Values[i] = ec._TransactionItem_fxRateToBase(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "externalRef":
+			out.Values[i] = ec._TransactionItem_externalRef(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
 				out.Invalids++
 			}
 		default:
@@ -20646,6 +20875,22 @@ func (ec *executionContext) marshalOPortfolio2ᚖbffᚋgraphᚋmodelᚐPortfolio
 		return graphql.Null
 	}
 	return ec._Portfolio(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalOSortDirection2ᚖbffᚋgraphᚋmodelᚐSortDirection(ctx context.Context, v any) (*model.SortDirection, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.SortDirection)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOSortDirection2ᚖbffᚋgraphᚋmodelᚐSortDirection(ctx context.Context, sel ast.SelectionSet, v *model.SortDirection) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOString2ᚕstringᚄ(ctx context.Context, v any) ([]string, error) {

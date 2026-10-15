@@ -219,26 +219,36 @@ message GetPortfolioHistoryResponse {
   common.v1.Decimal       return_percent = 5;
 }
 
+enum SortDirection {
+  SORT_DIRECTION_UNSPECIFIED = 0;
+  SORT_DIRECTION_DESC        = 1; // Default: newest first for UI display
+  SORT_DIRECTION_ASC         = 2; // Chronological: oldest first for export/audit
+}
+
 message TransactionItem {
-  string            id              = 1;
-  TransactionType   type            = 2;
-  string            symbol          = 3; // empty for cash events
-  string            instrument_name = 4;
-  string            trade_date      = 5; // YYYY-MM-DD
-  common.v1.Decimal quantity        = 6; // nullable
-  common.v1.Money   price           = 7; // nullable
-  common.v1.Money   amount          = 8;
-  common.v1.Money   fee             = 9;
-  string            notes           = 10;
-  string            created_at      = 11;
+  string            id                  = 1;
+  TransactionType   type                = 2;
+  string            symbol              = 3; // empty for cash events
+  string            instrument_name     = 4;
+  string            trade_date          = 5; // YYYY-MM-DD
+  common.v1.Decimal quantity            = 6; // nullable
+  common.v1.Money   price               = 7; // nullable
+  common.v1.Money   amount              = 8;
+  common.v1.Money   fee                 = 9;
+  string            notes               = 10;
+  string            created_at          = 11;
+  common.v1.Money   withholding_tax     = 12;
+  common.v1.Decimal fx_rate_to_base     = 13;
+  string            external_ref        = 14;
 }
 
 message ListTransactionsRequest {
-  string          user_id   = 1;
-  TransactionType type      = 2; // optional filter (0 = all)
-  string          symbol    = 3; // optional symbol filter
-  int32           page      = 4; // 1-indexed, default 1
-  int32           page_size = 5; // default 20, max 100
+  string          user_id        = 1;
+  TransactionType type           = 2; // optional filter (0 = all)
+  string          symbol         = 3; // optional symbol filter
+  int32           page           = 4; // 1-indexed, default 1
+  int32           page_size      = 5; // default 20, max 100 (0 = unpaginated / return all)
+  SortDirection   sort_direction = 6;
 }
 
 message ListTransactionsResponse {

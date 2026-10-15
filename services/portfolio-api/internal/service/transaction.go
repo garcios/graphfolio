@@ -308,13 +308,19 @@ func (s *portfolioService) ListTransactions(ctx context.Context, userID string, 
 		return nil, 0, fmt.Errorf("service: find portfolio: %w", err)
 	}
 
-	if filter.Page < 1 {
+	if filter.PageSize < 0 {
+		// Unpaginated mode for export (return all matching transactions)
+		filter.PageSize = 0
 		filter.Page = 1
-	}
-	if filter.PageSize <= 0 {
-		filter.PageSize = 20
-	} else if filter.PageSize > 100 {
-		filter.PageSize = 100
+	} else {
+		if filter.Page < 1 {
+			filter.Page = 1
+		}
+		if filter.PageSize == 0 {
+			filter.PageSize = 20
+		} else if filter.PageSize > 100 {
+			filter.PageSize = 100
+		}
 	}
 
 	if filter.Symbol != nil && *filter.Symbol != "" {

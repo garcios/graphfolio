@@ -50,11 +50,19 @@ type TransactionWithInstrument struct {
 	InstrumentName *string
 }
 
+type SortDirection string
+
+const (
+	SortDirectionDesc SortDirection = "DESC"
+	SortDirectionAsc  SortDirection = "ASC"
+)
+
 type TransactionFilter struct {
-	Type     *TransactionType
-	Symbol   *string
-	Page     int
-	PageSize int
+	Type          *TransactionType
+	Symbol        *string
+	Page          int
+	PageSize      int
+	SortDirection SortDirection
 }
 
 type AddTransactionInput struct {

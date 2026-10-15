@@ -588,7 +588,7 @@ func (r *queryResolver) PortfolioHistory(ctx context.Context, timeframe model.Hi
 }
 
 // Transactions is the resolver for the transactions field.
-func (r *queryResolver) Transactions(ctx context.Context, typeArg *model.TransactionType, symbol *string, page *int, pageSize *int) (*model.TransactionsConnection, error) {
+func (r *queryResolver) Transactions(ctx context.Context, typeArg *model.TransactionType, symbol *string, page *int, pageSize *int, sortDirection *model.SortDirection) (*model.TransactionsConnection, error) {
 	req := &pb.ListTransactionsRequest{
 		UserId: r.resolveUserID(ctx),
 	}
@@ -605,6 +605,14 @@ func (r *queryResolver) Transactions(ctx context.Context, typeArg *model.Transac
 	if pageSize != nil {
 		req.PageSize = int32(*pageSize)
 	}
+	if sortDirection != nil {
+		switch *sortDirection {
+		case model.SortDirectionAsc:
+			req.SortDirection = pb.SortDirection_SORT_DIRECTION_ASC
+		case model.SortDirectionDesc:
+			req.SortDirection = pb.SortDirection_SORT_DIRECTION_DESC
+		}
+	}
 
 	resp, err := r.PortfolioClient.ListTransactions(ctx, req)
 	if err != nil {
@@ -612,6 +620,34 @@ func (r *queryResolver) Transactions(ctx context.Context, typeArg *model.Transac
 	}
 
 	return toModelTransactionsConnection(resp), nil
+}
+
+// ExportTransactions is the resolver for the exportTransactions field.
+func (r *queryResolver) ExportTransactions(ctx context.Context, typeArg *model.TransactionType, symbol *string) ([]*model.TransactionItem, error) {
+	req := &pb.ListTransactionsRequest{
+		UserId:        r.resolveUserID(ctx),
+		PageSize:      -1, // signals unpaginated export
+		SortDirection: pb.SortDirection_SORT_DIRECTION_ASC,
+	}
+
+	if typeArg != nil {
+		req.Type = toProtoTransactionType(*typeArg)
+	}
+	if symbol != nil {
+		req.Symbol = *symbol
+	}
+
+	resp, err := r.PortfolioClient.ListTransactions(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	items := make([]*model.TransactionItem, len(resp.Transactions))
+	for i, tx := range resp.Transactions {
+		items[i] = toModelTransactionItem(tx)
+	}
+
+	return items, nil
 }
 
 // AllInstruments is the resolver for the allInstruments field.

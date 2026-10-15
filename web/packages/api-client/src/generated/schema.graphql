@@ -21,6 +21,11 @@ enum TransactionType {
   SPLIT
 }
 
+enum SortDirection {
+  ASC
+  DESC
+}
+
 input AddTransactionInput {
   type: TransactionType!
   symbol: String
@@ -81,7 +86,8 @@ type Query {
   portfolio(includeClosed: Boolean): Portfolio!
   instruments: [Instrument!]!
   portfolioHistory(timeframe: HistoryTimeframe!): PortfolioHistory!
-  transactions(type: TransactionType, symbol: String, page: Int = 1, pageSize: Int = 20): TransactionsConnection!
+  transactions(type: TransactionType, symbol: String, page: Int = 1, pageSize: Int = 20, sortDirection: SortDirection = DESC): TransactionsConnection!
+  exportTransactions(type: TransactionType, symbol: String): [TransactionItem!]!
   allInstruments(isActive: Boolean, search: String): [Instrument!]!
   exchanges: [Exchange!]!
   instrumentPrices(symbol: String, fromDate: String, toDate: String, limit: Int = 50, offset: Int = 0): InstrumentPricesConnection!
@@ -138,6 +144,9 @@ type TransactionItem {
   fee: Money!
   notes: String
   createdAt: String!
+  withholdingTax: Money
+  fxRateToBase: Decimal
+  externalRef: String
 }
 
 type TransactionsConnection {
