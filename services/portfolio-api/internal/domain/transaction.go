@@ -71,6 +71,22 @@ type AddTransactionInput struct {
 	Notes           *string
 }
 
+type UpdateTransactionInput struct {
+	UserID          string
+	TransactionID   string
+	Type            TransactionType
+	Symbol          *string
+	TradeDate       time.Time
+	Quantity        *decimal.Decimal
+	Price           *decimal.Decimal
+	Amount          *decimal.Decimal
+	CurrencyCode    *string
+	Fee             *decimal.Decimal
+	FeeCurrencyCode *string
+	Notes           *string
+	FXRateToBase    *decimal.Decimal
+}
+
 type ImportTransactionItem struct {
 	Type            TransactionType
 	Symbol          string

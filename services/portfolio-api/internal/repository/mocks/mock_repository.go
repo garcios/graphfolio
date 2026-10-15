@@ -480,6 +480,21 @@ func (mr *MockRepositoryMockRecorder) GetPortfolioValuations(ctx, portfolioID, f
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPortfolioValuations", reflect.TypeOf((*MockRepository)(nil).GetPortfolioValuations), ctx, portfolioID, fromDate)
 }
 
+// GetTransactionByID mocks base method.
+func (m *MockRepository) GetTransactionByID(ctx context.Context, portfolioID, transactionID uuid.UUID) (*domain.Transaction, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTransactionByID", ctx, portfolioID, transactionID)
+	ret0, _ := ret[0].(*domain.Transaction)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTransactionByID indicates an expected call of GetTransactionByID.
+func (mr *MockRepositoryMockRecorder) GetTransactionByID(ctx, portfolioID, transactionID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTransactionByID", reflect.TypeOf((*MockRepository)(nil).GetTransactionByID), ctx, portfolioID, transactionID)
+}
+
 // GetTransactions mocks base method.
 func (m *MockRepository) GetTransactions(ctx context.Context, portfolioID uuid.UUID) ([]domain.Transaction, error) {
 	m.ctrl.T.Helper()
@@ -779,6 +794,21 @@ func (m *MockRepository) UpdatePortfolioBaseCurrency(ctx context.Context, portfo
 func (mr *MockRepositoryMockRecorder) UpdatePortfolioBaseCurrency(ctx, portfolioID, baseCurrency, fxRate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePortfolioBaseCurrency", reflect.TypeOf((*MockRepository)(nil).UpdatePortfolioBaseCurrency), ctx, portfolioID, baseCurrency, fxRate)
+}
+
+// UpdateTransaction mocks base method.
+func (m *MockRepository) UpdateTransaction(ctx context.Context, portfolioID uuid.UUID, tx domain.Transaction) (*domain.Transaction, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateTransaction", ctx, portfolioID, tx)
+	ret0, _ := ret[0].(*domain.Transaction)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateTransaction indicates an expected call of UpdateTransaction.
+func (mr *MockRepositoryMockRecorder) UpdateTransaction(ctx, portfolioID, tx any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTransaction", reflect.TypeOf((*MockRepository)(nil).UpdateTransaction), ctx, portfolioID, tx)
 }
 
 // UpsertFXRate mocks base method.

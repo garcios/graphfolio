@@ -673,6 +673,84 @@ func (r *PostgresRepository) DeleteTransaction(ctx context.Context, portfolioID 
 	return nil
 }
 
+func (r *PostgresRepository) GetTransactionByID(ctx context.Context, portfolioID uuid.UUID, transactionID uuid.UUID) (*domain.Transaction, error) {
+	row := r.pool.QueryRow(ctx, getTransactionByIDSQL, transactionID, portfolioID)
+
+	var tx domain.Transaction
+	var txType string
+	err := row.Scan(
+		&tx.ID,
+		&tx.PortfolioID,
+		&tx.InstrumentID,
+		&txType,
+		&tx.TradeDate,
+		&tx.Quantity,
+		&tx.Price,
+		&tx.Amount,
+		&tx.CurrencyCode,
+		&tx.Fee,
+		&tx.WithholdingTax,
+		&tx.FXRateToBase,
+		&tx.ExternalRef,
+		&tx.Notes,
+		&tx.FeeCurrencyCode,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrTransactionNotFound
+		}
+		return nil, fmt.Errorf("repository: get transaction failed: %w", err)
+	}
+	tx.Type = domain.TransactionType(txType)
+	return &tx, nil
+}
+
+func (r *PostgresRepository) UpdateTransaction(ctx context.Context, portfolioID uuid.UUID, tx domain.Transaction) (*domain.Transaction, error) {
+	row := r.pool.QueryRow(ctx, updateTransactionSQL,
+		tx.InstrumentID,
+		string(tx.Type),
+		tx.TradeDate,
+		tx.Quantity,
+		tx.Price,
+		tx.Amount,
+		tx.CurrencyCode,
+		tx.Fee,
+		tx.FeeCurrencyCode,
+		tx.FXRateToBase,
+		tx.Notes,
+		tx.ID,
+		portfolioID,
+	)
+
+	var updated domain.Transaction
+	var txType string
+	err := row.Scan(
+		&updated.ID,
+		&updated.PortfolioID,
+		&updated.InstrumentID,
+		&txType,
+		&updated.TradeDate,
+		&updated.Quantity,
+		&updated.Price,
+		&updated.Amount,
+		&updated.CurrencyCode,
+		&updated.Fee,
+		&updated.WithholdingTax,
+		&updated.FXRateToBase,
+		&updated.ExternalRef,
+		&updated.Notes,
+		&updated.FeeCurrencyCode,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrTransactionNotFound
+		}
+		return nil, fmt.Errorf("repository: update transaction failed: %w", err)
+	}
+	updated.Type = domain.TransactionType(txType)
+	return &updated, nil
+}
+
 func (r *PostgresRepository) FindInstrumentBySymbol(ctx context.Context, symbol string) (*domain.Instrument, error) {
 	row := r.pool.QueryRow(ctx, findInstrumentBySymbolSQL, symbol)
 

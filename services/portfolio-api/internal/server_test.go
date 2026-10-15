@@ -980,6 +980,120 @@ func TestPortfolioServer_DeleteTransaction(t *testing.T) {
 	})
 }
 
+func TestPortfolioServer_UpdateTransaction(t *testing.T) {
+	ctx := context.Background()
+
+	mockSummary := &domain.PortfolioSummary{
+		Portfolio: domain.Portfolio{
+			ID:           uuid.New(),
+			UserID:       uuid.New(),
+			Name:         "Main Tech",
+			BaseCurrency: "USD",
+		},
+		TotalValue: domain.Money{
+			Amount:       decimal.RequireFromString("150000.00"),
+			CurrencyCode: "USD",
+		},
+		CashBalance: domain.Money{
+			Amount:       decimal.RequireFromString("25000.00"),
+			CurrencyCode: "USD",
+		},
+	}
+
+	txID := uuid.New()
+	instID := uuid.New()
+	sym := "AAPL"
+	instName := "Apple Inc."
+	qty := decimal.NewFromInt(50)
+	price := decimal.RequireFromString("180.00")
+	tradeDate := time.Date(2025, 4, 12, 0, 0, 0, 0, time.UTC)
+
+	mockItem := &domain.TransactionWithInstrument{
+		Transaction: domain.Transaction{
+			ID:           txID,
+			PortfolioID:  mockSummary.Portfolio.ID,
+			InstrumentID: &instID,
+			Type:         domain.TxTypeBuy,
+			TradeDate:    tradeDate,
+			Quantity:     &qty,
+			Price:        &price,
+			Amount:       decimal.RequireFromString("9000.00"),
+			CurrencyCode: "USD",
+			Fee:          decimal.RequireFromString("5.00"),
+			CreatedAt:    time.Now().UTC(),
+		},
+		Symbol:         &sym,
+		InstrumentName: &instName,
+	}
+
+	t.Run("success updates transaction and returns payload", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().UpdateTransaction(ctx, gomock.Any()).Return(mockItem, mockSummary, nil)
+
+		res, err := server.UpdateTransaction(ctx, &pb.UpdateTransactionRequest{
+			UserId:        "user-123",
+			TransactionId: txID.String(),
+			Type:          pb.TransactionType_TRANSACTION_TYPE_BUY,
+			TradeDate:     "2025-04-12",
+			Symbol:        &sym,
+			Quantity:      &commonpb.Decimal{Value: "50"},
+			Price:         &commonpb.Money{Amount: &commonpb.Decimal{Value: "180.00"}, CurrencyCode: "USD"},
+			Amount:        &commonpb.Money{Amount: &commonpb.Decimal{Value: "9000.00"}, CurrencyCode: "USD"},
+		})
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res == nil || !res.Success {
+			t.Fatalf("expected success response")
+		}
+		if res.Transaction.Symbol != "AAPL" {
+			t.Errorf("expected symbol AAPL, got %s", res.Transaction.Symbol)
+		}
+	})
+
+	t.Run("invalid argument when transaction id is empty", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		_, err := server.UpdateTransaction(ctx, &pb.UpdateTransactionRequest{
+			TransactionId: "",
+			Type:          pb.TransactionType_TRANSACTION_TYPE_BUY,
+		})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.InvalidArgument {
+			t.Errorf("expected InvalidArgument, got: %v", st.Code())
+		}
+	})
+
+	t.Run("negative inventory returns FailedPrecondition", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().UpdateTransaction(ctx, gomock.Any()).Return(nil, nil, errors.New("service: trade modification causes negative share inventory (-10 shares of AAPL)"))
+
+		_, err := server.UpdateTransaction(ctx, &pb.UpdateTransactionRequest{
+			TransactionId: txID.String(),
+			Type:          pb.TransactionType_TRANSACTION_TYPE_BUY,
+			TradeDate:     "2025-04-12",
+		})
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		st, _ := status.FromError(err)
+		if st.Code() != codes.FailedPrecondition {
+			t.Errorf("expected FailedPrecondition, got: %v", st.Code())
+		}
+	})
+}
+
 func TestPortfolioServer_ListAllInstruments(t *testing.T) {
 	ctx := context.Background()
 

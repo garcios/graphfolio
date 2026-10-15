@@ -43,6 +43,7 @@ This document catalogs all implemented features, in-progress components, and pla
 | **33** | **Portfolio Benchmark Comparison & Relative Performance Analytics (S&P 500, NASDAQ-100, ASX 200)** | **DONE** | Database, Proto, Svc, BFF, Web | [benchmark-performance-comparison-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/benchmark-performance-comparison-implementation-plan.md) |
 | **35** | **User Registration, Authentication & Session Management (Main App)** | **DONE** | Proto, User API, BFF, Web | [user-registration-and-login-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/user-registration-and-login-implementation-plan.md) |
 | **36** | **User Password Change & Session Invalidation (Main App)** | **DONE** | Proto, User API, BFF, Web | [user-change-password-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/user-change-password-implementation-plan.md) |
+| **37** | **In-Place Transaction Editing in Transaction Ledger** | **PLANNED** | Proto, Svc, BFF, Web | [edit-transaction-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/edit-transaction-implementation-plan.md) |
 
 
 
@@ -545,6 +546,18 @@ This document catalogs all implemented features, in-progress components, and pla
   - Total Return adjusted close (`adjclose`) ingestion for ETF proxies to ensure multi-year reinvested dividend comparability and eliminate dividend bias.
   - Multi-year historical backfill capability via CLI (`cmd/market-ingest -symbol SP500TR -from 2020-01-01`) and Admin backfill triggers.
   - Integration with Admin Portal `MissingPricesReport` to identify and backfill missing benchmark quotes with a single click.
+
+### 3.5 In-Place Transaction Editing in Transaction Ledger
+- **Status**: **PLANNED**
+- **User Story**: [edit-transaction-ledger.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/edit-transaction-ledger.md) (`US-TX-102`)
+- **Plan Reference**: [edit-transaction-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/edit-transaction-implementation-plan.md)
+- **Scope**: Proto (`proto/portfolio/v1/portfolio.proto`), Database (`portfolio.transactions`, `portfolio.tax_lots`, `portfolio.projections_holdings`), Portfolio Service (`services/portfolio-api`), BFF (`bff/`), Main App (`web/apps/main-app`)
+- **Highlights**:
+  - In-place transaction editing directly from the `TransactionLedger.tsx` table via a dedicated pencil icon action button.
+  - Dark glassmorphic `EditTransactionModal` pre-populated with trade parameters (date, ticker, quantity, execution price, net amount, brokerage fees, and notes).
+  - Short-sale prevention and Negative Inventory Guard verifying that editing historical trades never causes interim inventory to dip below zero.
+  - Atomic ledger projection replay (`RebuildProjections`) deterministically re-evaluating FIFO tax-lot relief, open position cost basis, realized gains, and cash balance.
+  - Automatic multi-day daily portfolio valuation backfill (`BackfillPortfolioValuations`) re-anchoring daily valuation snapshots from $\min(T_{\text{old}}, T_{\text{new}})$ through today.
 
 ### 2.34 User Registration, Authentication & Session Management (Main App)
 - **Status**: **DONE**

@@ -70,6 +70,50 @@ func (r *mutationResolver) DeleteTransaction(ctx context.Context, id string) (*m
 	}, nil
 }
 
+// UpdateTransaction is the resolver for the updateTransaction field.
+func (r *mutationResolver) UpdateTransaction(ctx context.Context, id string, input model.UpdateTransactionInput) (*model.UpdateTransactionPayload, error) {
+	currency := "USD"
+	if input.CurrencyCode != nil && *input.CurrencyCode != "" {
+		currency = *input.CurrencyCode
+	}
+
+	feeCurrency := currency
+	if input.FeeCurrencyCode != nil && *input.FeeCurrencyCode != "" {
+		feeCurrency = *input.FeeCurrencyCode
+	}
+
+	req := &pb.UpdateTransactionRequest{
+		UserId:          r.resolveUserID(ctx),
+		TransactionId:   id,
+		Type:            toProtoTransactionType(input.Type),
+		TradeDate:       input.TradeDate,
+		Quantity:        toProtoDecimal(input.Quantity),
+		Price:           toProtoMoney(input.Price, currency),
+		Amount:          toProtoMoney(&input.Amount, currency),
+		Fee:             toProtoMoney(input.Fee, feeCurrency),
+		CurrencyCode:    &currency,
+		FeeCurrencyCode: &feeCurrency,
+	}
+
+	if input.Symbol != nil {
+		req.Symbol = input.Symbol
+	}
+	if input.Notes != nil {
+		req.Notes = input.Notes
+	}
+
+	resp, err := r.PortfolioClient.UpdateTransaction(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.UpdateTransactionPayload{
+		Success:     resp.Success,
+		Transaction: toModelTransactionItem(resp.Transaction),
+		Portfolio:   toModelPortfolio(resp.Portfolio),
+	}, nil
+}
+
 // CreateInstrument is the resolver for the createInstrument field.
 func (r *mutationResolver) CreateInstrument(ctx context.Context, input model.CreateInstrumentInput) (*model.Instrument, error) {
 	req := &pb.CreateInstrumentRequest{

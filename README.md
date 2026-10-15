@@ -461,6 +461,8 @@ make generate
 - **Modified Dietz Annualized Return User Story**: [`docs/user-stories/annualized-return-modified-dietz.md`](./docs/user-stories/annualized-return-modified-dietz.md)
 - **User Registration & Login Implementation Plan**: [`docs/plans/user-registration-and-login-implementation-plan.md`](./docs/plans/user-registration-and-login-implementation-plan.md)
 - **User Registration & Login User Story**: [`docs/user-stories/user-registration-and-login.md`](./docs/user-stories/user-registration-and-login.md)
+- **Edit Transaction in Ledger Implementation Plan**: [`docs/plans/edit-transaction-implementation-plan.md`](./docs/plans/edit-transaction-implementation-plan.md)
+- **Edit Transaction in Ledger User Story**: [`docs/user-stories/edit-transaction-ledger.md`](./docs/user-stories/edit-transaction-ledger.md)
 - **Negative Cash Balance Investigation Report**: [`docs/negative-cash-balance-investigation-report.md`](./docs/negative-cash-balance-investigation-report.md)
 - **Competitive Strategy Analysis**: [`docs/competitive-analysis.md`](./docs/competitive-analysis.md)
 - **Frontend GraphQL Setup**: [`docs/genql-usage.md`](./docs/genql-usage.md)

@@ -723,9 +723,16 @@ export const Dashboard = () => {
         <TransactionLedger
           refreshTrigger={ledgerRefreshKey}
           onOpenImportModal={() => setIsImportModalOpen(true)}
+          preferredCurrency={userPrefs?.displayCurrency}
+          supportedCurrencies={supportedCurrencies}
           onTransactionDeleted={(updatedPortfolio) => {
             setData(updatedPortfolio);
             setToastMessage('Transaction deleted and projections recomputed!');
+            setTimeout(() => setToastMessage(null), 4000);
+          }}
+          onTransactionUpdated={(updatedPortfolio) => {
+            setData(updatedPortfolio);
+            setToastMessage('Transaction updated and projections recomputed!');
             setTimeout(() => setToastMessage(null), 4000);
           }}
         />

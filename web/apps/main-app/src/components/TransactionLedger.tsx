@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { client } from '@graphfolio/api-client';
 import { formatMoney, formatQuantity } from '@graphfolio/ui';
+import { EditTransactionModal } from './EditTransactionModal';
 import './TransactionLedger.css';
 
 interface Money {
@@ -24,8 +25,11 @@ export interface TransactionItem {
 
 interface TransactionLedgerProps {
   onTransactionDeleted?: (updatedPortfolio: any) => void;
+  onTransactionUpdated?: (updatedPortfolio: any) => void;
   onOpenImportModal?: () => void;
   refreshTrigger?: number;
+  preferredCurrency?: string;
+  supportedCurrencies?: any[];
 }
 
 const filterTypes: Array<{ label: string; value: string | null }> = [
@@ -40,8 +44,11 @@ const filterTypes: Array<{ label: string; value: string | null }> = [
 
 export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
   onTransactionDeleted,
+  onTransactionUpdated,
   onOpenImportModal,
   refreshTrigger = 0,
+  preferredCurrency,
+  supportedCurrencies,
 }) => {
   const [transactions, setTransactions] = useState<TransactionItem[]>([]);
   const [totalCount, setTotalCount] = useState(0);
@@ -54,6 +61,9 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Edit modal state
+  const [txToEdit, setTxToEdit] = useState<TransactionItem | null>(null);
 
   // Delete modal state
   const [txToDelete, setTxToDelete] = useState<TransactionItem | null>(null);
@@ -287,7 +297,7 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
                   <th>Amount</th>
                   <th>Fee</th>
                   <th>Notes</th>
-                  <th style={{ width: '40px', textAlign: 'center' }}></th>
+                  <th style={{ width: '80px', textAlign: 'center' }}></th>
                 </tr>
               </thead>
               <tbody>
@@ -323,29 +333,51 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
                         </span>
                       </td>
                       <td style={{ textAlign: 'center' }}>
-                        <button
-                          type="button"
-                          className="btn-delete-row"
-                          onClick={() => setTxToDelete(tx)}
-                          title="Delete transaction"
-                        >
-                          <svg
-                            width="15"
-                            height="15"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                        <div className="row-actions">
+                          <button
+                            type="button"
+                            className="btn-edit-row"
+                            onClick={() => setTxToEdit(tx)}
+                            title="Edit transaction"
                           >
-                            <path d="M3 6h18" />
-                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                            <line x1="10" y1="11" x2="10" y2="17" />
-                            <line x1="14" y1="11" x2="14" y2="17" />
-                          </svg>
-                        </button>
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                          </button>
+                          <button
+                            type="button"
+                            className="btn-delete-row"
+                            onClick={() => setTxToDelete(tx)}
+                            title="Delete transaction"
+                          >
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            >
+                              <path d="M3 6h18" />
+                              <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                              <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                              <line x1="10" y1="11" x2="10" y2="17" />
+                              <line x1="14" y1="11" x2="14" y2="17" />
+                            </svg>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -449,6 +481,23 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
             </div>
           </div>
         </div>
+      )}
+      {/* Edit Transaction Modal */}
+      {txToEdit && (
+        <EditTransactionModal
+          isOpen={true}
+          transaction={txToEdit}
+          onClose={() => setTxToEdit(null)}
+          preferredCurrency={preferredCurrency}
+          supportedCurrencies={supportedCurrencies}
+          onSuccess={(updatedPortfolio) => {
+            setTxToEdit(null);
+            setReloadCount((c) => c + 1);
+            if (onTransactionUpdated) {
+              onTransactionUpdated(updatedPortfolio);
+            }
+          }}
+        />
       )}
     </div>
   );
