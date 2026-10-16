@@ -1,0 +1,9 @@
+# Local Development Secrets Template (.dev.vars)
+# Copy this file to .dev.vars in deploy/cloudflare/ or root when testing with `npx wrangler dev`
+# DO NOT COMMIT ACTUAL SECRETS TO GIT
+
+JWT_SECRET=dev_jwt_secret_must_be_at_least_32_characters_long_123456
+PORTFOLIO_DB_URL=postgresql://portfolio_svc:portfolio@localhost:5432/graphfolio?sslmode=disable
+USER_DB_URL=postgresql://user_svc:user@localhost:5432/graphfolio?sslmode=disable
+TWELVE_DATA_API_KEY=demo
+INTERNAL_CRON_SECRET=local_dev_cron_secret_64chars_abcdef1234567890

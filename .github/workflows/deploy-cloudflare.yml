@@ -1,0 +1,128 @@
+name: Deploy GraphFolio to Cloudflare
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: cloudflare-deployment
+  cancel-in-progress: false
+
+jobs:
+  test-backend:
+    name: Test Backend Go Services
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+          cache: true
+
+      - name: Run Backend Unit Tests
+        run: |
+          go test ./pkg/...
+          go test ./services/portfolio-api/...
+          go test ./services/user-api/...
+          go test ./bff/...
+
+  test-frontend:
+    name: Test Frontend Web Apps
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Run Frontend Lint & Tests
+        run: |
+          cd web
+          npm ci
+          npm run test
+          npm run lint
+
+  deploy-container-backend:
+    name: Deploy Container to Cloudflare Workers
+    needs: [test-backend, test-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy Worker with Containers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: 'deploy/cloudflare'
+          command: deploy
+          secrets: |
+            JWT_SECRET
+            PORTFOLIO_DB_URL
+            USER_DB_URL
+            TWELVE_DATA_API_KEY
+            INTERNAL_CRON_SECRET
+        env:
+          JWT_SECRET: ${{ secrets.PROD_JWT_SECRET }}
+          PORTFOLIO_DB_URL: ${{ secrets.PROD_PORTFOLIO_DB_URL }}
+          USER_DB_URL: ${{ secrets.PROD_USER_DB_URL }}
+          TWELVE_DATA_API_KEY: ${{ secrets.PROD_TWELVE_DATA_API_KEY }}
+          INTERNAL_CRON_SECRET: ${{ secrets.PROD_INTERNAL_CRON_SECRET }}
+
+  deploy-frontend-pages:
+    name: Deploy Frontends to Cloudflare Pages
+    needs: [test-backend, test-frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install Web Dependencies
+        run: |
+          cd web
+          npm ci
+
+      - name: Build Investor Portal (Main App)
+        run: |
+          cd web
+          VITE_GRAPHQL_ENDPOINT=https://api.graphfolio.app/query npm run build:main
+
+      - name: Deploy Main App to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: graphfolio-main-app
+          directory: web/apps/main-app/dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Admin Portal (Admin App)
+        run: |
+          cd web
+          VITE_GRAPHQL_ENDPOINT=https://api.graphfolio.app/query npm run build:admin
+
+      - name: Deploy Admin App to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: graphfolio-admin-app
+          directory: web/apps/admin-app/dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}

@@ -116,3 +116,19 @@ run:
 	@echo "Starting services..."
 	$(MAKE) -j 4 run-portfolio run-user run-bff run-web
 
+docker-build:
+	@echo "Building local Docker container image..."
+	docker build -f deploy/docker/Dockerfile -t graphfolio-backend:local .
+
+docker-run:
+	@echo "Running GraphFolio backend container locally on port 8080..."
+	docker run --rm -p 8080:8080 --env-file .env graphfolio-backend:local
+
+cf-dev:
+	@echo "Starting Cloudflare Worker Gateway with Container locally..."
+	cd deploy/cloudflare && npx wrangler dev
+
+cf-deploy:
+	@echo "Deploying GraphFolio backend container to Cloudflare..."
+	cd deploy/cloudflare && npx wrangler deploy
+

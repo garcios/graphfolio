@@ -1,0 +1,53 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "graphfolio-backend",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-15",
+  "compatibility_flags": ["nodejs_compat"],
+
+  // 1. Cloudflare Container Configuration
+  "containers": [
+    {
+      "class_name": "GraphFolioContainer",
+      "image": "../docker"
+    }
+  ],
+
+  // 2. Durable Objects Binding to Container Class
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "GRAPHFOLIO_CONTAINER",
+        "class_name": "GraphFolioContainer"
+      }
+    ]
+  },
+
+  // 3. Durable Object Migration Tag
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_classes": ["GraphFolioContainer"]
+    }
+  ],
+
+  // 4. Cron Triggers for Scheduled EOD Valuation (Mon-Fri at 22:00 UTC)
+  "triggers": {
+    "crons": ["0 22 * * 1-5"]
+  },
+
+  // 5. Custom Domain Route for API Gateway & Container Pod
+  "routes": [
+    {
+      "pattern": "api.graphfolio.app/*",
+      "custom_domain": true
+    }
+  ],
+
+  // 6. Non-sensitive Environment Variables
+  "vars": {
+    "ENVIRONMENT": "production",
+    "CORS_ORIGINS": "https://graphfolio.app,https://app.graphfolio.app,https://admin.graphfolio.app",
+    "MIGRATE_ON_START": "false"
+  }
+}

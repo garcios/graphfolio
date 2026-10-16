@@ -94,8 +94,15 @@ func main() {
 
 	authMiddleware := auth.Middleware(auth.GetJWTSecret())
 
+	queryHandler := corsMiddleware(authMiddleware(srv))
 	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", corsMiddleware(authMiddleware(srv)))
+	http.Handle("/query", queryHandler)
+	http.Handle("/graphql", queryHandler)
+	http.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(`{"status":"healthy"}`))
+	})
 
 	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
