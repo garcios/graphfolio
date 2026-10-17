@@ -8,10 +8,11 @@ export default {
         11,
         14,
         15,
-        55,
+        44,
         56,
         57,
-        69
+        58,
+        70
     ],
     "types": {
         "Decimal": {},
@@ -262,19 +263,19 @@ export default {
                 38
             ],
             "me": [
-                44
-            ],
-            "userPreferences": [
-                44
-            ],
-            "supportedCurrencies": [
                 45
             ],
+            "userPreferences": [
+                45
+            ],
+            "supportedCurrencies": [
+                46
+            ],
             "currencyPairs": [
-                48
+                49
             ],
             "currencyPairHistory": [
-                52,
+                53,
                 {
                     "baseCurrency": [
                         2,
@@ -291,7 +292,7 @@ export default {
                 }
             ],
             "fxRates": [
-                50,
+                51,
                 {
                     "baseCurrency": [
                         2
@@ -323,16 +324,16 @@ export default {
                 }
             ],
             "cashFlowReport": [
-                62,
+                63,
                 {
                     "filter": [
-                        58,
+                        59,
                         "CashFlowFilterInput!"
                     ]
                 }
             ],
             "missingPriceTransactions": [
-                64,
+                65,
                 {
                     "symbol": [
                         2
@@ -352,7 +353,7 @@ export default {
                 }
             ],
             "missingFXRateTransactions": [
-                66,
+                67,
                 {
                     "currencyPair": [
                         2
@@ -375,7 +376,7 @@ export default {
                 }
             ],
             "modifiedDietzReturn": [
-                67,
+                68,
                 {
                     "startDate": [
                         2,
@@ -391,10 +392,10 @@ export default {
                 }
             ],
             "benchmarks": [
-                70
+                71
             ],
             "benchmarkComparison": [
-                73,
+                74,
                 {
                     "benchmarkId": [
                         11,
@@ -405,7 +406,7 @@ export default {
                         "HistoryTimeframe!"
                     ],
                     "currencyMode": [
-                        69
+                        70
                     ]
                 }
             ],
@@ -634,19 +635,19 @@ export default {
                 }
             ],
             "updateUserPreferences": [
-                47,
+                48,
                 {
                     "input": [
-                        46,
+                        47,
                         "UpdateUserPreferencesInput!"
                     ]
                 }
             ],
             "recordFXRateOverride": [
-                54,
+                55,
                 {
                     "input": [
-                        53,
+                        54,
                         "RecordFXRateOverrideInput!"
                     ]
                 }
@@ -699,7 +700,7 @@ export default {
         },
         "AuthPayload": {
             "user": [
-                44
+                45
             ],
             "accessToken": [
                 2
@@ -1147,6 +1148,7 @@ export default {
                 2
             ]
         },
+        "UserRole": {},
         "UserPreferences": {
             "userId": [
                 11
@@ -1162,6 +1164,12 @@ export default {
             ],
             "theme": [
                 2
+            ],
+            "role": [
+                44
+            ],
+            "mustChangePassword": [
+                9
             ],
             "createdAt": [
                 2
@@ -1203,7 +1211,7 @@ export default {
         },
         "UpdateUserPreferencesPayload": {
             "preferences": [
-                44
+                45
             ],
             "portfolio": [
                 42
@@ -1281,7 +1289,7 @@ export default {
         },
         "FXRatesConnection": {
             "items": [
-                49
+                50
             ],
             "totalCount": [
                 14
@@ -1318,7 +1326,7 @@ export default {
                 2
             ],
             "points": [
-                51
+                52
             ],
             "startRate": [
                 0
@@ -1367,7 +1375,7 @@ export default {
         },
         "RecordFXRateOverridePayload": {
             "rate": [
-                49
+                50
             ],
             "valuationsRecomputed": [
                 9
@@ -1381,7 +1389,7 @@ export default {
         "CashFlowCategory": {},
         "CashFlowFilterInput": {
             "timeframe": [
-                55
+                56
             ],
             "fromDate": [
                 2
@@ -1456,10 +1464,10 @@ export default {
                 3
             ],
             "flowDirection": [
-                56
+                57
             ],
             "category": [
-                57
+                58
             ],
             "symbol": [
                 2
@@ -1491,13 +1499,13 @@ export default {
         },
         "CashFlowReport": {
             "summary": [
-                59
-            ],
-            "breakdown": [
                 60
             ],
-            "items": [
+            "breakdown": [
                 61
+            ],
+            "items": [
+                62
             ],
             "baseCurrency": [
                 2
@@ -1552,7 +1560,7 @@ export default {
         },
         "MissingPriceReport": {
             "items": [
-                63
+                64
             ],
             "totalCount": [
                 14
@@ -1616,7 +1624,7 @@ export default {
         },
         "MissingFXRatesReport": {
             "items": [
-                65
+                66
             ],
             "totalCount": [
                 14
@@ -1681,7 +1689,7 @@ export default {
                 2
             ],
             "cashFlowWeights": [
-                68
+                69
             ],
             "__typename": [
                 2
@@ -1806,10 +1814,10 @@ export default {
                 2
             ],
             "benchmark": [
-                70
+                71
             ],
             "currencyMode": [
-                69
+                70
             ],
             "startDate": [
                 2
@@ -1821,10 +1829,10 @@ export default {
                 14
             ],
             "points": [
-                71
+                72
             ],
             "metrics": [
-                72
+                73
             ],
             "__typename": [
                 2

@@ -8,17 +8,29 @@ import (
 
 // User represents a user identity and personal preferences.
 type User struct {
-	ID              uuid.UUID
-	Email           string
-	PasswordHash    string
-	IsActive        bool
-	DisplayName     string
-	DisplayCurrency string
-	Theme           string
-	EmailVerifiedAt *time.Time
-	LastLoginAt     *time.Time
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
+	ID                 uuid.UUID
+	Email              string
+	PasswordHash       string
+	IsActive           bool
+	DisplayName        string
+	DisplayCurrency    string
+	Theme              string
+	Role               string // "USER" or "ADMIN"
+	MustChangePassword bool   // true if bootstrap password change required
+	EmailVerifiedAt    *time.Time
+	LastLoginAt        *time.Time
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
+}
+
+const (
+	RoleUser  = "USER"
+	RoleAdmin = "ADMIN"
+)
+
+// IsValidRole returns true if the role is USER or ADMIN.
+func IsValidRole(role string) bool {
+	return role == RoleUser || role == RoleAdmin
 }
 
 // Session represents an active refresh token session for a user.

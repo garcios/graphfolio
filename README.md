@@ -49,6 +49,11 @@ A modern portfolio tracker built for serious investors. GraphFolio accurately me
   - **Decoupled Multi-Tenant BFF**: Contextual HTTP authorization middleware extracts and verifies bearer JWTs, injecting `ctx.UserID` to scope all portfolio, cash flow, benchmark, and preference resolvers to the authenticated tenant.
   - **Dark Glassmorphic UI & Session Lifecycle**: Centered `AuthView` with `[ Sign In | Create Account ]` tabs, live `PasswordStrengthMeter` checklist, silent background token renewal 60 seconds prior to expiration, and an investor `UserProfileMenu` dropdown with profile details, preferences shortcut, and one-click sign out.
   - **Credential Management & Password Change**: In-app password rotation with mandatory current-password re-authentication, live complexity checklist, prevention of identical password reuse, and optional invalidation of all other active sessions across devices.
+- **Admin Portal Authentication, Auto-Provisioning & Credential Policy**: Institutional security layer guarding the internal Admin Portal (`:5174`):
+  - **Automated Idempotent Admin Bootstrapping**: Migration `000004_add_role_and_password_policy` and seeds provision `admin@graphfolio.app` with `Password123!` (Argon2id RFC 9106 hash), `role = 'ADMIN'`, and `must_change_password = true` without overwriting rotated passwords upon restarts.
+  - **Role-Based Access Control (RBAC)**: Distinguishes between standard investors (`USER`) and administrators (`ADMIN`) across PostgreSQL constraints, Protobuf contracts, GraphQL schemas, and JWT claims. Investors attempting access to `:5174` receive an explicit 403 Forbidden `AccessDeniedView` with sign-out controls.
+  - **Mandatory First-Login Password Rotation**: Unrotated credentials trigger `must_change_password = true`, locking navigation to `AdminChangePasswordView` until NIST SP 800-63B complexity standards ($\ge 10$ characters, uppercase, lowercase, digit, symbol) are met. Operational consoles (Assets, Prices, Ingestion, FX) remain unmounted until rotated.
+  - **Admin Session Lifecycle & Header Menu**: Powered by `AdminAuthContext` with silent cookie refresh, in-memory bearer token storage, and an `AdminLayout` header pill displaying user email, `ADMIN` badge, password change modal trigger, and sign out.
 - **Clean Microservice Monorepo**: Contract-first gRPC services with a Go GraphQL Backend-for-Frontend (BFF) and strongly-typed frontend queries.
 - **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, Vite, modal transaction entry (`AddTransactionModal`), statement import (`ImportTransactionsModal`), investor preferences dialog (`UserPreferencesModal`), reports hub (`ReportsView`), return calculator (`ModifiedDietzModal`), and instant reactive state refresh.
 
@@ -160,8 +165,16 @@ make run
 - **User gRPC API**: `localhost:50052`
 
 > 💡 **Default Development Credentials** (seeded via `make db-seed`):
-> - **Email**: `oscar@graphfolio.com` (or `tom@cruz.com`)
-> - **Password**: `Password123!` *(Note: case-sensitive with capital `P` and exclamation mark `!`)*
+> - **Investor Web App (:5173)**:
+>   - **Email**: `oscar@graphfolio.app` (or `tom@cruz.com`)
+>   - **Password**: `Password123!` *(Note: case-sensitive with capital `P` and exclamation mark `!`)*
+>   - **Role**: `USER`
+> - **Admin Operations Portal (:5174)**:
+>   - **Email**: `admin@graphfolio.app`
+>   - **Initial Password**: `Password123!`
+>   - **Role**: `ADMIN`
+>   - **First Login Policy**: Redirects immediately to `AdminChangePasswordView` to enforce initial credential rotation before unlocking operations consoles.
+>   - *Note*: Standard investor accounts (`role = 'USER'`) will receive a 403 Forbidden Access Denied screen on `:5174`.
 
 ---
 
@@ -178,7 +191,8 @@ flowchart TB
         end
 
         subgraph AdminApp ["Internal Operations Portal (:5174)"]
-            ADMIN_UI["Administrative Portals<br/>• Price Management and Override Presets<br/>• Missing Price and FX Diagnostics<br/>• FX Rates and Backfill Range Dispatcher"]
+            ADMIN_UI["Administrative Portals<br/>• AdminLoginView and AccessDeniedView<br/>• Mandatory AdminChangePasswordView<br/>• Price Management and Override Presets<br/>• Missing Price and FX Diagnostics<br/>• FX Rates and Backfill Range Dispatcher"]
+            ADMIN_AUTH_CTX["AdminAuthContext and State<br/>• Silent Refresh and Bearer Token<br/>• Role Guard and Password Policy"]
         end
 
         subgraph SharedPackages ["Shared Workspace Packages"]
@@ -204,13 +218,13 @@ flowchart TB
         end
 
         subgraph UserService ["User API (:50052)"]
-            USER_SERVER["User gRPC Server<br/>• Argon2id Cryptographic Hasher (RFC 9106)<br/>• Session Family Rotation and Reuse Detection<br/>• Credential Rotation and Multi-Session Revocation<br/>• User Preferences and Supported Currencies"]
+            USER_SERVER["User gRPC Server<br/>• Argon2id Cryptographic Hasher (RFC 9106)<br/>• Session Family Rotation and Reuse Detection<br/>• RBAC (USER and ADMIN) & Auto-Provisioning<br/>• Password Policy and First-Login Rotation<br/>• User Preferences and Supported Currencies"]
         end
     end
 
     subgraph DBLayer ["PostgreSQL 17 Database (:5432/graphfolio)"]
         PORT_DB["Portfolio Schema [portfolio_svc]<br/>• portfolios, transactions, holding_projections<br/>• tax_lots, lot_disposals, portfolio_valuations<br/>• daily_prices, fx_rates, benchmarks"]
-        USER_DB["Users Schema [user_svc]<br/>• users (password_hash, preferences, theme)<br/>• sessions (token_hash, family_id, is_revoked)"]
+        USER_DB["Users Schema [user_svc]<br/>• users (password_hash, role, must_change_password)<br/>• sessions (token_hash, family_id, is_revoked)"]
     end
 
     %% Web Monorepo Internal Bindings
@@ -219,6 +233,7 @@ flowchart TB
     MAIN_UI -.-> UI_PKG
     ADMIN_UI -.-> UI_PKG
     MAIN_UI --- AUTH_CTX
+    ADMIN_UI --- ADMIN_AUTH_CTX
 
     %% Frontend to BFF Communication
     CLIENT_PKG -->|"GraphQL HTTP"| BFF_MW
@@ -287,6 +302,11 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
    - All portfolio queries and mutations resolve user identity strictly from `r.resolveUserID(ctx)`, ensuring complete tenant isolation and multi-user data segregation.
 5. **Initial Portfolio Auto-Provisioning**:
    - When a new investor completes registration via `register`, the BFF coordinates with `portfolio-api`'s `CreatePortfolio` gRPC endpoint to automatically instantiate an initial default `"Main Portfolio"` anchored in the investor's designated base currency.
+6. **Admin Portal Authentication, Role-Based Access Control & Credential Policy**:
+   - **Automated Idempotent Admin Bootstrapping**: Database migration `000004_add_role_and_password_policy.up.sql` and development seed `dev_seed.sql` provision `admin@graphfolio.app` with default password `Password123!` (Argon2id RFC 9106 hash: `$argon2id$v=19$m=65536,t=3,p=4$z48VmX+qFO9X2FkAfV/Z6Q$WW1NOG+O6TwEwlSDkDIfae3Xi0xOePDpNg+rd7lkWsw`), `role = 'ADMIN'`, and `must_change_password = true`.
+   - **Role-Based Access Control (RBAC)**: Distinguishes between standard investors (`USER`) and platform administrators (`ADMIN`) across PostgreSQL constraints, Protobuf contracts, GraphQL schemas, and JWT claims. Investors attempting access to `:5174` receive an explicit 403 Forbidden `AccessDeniedView` with sign-out controls.
+   - **Mandatory First-Login Password Rotation**: Unrotated credentials trigger `must_change_password = true`, locking navigation to `AdminChangePasswordView` until NIST SP 800-63B complexity standards ($\ge 10$ characters, uppercase, lowercase, digit, symbol) are met. Operational consoles (Assets, Prices, Ingestion, FX) remain unmounted until rotated.
+   - **Admin Session Lifecycle & Header Menu**: Powered by `AdminAuthContext` with silent cookie refresh, in-memory bearer token storage, and an `AdminLayout` header pill displaying user email, `ADMIN` badge, password change modal trigger, and sign out.
 
 ---
 
@@ -312,8 +332,8 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   └── user-api/                 # User domain microservice (:50052)
 │       ├── cmd/server/           # Application entrypoint (:50052)
 │       ├── internal/             # User domain, crypto (Argon2id), auth (JWT/hashing), repository (pgx), service, and gRPC server
-│       ├── migrations/           # Versioned schema migrations (000001, 000002_add_theme, 000003_add_auth_and_sessions)
-│       └── seeds/                # User dev fixtures (dev_seed.sql with demo investor & Argon2id hash)
+│       ├── migrations/           # Versioned schema migrations (000001 - 000004_add_role_and_password_policy)
+│       └── seeds/                # User dev fixtures (dev_seed.sql with demo investor & auto-provisioned admin)
 ├── bff/                          # GraphQL Backend-for-Frontend (gqlgen on :8080)
 │   ├── cmd/server/               # BFF entrypoint
 │   ├── internal/auth/            # JWT authorization middleware and httpOnly cookie management
@@ -321,9 +341,10 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 ├── web/                          # Frontend Workspace Monorepo
 │   │   ├── main-app/             # Primary Investor React App (:5173)
 │   │   │   ├── src/context/      # AuthContext.tsx (in-memory access token, silent refresh, session state)
-│   │   │   └── src/components/   # AuthView, LoginForm, RegisterForm, PasswordStrengthMeter, UserProfileMenu, Dashboard, PerformanceChart, ModifiedDietzModal, TransactionLedger, ReportsView, CashFlowReport, AddTransactionModal, ImportTransactionsModal, UserPreferencesModal
+│   │   │   └── src/components/   # AuthView, LoginForm, RegisterForm, PasswordStrengthMeter, UserProfileMenu, Dashboard, PerformanceChart, ModifiedDietzModal, TransactionLedger, ReportsView, CashFlowReport, AddTransactionModal, ImportTransactionsModal, UserPreferencesModal, ChangePasswordModal
 │   │   └── admin-app/            # Internal Operations Portal (:5174)
-│   │       └── src/components/   # AssetManagement, DeleteAssetModal, PriceManagement, MissingPricesReport, MissingFXRatesReport, FXManagement, FXTrendChart, FXOverrideModal, BackfillModal, IngestionPipeline
+│   │       ├── src/context/      # AdminAuthContext.tsx (admin session state, silent refresh, role guard)
+│   │       └── src/components/   # AdminLoginView, AdminChangePasswordView, AccessDeniedView, AdminLayout, AssetManagement, DeleteAssetModal, PriceManagement, MissingPricesReport, MissingFXRatesReport, FXManagement, FXTrendChart, FXOverrideModal, BackfillModal, IngestionPipeline, AdminAuth.test.ts
 │   └── packages/
 │       ├── ui/                   # Shared Design System (@graphfolio/ui)
 │       └── api-client/           # Shared GraphQL Client (@graphfolio/api-client with dynamic access token & credentials)
@@ -353,7 +374,11 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── portfolio-cash-flow-report-implementation-plan.md
 │   │   ├── include-closed-positions-implementation-plan.md
 │   │   ├── annualized-return-modified-dietz-implementation-plan.md
+│   │   ├── benchmark-performance-comparison-implementation-plan.md
+│   │   ├── download-transactions-ledger-implementation-plan.md
 │   │   ├── user-registration-and-login-implementation-plan.md
+│   │   ├── user-change-password-implementation-plan.md
+│   │   ├── admin-portal-login-implementation-plan.md
 │   │   └── web-workspace-refactoring-plan.md
 │   ├── user-stories/             # Product specifications & acceptance criteria
 │   │   ├── investment-holding-capital-gain-income-currency.md
@@ -362,7 +387,11 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── admin-missing-fx-rates-report.md
 │   │   ├── include-closed-positions-dashboard.md
 │   │   ├── annualized-return-modified-dietz.md
-│   │   └── user-registration-and-login.md
+│   │   ├── benchmark-performance-comparison.md
+│   │   ├── download-transactions-ledger.md
+│   │   ├── user-registration-and-login.md
+│   │   ├── user-change-password.md
+│   │   └── admin-portal-login-and-provisioning.md
 │   ├── negative-cash-balance-investigation-report.md # Cash ledger overdraft root cause & remediation report
 │   ├── competitive-analysis.md
 │   └── genql-usage.md
@@ -461,6 +490,14 @@ make generate
 - **Modified Dietz Annualized Return User Story**: [`docs/user-stories/annualized-return-modified-dietz.md`](./docs/user-stories/annualized-return-modified-dietz.md)
 - **User Registration & Login Implementation Plan**: [`docs/plans/user-registration-and-login-implementation-plan.md`](./docs/plans/user-registration-and-login-implementation-plan.md)
 - **User Registration & Login User Story**: [`docs/user-stories/user-registration-and-login.md`](./docs/user-stories/user-registration-and-login.md)
+- **User Password Change Implementation Plan**: [`docs/plans/user-change-password-implementation-plan.md`](./docs/plans/user-change-password-implementation-plan.md)
+- **User Password Change User Story**: [`docs/user-stories/user-change-password.md`](./docs/user-stories/user-change-password.md)
+- **Download Transactions Ledger Implementation Plan**: [`docs/plans/download-transactions-ledger-implementation-plan.md`](./docs/plans/download-transactions-ledger-implementation-plan.md)
+- **Download Transactions Ledger User Story**: [`docs/user-stories/download-transactions-ledger.md`](./docs/user-stories/download-transactions-ledger.md)
+- **Benchmark Performance Comparison Implementation Plan**: [`docs/plans/benchmark-performance-comparison-implementation-plan.md`](./docs/plans/benchmark-performance-comparison-implementation-plan.md)
+- **Benchmark Performance Comparison User Story**: [`docs/user-stories/benchmark-performance-comparison.md`](./docs/user-stories/benchmark-performance-comparison.md)
+- **Admin Portal Authentication & Auto-Provisioning Implementation Plan**: [`docs/plans/admin-portal-login-implementation-plan.md`](./docs/plans/admin-portal-login-implementation-plan.md)
+- **Admin Portal Authentication & Auto-Provisioning User Story**: [`docs/user-stories/admin-portal-login-and-provisioning.md`](./docs/user-stories/admin-portal-login-and-provisioning.md)
 - **Edit Transaction in Ledger Implementation Plan**: [`docs/plans/edit-transaction-implementation-plan.md`](./docs/plans/edit-transaction-implementation-plan.md)
 - **Edit Transaction in Ledger User Story**: [`docs/user-stories/edit-transaction-ledger.md`](./docs/user-stories/edit-transaction-ledger.md)
 - **Negative Cash Balance Investigation Report**: [`docs/negative-cash-balance-investigation-report.md`](./docs/negative-cash-balance-investigation-report.md)

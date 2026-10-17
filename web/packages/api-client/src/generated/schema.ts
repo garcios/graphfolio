@@ -279,12 +279,16 @@ export interface Investment {
     __typename: 'Investment'
 }
 
+export type UserRole = 'USER' | 'ADMIN'
+
 export interface UserPreferences {
     userId: Scalars['ID']
     email: Scalars['String']
     displayName: Scalars['String']
     displayCurrency: Scalars['String']
     theme: Scalars['String']
+    role: UserRole
+    mustChangePassword: Scalars['Boolean']
     createdAt: Scalars['String']
     updatedAt: Scalars['String']
     __typename: 'UserPreferences'
@@ -864,6 +868,8 @@ export interface UserPreferencesGenqlSelection{
     displayName?: boolean | number
     displayCurrency?: boolean | number
     theme?: boolean | number
+    role?: boolean | number
+    mustChangePassword?: boolean | number
     createdAt?: boolean | number
     updatedAt?: boolean | number
     __typename?: boolean | number
@@ -1559,6 +1565,11 @@ export const enumHistoryTimeframe = {
    TIMEFRAME_1M: 'TIMEFRAME_1M' as const,
    TIMEFRAME_1Y: 'TIMEFRAME_1Y' as const,
    TIMEFRAME_ALL: 'TIMEFRAME_ALL' as const
+}
+
+export const enumUserRole = {
+   USER: 'USER' as const,
+   ADMIN: 'ADMIN' as const
 }
 
 export const enumCashFlowTimeframe = {

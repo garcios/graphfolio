@@ -41,9 +41,11 @@ This document catalogs all implemented features, in-progress components, and pla
 | **31** | **Modified Dietz Annualized Return & Cash-Flow Weighting** | **DONE** | Proto, Svc, BFF, Web | [annualized-return-modified-dietz-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/annualized-return-modified-dietz-implementation-plan.md) |
 | **32** | **Missing FX Rates Report & Date Range Backfill (Admin Portal)** | **DONE** | Proto, Svc, BFF, Web | [admin-missing-fx-rates-report-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-missing-fx-rates-report-implementation-plan.md) |
 | **33** | **Portfolio Benchmark Comparison & Relative Performance Analytics (S&P 500, NASDAQ-100, ASX 200)** | **DONE** | Database, Proto, Svc, BFF, Web | [benchmark-performance-comparison-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/benchmark-performance-comparison-implementation-plan.md) |
+| **34** | **Download Transactions from Transaction Ledger (Ascending Order)** | **DONE** | Proto, Svc, BFF, Web | [download-transactions-ledger-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/download-transactions-ledger-implementation-plan.md) |
 | **35** | **User Registration, Authentication & Session Management (Main App)** | **DONE** | Proto, User API, BFF, Web | [user-registration-and-login-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/user-registration-and-login-implementation-plan.md) |
 | **36** | **User Password Change & Session Invalidation (Main App)** | **DONE** | Proto, User API, BFF, Web | [user-change-password-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/user-change-password-implementation-plan.md) |
 | **37** | **In-Place Transaction Editing in Transaction Ledger** | **PLANNED** | Proto, Svc, BFF, Web | [edit-transaction-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/edit-transaction-implementation-plan.md) |
+| **38** | **Admin Portal Authentication, Auto-Provisioning & Mandatory First-Login Password Rotation** | **DONE** | Database, Proto, User API, BFF, Web | [admin-portal-login-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-portal-login-implementation-plan.md) |
 
 
 
@@ -497,6 +499,59 @@ This document catalogs all implemented features, in-progress components, and pla
   - [BenchmarkMetricsStrip.tsx](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/BenchmarkMetricsStrip.tsx)
   - [BenchmarkMetricsStrip.css](file:///Users/oscargarcia/workspace/graphfolio/web/apps/main-app/src/components/BenchmarkMetricsStrip.css)
 
+### 2.34 User Registration, Authentication & Session Management (Main App)
+- **Status**: **DONE**
+- **User Story**: [user-registration-and-login.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/user-registration-and-login.md) (`US-AUTH-101`)
+- **Plan Reference**: [user-registration-and-login-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/user-registration-and-login-implementation-plan.md)
+- **Scope**: Proto (`proto/user/v1/user.proto`, `proto/portfolio/v1/portfolio.proto`), Database (`users.users`, `users.sessions`), User Service (`services/user-api`), BFF (`bff/`), Main App (`web/apps/main-app`)
+- **Highlights**:
+  - Secure investor registration with Argon2id cryptographic password hashing, real-time complexity validation, and automatic initial default portfolio provisioning in the chosen base currency.
+  - Dual-token session security architecture: short-lived (15-minute) JWT access tokens in memory and long-lived (30-day) `httpOnly`, `Secure`, `SameSite=Strict` rotating refresh cookies with token family reuse detection.
+  - Decoupling BFF resolvers from the hardcoded `defaultUserID` using contextual authorization middleware (`ctx.UserID`).
+  - Dark glassmorphic login and registration views in `@graphfolio/ui` aesthetics, accessible forms, silent background session refresh, and explicit sign-out action in the navigation profile menu.
+
+### 2.35 User Password Change & Session Invalidation (Main App)
+- **Status**: **DONE**
+- **User Story**: [user-change-password.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/user-change-password.md) (`US-AUTH-102`)
+- **Plan Reference**: [user-change-password-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/user-change-password-implementation-plan.md)
+- **Scope**: Proto (`proto/user/v1/user.proto`), Database (`users.users`, `users.sessions`), User Service (`services/user-api`), BFF (`bff/`), Main App (`web/apps/main-app`)
+- **Highlights**:
+  - Secure credential rotation conforming to OWASP ASVS v4.0 Level 2 and NIST SP 800-63B memorized secret verifier specifications.
+  - Mandatory current password re-authentication before permitting changes, protecting against unauthorized workstation takeover.
+  - Real-time password complexity enforcement ($\ge 10$ characters, uppercase, lowercase, digit, special symbol) via live `PasswordStrengthMeter` checklist and match verification.
+  - Prevention of identical password reuse and constant-time dummy hash verification against user enumeration timing attacks.
+  - Option to revoke all other active sessions and background refresh tokens across devices while preserving uninterrupted authentication on the current active session.
+  - Dark glassmorphic `ChangePasswordModal` launched from `UserProfileMenu` with password visibility toggles, loading state, error banners, and auto-dismissing success notifications.
+
+### 2.36 Download Transactions from Transaction Ledger (Ascending Order)
+- **Status**: **DONE**
+- **User Story**: [download-transactions-ledger.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/download-transactions-ledger.md) (`US-TX-103`)
+- **Plan Reference**: [download-transactions-ledger-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/download-transactions-ledger-implementation-plan.md)
+- **Scope**: Proto (`proto/portfolio/v1/portfolio.proto`), Database (`portfolio.transactions`), Portfolio Service (`services/portfolio-api`), BFF (`bff/`), Main App (`web/apps/main-app`)
+- **Highlights**:
+  - Direct CSV download action ("Export CSV") integrated into the `TransactionLedger.tsx` header toolbar alongside "Import CSV".
+  - Strict ascending chronological ordering (`trade_date ASC, created_at ASC, id ASC`) so financial events flow forward from inception, ensuring seamless ingestion into tax tools and external accounting engines without negative inventory errors.
+  - Complete dataset export across all pages, bypassing UI pagination limits (20 items/page).
+  - Filter-aware export respecting active transaction type filters (e.g. Dividend only) and symbol searches while maintaining chronological integrity.
+  - Comprehensive CSV schema including trade date, transaction type, ticker, company name, quantity, price, gross/net amounts, fee, fee currency, withholding tax, FX rate to base, external broker reference, and user notes.
+  - Robust security and formatting guards: RFC 4180 escaping, UTF-8 BOM encoding for Excel compatibility, and formula injection sanitization (CWE-1236) protecting against leading `=, +, -, @` characters.
+
+### 2.37 Admin Portal Authentication, Auto-Provisioning & Mandatory First-Login Password Rotation
+- **Status**: **DONE**
+- **User Story**: [admin-portal-login-and-provisioning.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/admin-portal-login-and-provisioning.md) (`US-ADM-103`)
+- **Plan Reference**: [admin-portal-login-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-portal-login-implementation-plan.md)
+- **Scope**: Database (`users.users`), Proto (`proto/user/v1/user.proto`), User Microservice (`services/user-api`), BFF (`bff/`), Admin Portal (`web/apps/admin-app`)
+- **Highlights**:
+  - Automated idempotent database migration (`000004_add_role_and_password_policy.up.sql`) and seed (`dev_seed.sql`) auto-provisioning `admin@graphfolio.app` with default password `Password123!` (Argon2id RFC 9106 hash: `$argon2id$v=19$m=65536,t=3,p=4$z48VmX+qFO9X2FkAfV/Z6Q$WW1NOG+O6TwEwlSDkDIfae3Xi0xOePDpNg+rd7lkWsw`), `role = 'ADMIN'`, and `must_change_password = true`.
+  - Strict Role-Based Access Control (RBAC): `role text NOT NULL DEFAULT 'USER' CHECK (role IN ('USER', 'ADMIN'))` in PostgreSQL, `UserRole` enum in Protobuf and GraphQL, and embedded `Role` in JWT access token claims. Standard investors (`role = 'USER'`) attempting access to the admin portal (:5174) are denied with an explicit 403 `AccessDeniedView` offering an immediate sign-out action.
+  - Mandatory first-login password rotation: `must_change_password` flag intercepts admin login and strictly enforces completion of `AdminChangePasswordView`. Operational console tabs (Assets, Prices, Missing Prices, Missing FX, FX Management, Ingestion Pipeline) remain unmounted and blocked until rotated.
+  - NIST SP 800-63B password complexity enforcement ($\ge 10$ characters, uppercase, lowercase, digit, symbol) with real-time `PasswordStrengthMeter` checklist, match confirmation, and optional multi-session revocation. Calling `UpdatePassword` in `services/user-api` automatically resets `must_change_password = false`, instantly unlocking the portal.
+  - Admin portal session lifecycle via `AdminAuthContext` and `AdminAuthProvider`: silent `httpOnly` cookie refresh on mount, background token renewal, in-memory JWT bearer storage, dynamic `@graphfolio/api-client` GenQL client injection with `credentials: 'include'`.
+  - Top-right administrative profile header in `AdminLayout` displaying user email, `ADMIN` badge, "Change Password" modal launcher, and "Sign Out" dropdown action.
+  - Client-side security state machine in `web/apps/admin-app/src/App.tsx`:
+    $$\text{Loading} \longrightarrow \text{Unauthenticated (AdminLoginView)} \longrightarrow \text{Non-Admin (AccessDeniedView)} \longrightarrow \text{MustChangePassword (AdminChangePasswordView)} \longrightarrow \text{AdminLayout}$$
+  - Full automated test coverage in `services/user-api` (`server_test.go`), BFF (`resolvers_test.go`), and Admin App (`AdminAuth.test.ts`).
+
 ---
 
 ## 3. Planned Features (`PLANNED`)
@@ -558,44 +613,6 @@ This document catalogs all implemented features, in-progress components, and pla
   - Short-sale prevention and Negative Inventory Guard verifying that editing historical trades never causes interim inventory to dip below zero.
   - Atomic ledger projection replay (`RebuildProjections`) deterministically re-evaluating FIFO tax-lot relief, open position cost basis, realized gains, and cash balance.
   - Automatic multi-day daily portfolio valuation backfill (`BackfillPortfolioValuations`) re-anchoring daily valuation snapshots from $\min(T_{\text{old}}, T_{\text{new}})$ through today.
-
-### 3.6 Download Transactions from Transaction Ledger (Ascending Order)
-- **Status**: **DONE**
-- **User Story**: [download-transactions-ledger.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/download-transactions-ledger.md) (`US-TX-103`)
-- **Plan Reference**: [download-transactions-ledger-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/download-transactions-ledger-implementation-plan.md)
-- **Scope**: Proto (`proto/portfolio/v1/portfolio.proto`), Database (`portfolio.transactions`), Portfolio Service (`services/portfolio-api`), BFF (`bff/`), Main App (`web/apps/main-app`)
-- **Highlights**:
-  - Direct CSV download action ("Export CSV") integrated into the `TransactionLedger.tsx` header toolbar alongside "Import CSV".
-  - Strict ascending chronological ordering (`trade_date ASC, created_at ASC, id ASC`) so financial events flow forward from inception, ensuring seamless ingestion into tax tools and external accounting engines without negative inventory errors.
-  - Complete dataset export across all pages, bypassing UI pagination limits (20 items/page).
-  - Filter-aware export respecting active transaction type filters (e.g. Dividend only) and symbol searches while maintaining chronological integrity.
-  - Comprehensive CSV schema including trade date, transaction type, ticker, company name, quantity, price, gross/net amounts, fee, fee currency, withholding tax, FX rate to base, external broker reference, and user notes.
-  - Robust security and formatting guards: RFC 4180 escaping, UTF-8 BOM encoding for Excel compatibility, and formula injection sanitization (CWE-1236) protecting against leading `=, +, -, @` characters.
-
-
-### 2.34 User Registration, Authentication & Session Management (Main App)
-- **Status**: **DONE**
-- **User Story**: [user-registration-and-login.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/user-registration-and-login.md) (`US-AUTH-101`)
-- **Plan Reference**: [user-registration-and-login-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/user-registration-and-login-implementation-plan.md)
-- **Scope**: Proto (`proto/user/v1/user.proto`, `proto/portfolio/v1/portfolio.proto`), Database (`users.users`, `users.sessions`), User Service (`services/user-api`), BFF (`bff/`), Main App (`web/apps/main-app`)
-- **Highlights**:
-  - Secure investor registration with Argon2id cryptographic password hashing, real-time complexity validation, and automatic initial default portfolio provisioning in the chosen base currency.
-  - Dual-token session security architecture: short-lived (15-minute) JWT access tokens in memory and long-lived (30-day) `httpOnly`, `Secure`, `SameSite=Strict` rotating refresh cookies with token family reuse detection.
-  - Decoupling BFF resolvers from the hardcoded `defaultUserID` using contextual authorization middleware (`ctx.UserID`).
-  - Dark glassmorphic login and registration views in `@graphfolio/ui` aesthetics, accessible forms, silent background session refresh, and explicit sign-out action in the navigation profile menu.
-
-### 2.35 User Password Change & Session Invalidation (Main App)
-- **Status**: **DONE**
-- **User Story**: [user-change-password.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/user-change-password.md) (`US-AUTH-102`)
-- **Plan Reference**: [user-change-password-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/user-change-password-implementation-plan.md)
-- **Scope**: Proto (`proto/user/v1/user.proto`), Database (`users.users`, `users.sessions`), User Service (`services/user-api`), BFF (`bff/`), Main App (`web/apps/main-app`)
-- **Highlights**:
-  - Secure credential rotation conforming to OWASP ASVS v4.0 Level 2 and NIST SP 800-63B memorized secret verifier specifications.
-  - Mandatory current password re-authentication before permitting changes, protecting against unauthorized workstation takeover.
-  - Real-time password complexity enforcement ($\ge 10$ characters, uppercase, lowercase, digit, special symbol) via live `PasswordStrengthMeter` checklist and match verification.
-  - Prevention of identical password reuse and constant-time dummy hash verification against user enumeration timing attacks.
-  - Option to revoke all other active sessions and background refresh tokens across devices while preserving uninterrupted authentication on the current active session.
-  - Dark glassmorphic `ChangePasswordModal` launched from `UserProfileMenu` with password visibility toggles, loading state, error banners, and auto-dismissing success notifications.
 
 ---
 

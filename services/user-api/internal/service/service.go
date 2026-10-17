@@ -260,6 +260,7 @@ func (s *userService) RefreshToken(ctx context.Context, rawRefreshToken string) 
 		Email:        user.Email,
 		DisplayName:  user.DisplayName,
 		BaseCurrency: user.DisplayCurrency,
+		Role:         user.Role,
 		IssuedAt:     now.Unix(),
 		ExpiresAt:    now.Add(AccessTokenDuration).Unix(),
 	})
@@ -381,6 +382,7 @@ func (s *userService) issueTokens(ctx context.Context, user *domain.User, refres
 		Email:        user.Email,
 		DisplayName:  user.DisplayName,
 		BaseCurrency: user.DisplayCurrency,
+		Role:         user.Role,
 		IssuedAt:     now.Unix(),
 		ExpiresAt:    now.Add(AccessTokenDuration).Unix(),
 	})

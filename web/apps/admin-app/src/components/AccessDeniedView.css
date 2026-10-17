@@ -1,0 +1,110 @@
+.admin-access-denied-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: radial-gradient(circle at 50% 25%, rgba(40, 20, 25, 0.7) 0%, rgba(10, 14, 23, 0.98) 100%), #0a0e17;
+  position: relative;
+  overflow: hidden;
+}
+
+.admin-denied-glow {
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.12) 0%, rgba(239, 68, 68, 0) 70%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  filter: blur(50px);
+}
+
+.admin-denied-card {
+  width: 100%;
+  max-width: 480px;
+  background: rgba(18, 24, 38, 0.85) !important;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(239, 68, 68, 0.25) !important;
+  border-radius: 16px;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  position: relative;
+  z-index: 1;
+}
+
+.admin-denied-icon {
+  font-size: 2.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.admin-denied-title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: #f87171;
+  margin: 0 0 0.75rem;
+}
+
+.admin-denied-message {
+  font-size: 0.875rem;
+  color: #cbd5e1;
+  line-height: 1.5;
+  margin: 0 0 1rem;
+}
+
+.admin-denied-message strong {
+  color: #ffffff;
+}
+
+.admin-denied-badge-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  margin-bottom: 1.25rem;
+}
+
+.denied-label {
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.denied-role-pill {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fca5a5;
+  background: rgba(239, 68, 68, 0.2);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+}
+
+.admin-denied-subtext {
+  font-size: 0.8125rem;
+  color: #64748b;
+  line-height: 1.45;
+  margin: 0 0 1.5rem;
+}
+
+.admin-denied-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.admin-denied-signout-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+  border: none !important;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.35);
+  font-weight: 600;
+  padding: 0.65rem 1.5rem;
+}
+
+.admin-denied-signout-btn:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.45);
+}
