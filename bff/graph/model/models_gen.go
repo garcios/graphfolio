@@ -548,13 +548,15 @@ type UpdateUserPreferencesPayload struct {
 }
 
 type UserPreferences struct {
-	UserID          string `json:"userId"`
-	Email           string `json:"email"`
-	DisplayName     string `json:"displayName"`
-	DisplayCurrency string `json:"displayCurrency"`
-	Theme           string `json:"theme"`
-	CreatedAt       string `json:"createdAt"`
-	UpdatedAt       string `json:"updatedAt"`
+	UserID             string   `json:"userId"`
+	Email              string   `json:"email"`
+	DisplayName        string   `json:"displayName"`
+	DisplayCurrency    string   `json:"displayCurrency"`
+	Theme              string   `json:"theme"`
+	Role               UserRole `json:"role"`
+	MustChangePassword bool     `json:"mustChangePassword"`
+	CreatedAt          string   `json:"createdAt"`
+	UpdatedAt          string   `json:"updatedAt"`
 }
 
 type ValuationPoint struct {
@@ -996,6 +998,61 @@ func (e *TransactionType) UnmarshalJSON(b []byte) error {
 }
 
 func (e TransactionType) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type UserRole string
+
+const (
+	UserRoleUser  UserRole = "USER"
+	UserRoleAdmin UserRole = "ADMIN"
+)
+
+var AllUserRole = []UserRole{
+	UserRoleUser,
+	UserRoleAdmin,
+}
+
+func (e UserRole) IsValid() bool {
+	switch e {
+	case UserRoleUser, UserRoleAdmin:
+		return true
+	}
+	return false
+}
+
+func (e UserRole) String() string {
+	return string(e)
+}
+
+func (e *UserRole) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = UserRole(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid UserRole", str)
+	}
+	return nil
+}
+
+func (e UserRole) MarshalGQL(w io.Writer) {
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *UserRole) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e UserRole) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

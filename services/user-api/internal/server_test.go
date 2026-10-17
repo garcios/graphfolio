@@ -450,3 +450,91 @@ func TestUserServer_ChangePassword(t *testing.T) {
 	})
 }
 
+func TestUserServer_RoleAndMustChangePasswordMapping(t *testing.T) {
+	ctx := context.Background()
+	adminUUID := uuid.New()
+	now := time.Now().UTC()
+	adminUser := &domain.User{
+		ID:                 adminUUID,
+		Email:              "admin@graphfolio.app",
+		DisplayName:        "System Administrator",
+		DisplayCurrency:    "USD",
+		Theme:              "DARK",
+		Role:               domain.RoleAdmin,
+		MustChangePassword: true,
+		CreatedAt:          now,
+		UpdatedAt:          now,
+	}
+
+	t.Run("login returns admin role and must_change_password true", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockSvc := mocks.NewMockUserService(ctrl)
+		mockSvc.EXPECT().
+			Login(ctx, "admin@graphfolio.app", "Password123!", false).
+			Return(&service.AuthResult{
+				User:         adminUser,
+				AccessToken:  "mock-access-token",
+				RefreshToken: "mock-refresh-token",
+				ExpiresIn:    900,
+			}, nil)
+
+		server := NewUserServer(mockSvc)
+		resp, err := server.Login(ctx, &userpb.LoginRequest{
+			Email:    "admin@graphfolio.app",
+			Password: "Password123!",
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if resp == nil || resp.User == nil {
+			t.Fatalf("expected user preferences in response")
+		}
+		if resp.User.Role != userpb.UserRole_USER_ROLE_ADMIN {
+			t.Errorf("expected role USER_ROLE_ADMIN, got: %v", resp.User.Role)
+		}
+		if !resp.User.MustChangePassword {
+			t.Errorf("expected must_change_password true, got false")
+		}
+	})
+
+	t.Run("get user preferences returns standard user role", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		userUUID := uuid.New()
+		standardUser := &domain.User{
+			ID:                 userUUID,
+			Email:              "investor@example.com",
+			DisplayName:        "Investor",
+			DisplayCurrency:    "USD",
+			Theme:              "LIGHT",
+			Role:               domain.RoleUser,
+			MustChangePassword: false,
+			CreatedAt:          now,
+			UpdatedAt:          now,
+		}
+
+		mockSvc := mocks.NewMockUserService(ctrl)
+		mockSvc.EXPECT().
+			GetUserPreferences(ctx, userUUID.String()).
+			Return(standardUser, nil)
+
+		server := NewUserServer(mockSvc)
+		resp, err := server.GetUserPreferences(ctx, &userpb.GetUserPreferencesRequest{
+			UserId: userUUID.String(),
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if resp.Preferences.Role != userpb.UserRole_USER_ROLE_USER {
+			t.Errorf("expected role USER_ROLE_USER, got: %v", resp.Preferences.Role)
+		}
+		if resp.Preferences.MustChangePassword {
+			t.Errorf("expected must_change_password false, got true")
+		}
+	})
+}
+
+

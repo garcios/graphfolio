@@ -15,21 +15,21 @@ import (
 )
 
 const getUserByIDSQL = `
-SELECT id, email, password_hash, is_active, display_name, base_currency, theme, email_verified_at, last_login_at, created_at, updated_at
+SELECT id, email, password_hash, is_active, display_name, base_currency, theme, role, must_change_password, email_verified_at, last_login_at, created_at, updated_at
 FROM users.users
 WHERE id = $1;
 `
 
 const getUserByEmailSQL = `
-SELECT id, email, password_hash, is_active, display_name, base_currency, theme, email_verified_at, last_login_at, created_at, updated_at
+SELECT id, email, password_hash, is_active, display_name, base_currency, theme, role, must_change_password, email_verified_at, last_login_at, created_at, updated_at
 FROM users.users
 WHERE lower(email) = lower($1);
 `
 
 const createUserSQL = `
-INSERT INTO users.users (email, password_hash, display_name, base_currency, theme, is_active)
-VALUES (lower($1), $2, $3, $4, 'DARK', true)
-RETURNING id, email, password_hash, is_active, display_name, base_currency, theme, email_verified_at, last_login_at, created_at, updated_at;
+INSERT INTO users.users (email, password_hash, display_name, base_currency, theme, role, must_change_password, is_active)
+VALUES (lower($1), $2, $3, $4, 'DARK', 'USER', false, true)
+RETURNING id, email, password_hash, is_active, display_name, base_currency, theme, role, must_change_password, email_verified_at, last_login_at, created_at, updated_at;
 `
 
 const updateUserPreferencesSQL = `
@@ -39,7 +39,7 @@ SET display_name = COALESCE($2::text, display_name),
     theme = COALESCE($4::text, theme),
     updated_at = now()
 WHERE id = $1
-RETURNING id, email, password_hash, is_active, display_name, base_currency, theme, email_verified_at, last_login_at, created_at, updated_at;
+RETURNING id, email, password_hash, is_active, display_name, base_currency, theme, role, must_change_password, email_verified_at, last_login_at, created_at, updated_at;
 `
 
 const updateLastLoginSQL = `
@@ -73,7 +73,9 @@ WHERE family_id = $1;
 
 const updatePasswordSQL = `
 UPDATE users.users
-SET password_hash = $1, updated_at = now()
+SET password_hash = $1,
+    must_change_password = false,
+    updated_at = now()
 WHERE id = $2 AND is_active = true;
 `
 
@@ -103,6 +105,8 @@ func scanUser(row pgx.Row) (*domain.User, error) {
 		&u.DisplayName,
 		&u.DisplayCurrency,
 		&u.Theme,
+		&u.Role,
+		&u.MustChangePassword,
 		&u.EmailVerifiedAt,
 		&u.LastLoginAt,
 		&u.CreatedAt,

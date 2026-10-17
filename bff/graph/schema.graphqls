@@ -445,12 +445,19 @@ type Investment {
   isClosed: Boolean!
 }
 
+enum UserRole {
+  USER
+  ADMIN
+}
+
 type UserPreferences {
   userId: ID!
   email: String!
   displayName: String!
   displayCurrency: String!
   theme: String!
+  role: UserRole!
+  mustChangePassword: Boolean!
   createdAt: String!
   updatedAt: String!
 }

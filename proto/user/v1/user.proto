@@ -18,14 +18,22 @@ service UserService {
   rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse) {}
 }
 
+enum UserRole {
+  USER_ROLE_UNSPECIFIED = 0;
+  USER_ROLE_USER        = 1;
+  USER_ROLE_ADMIN       = 2;
+}
+
 message UserPreferences {
-  string user_id          = 1;
-  string email            = 2;
-  string display_name     = 3;
-  string display_currency = 4; // 3-letter ISO code: "USD", "EUR", "GBP", "AUD", etc.
-  string theme            = 5; // "DARK", "LIGHT", "SYSTEM"
-  string created_at       = 6;
-  string updated_at       = 7;
+  string   user_id              = 1;
+  string   email                = 2;
+  string   display_name         = 3;
+  string   display_currency     = 4; // 3-letter ISO code: "USD", "EUR", "GBP", "AUD", etc.
+  string   theme                = 5; // "DARK", "LIGHT", "SYSTEM"
+  string   created_at           = 6;
+  string   updated_at           = 7;
+  UserRole role                 = 8; // User role: USER or ADMIN
+  bool     must_change_password = 9; // Forces immediate password rotation on first login
 }
 
 message CurrencyInfo {

@@ -1,5 +1,7 @@
-import React from 'react';
-import { Badge } from '@graphfolio/ui';
+import React, { useState, useRef, useEffect } from 'react';
+import { Badge, Modal } from '@graphfolio/ui';
+import { useAdminAuth } from '../context/AdminAuthContext';
+import { AdminChangePasswordView } from './AdminChangePasswordView';
 import './AdminLayout.css';
 
 export type AdminTab = 'assets' | 'prices' | 'missing-prices' | 'missing-fx' | 'fx' | 'ingestion';
@@ -19,6 +21,20 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   missingFXCount,
   children,
 }) => {
+  const { user, logout } = useAdminAuth();
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   return (
     <div className="admin-layout">
@@ -27,7 +43,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           <div className="admin-sidebar__logo">
             GraphFolio <span>Admin</span>
           </div>
-          <Badge variant="info">LOCAL</Badge>
+          <Badge variant="info">PORTAL</Badge>
         </div>
 
         <nav className="admin-sidebar__nav">
@@ -119,12 +135,71 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           </h2>
 
           <div className="admin-topbar__actions">
-            <Badge variant="purple">Internal Portal</Badge>
+            <div className="admin-profile-menu-container" ref={menuRef}>
+              <button
+                type="button"
+                className="admin-profile-trigger"
+                onClick={() => setMenuOpen(!menuOpen)}
+                aria-expanded={menuOpen}
+              >
+                <span className="admin-avatar">👤</span>
+                <span className="admin-email-text">{user?.email || 'admin@graphfolio.app'}</span>
+                <span className="admin-role-badge">ADMIN</span>
+                <span className="admin-dropdown-arrow">▾</span>
+              </button>
+
+              {menuOpen && (
+                <div className="admin-profile-dropdown">
+                  <div className="admin-dropdown-header">
+                    <span className="admin-dropdown-name">{user?.displayName || 'System Administrator'}</span>
+                    <span className="admin-dropdown-email">{user?.email}</span>
+                  </div>
+                  <div className="admin-dropdown-divider" />
+                  <button
+                    type="button"
+                    className="admin-dropdown-item"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setShowPasswordModal(true);
+                    }}
+                  >
+                    <span>🔑</span>
+                    <span>Change Password</span>
+                  </button>
+                  <div className="admin-dropdown-divider" />
+                  <button
+                    type="button"
+                    className="admin-dropdown-item admin-dropdown-item--danger"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      logout();
+                    }}
+                  >
+                    <span>🚪</span>
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
         <div className="admin-content">{children}</div>
       </main>
+
+      {showPasswordModal && (
+        <Modal
+          isOpen={showPasswordModal}
+          onClose={() => setShowPasswordModal(false)}
+          title="Change Administrator Password"
+        >
+          <AdminChangePasswordView
+            isModal={true}
+            onSuccess={() => setShowPasswordModal(false)}
+            onCancel={() => setShowPasswordModal(false)}
+          />
+        </Modal>
+      )}
     </div>
   );
 };

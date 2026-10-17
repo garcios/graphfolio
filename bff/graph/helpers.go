@@ -408,18 +408,27 @@ func toModelIngestionStatus(resp *pb.GetIngestionStatusResponse) *model.Ingestio
 	}
 }
 
+func toModelUserRole(r userpb.UserRole) model.UserRole {
+	if r == userpb.UserRole_USER_ROLE_ADMIN {
+		return model.UserRoleAdmin
+	}
+	return model.UserRoleUser
+}
+
 func toModelUserPreferences(p *userpb.UserPreferences) *model.UserPreferences {
 	if p == nil {
 		return nil
 	}
 	return &model.UserPreferences{
-		UserID:          p.UserId,
-		Email:           p.Email,
-		DisplayName:     p.DisplayName,
-		DisplayCurrency: p.DisplayCurrency,
-		Theme:           p.Theme,
-		CreatedAt:       p.CreatedAt,
-		UpdatedAt:       p.UpdatedAt,
+		UserID:             p.UserId,
+		Email:              p.Email,
+		DisplayName:        p.DisplayName,
+		DisplayCurrency:    p.DisplayCurrency,
+		Theme:              p.Theme,
+		Role:               toModelUserRole(p.Role),
+		MustChangePassword: p.MustChangePassword,
+		CreatedAt:          p.CreatedAt,
+		UpdatedAt:          p.UpdatedAt,
 	}
 }
 

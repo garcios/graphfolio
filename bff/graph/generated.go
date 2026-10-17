@@ -493,13 +493,15 @@ type ComplexityRoot struct {
 	}
 
 	UserPreferences struct {
-		CreatedAt       func(childComplexity int) int
-		DisplayCurrency func(childComplexity int) int
-		DisplayName     func(childComplexity int) int
-		Email           func(childComplexity int) int
-		Theme           func(childComplexity int) int
-		UpdatedAt       func(childComplexity int) int
-		UserID          func(childComplexity int) int
+		CreatedAt          func(childComplexity int) int
+		DisplayCurrency    func(childComplexity int) int
+		DisplayName        func(childComplexity int) int
+		Email              func(childComplexity int) int
+		MustChangePassword func(childComplexity int) int
+		Role               func(childComplexity int) int
+		Theme              func(childComplexity int) int
+		UpdatedAt          func(childComplexity int) int
+		UserID             func(childComplexity int) int
 	}
 
 	ValuationPoint struct {
@@ -2696,6 +2698,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.UserPreferences.Email(childComplexity), true
+	case "UserPreferences.mustChangePassword":
+		if e.ComplexityRoot.UserPreferences.MustChangePassword == nil {
+			break
+		}
+
+		return e.ComplexityRoot.UserPreferences.MustChangePassword(childComplexity), true
+	case "UserPreferences.role":
+		if e.ComplexityRoot.UserPreferences.Role == nil {
+			break
+		}
+
+		return e.ComplexityRoot.UserPreferences.Role(childComplexity), true
 	case "UserPreferences.theme":
 		if e.ComplexityRoot.UserPreferences.Theme == nil {
 			break
@@ -3700,6 +3714,10 @@ func (ec *executionContext) childFields_UserPreferences(ctx context.Context, fie
 		return ec.fieldContext_UserPreferences_displayCurrency(ctx, field)
 	case "theme":
 		return ec.fieldContext_UserPreferences_theme(ctx, field)
+	case "role":
+		return ec.fieldContext_UserPreferences_role(ctx, field)
+	case "mustChangePassword":
+		return ec.fieldContext_UserPreferences_mustChangePassword(ctx, field)
 	case "createdAt":
 		return ec.fieldContext_UserPreferences_createdAt(ctx, field)
 	case "updatedAt":
@@ -13425,6 +13443,52 @@ func (ec *executionContext) fieldContext_UserPreferences_theme(_ context.Context
 	return graphql.NewScalarFieldContext("UserPreferences", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
+func (ec *executionContext) _UserPreferences_role(ctx context.Context, field graphql.CollectedField, obj *model.UserPreferences) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UserPreferences_role(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Role, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.UserRole) graphql.Marshaler {
+			return ec.marshalNUserRole2bffᚋgraphᚋmodelᚐUserRole(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_UserPreferences_role(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("UserPreferences", field, false, false, errors.New("field of type UserRole does not have child fields"))
+}
+
+func (ec *executionContext) _UserPreferences_mustChangePassword(ctx context.Context, field graphql.CollectedField, obj *model.UserPreferences) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UserPreferences_mustChangePassword(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.MustChangePassword, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_UserPreferences_mustChangePassword(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("UserPreferences", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
 func (ec *executionContext) _UserPreferences_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.UserPreferences) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -19160,6 +19224,16 @@ func (ec *executionContext) _UserPreferences(ctx context.Context, sel ast.Select
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "role":
+			out.Values[i] = ec._UserPreferences_role(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "mustChangePassword":
+			out.Values[i] = ec._UserPreferences_mustChangePassword(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "createdAt":
 			out.Values[i] = ec._UserPreferences_createdAt(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -20597,6 +20671,16 @@ func (ec *executionContext) marshalNUserPreferences2ᚖbffᚋgraphᚋmodelᚐUse
 		return graphql.Null
 	}
 	return ec._UserPreferences(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNUserRole2bffᚋgraphᚋmodelᚐUserRole(ctx context.Context, v any) (model.UserRole, error) {
+	var res model.UserRole
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNUserRole2bffᚋgraphᚋmodelᚐUserRole(ctx context.Context, sel ast.SelectionSet, v model.UserRole) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) marshalNValuationPoint2ᚕᚖbffᚋgraphᚋmodelᚐValuationPointᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.ValuationPoint) graphql.Marshaler {

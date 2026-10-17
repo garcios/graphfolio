@@ -31,6 +31,7 @@ type Claims struct {
 	Email        string `json:"email"`
 	DisplayName  string `json:"display_name"`
 	BaseCurrency string `json:"base_currency"`
+	Role         string `json:"role"`
 	IssuedAt     int64  `json:"iat"`
 	ExpiresAt    int64  `json:"exp"`
 }

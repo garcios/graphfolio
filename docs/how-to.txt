@@ -8,3 +8,7 @@
 
 # How to trigger recalculattion of cash balance?
 cd services/portfolio-api && go run cmd/market-ingest/main.go -rebuild-projections=true
+
+
+# How to install & use OrbStack for Docker containers and Linux VMs?
+See docs/orbstack-guide.md

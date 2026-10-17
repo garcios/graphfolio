@@ -287,17 +287,26 @@ func mapServiceError(err error) error {
 	}
 }
 
+func toProtoRole(role string) userpb.UserRole {
+	if role == domain.RoleAdmin {
+		return userpb.UserRole_USER_ROLE_ADMIN
+	}
+	return userpb.UserRole_USER_ROLE_USER
+}
+
 func domainUserToProto(u *domain.User) *userpb.UserPreferences {
 	if u == nil {
 		return nil
 	}
 	return &userpb.UserPreferences{
-		UserId:          u.ID.String(),
-		Email:           u.Email,
-		DisplayName:     u.DisplayName,
-		DisplayCurrency: u.DisplayCurrency,
-		Theme:           u.Theme,
-		CreatedAt:       u.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:       u.UpdatedAt.Format(time.RFC3339),
+		UserId:             u.ID.String(),
+		Email:              u.Email,
+		DisplayName:        u.DisplayName,
+		DisplayCurrency:    u.DisplayCurrency,
+		Theme:              u.Theme,
+		Role:               toProtoRole(u.Role),
+		MustChangePassword: u.MustChangePassword,
+		CreatedAt:          u.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:          u.UpdatedAt.Format(time.RFC3339),
 	}
 }
