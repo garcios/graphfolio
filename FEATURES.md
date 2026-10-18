@@ -46,6 +46,9 @@ This document catalogs all implemented features, in-progress components, and pla
 | **36** | **User Password Change & Session Invalidation (Main App)** | **DONE** | Proto, User API, BFF, Web | [user-change-password-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/user-change-password-implementation-plan.md) |
 | **37** | **In-Place Transaction Editing in Transaction Ledger** | **PLANNED** | Proto, Svc, BFF, Web | [edit-transaction-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/edit-transaction-implementation-plan.md) |
 | **38** | **Admin Portal Authentication, Auto-Provisioning & Mandatory First-Login Password Rotation** | **DONE** | Database, Proto, User API, BFF, Web | [admin-portal-login-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/admin-portal-login-implementation-plan.md) |
+| **39** | **Bidirectional Date Sorting in Transaction Ledger (`DESC` ↔ `ASC`)** | **DONE** | Proto, Svc, BFF, Web | [sort-transactions-by-date-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/sort-transactions-by-date-implementation-plan.md) |
+| **40** | **Create Cash Withdrawal Against Dividend Transaction** | **DONE** | Web, BFF, Svc | [withdraw-against-dividend-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/withdraw-against-dividend-implementation-plan.md) |
+| **41** | **Filter Transactions by Interest Type in Transaction Ledger** | **DONE** | Web, BFF, Svc, Proto, DB | [filter-transactions-by-interest-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/filter-transactions-by-interest-implementation-plan.md) |
 
 
 
@@ -551,6 +554,42 @@ This document catalogs all implemented features, in-progress components, and pla
   - Client-side security state machine in `web/apps/admin-app/src/App.tsx`:
     $$\text{Loading} \longrightarrow \text{Unauthenticated (AdminLoginView)} \longrightarrow \text{Non-Admin (AccessDeniedView)} \longrightarrow \text{MustChangePassword (AdminChangePasswordView)} \longrightarrow \text{AdminLayout}$$
   - Full automated test coverage in `services/user-api` (`server_test.go`), BFF (`resolvers_test.go`), and Admin App (`AdminAuth.test.ts`).
+
+### 2.38 Bidirectional Date Sorting in Transaction Ledger (`DESC` ↔ `ASC`)
+- **Status**: **DONE**
+- **User Story**: [sort-transactions-by-date-ledger.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/sort-transactions-by-date-ledger.md) (`US-TX-104`)
+- **Plan Reference**: [sort-transactions-by-date-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/sort-transactions-by-date-implementation-plan.md)
+- **Scope**: Proto (`SortDirection`), Database (`portfolio.transactions`), Portfolio Service (`services/portfolio-api`), BFF (`bff/`), Main App (`web/apps/main-app`)
+- **Highlights**:
+  - Interactive bidirectional sort toggle on the "Date" column header in `TransactionLedger.tsx` supporting reverse chronological descending (`DESC`, newest first) and chronological ascending (`ASC`, oldest first).
+  - Dynamic sort indicator chevrons (`▲/▼`), accessible ARIA markup (`role="columnheader"`, `aria-sort="ascending" | "descending"`), and full keyboard interaction (`Enter` / `Space`).
+  - Seamless state preservation: toggling sort direction preserves active transaction type filters (`selectedType`) and symbol queries (`symbolQuery`), automatically resetting to page 1.
+  - End-to-end backend contract support: `SortDirection` enum defined in `proto/portfolio/v1/portfolio.proto` and exposed via GraphQL `schema.graphqls`.
+  - Deterministic PostgreSQL repository queries (`listTransactionsAscSQL` and `listTransactionsDescSQL`) incorporating event lifecycle tie-breaking (`DEPOSIT` before `BUY` before `SELL` for ASC; reverse for DESC).
+
+### 2.39 Create Cash Withdrawal Against Dividend Transaction
+- **Status**: **DONE**
+- **User Story**: [withdraw-against-dividend-transaction.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/withdraw-against-dividend-transaction.md) (`US-TX-105`)
+- **Plan Reference**: [withdraw-against-dividend-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/withdraw-against-dividend-implementation-plan.md)
+- **Scope**: Web (`web/apps/main-app`), BFF (`bff/`), Portfolio Service (`services/portfolio-api`)
+- **Highlights**:
+  - Contextual row-level action button rendered exclusively on `DIVIDEND` items in `TransactionLedger.tsx`.
+  - Dark glassmorphic modal (`WithdrawDividendModal.tsx`) pre-populating trade date, currency, and exact net dividend amount.
+  - Standardized automated audit reference memo: `"Withdrawal for dividend: SYMBOL on YYYY-MM-DD"`.
+  - Eliminates "ghost cash" accumulation and preserves 100% bank statement cash reconciliation ($\Delta \text{Cash} = +D - D = \$0.00$) for investors who sweep dividend income into personal checking/savings accounts.
+  - Guaranteed intra-day ordering safety during ledger replay (`DIVIDEND` with priority 5 executes before `WITHDRAWAL` with priority 11).
+
+### 2.40 Filter Transactions by Interest Type in Transaction Ledger
+- **Status**: **DONE**
+- **User Story**: [filter-transactions-by-interest-ledger.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/filter-transactions-by-interest-ledger.md) (`US-TX-106`)
+- **Plan Reference**: [filter-transactions-by-interest-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/filter-transactions-by-interest-implementation-plan.md)
+- **Scope**: Web (`web/apps/main-app`), BFF (`bff/`), Portfolio Service (`services/portfolio-api`), Database (`portfolio.transactions`)
+- **Highlights**:
+  - Dedicated "Interest" filter pill added to `filterTypes` toolbar in `TransactionLedger.tsx`, positioned alongside income cash flows.
+  - Distinctive cyan/teal glassmorphic badge styling (`.badge-type.interest` with `#22d3ee`) in `TransactionLedger.css`.
+  - Contextual zero-state empty message (`getEmptyStateMessage`) informing the investor when no interest records exist for the active portfolio or search criteria.
+  - Filtered CSV data export generating interest-only audit files (`graphfolio-transactions-interest-YYYY-MM-DD.csv`).
+  - Comprehensive unit test coverage verifying filter pill constants, query argument building, badge class resolution, and empty state messaging.
 
 ---
 
