@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { client } from '@graphfolio/api-client';
 import { formatMoney, formatQuantity } from '@graphfolio/ui';
 import { EditTransactionModal } from './EditTransactionModal';
+import { WithdrawDividendModal } from './WithdrawDividendModal';
 import { formatTransactionsCSV, downloadCSV } from '../services/csv/export';
 import './TransactionLedger.css';
 
@@ -36,15 +37,95 @@ interface TransactionLedgerProps {
   supportedCurrencies?: any[];
 }
 
-const filterTypes: Array<{ label: string; value: string | null }> = [
+export const filterTypes: Array<{ label: string; value: string | null }> = [
   { label: 'All', value: null },
   { label: 'Buy', value: 'BUY' },
   { label: 'Sell', value: 'SELL' },
   { label: 'Dividend', value: 'DIVIDEND' },
+  { label: 'Interest', value: 'INTEREST' },
   { label: 'Split', value: 'SPLIT' },
   { label: 'Deposit', value: 'DEPOSIT' },
   { label: 'Withdrawal', value: 'WITHDRAWAL' },
 ];
+
+export function toggleSortDirection(current: 'DESC' | 'ASC'): 'DESC' | 'ASC' {
+  return current === 'DESC' ? 'ASC' : 'DESC';
+}
+
+export function buildTransactionQueryArgs(
+  page: number,
+  pageSize: number,
+  sortDirection: 'DESC' | 'ASC',
+  selectedType?: string | null,
+  symbolQuery?: string
+): Record<string, any> {
+  const args: Record<string, any> = {
+    page,
+    pageSize,
+    sortDirection,
+  };
+  if (selectedType) {
+    args.type = selectedType;
+  }
+  const trimmed = symbolQuery?.trim();
+  if (trimmed) {
+    args.symbol = trimmed.toUpperCase();
+  }
+  return args;
+}
+
+export function getSortHeaderAria(sortDirection: 'DESC' | 'ASC'): 'ascending' | 'descending' {
+  return sortDirection === 'ASC' ? 'ascending' : 'descending';
+}
+
+export function getSortHeaderTitle(sortDirection: 'DESC' | 'ASC'): string {
+  return `Sorted by Date: ${
+    sortDirection === 'DESC'
+      ? 'Newest first (click to sort oldest first)'
+      : 'Oldest first (click to sort newest first)'
+  }`;
+}
+
+export function getBadgeClass(type: string): string {
+  switch (type) {
+    case 'BUY':
+      return 'badge-type buy';
+    case 'SELL':
+      return 'badge-type sell';
+    case 'DIVIDEND':
+      return 'badge-type dividend';
+    case 'INTEREST':
+      return 'badge-type interest';
+    case 'SPLIT':
+      return 'badge-type split';
+    case 'DEPOSIT':
+      return 'badge-type deposit';
+    case 'WITHDRAWAL':
+      return 'badge-type withdrawal';
+    default:
+      return 'badge-type other';
+  }
+}
+
+export function getEmptyStateMessage(
+  selectedType?: string | null,
+  symbolQuery?: string
+): string {
+  const trimmed = symbolQuery?.trim();
+  if (selectedType === 'INTEREST' && trimmed) {
+    return `No interest transactions found matching "${trimmed.toUpperCase()}".`;
+  }
+  if (selectedType === 'INTEREST') {
+    return 'No interest transactions found for this portfolio.';
+  }
+  if (trimmed) {
+    return `No transactions found matching "${trimmed.toUpperCase()}".`;
+  }
+  if (selectedType) {
+    return `No ${selectedType.toLowerCase()} transactions found for this portfolio.`;
+  }
+  return 'No transactions found matching your criteria.';
+}
 
 export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
   onTransactionDeleted,
@@ -58,6 +139,8 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
   const [totalCount, setTotalCount] = useState(0);
   const [page, setPage] = useState(1);
   const pageSize = 20;
+
+  const [sortDirection, setSortDirection] = useState<'DESC' | 'ASC'>('DESC');
 
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [symbolQuery, setSymbolQuery] = useState('');
@@ -78,20 +161,13 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
+  // Withdraw dividend modal state
+  const [dividendToWithdraw, setDividendToWithdraw] = useState<TransactionItem | null>(null);
+
   useEffect(() => {
     let isCancelled = false;
     const timer = setTimeout(() => {
-      const args: any = {
-        page,
-        pageSize,
-      };
-      if (selectedType) {
-        args.type = selectedType;
-      }
-      const trimmed = symbolQuery.trim();
-      if (trimmed) {
-        args.symbol = trimmed.toUpperCase();
-      }
+      const args = buildTransactionQueryArgs(page, pageSize, sortDirection, selectedType, symbolQuery);
 
       client
         .query({
@@ -140,7 +216,25 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
       isCancelled = true;
       clearTimeout(timer);
     };
-  }, [page, pageSize, selectedType, symbolQuery, refreshTrigger, reloadCount]);
+  }, [page, pageSize, selectedType, symbolQuery, sortDirection, refreshTrigger, reloadCount]);
+
+  const handleSortDate = () => {
+    setSortDirection((prev) => toggleSortDirection(prev));
+    setLoading(true);
+    setPage(1);
+  };
+
+  const handleWithdrawalSuccess = (updatedPortfolio: any) => {
+    if (onTransactionUpdated) {
+      onTransactionUpdated(updatedPortfolio);
+    }
+    setExportNotice(
+      `Withdrawal of ${dividendToWithdraw?.amount ? formatMoney(dividendToWithdraw.amount) : 'cash'} recorded successfully.`
+    );
+    setTimeout(() => setExportNotice(null), 4000);
+    setDividendToWithdraw(null);
+    setReloadCount((c) => c + 1);
+  };
 
   const handleTypeSelect = (typeVal: string | null) => {
     setSelectedType(typeVal);
@@ -274,25 +368,6 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
   const startItem = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
   const endItem = Math.min(page * pageSize, totalCount);
 
-  const getBadgeClass = (type: string) => {
-    switch (type) {
-      case 'BUY':
-        return 'badge-type buy';
-      case 'SELL':
-        return 'badge-type sell';
-      case 'DIVIDEND':
-        return 'badge-type dividend';
-      case 'SPLIT':
-        return 'badge-type split';
-      case 'DEPOSIT':
-        return 'badge-type deposit';
-      case 'WITHDRAWAL':
-        return 'badge-type withdrawal';
-      default:
-        return 'badge-type other';
-    }
-  };
-
   return (
     <div className="transaction-ledger-container">
       <div className="ledger-card">
@@ -381,13 +456,35 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
         ) : error ? (
           <div className="ledger-state-msg error">{error}</div>
         ) : transactions.length === 0 ? (
-          <div className="ledger-state-msg">No transactions found matching your criteria.</div>
+          <div className="ledger-state-msg">
+            {getEmptyStateMessage(selectedType, symbolQuery)}
+          </div>
         ) : (
           <div className="ledger-table-wrapper">
             <table className="ledger-table">
               <thead>
                 <tr>
-                  <th>Date</th>
+                  <th
+                    className="sortable-th"
+                    onClick={handleSortDate}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleSortDate();
+                      }
+                    }}
+                    tabIndex={0}
+                    role="columnheader"
+                    aria-sort={getSortHeaderAria(sortDirection)}
+                    title={getSortHeaderTitle(sortDirection)}
+                  >
+                    <div className="th-content">
+                      <span>Date</span>
+                      <span className="sort-icon active" aria-hidden="true">
+                        {sortDirection === 'ASC' ? '▲' : '▼'}
+                      </span>
+                    </div>
+                  </th>
                   <th>Type</th>
                   <th>Asset</th>
                   <th>Quantity</th>
@@ -395,7 +492,7 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
                   <th>Amount</th>
                   <th>Fee</th>
                   <th>Notes</th>
-                  <th style={{ width: '80px', textAlign: 'center' }}></th>
+                  <th style={{ width: '100px', textAlign: 'center' }}></th>
                 </tr>
               </thead>
               <tbody>
@@ -432,6 +529,29 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
                       </td>
                       <td style={{ textAlign: 'center' }}>
                         <div className="row-actions">
+                          {tx.type === 'DIVIDEND' && (
+                            <button
+                              type="button"
+                              className="btn-withdraw-dividend"
+                              onClick={() => setDividendToWithdraw(tx)}
+                              title="Create matching cash withdrawal"
+                              aria-label={`Create matching withdrawal for ${tx.symbol || 'Cash'} dividend of ${formatMoney(tx.amount)}`}
+                            >
+                              <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                              >
+                                <path d="M12 2v10m0 0l-4-4m4 4l4-4" />
+                                <path d="M2 17l.621 2.485A2 2 0 0 0 4.561 21h14.877a2 2 0 0 0 1.94-1.515L22 17" />
+                              </svg>
+                            </button>
+                          )}
                           <button
                             type="button"
                             className="btn-edit-row"
@@ -595,6 +715,15 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
               onTransactionUpdated(updatedPortfolio);
             }
           }}
+        />
+      )}
+      {/* Withdraw Dividend Modal */}
+      {dividendToWithdraw && (
+        <WithdrawDividendModal
+          isOpen={true}
+          dividendTx={dividendToWithdraw}
+          onClose={() => setDividendToWithdraw(null)}
+          onSuccess={handleWithdrawalSuccess}
         />
       )}
     </div>
