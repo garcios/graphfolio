@@ -192,6 +192,87 @@ func TestPortfolioService_AddTransaction(t *testing.T) {
 		}
 	})
 
+	t.Run("successful INTEREST ingestion", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		interestAmount := decimal.RequireFromString("125.50")
+		tradeDate := time.Date(2026, 10, 18, 0, 0, 0, 0, time.UTC)
+		notes := "Monthly CMA Cash Interest"
+		input := domain.AddTransactionInput{
+			UserID:    userID,
+			Type:      domain.TxTypeInterest,
+			TradeDate: tradeDate,
+			Amount:    &interestAmount,
+			Notes:     &notes,
+		}
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().InsertTransaction(ctx, gomock.Any()).DoAndReturn(func(_ context.Context, tx domain.Transaction) (*domain.Transaction, error) {
+			if tx.Type != domain.TxTypeInterest {
+				t.Fatalf("expected interest, got %v", tx.Type)
+			}
+			if !tx.Amount.Equal(interestAmount) {
+				t.Fatalf("expected amount %s, got %s", interestAmount, tx.Amount)
+			}
+			if tx.InstrumentID != nil {
+				t.Fatalf("expected nil InstrumentID for cash interest, got %v", tx.InstrumentID)
+			}
+			if tx.CurrencyCode != "USD" {
+				t.Fatalf("expected default currency USD, got %s", tx.CurrencyCode)
+			}
+			tx.ID = uuid.New()
+			return &tx, nil
+		})
+
+		// RebuildProjections calls
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetTransactions(ctx, portfolioID).Return([]domain.Transaction{}, nil)
+		mockRepo.EXPECT().GetCorporateActions(ctx, gomock.Len(0)).Return([]domain.CorporateAction{}, nil)
+		mockRepo.EXPECT().SaveProjectionsTx(ctx, portfolioID, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+		// GetPortfolioSummary calls
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetHoldingsWithMarketData(ctx, portfolioID).Return([]domain.HoldingWithPrice{}, nil)
+		mockRepo.EXPECT().GetCashBalances(ctx, portfolioID).Return([]domain.CashBalance{
+			{PortfolioID: portfolioID, CurrencyCode: "USD", Balance: interestAmount},
+		}, nil)
+		mockRepo.EXPECT().GetLatestValuation(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetCashFXRates(ctx, "USD").Return(map[string]decimal.Decimal{"USD": decimal.NewFromInt(1)}, nil)
+
+		tx, summary, err := svc.AddTransaction(ctx, input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if tx == nil || summary == nil {
+			t.Fatalf("expected tx and summary, got nil")
+		}
+		if !summary.CashBalance.Amount.Equal(interestAmount) {
+			t.Fatalf("expected cash balance %s, got %s", interestAmount, summary.CashBalance.Amount)
+		}
+	})
+
+	t.Run("validation error on INTEREST with non-positive amount", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+
+		zeroAmount := decimal.Zero
+		input := domain.AddTransactionInput{
+			UserID: userID,
+			Type:   domain.TxTypeInterest,
+			Amount: &zeroAmount,
+		}
+
+		_, _, err := svc.AddTransaction(ctx, input)
+		if err == nil {
+			t.Fatalf("expected error for non-positive amount, got nil")
+		}
+	})
+
 	t.Run("validation error on BUY without symbol", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		mockRepo := repoMocks.NewMockRepository(ctrl)
@@ -1385,6 +1466,79 @@ func TestPortfolioService_UpdateTransaction(t *testing.T) {
 		}
 		if !errors.Is(err, errors.New("negative share inventory")) && err.Error() == "" {
 			t.Fatalf("expected negative share inventory error message, got: %v", err)
+		}
+	})
+
+	t.Run("successful INTEREST update", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mockRepo := repoMocks.NewMockRepository(ctrl)
+		mockValuation := serviceMocks.NewMockValuationService(ctrl)
+		svc := service.NewPortfolioService(mockRepo, service.WithValuationService(mockValuation))
+
+		interestTxID := uuid.New()
+		origAmount := decimal.RequireFromString("100.00")
+		origTx := &domain.Transaction{
+			ID:           interestTxID,
+			PortfolioID:  portfolioID,
+			InstrumentID: nil,
+			Type:         domain.TxTypeInterest,
+			TradeDate:    tradeDate,
+			Amount:       origAmount,
+			CurrencyCode: "USD",
+			Fee:          decimal.Zero,
+		}
+
+		newAmount := decimal.RequireFromString("150.00")
+		newNotes := "Corrected CMA interest"
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetTransactionByID(ctx, portfolioID, interestTxID).Return(origTx, nil)
+
+		mockRepo.EXPECT().UpdateTransaction(ctx, portfolioID, gomock.Any()).DoAndReturn(func(_ context.Context, pid uuid.UUID, tx domain.Transaction) (*domain.Transaction, error) {
+			if tx.Type != domain.TxTypeInterest {
+				t.Fatalf("expected interest type, got %v", tx.Type)
+			}
+			if !tx.Amount.Equal(newAmount) {
+				t.Fatalf("expected new amount %s, got %s", newAmount, tx.Amount)
+			}
+			return &tx, nil
+		})
+
+		// postTransactionUpdate calls
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetTransactions(ctx, portfolioID).Return([]domain.Transaction{*origTx}, nil)
+		mockRepo.EXPECT().GetCorporateActions(ctx, gomock.Len(0)).Return([]domain.CorporateAction{}, nil)
+		mockRepo.EXPECT().SaveProjectionsTx(ctx, portfolioID, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+		// Valuation backfill
+		mockValuation.EXPECT().BackfillPortfolioValuations(ctx, portfolioID, tradeDate).Return(nil)
+
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(mockPortfolio, nil)
+		mockRepo.EXPECT().GetHoldingsWithMarketData(ctx, portfolioID).Return([]domain.HoldingWithPrice{}, nil)
+		mockRepo.EXPECT().GetCashBalances(ctx, portfolioID).Return([]domain.CashBalance{
+			{PortfolioID: portfolioID, CurrencyCode: "USD", Balance: newAmount},
+		}, nil)
+		mockRepo.EXPECT().GetLatestValuation(ctx, portfolioID).Return(nil, nil)
+		mockRepo.EXPECT().GetCashFXRates(ctx, "USD").Return(map[string]decimal.Decimal{"USD": decimal.NewFromInt(1)}, nil)
+
+		input := domain.UpdateTransactionInput{
+			UserID:        userID,
+			TransactionID: interestTxID.String(),
+			Type:          domain.TxTypeInterest,
+			TradeDate:     tradeDate,
+			Amount:        &newAmount,
+			Notes:         &newNotes,
+		}
+
+		res, summary, err := svc.UpdateTransaction(ctx, input)
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res == nil || summary == nil {
+			t.Fatal("expected res and summary, got nil")
+		}
+		if !res.Amount.Equal(newAmount) {
+			t.Errorf("expected updated amount %s, got %s", newAmount, res.Amount)
 		}
 	})
 

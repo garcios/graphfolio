@@ -49,6 +49,7 @@ This document catalogs all implemented features, in-progress components, and pla
 | **39** | **Bidirectional Date Sorting in Transaction Ledger (`DESC` ↔ `ASC`)** | **DONE** | Proto, Svc, BFF, Web | [sort-transactions-by-date-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/sort-transactions-by-date-implementation-plan.md) |
 | **40** | **Create Cash Withdrawal Against Dividend Transaction** | **DONE** | Web, BFF, Svc | [withdraw-against-dividend-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/withdraw-against-dividend-implementation-plan.md) |
 | **41** | **Filter Transactions by Interest Type in Transaction Ledger** | **DONE** | Web, BFF, Svc, Proto, DB | [filter-transactions-by-interest-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/filter-transactions-by-interest-implementation-plan.md) |
+| **42** | **Record Cash Interest Transactions (Yield Ingestion & Cash Account Reconciliation)** | **DONE** | Proto, Svc, BFF, Web | [record-interest-transaction-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/record-interest-transaction-implementation-plan.md) |
 
 
 
@@ -590,6 +591,17 @@ This document catalogs all implemented features, in-progress components, and pla
   - Contextual zero-state empty message (`getEmptyStateMessage`) informing the investor when no interest records exist for the active portfolio or search criteria.
   - Filtered CSV data export generating interest-only audit files (`graphfolio-transactions-interest-YYYY-MM-DD.csv`).
   - Comprehensive unit test coverage verifying filter pill constants, query argument building, badge class resolution, and empty state messaging.
+
+### 2.41 Record Cash Interest Transactions (Yield Ingestion & Cash Account Reconciliation)
+- **Status**: **DONE**
+- **User Story**: [record-interest-transaction.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/record-interest-transaction.md) (`US-TX-107`)
+- **Plan Reference**: [record-interest-transaction-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/record-interest-transaction-implementation-plan.md)
+- **Scope**: Proto (`proto/portfolio/v1/portfolio.proto`), Database (`portfolio.transactions`, `portfolio.cash_balances`), Portfolio Service (`services/portfolio-api`), BFF (`bff/`), Main App (`web/apps/main-app`)
+- **Highlights**:
+  - Direct manual recording of cash yield/interest payments via dedicated "Interest" type tab in `AddTransactionModal.tsx`.
+  - Dynamic form adaptation hiding equity-specific fields (Symbol, Quantity, Price, Split) and presenting Trade Date, Amount, Currency, and Notes.
+  - Strict preservation of GIPS® TWR and Modified Dietz investment return metrics by classifying cash yield as internal income rather than external capital contributions ($F_t = 0$).
+  - Exact fixed-point arithmetic (`shopspring/decimal.Decimal`) updating portfolio cash balances and reflecting in the Transaction Ledger and Cash Flow Report without full page reloads.
 
 ---
 
