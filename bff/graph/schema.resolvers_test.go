@@ -702,6 +702,69 @@ func TestMutationResolver_AddTransaction_Split(t *testing.T) {
 	}
 }
 
+func TestMutationResolver_AddTransaction_Interest(t *testing.T) {
+	ctx := context.Background()
+
+	fakeClient := &fakePortfolioClient{
+		addTransactionFn: func(ctx context.Context, in *pb.AddTransactionRequest) (*pb.AddTransactionResponse, error) {
+			if in.GetType() != pb.TransactionType_TRANSACTION_TYPE_INTEREST {
+				t.Errorf("expected TRANSACTION_TYPE_INTEREST, got %v", in.GetType())
+			}
+			if in.GetSymbol() != "" {
+				t.Errorf("expected empty symbol for interest, got %s", in.GetSymbol())
+			}
+			if in.GetAmount().GetCurrencyCode() != "AUD" {
+				t.Errorf("expected currency AUD, got %s", in.GetAmount().GetCurrencyCode())
+			}
+			amt, err := decimalpb.FromProto(in.GetAmount().GetAmount())
+			if err != nil {
+				t.Fatalf("failed to parse amount: %v", err)
+			}
+			if !amt.Equal(decimal.RequireFromString("125.50")) {
+				t.Errorf("expected amount 125.50, got %s", amt)
+			}
+			if in.GetNotes() != "CMA Monthly Interest" {
+				t.Errorf("expected notes 'CMA Monthly Interest', got %s", in.GetNotes())
+			}
+			return &pb.AddTransactionResponse{
+				TransactionId: "tx-interest-123",
+				Portfolio: &pb.Portfolio{
+					TotalValue:  decimalpb.MoneyToProto(decimal.RequireFromString("10125.50"), "AUD"),
+					CashBalance: decimalpb.MoneyToProto(decimal.RequireFromString("125.50"), "AUD"),
+				},
+			}, nil
+		},
+	}
+
+	resolver := &Resolver{PortfolioClient: fakeClient}
+	mResolver := resolver.Mutation()
+
+	amount := model.Decimal(decimal.RequireFromString("125.50"))
+	curr := "AUD"
+	notes := "CMA Monthly Interest"
+
+	payload, err := mResolver.AddTransaction(ctx, model.AddTransactionInput{
+		Type:         model.TransactionTypeInterest,
+		TradeDate:    "2026-10-18",
+		Amount:       &amount,
+		CurrencyCode: &curr,
+		Notes:        &notes,
+	})
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if payload == nil {
+		t.Fatalf("expected payload, got nil")
+	}
+	if payload.TransactionID != "tx-interest-123" {
+		t.Errorf("expected tx ID tx-interest-123, got %s", payload.TransactionID)
+	}
+	if !decimal.Decimal(payload.Portfolio.CashBalance.Amount).Equal(decimal.RequireFromString("125.50")) {
+		t.Errorf("expected cash balance 125.50, got %s", decimal.Decimal(payload.Portfolio.CashBalance.Amount))
+	}
+}
+
 func TestQueryResolver_PortfolioHistory(t *testing.T) {
 	ctx := context.Background()
 

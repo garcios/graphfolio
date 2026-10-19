@@ -2,7 +2,109 @@ import React, { useState, useEffect } from 'react';
 import { client } from '@graphfolio/api-client';
 import './AddTransactionModal.css';
 
-type TransactionType = 'BUY' | 'SELL' | 'DIVIDEND' | 'SPLIT' | 'DEPOSIT' | 'WITHDRAWAL';
+export type TransactionType = 'BUY' | 'SELL' | 'DIVIDEND' | 'INTEREST' | 'SPLIT' | 'DEPOSIT' | 'WITHDRAWAL';
+
+export const transactionTypes: TransactionType[] = [
+  'BUY',
+  'SELL',
+  'DIVIDEND',
+  'INTEREST',
+  'SPLIT',
+  'DEPOSIT',
+  'WITHDRAWAL',
+];
+
+export function validateTransactionInput(params: {
+  type: TransactionType;
+  symbol?: string;
+  quantity?: string;
+  price?: string;
+  amount?: string;
+  splitRatioTo?: string;
+  splitRatioFrom?: string;
+}): void {
+  const { type, symbol, quantity, price, amount, splitRatioTo, splitRatioFrom } = params;
+  if (type === 'BUY' || type === 'SELL') {
+    if (!symbol) throw new Error('Please select or specify a symbol.');
+    if (!quantity || parseFloat(quantity) <= 0) throw new Error('Quantity must be greater than zero.');
+    if (!price || parseFloat(price) < 0) throw new Error('Price cannot be negative.');
+  } else if (type === 'DEPOSIT' || type === 'WITHDRAWAL' || type === 'INTEREST') {
+    if (!amount || parseFloat(amount) <= 0) throw new Error('Amount must be greater than zero.');
+  } else if (type === 'DIVIDEND') {
+    if (!symbol) throw new Error('Please select or specify a symbol for dividend.');
+    if (!amount || parseFloat(amount) <= 0) throw new Error('Amount must be greater than zero.');
+  } else if (type === 'SPLIT') {
+    if (!symbol) throw new Error('Please select or specify an asset for the stock split.');
+    const to = parseFloat(splitRatioTo || '');
+    const from = parseFloat(splitRatioFrom || '');
+    if (isNaN(to) || to <= 0) throw new Error('New shares ratio must be greater than zero.');
+    if (isNaN(from) || from <= 0) throw new Error('Old shares ratio must be greater than zero.');
+  }
+}
+
+export function buildAddTransactionPayload(params: {
+  type: TransactionType;
+  tradeDate: string;
+  currencyCode: string;
+  symbol?: string;
+  quantity?: string;
+  price?: string;
+  amount?: string;
+  fee?: string;
+  feeCurrencyCode?: string;
+  notes?: string;
+  splitRatioTo?: string;
+  splitRatioFrom?: string;
+}) {
+  const {
+    type,
+    tradeDate,
+    currencyCode,
+    symbol,
+    quantity,
+    price,
+    amount,
+    fee,
+    feeCurrencyCode,
+    notes,
+    splitRatioTo,
+    splitRatioFrom,
+  } = params;
+
+  const input: any = {
+    type,
+    tradeDate,
+    currencyCode,
+    notes: notes || undefined,
+    fee: fee ? fee : undefined,
+    feeCurrencyCode: type === 'BUY' || type === 'SELL' ? feeCurrencyCode : feeCurrencyCode || undefined,
+  };
+
+  if (type === 'BUY' || type === 'SELL') {
+    input.symbol = symbol;
+    input.quantity = quantity;
+    input.price = price;
+    input.amount = amount || (parseFloat(quantity || '0') * parseFloat(price || '0')).toFixed(2);
+  } else if (type === 'DEPOSIT' || type === 'WITHDRAWAL' || type === 'INTEREST') {
+    input.amount = amount;
+  } else if (type === 'DIVIDEND') {
+    input.symbol = symbol;
+    input.amount = amount;
+  } else if (type === 'SPLIT') {
+    const to = parseFloat(splitRatioTo || '2');
+    const from = parseFloat(splitRatioFrom || '1');
+    const ratioMultiplier = (to / from).toFixed(8).replace(/\.?0+$/, '');
+    input.symbol = symbol;
+    input.quantity = ratioMultiplier;
+    input.price = '0.00';
+    input.amount = '0.00';
+    if (!notes) {
+      input.notes = `${splitRatioTo || '2'}-for-${splitRatioFrom || '1'} Stock Split`;
+    }
+  }
+
+  return input;
+}
 
 interface InstrumentOption {
   id: string;
@@ -149,55 +251,30 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
     setLoading(true);
 
     try {
-      // Validate inputs
-      if (type === 'BUY' || type === 'SELL') {
-        if (!symbol) throw new Error('Please select or specify a symbol.');
-        if (!quantity || parseFloat(quantity) <= 0) throw new Error('Quantity must be greater than zero.');
-        if (!price || parseFloat(price) < 0) throw new Error('Price cannot be negative.');
-      } else if (type === 'DEPOSIT' || type === 'WITHDRAWAL') {
-        if (!amount || parseFloat(amount) <= 0) throw new Error('Amount must be greater than zero.');
-      } else if (type === 'DIVIDEND') {
-        if (!symbol) throw new Error('Please select or specify a symbol for dividend.');
-        if (!amount || parseFloat(amount) <= 0) throw new Error('Amount must be greater than zero.');
-      } else if (type === 'SPLIT') {
-        if (!symbol) throw new Error('Please select or specify an asset for the stock split.');
-        const to = parseFloat(splitRatioTo);
-        const from = parseFloat(splitRatioFrom);
-        if (isNaN(to) || to <= 0) throw new Error('New shares ratio must be greater than zero.');
-        if (isNaN(from) || from <= 0) throw new Error('Old shares ratio must be greater than zero.');
-      }
+      validateTransactionInput({
+        type,
+        symbol,
+        quantity,
+        price,
+        amount,
+        splitRatioTo,
+        splitRatioFrom,
+      });
 
-      const input: any = {
+      const input = buildAddTransactionPayload({
         type,
         tradeDate,
         currencyCode,
-        notes: notes || undefined,
-        fee: fee ? fee : undefined,
-        feeCurrencyCode: (type === 'BUY' || type === 'SELL') ? feeCurrencyCode : (feeCurrencyCode || undefined),
-      };
-
-      if (type === 'BUY' || type === 'SELL') {
-        input.symbol = symbol;
-        input.quantity = quantity;
-        input.price = price;
-        input.amount = amount || (parseFloat(quantity) * parseFloat(price)).toFixed(2);
-      } else if (type === 'DEPOSIT' || type === 'WITHDRAWAL') {
-        input.amount = amount;
-      } else if (type === 'DIVIDEND') {
-        input.symbol = symbol;
-        input.amount = amount;
-      } else if (type === 'SPLIT') {
-        const to = parseFloat(splitRatioTo);
-        const from = parseFloat(splitRatioFrom);
-        const ratioMultiplier = (to / from).toFixed(8).replace(/\.?0+$/, '');
-        input.symbol = symbol;
-        input.quantity = ratioMultiplier;
-        input.price = '0.00';
-        input.amount = '0.00';
-        if (!notes) {
-          input.notes = `${splitRatioTo}-for-${splitRatioFrom} Stock Split`;
-        }
-      }
+        symbol,
+        quantity,
+        price,
+        amount,
+        fee,
+        feeCurrencyCode,
+        notes,
+        splitRatioTo,
+        splitRatioFrom,
+      });
 
       const res = await client.mutation({
         addTransaction: {
@@ -260,11 +337,11 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 
         {/* Transaction Type Segmented Control */}
         <div className="type-tabs">
-          {(['BUY', 'SELL', 'DIVIDEND', 'SPLIT', 'DEPOSIT', 'WITHDRAWAL'] as TransactionType[]).map((t) => (
+          {transactionTypes.map((t) => (
             <button
               key={t}
               type="button"
-              className={`type-tab ${type === t ? 'active' : ''} ${type === 'SELL' ? 'sell' : ''} ${type === 'SPLIT' ? 'split' : ''}`}
+              className={`type-tab ${type === t ? 'active' : ''} ${type === 'SELL' ? 'sell' : ''} ${type === 'SPLIT' ? 'split' : ''} ${type === 'INTEREST' ? 'interest' : ''}`}
               onClick={() => {
                 setType(t);
                 setError(null);

@@ -120,7 +120,7 @@ func (s *portfolioService) AddTransaction(ctx context.Context, input domain.AddT
 
 		return savedTx, summary, nil
 
-	case domain.TxTypeDeposit, domain.TxTypeWithdrawal:
+	case domain.TxTypeDeposit, domain.TxTypeWithdrawal, domain.TxTypeInterest:
 		if input.Amount == nil || !input.Amount.IsPositive() {
 			return nil, nil, fmt.Errorf("service: positive amount is required for %s", input.Type)
 		}
@@ -490,7 +490,7 @@ func (s *portfolioService) UpdateTransaction(ctx context.Context, input domain.U
 			InstrumentName: &instName,
 		}, summary, nil
 
-	case domain.TxTypeDeposit, domain.TxTypeWithdrawal:
+	case domain.TxTypeDeposit, domain.TxTypeWithdrawal, domain.TxTypeInterest:
 		if input.Amount == nil || !input.Amount.IsPositive() {
 			return nil, nil, fmt.Errorf("service: positive amount is required for %s", input.Type)
 		}
