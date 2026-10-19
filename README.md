@@ -509,4 +509,10 @@ make generate
 - **Competitive Strategy Analysis**: [`docs/competitive-analysis.md`](./docs/competitive-analysis.md)
 - **Frontend GraphQL Setup**: [`docs/genql-usage.md`](./docs/genql-usage.md)
 
+---
+
+## License
+
+This project is licensed under the terms of the [BSD 3-Clause License](LICENSE).
+
 
