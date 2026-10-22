@@ -425,10 +425,12 @@ func toModelUserPreferences(p *userpb.UserPreferences) *model.UserPreferences {
 		DisplayName:        p.DisplayName,
 		DisplayCurrency:    p.DisplayCurrency,
 		Theme:              p.Theme,
-		Role:               toModelUserRole(p.Role),
-		MustChangePassword: p.MustChangePassword,
-		CreatedAt:          p.CreatedAt,
-		UpdatedAt:          p.UpdatedAt,
+		Role:                  toModelUserRole(p.Role),
+		MustChangePassword:    p.MustChangePassword,
+		FinancialYearEndMonth: int(p.FinancialYearEndMonth),
+		FinancialYearEndDay:   int(p.FinancialYearEndDay),
+		CreatedAt:             p.CreatedAt,
+		UpdatedAt:             p.UpdatedAt,
 	}
 }
 

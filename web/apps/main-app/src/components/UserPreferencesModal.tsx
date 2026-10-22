@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { client } from '@graphfolio/api-client';
 import './UserPreferencesModal.css';
 
@@ -8,6 +8,8 @@ export interface UserPreferencesData {
   displayName: string;
   displayCurrency: string;
   theme: string;
+  financialYearEndMonth?: number;
+  financialYearEndDay?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -16,6 +18,125 @@ export interface CurrencyItem {
   code: string;
   name: string;
   symbol: string;
+}
+
+export interface EOFYPreset {
+  id: string;
+  label: string;
+  flag: string;
+  month: number;
+  day: number;
+}
+
+export const EOFY_PRESETS: EOFYPreset[] = [
+  { id: 'AU', label: 'Australia (30 Jun)', flag: '🇦🇺', month: 6, day: 30 },
+  { id: 'UK', label: 'UK (5 Apr)', flag: '🇬🇧', month: 4, day: 5 },
+  { id: 'US', label: 'USA / Canada (31 Dec)', flag: '🇺🇸', month: 12, day: 31 },
+  { id: 'NZ', label: 'NZ / India (31 Mar)', flag: '🇳🇿', month: 3, day: 31 },
+  { id: 'ZA', label: 'South Africa (28 Feb)', flag: '🇿🇦', month: 2, day: 28 },
+];
+
+export const MONTH_OPTIONS = [
+  { value: 1, label: 'January (01)' },
+  { value: 2, label: 'February (02)' },
+  { value: 3, label: 'March (03)' },
+  { value: 4, label: 'April (04)' },
+  { value: 5, label: 'May (05)' },
+  { value: 6, label: 'June (06)' },
+  { value: 7, label: 'July (07)' },
+  { value: 8, label: 'August (08)' },
+  { value: 9, label: 'September (09)' },
+  { value: 10, label: 'October (10)' },
+  { value: 11, label: 'November (11)' },
+  { value: 12, label: 'December (12)' },
+];
+
+export function getMaxDaysInMonth(month: number): number {
+  if (month === 2) return 29; // Allows leap-year enders (e.g. Feb 29)
+  if ([4, 6, 9, 11].includes(month)) return 30;
+  return 31;
+}
+
+export function detectPresetId(month: number, day: number): string {
+  const match = EOFY_PRESETS.find((p) => p.month === month && p.day === day);
+  return match ? match.id : 'CUSTOM';
+}
+
+export function isLastDayOfMonth(month: number, day: number): boolean {
+  if (month === 2) return day >= 28;
+  if ([4, 6, 9, 11].includes(month)) return day === 30;
+  return day === 31;
+}
+
+export function calculateFiscalYearBounds(
+  month: number,
+  day: number,
+  asOfDate: Date = new Date()
+) {
+  const currentYear = asOfDate.getFullYear();
+  const isLeap = (year: number) => (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+  const resolveEndDay = (year: number, m: number, d: number) => {
+    if (m === 2) {
+      if (d >= 28) return isLeap(year) ? 29 : 28;
+      return d;
+    }
+    return d;
+  };
+
+  const endThisYear = new Date(
+    currentYear,
+    month - 1,
+    resolveEndDay(currentYear, month, day),
+    23,
+    59,
+    59,
+    999
+  );
+  let fyEndYear: number;
+
+  if (asOfDate.getTime() <= endThisYear.getTime()) {
+    fyEndYear = currentYear;
+  } else {
+    fyEndYear = currentYear + 1;
+  }
+
+  const buildBounds = (endYear: number) => {
+    const endDay = resolveEndDay(endYear, month, day);
+    const endDate = new Date(endYear, month - 1, endDay);
+    let startDate: Date;
+
+    if (isLastDayOfMonth(month, day)) {
+      if (month === 12) {
+        startDate = new Date(endYear, 0, 1);
+      } else {
+        startDate = new Date(endYear - 1, month, 1);
+      }
+    } else {
+      startDate = new Date(endYear - 1, month - 1, day + 1);
+    }
+
+    const label =
+      month === 12 && day === 31
+        ? `FY${endYear}`
+        : `FY${String(endYear).slice(-2)}`;
+
+    return { startDate, endDate, label };
+  };
+
+  const current = buildBounds(fyEndYear);
+  const prev = buildBounds(fyEndYear - 1);
+
+  const formatDate = (d: Date) =>
+    d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+  return {
+    currentPeriod: `${formatDate(current.startDate)} – ${formatDate(current.endDate)} (${current.label})`,
+    prevPeriod: `${formatDate(prev.startDate)} – ${formatDate(prev.endDate)} (${prev.label})`,
+    currentLabel: current.label,
+    prevLabel: prev.label,
+    startDate: current.startDate,
+    endDate: current.endDate,
+  };
 }
 
 interface UserPreferencesModalProps {
@@ -46,6 +167,8 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({
   const [displayName, setDisplayName] = useState('');
   const [displayCurrency, setDisplayCurrency] = useState('USD');
   const [theme, setTheme] = useState('DARK');
+  const [fyMonth, setFyMonth] = useState(6);
+  const [fyDay, setFyDay] = useState(30);
   const [currencies, setCurrencies] = useState<CurrencyItem[]>(supportedCurrencies);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -56,6 +179,8 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({
       setDisplayName(currentPreferences.displayName || '');
       setDisplayCurrency(currentPreferences.displayCurrency || 'USD');
       setTheme(currentPreferences.theme || 'DARK');
+      setFyMonth(currentPreferences.financialYearEndMonth ?? 6);
+      setFyDay(currentPreferences.financialYearEndDay ?? 30);
     }
     setError(null);
   }, [currentPreferences, isOpen]);
@@ -101,6 +226,18 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({
     };
   }, [isOpen, saving, onClose]);
 
+  const activePresetId = useMemo(() => detectPresetId(fyMonth, fyDay), [fyMonth, fyDay]);
+
+  const fiscalYearPreview = useMemo(
+    () => calculateFiscalYearBounds(fyMonth, fyDay),
+    [fyMonth, fyDay]
+  );
+
+  const availableDays = useMemo(() => {
+    const max = getMaxDaysInMonth(fyMonth);
+    return Array.from({ length: max }, (_, i) => i + 1);
+  }, [fyMonth]);
+
   if (!isOpen) return null;
 
   const getInitials = (name: string): string => {
@@ -115,6 +252,19 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({
     code: displayCurrency,
     name: displayCurrency,
     symbol: '$',
+  };
+
+  const handleMonthChange = (newMonth: number) => {
+    setFyMonth(newMonth);
+    const max = getMaxDaysInMonth(newMonth);
+    if (fyDay > max) {
+      setFyDay(max);
+    }
+  };
+
+  const handlePresetSelect = (preset: EOFYPreset) => {
+    setFyMonth(preset.month);
+    setFyDay(preset.day);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -140,6 +290,8 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({
               displayName: trimmedName,
               displayCurrency,
               theme,
+              financialYearEndMonth: fyMonth,
+              financialYearEndDay: fyDay,
             },
           },
           preferences: {
@@ -148,6 +300,8 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({
             displayName: true,
             displayCurrency: true,
             theme: true,
+            financialYearEndMonth: true,
+            financialYearEndDay: true,
             createdAt: true,
             updatedAt: true,
           },
@@ -248,8 +402,8 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({
               className="prefs-input"
               value={displayName}
               maxLength={100}
-              placeholder="e.g. Oscar Garcia"
               onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Your preferred name or alias"
               disabled={saving}
               required
             />
@@ -257,25 +411,25 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({
 
           {/* Display Currency Select */}
           <div className="prefs-form-group">
-            <label htmlFor="prefs-currency" className="prefs-label">
-              Display Currency
-            </label>
-            <span className="prefs-subtitle">
-              Anchors portfolio valuations, cash balances, and performance metrics.
-            </span>
+            <div className="prefs-label-row">
+              <label htmlFor="prefs-currency-select" className="prefs-label">
+                Reporting & Display Currency
+              </label>
+              <span className="prefs-hint">Converts portfolio values & returns</span>
+            </div>
             <select
-              id="prefs-currency"
+              id="prefs-currency-select"
               className="prefs-select"
               value={displayCurrency}
               onChange={(e) => setDisplayCurrency(e.target.value)}
               disabled={saving}
             >
               {currencies.length > 0 ? (
-                currencies.map((c) => {
-                  const flag = CURRENCY_FLAGS[c.code] || '🌐';
+                currencies.map((curr) => {
+                  const flag = CURRENCY_FLAGS[curr.code] || '🌐';
                   return (
-                    <option key={c.code} value={c.code}>
-                      {flag} {c.code} ({c.symbol}) — {c.name}
+                    <option key={curr.code} value={curr.code}>
+                      {flag} {curr.code} ({curr.symbol}) — {curr.name}
                     </option>
                   );
                 })
@@ -320,6 +474,102 @@ export const UserPreferencesModal: React.FC<UserPreferencesModalProps> = ({
               >
                 <span>💻</span> System
               </button>
+            </div>
+          </div>
+
+          <div className="prefs-section-divider" />
+
+          {/* End of Financial Year (EOFY) Section */}
+          <div className="prefs-form-group">
+            <div className="prefs-label-row">
+              <label className="prefs-label">Financial Year End (EOFY)</label>
+              <span className="prefs-hint">Tax year cutoff for statements & FYTD metrics</span>
+            </div>
+
+            {/* Regional Presets */}
+            <div className="prefs-eofy-presets">
+              {EOFY_PRESETS.map((preset) => {
+                const isActive = activePresetId === preset.id;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    className={`prefs-preset-pill ${isActive ? 'active' : ''}`}
+                    onClick={() => handlePresetSelect(preset)}
+                    disabled={saving}
+                  >
+                    <span>{preset.flag}</span> {preset.label}
+                  </button>
+                );
+              })}
+              <button
+                type="button"
+                className={`prefs-preset-pill ${activePresetId === 'CUSTOM' ? 'active' : ''}`}
+                onClick={() => {
+                  // Switch to custom (retaining current month & day)
+                }}
+                disabled={saving}
+              >
+                <span>🌐</span> Custom
+              </button>
+            </div>
+
+            {/* Month & Day Dropdown Pickers */}
+            <div className="prefs-eofy-pickers">
+              <div className="prefs-picker-col">
+                <label htmlFor="prefs-eofy-month" className="prefs-sublabel">
+                  Ending Month
+                </label>
+                <select
+                  id="prefs-eofy-month"
+                  className="prefs-select"
+                  value={fyMonth}
+                  onChange={(e) => handleMonthChange(Number(e.target.value))}
+                  disabled={saving}
+                >
+                  {MONTH_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="prefs-picker-col">
+                <label htmlFor="prefs-eofy-day" className="prefs-sublabel">
+                  Ending Day
+                </label>
+                <select
+                  id="prefs-eofy-day"
+                  className="prefs-select"
+                  value={fyDay}
+                  onChange={(e) => setFyDay(Number(e.target.value))}
+                  disabled={saving}
+                >
+                  {availableDays.map((d) => (
+                    <option key={d} value={d}>
+                      {d}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Live Fiscal Year Preview Card */}
+            <div className="prefs-eofy-card">
+              <div className="prefs-eofy-card-header">
+                <span className="prefs-eofy-badge">Fiscal Calendar Preview</span>
+              </div>
+              <div className="prefs-eofy-card-body">
+                <div className="prefs-eofy-row">
+                  <span className="prefs-eofy-label">Current Fiscal Period:</span>
+                  <span className="prefs-eofy-value current">{fiscalYearPreview.currentPeriod}</span>
+                </div>
+                <div className="prefs-eofy-row">
+                  <span className="prefs-eofy-label">Previous Fiscal Period:</span>
+                  <span className="prefs-eofy-value">{fiscalYearPreview.prevPeriod}</span>
+                </div>
+              </div>
             </div>
           </div>
 

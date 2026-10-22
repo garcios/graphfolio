@@ -187,16 +187,16 @@ func (mr *MockRepositoryMockRecorder) UpdatePassword(ctx, id, passwordHash any) 
 }
 
 // UpdateUserPreferences mocks base method.
-func (m *MockRepository) UpdateUserPreferences(ctx context.Context, id uuid.UUID, displayName, currency, theme *string) (*domain.User, error) {
+func (m *MockRepository) UpdateUserPreferences(ctx context.Context, id uuid.UUID, displayName, currency, theme *string, fyMonth, fyDay *int) (*domain.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "UpdateUserPreferences", ctx, id, displayName, currency, theme)
+	ret := m.ctrl.Call(m, "UpdateUserPreferences", ctx, id, displayName, currency, theme, fyMonth, fyDay)
 	ret0, _ := ret[0].(*domain.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // UpdateUserPreferences indicates an expected call of UpdateUserPreferences.
-func (mr *MockRepositoryMockRecorder) UpdateUserPreferences(ctx, id, displayName, currency, theme any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) UpdateUserPreferences(ctx, id, displayName, currency, theme, fyMonth, fyDay any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPreferences", reflect.TypeOf((*MockRepository)(nil).UpdateUserPreferences), ctx, id, displayName, currency, theme)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUserPreferences", reflect.TypeOf((*MockRepository)(nil).UpdateUserPreferences), ctx, id, displayName, currency, theme, fyMonth, fyDay)
 }

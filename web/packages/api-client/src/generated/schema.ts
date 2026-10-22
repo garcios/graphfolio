@@ -289,6 +289,8 @@ export interface UserPreferences {
     theme: Scalars['String']
     role: UserRole
     mustChangePassword: Scalars['Boolean']
+    financialYearEndMonth: Scalars['Int']
+    financialYearEndDay: Scalars['Int']
     createdAt: Scalars['String']
     updatedAt: Scalars['String']
     __typename: 'UserPreferences'
@@ -870,6 +872,8 @@ export interface UserPreferencesGenqlSelection{
     theme?: boolean | number
     role?: boolean | number
     mustChangePassword?: boolean | number
+    financialYearEndMonth?: boolean | number
+    financialYearEndDay?: boolean | number
     createdAt?: boolean | number
     updatedAt?: boolean | number
     __typename?: boolean | number
@@ -884,7 +888,7 @@ export interface CurrencyGenqlSelection{
     __scalar?: boolean | number
 }
 
-export interface UpdateUserPreferencesInput {displayName?: (Scalars['String'] | null),displayCurrency?: (Scalars['String'] | null),theme?: (Scalars['String'] | null)}
+export interface UpdateUserPreferencesInput {displayName?: (Scalars['String'] | null),displayCurrency?: (Scalars['String'] | null),theme?: (Scalars['String'] | null),financialYearEndMonth?: (Scalars['Int'] | null),financialYearEndDay?: (Scalars['Int'] | null)}
 
 export interface UpdateUserPreferencesPayloadGenqlSelection{
     preferences?: UserPreferencesGenqlSelection

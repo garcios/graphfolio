@@ -4,7 +4,7 @@
 
 BEGIN;
 
-INSERT INTO users.users (id, email, password_hash, display_name, base_currency, theme, role, must_change_password, is_active)
+INSERT INTO users.users (id, email, password_hash, display_name, base_currency, theme, role, must_change_password, financial_year_end_month, financial_year_end_day, is_active)
 VALUES (
     '018f0000-0000-7000-8000-000000000001',
     'oscar@graphfolio.app',
@@ -14,6 +14,8 @@ VALUES (
     'DARK',
     'USER',
     false,
+    6,
+    30,
     true
 )
 ON CONFLICT (id) DO UPDATE
@@ -23,10 +25,12 @@ SET password_hash = EXCLUDED.password_hash,
     theme = EXCLUDED.theme,
     role = EXCLUDED.role,
     must_change_password = EXCLUDED.must_change_password,
+    financial_year_end_month = EXCLUDED.financial_year_end_month,
+    financial_year_end_day = EXCLUDED.financial_year_end_day,
     is_active = EXCLUDED.is_active;
 
 -- Default Administrator
-INSERT INTO users.users (id, email, password_hash, display_name, base_currency, theme, role, must_change_password, is_active)
+INSERT INTO users.users (id, email, password_hash, display_name, base_currency, theme, role, must_change_password, financial_year_end_month, financial_year_end_day, is_active)
 VALUES (
     '018f0000-0000-7000-8000-000000000002',
     'admin@graphfolio.app',
@@ -36,6 +40,8 @@ VALUES (
     'DARK',
     'ADMIN',
     true,
+    12,
+    31,
     true
 )
 ON CONFLICT (lower(email)) DO NOTHING;

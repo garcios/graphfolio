@@ -493,15 +493,17 @@ type ComplexityRoot struct {
 	}
 
 	UserPreferences struct {
-		CreatedAt          func(childComplexity int) int
-		DisplayCurrency    func(childComplexity int) int
-		DisplayName        func(childComplexity int) int
-		Email              func(childComplexity int) int
-		MustChangePassword func(childComplexity int) int
-		Role               func(childComplexity int) int
-		Theme              func(childComplexity int) int
-		UpdatedAt          func(childComplexity int) int
-		UserID             func(childComplexity int) int
+		CreatedAt             func(childComplexity int) int
+		DisplayCurrency       func(childComplexity int) int
+		DisplayName           func(childComplexity int) int
+		Email                 func(childComplexity int) int
+		FinancialYearEndDay   func(childComplexity int) int
+		FinancialYearEndMonth func(childComplexity int) int
+		MustChangePassword    func(childComplexity int) int
+		Role                  func(childComplexity int) int
+		Theme                 func(childComplexity int) int
+		UpdatedAt             func(childComplexity int) int
+		UserID                func(childComplexity int) int
 	}
 
 	ValuationPoint struct {
@@ -2698,6 +2700,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.UserPreferences.Email(childComplexity), true
+	case "UserPreferences.financialYearEndDay":
+		if e.ComplexityRoot.UserPreferences.FinancialYearEndDay == nil {
+			break
+		}
+
+		return e.ComplexityRoot.UserPreferences.FinancialYearEndDay(childComplexity), true
+	case "UserPreferences.financialYearEndMonth":
+		if e.ComplexityRoot.UserPreferences.FinancialYearEndMonth == nil {
+			break
+		}
+
+		return e.ComplexityRoot.UserPreferences.FinancialYearEndMonth(childComplexity), true
 	case "UserPreferences.mustChangePassword":
 		if e.ComplexityRoot.UserPreferences.MustChangePassword == nil {
 			break
@@ -3718,6 +3732,10 @@ func (ec *executionContext) childFields_UserPreferences(ctx context.Context, fie
 		return ec.fieldContext_UserPreferences_role(ctx, field)
 	case "mustChangePassword":
 		return ec.fieldContext_UserPreferences_mustChangePassword(ctx, field)
+	case "financialYearEndMonth":
+		return ec.fieldContext_UserPreferences_financialYearEndMonth(ctx, field)
+	case "financialYearEndDay":
+		return ec.fieldContext_UserPreferences_financialYearEndDay(ctx, field)
 	case "createdAt":
 		return ec.fieldContext_UserPreferences_createdAt(ctx, field)
 	case "updatedAt":
@@ -13489,6 +13507,52 @@ func (ec *executionContext) fieldContext_UserPreferences_mustChangePassword(_ co
 	return graphql.NewScalarFieldContext("UserPreferences", field, false, false, errors.New("field of type Boolean does not have child fields"))
 }
 
+func (ec *executionContext) _UserPreferences_financialYearEndMonth(ctx context.Context, field graphql.CollectedField, obj *model.UserPreferences) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UserPreferences_financialYearEndMonth(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FinancialYearEndMonth, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_UserPreferences_financialYearEndMonth(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("UserPreferences", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _UserPreferences_financialYearEndDay(ctx context.Context, field graphql.CollectedField, obj *model.UserPreferences) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_UserPreferences_financialYearEndDay(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FinancialYearEndDay, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_UserPreferences_financialYearEndDay(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("UserPreferences", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
 func (ec *executionContext) _UserPreferences_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.UserPreferences) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -15605,7 +15669,7 @@ func (ec *executionContext) unmarshalInputUpdateUserPreferencesInput(ctx context
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"displayName", "displayCurrency", "theme"}
+	fieldsInOrder := [...]string{"displayName", "displayCurrency", "theme", "financialYearEndMonth", "financialYearEndDay"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -15633,6 +15697,20 @@ func (ec *executionContext) unmarshalInputUpdateUserPreferencesInput(ctx context
 				return it, err
 			}
 			it.Theme = data
+		case "financialYearEndMonth":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("financialYearEndMonth"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FinancialYearEndMonth = data
+		case "financialYearEndDay":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("financialYearEndDay"))
+			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FinancialYearEndDay = data
 		}
 	}
 	return it, nil
@@ -19231,6 +19309,16 @@ func (ec *executionContext) _UserPreferences(ctx context.Context, sel ast.Select
 			}
 		case "mustChangePassword":
 			out.Values[i] = ec._UserPreferences_mustChangePassword(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "financialYearEndMonth":
+			out.Values[i] = ec._UserPreferences_financialYearEndMonth(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "financialYearEndDay":
+			out.Values[i] = ec._UserPreferences_financialYearEndDay(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

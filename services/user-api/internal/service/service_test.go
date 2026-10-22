@@ -152,8 +152,8 @@ func TestUserService_UpdateUserPreferences(t *testing.T) {
 		rawTheme := "light"
 		mockRepo := mocks.NewMockRepository(ctrl)
 		mockRepo.EXPECT().
-			UpdateUserPreferences(ctx, validUUID, gomock.Any(), gomock.Any(), gomock.Any()).
-			DoAndReturn(func(_ context.Context, id uuid.UUID, name *string, curr *string, th *string) (*domain.User, error) {
+			UpdateUserPreferences(ctx, validUUID, gomock.Any(), gomock.Any(), gomock.Any(), nil, nil).
+			DoAndReturn(func(_ context.Context, id uuid.UUID, name *string, curr *string, th *string, fyM *int, fyD *int) (*domain.User, error) {
 				if id != validUUID {
 					t.Errorf("expected id %s, got %s", validUUID, id)
 				}
@@ -190,8 +190,8 @@ func TestUserService_UpdateUserPreferences(t *testing.T) {
 
 		mockRepo := mocks.NewMockRepository(ctrl)
 		mockRepo.EXPECT().
-			UpdateUserPreferences(ctx, validUUID, nil, gomock.Any(), nil).
-			DoAndReturn(func(_ context.Context, id uuid.UUID, name *string, curr *string, th *string) (*domain.User, error) {
+			UpdateUserPreferences(ctx, validUUID, nil, gomock.Any(), nil, nil, nil).
+			DoAndReturn(func(_ context.Context, id uuid.UUID, name *string, curr *string, th *string, fyM *int, fyD *int) (*domain.User, error) {
 				if name != nil {
 					t.Errorf("expected nil name, got %v", name)
 				}
@@ -324,7 +324,7 @@ func TestUserService_UpdateUserPreferences(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			mockRepo := mocks.NewMockRepository(ctrl)
 			mockRepo.EXPECT().
-				UpdateUserPreferences(ctx, validUUID, nil, nil, gomock.Any()).
+				UpdateUserPreferences(ctx, validUUID, nil, nil, gomock.Any(), nil, nil).
 				Return(mockUpdatedUser, nil)
 
 			svc := NewUserService(mockRepo)
@@ -346,7 +346,7 @@ func TestUserService_UpdateUserPreferences(t *testing.T) {
 
 		mockRepo := mocks.NewMockRepository(ctrl)
 		mockRepo.EXPECT().
-			UpdateUserPreferences(ctx, validUUID, gomock.Any(), gomock.Any(), gomock.Any()).
+			UpdateUserPreferences(ctx, validUUID, gomock.Any(), gomock.Any(), gomock.Any(), nil, nil).
 			Return(nil, repository.ErrUserNotFound)
 
 		svc := NewUserService(mockRepo)
@@ -360,6 +360,65 @@ func TestUserService_UpdateUserPreferences(t *testing.T) {
 		}
 		if res != nil {
 			t.Errorf("expected nil user, got: %v", res)
+		}
+	})
+
+	t.Run("success updating EOFY preferences", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		fyMonth := 6
+		fyDay := 30
+		mockRepo := mocks.NewMockRepository(ctrl)
+		mockRepo.EXPECT().
+			UpdateUserPreferences(ctx, validUUID, nil, nil, nil, &fyMonth, &fyDay).
+			Return(&domain.User{
+				ID:                    validUUID,
+				FinancialYearEndMonth: 6,
+				FinancialYearEndDay:   30,
+			}, nil)
+
+		svc := NewUserService(mockRepo)
+		res, err := svc.UpdateUserPreferences(ctx, UpdatePreferencesInput{
+			UserID:                validUUID.String(),
+			FinancialYearEndMonth: &fyMonth,
+			FinancialYearEndDay:   &fyDay,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if res.FinancialYearEndMonth != 6 || res.FinancialYearEndDay != 30 {
+			t.Errorf("unexpected EOFY values: %d/%d", res.FinancialYearEndMonth, res.FinancialYearEndDay)
+		}
+	})
+
+	t.Run("rejects invalid EOFY preferences", func(t *testing.T) {
+		invalidDates := []struct {
+			m int
+			d int
+		}{
+			{m: 2, d: 30},
+			{m: 4, d: 31},
+			{m: 13, d: 15},
+			{m: 6, d: 0},
+			{m: 11, d: 31},
+		}
+
+		for _, dt := range invalidDates {
+			ctrl := gomock.NewController(t)
+			mockRepo := mocks.NewMockRepository(ctrl)
+			svc := NewUserService(mockRepo)
+			m := dt.m
+			d := dt.d
+			_, err := svc.UpdateUserPreferences(ctx, UpdatePreferencesInput{
+				UserID:                validUUID.String(),
+				FinancialYearEndMonth: &m,
+				FinancialYearEndDay:   &d,
+			})
+			if !errors.Is(err, ErrInvalidFinancialYearEnd) {
+				t.Errorf("expected ErrInvalidFinancialYearEnd for %d/%d, got: %v", m, d, err)
+			}
+			ctrl.Finish()
 		}
 	})
 }
