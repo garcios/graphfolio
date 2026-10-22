@@ -15,12 +15,14 @@ type User struct {
 	DisplayName        string
 	DisplayCurrency    string
 	Theme              string
-	Role               string // "USER" or "ADMIN"
-	MustChangePassword bool   // true if bootstrap password change required
-	EmailVerifiedAt    *time.Time
-	LastLoginAt        *time.Time
-	CreatedAt          time.Time
-	UpdatedAt          time.Time
+	Role                   string // "USER" or "ADMIN"
+	MustChangePassword     bool   // true if bootstrap password change required
+	FinancialYearEndMonth  int    // 1..12 (1 = Jan, 12 = Dec)
+	FinancialYearEndDay    int    // 1..31
+	EmailVerifiedAt        *time.Time
+	LastLoginAt            *time.Time
+	CreatedAt              time.Time
+	UpdatedAt              time.Time
 }
 
 const (
@@ -83,4 +85,15 @@ func IsValidTheme(theme string) bool {
 	default:
 		return false
 	}
+}
+
+// IsValidFinancialYearEnd validates that the given month and day represent a viable calendar date.
+// February allows day 29 to accommodate leap-year enders (e.g. South Africa).
+func IsValidFinancialYearEnd(month, day int) bool {
+	if month < 1 || month > 12 || day < 1 || day > 31 {
+		return false
+	}
+	// Max days per month in a leap year
+	maxDays := []int{31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31}
+	return day <= maxDays[month-1]
 }

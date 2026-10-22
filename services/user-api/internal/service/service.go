@@ -31,6 +31,7 @@ var (
 	ErrInvalidCurrentPassword   = errors.New("invalid current password")
 	ErrSamePassword             = errors.New("new password cannot be the same as current password")
 	ErrPasswordComplexityFailed = errors.New("new password does not meet complexity requirements")
+	ErrInvalidFinancialYearEnd  = errors.New("invalid financial year end date")
 )
 
 const (
@@ -42,10 +43,12 @@ const (
 
 // UpdatePreferencesInput represents parameters for updating user preferences.
 type UpdatePreferencesInput struct {
-	UserID          string
-	DisplayName     *string
-	DisplayCurrency *string
-	Theme           *string
+	UserID                string
+	DisplayName           *string
+	DisplayCurrency       *string
+	Theme                 *string
+	FinancialYearEndMonth *int
+	FinancialYearEndDay   *int
 }
 
 // AuthResult represents the payload returned upon successful registration, login, or token refresh.
@@ -440,7 +443,36 @@ func (s *userService) UpdateUserPreferences(ctx context.Context, input UpdatePre
 		theme = &th
 	}
 
-	return s.repo.UpdateUserPreferences(ctx, uid, displayName, currency, theme)
+	var fyMonth *int
+	var fyDay *int
+	if input.FinancialYearEndMonth != nil || input.FinancialYearEndDay != nil {
+		m := 0
+		d := 0
+		if input.FinancialYearEndMonth != nil && input.FinancialYearEndDay != nil {
+			m = *input.FinancialYearEndMonth
+			d = *input.FinancialYearEndDay
+		} else {
+			current, err := s.repo.GetUserByID(ctx, uid)
+			if err != nil {
+				return nil, err
+			}
+			m = current.FinancialYearEndMonth
+			d = current.FinancialYearEndDay
+			if input.FinancialYearEndMonth != nil {
+				m = *input.FinancialYearEndMonth
+			}
+			if input.FinancialYearEndDay != nil {
+				d = *input.FinancialYearEndDay
+			}
+		}
+		if !domain.IsValidFinancialYearEnd(m, d) {
+			return nil, ErrInvalidFinancialYearEnd
+		}
+		fyMonth = input.FinancialYearEndMonth
+		fyDay = input.FinancialYearEndDay
+	}
+
+	return s.repo.UpdateUserPreferences(ctx, uid, displayName, currency, theme, fyMonth, fyDay)
 }
 
 func (s *userService) ListSupportedCurrencies(ctx context.Context) ([]domain.CurrencyInfo, error) {

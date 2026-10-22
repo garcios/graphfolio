@@ -348,3 +348,122 @@
     transform: rotate(360deg);
   }
 }
+
+/* EOFY Section Styling */
+.prefs-section-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 0.5rem 0;
+}
+
+.prefs-eofy-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.prefs-preset-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.4rem 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.prefs-preset-pill:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.prefs-preset-pill.active {
+  background: rgba(59, 130, 246, 0.15);
+  border-color: rgba(59, 130, 246, 0.4);
+  color: #60a5fa;
+  font-weight: 600;
+}
+
+.prefs-eofy-pickers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.prefs-picker-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.prefs-sublabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.prefs-eofy-card {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.15) 0%, rgba(15, 23, 42, 0.6) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.prefs-eofy-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.prefs-eofy-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #93c5fd;
+}
+
+.prefs-eofy-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.prefs-eofy-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.825rem;
+}
+
+.prefs-eofy-label {
+  color: var(--text-secondary);
+}
+
+.prefs-eofy-value {
+  color: var(--text-primary);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.825rem;
+}
+
+.prefs-eofy-value.current {
+  color: #60a5fa;
+  font-weight: 600;
+}

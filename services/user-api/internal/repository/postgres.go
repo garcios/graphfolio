@@ -15,13 +15,13 @@ import (
 )
 
 const getUserByIDSQL = `
-SELECT id, email, password_hash, is_active, display_name, base_currency, theme, role, must_change_password, email_verified_at, last_login_at, created_at, updated_at
+SELECT id, email, password_hash, is_active, display_name, base_currency, theme, role, must_change_password, financial_year_end_month, financial_year_end_day, email_verified_at, last_login_at, created_at, updated_at
 FROM users.users
 WHERE id = $1;
 `
 
 const getUserByEmailSQL = `
-SELECT id, email, password_hash, is_active, display_name, base_currency, theme, role, must_change_password, email_verified_at, last_login_at, created_at, updated_at
+SELECT id, email, password_hash, is_active, display_name, base_currency, theme, role, must_change_password, financial_year_end_month, financial_year_end_day, email_verified_at, last_login_at, created_at, updated_at
 FROM users.users
 WHERE lower(email) = lower($1);
 `
@@ -29,7 +29,7 @@ WHERE lower(email) = lower($1);
 const createUserSQL = `
 INSERT INTO users.users (email, password_hash, display_name, base_currency, theme, role, must_change_password, is_active)
 VALUES (lower($1), $2, $3, $4, 'DARK', 'USER', false, true)
-RETURNING id, email, password_hash, is_active, display_name, base_currency, theme, role, must_change_password, email_verified_at, last_login_at, created_at, updated_at;
+RETURNING id, email, password_hash, is_active, display_name, base_currency, theme, role, must_change_password, financial_year_end_month, financial_year_end_day, email_verified_at, last_login_at, created_at, updated_at;
 `
 
 const updateUserPreferencesSQL = `
@@ -37,9 +37,11 @@ UPDATE users.users
 SET display_name = COALESCE($2::text, display_name),
     base_currency = COALESCE($3::char(3), base_currency),
     theme = COALESCE($4::text, theme),
+    financial_year_end_month = COALESCE($5::smallint, financial_year_end_month),
+    financial_year_end_day = COALESCE($6::smallint, financial_year_end_day),
     updated_at = now()
 WHERE id = $1
-RETURNING id, email, password_hash, is_active, display_name, base_currency, theme, role, must_change_password, email_verified_at, last_login_at, created_at, updated_at;
+RETURNING id, email, password_hash, is_active, display_name, base_currency, theme, role, must_change_password, financial_year_end_month, financial_year_end_day, email_verified_at, last_login_at, created_at, updated_at;
 `
 
 const updateLastLoginSQL = `
@@ -107,6 +109,8 @@ func scanUser(row pgx.Row) (*domain.User, error) {
 		&u.Theme,
 		&u.Role,
 		&u.MustChangePassword,
+		&u.FinancialYearEndMonth,
+		&u.FinancialYearEndDay,
 		&u.EmailVerifiedAt,
 		&u.LastLoginAt,
 		&u.CreatedAt,
@@ -167,8 +171,10 @@ func (r *PostgresRepository) UpdateUserPreferences(
 	displayName *string,
 	currency *string,
 	theme *string,
+	fyMonth *int,
+	fyDay *int,
 ) (*domain.User, error) {
-	row := r.pool.QueryRow(ctx, updateUserPreferencesSQL, id, displayName, currency, theme)
+	row := r.pool.QueryRow(ctx, updateUserPreferencesSQL, id, displayName, currency, theme, fyMonth, fyDay)
 	u, err := scanUser(row)
 	if err != nil {
 		if errors.Is(err, ErrUserNotFound) {

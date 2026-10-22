@@ -217,11 +217,24 @@ func (s *UserServer) UpdateUserPreferences(
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}
 
+	var fyMonth *int
+	if req.FinancialYearEndMonth != nil {
+		m := int(*req.FinancialYearEndMonth)
+		fyMonth = &m
+	}
+	var fyDay *int
+	if req.FinancialYearEndDay != nil {
+		d := int(*req.FinancialYearEndDay)
+		fyDay = &d
+	}
+
 	input := service.UpdatePreferencesInput{
-		UserID:          req.GetUserId(),
-		DisplayName:     req.DisplayName,
-		DisplayCurrency: req.DisplayCurrency,
-		Theme:           req.Theme,
+		UserID:                req.GetUserId(),
+		DisplayName:           req.DisplayName,
+		DisplayCurrency:       req.DisplayCurrency,
+		Theme:                 req.Theme,
+		FinancialYearEndMonth: fyMonth,
+		FinancialYearEndDay:   fyDay,
 	}
 
 	user, err := s.svc.UpdateUserPreferences(ctx, input)
@@ -270,7 +283,8 @@ func mapServiceError(err error) error {
 		errors.Is(err, service.ErrInvalidEmail),
 		errors.Is(err, service.ErrInvalidPassword),
 		errors.Is(err, service.ErrSamePassword),
-		errors.Is(err, service.ErrPasswordComplexityFailed):
+		errors.Is(err, service.ErrPasswordComplexityFailed),
+		errors.Is(err, service.ErrInvalidFinancialYearEnd):
 		return status.Error(codes.InvalidArgument, err.Error())
 	case errors.Is(err, service.ErrEmailAlreadyRegistered):
 		return status.Error(codes.AlreadyExists, err.Error())
@@ -304,9 +318,11 @@ func domainUserToProto(u *domain.User) *userpb.UserPreferences {
 		DisplayName:        u.DisplayName,
 		DisplayCurrency:    u.DisplayCurrency,
 		Theme:              u.Theme,
-		Role:               toProtoRole(u.Role),
-		MustChangePassword: u.MustChangePassword,
-		CreatedAt:          u.CreatedAt.Format(time.RFC3339),
-		UpdatedAt:          u.UpdatedAt.Format(time.RFC3339),
+		Role:                  toProtoRole(u.Role),
+		MustChangePassword:    u.MustChangePassword,
+		FinancialYearEndMonth: int32(u.FinancialYearEndMonth),
+		FinancialYearEndDay:   int32(u.FinancialYearEndDay),
+		CreatedAt:             u.CreatedAt.Format(time.RFC3339),
+		UpdatedAt:             u.UpdatedAt.Format(time.RFC3339),
 	}
 }

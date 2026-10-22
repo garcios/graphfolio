@@ -1171,6 +1171,12 @@ export default {
             "mustChangePassword": [
                 9
             ],
+            "financialYearEndMonth": [
+                14
+            ],
+            "financialYearEndDay": [
+                14
+            ],
             "createdAt": [
                 2
             ],
@@ -1204,6 +1210,12 @@ export default {
             ],
             "theme": [
                 2
+            ],
+            "financialYearEndMonth": [
+                14
+            ],
+            "financialYearEndDay": [
+                14
             ],
             "__typename": [
                 2

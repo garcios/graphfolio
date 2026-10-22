@@ -264,11 +264,24 @@ func (r *mutationResolver) TriggerBackfill(ctx context.Context, input model.Trig
 
 // UpdateUserPreferences is the resolver for the updateUserPreferences field.
 func (r *mutationResolver) UpdateUserPreferences(ctx context.Context, input model.UpdateUserPreferencesInput) (*model.UpdateUserPreferencesPayload, error) {
+	var fyMonth *int32
+	if input.FinancialYearEndMonth != nil {
+		m := int32(*input.FinancialYearEndMonth)
+		fyMonth = &m
+	}
+	var fyDay *int32
+	if input.FinancialYearEndDay != nil {
+		d := int32(*input.FinancialYearEndDay)
+		fyDay = &d
+	}
+
 	req := &userpb.UpdateUserPreferencesRequest{
-		UserId:          r.resolveUserID(ctx),
-		DisplayName:     input.DisplayName,
-		DisplayCurrency: input.DisplayCurrency,
-		Theme:           input.Theme,
+		UserId:                r.resolveUserID(ctx),
+		DisplayName:           input.DisplayName,
+		DisplayCurrency:       input.DisplayCurrency,
+		Theme:                 input.Theme,
+		FinancialYearEndMonth: fyMonth,
+		FinancialYearEndDay:   fyDay,
 	}
 
 	resp, err := r.UserClient.UpdateUserPreferences(ctx, req)

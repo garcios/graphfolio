@@ -23,13 +23,15 @@ func TestUserServer_GetUserPreferences(t *testing.T) {
 	validUUID := uuid.New()
 	now := time.Now().UTC()
 	mockUser := &domain.User{
-		ID:              validUUID,
-		Email:           "oscar@example.com",
-		DisplayName:     "Oscar Garcia",
-		DisplayCurrency: "USD",
-		Theme:           "DARK",
-		CreatedAt:       now,
-		UpdatedAt:       now,
+		ID:                    validUUID,
+		Email:                 "oscar@example.com",
+		DisplayName:           "Oscar Garcia",
+		DisplayCurrency:       "USD",
+		Theme:                 "DARK",
+		FinancialYearEndMonth: 6,
+		FinancialYearEndDay:   30,
+		CreatedAt:             now,
+		UpdatedAt:             now,
 	}
 
 	t.Run("success", func(t *testing.T) {
@@ -65,6 +67,9 @@ func TestUserServer_GetUserPreferences(t *testing.T) {
 		}
 		if resp.Preferences.Theme != mockUser.Theme {
 			t.Errorf("expected theme %s, got: %s", mockUser.Theme, resp.Preferences.Theme)
+		}
+		if resp.Preferences.FinancialYearEndMonth != 6 || resp.Preferences.FinancialYearEndDay != 30 {
+			t.Errorf("expected EOFY 6/30, got: %d/%d", resp.Preferences.FinancialYearEndMonth, resp.Preferences.FinancialYearEndDay)
 		}
 	})
 
@@ -309,6 +314,71 @@ func TestUserServer_UpdateUserPreferences(t *testing.T) {
 		st, ok := status.FromError(err)
 		if !ok || st.Code() != codes.NotFound {
 			t.Fatalf("expected NotFound, got: %v", err)
+		}
+	})
+
+	t.Run("success with EOFY fields", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		fyM := int32(4)
+		fyD := int32(5)
+		expectedM := int(fyM)
+		expectedD := int(fyD)
+
+		mockSvc := mocks.NewMockUserService(ctrl)
+		mockSvc.EXPECT().
+			UpdateUserPreferences(ctx, service.UpdatePreferencesInput{
+				UserID:                validUUID.String(),
+				FinancialYearEndMonth: &expectedM,
+				FinancialYearEndDay:   &expectedD,
+			}).
+			Return(&domain.User{
+				ID:                    validUUID,
+				Email:                 "oscar@example.com",
+				DisplayName:           "Oscar Garcia",
+				DisplayCurrency:       "GBP",
+				Theme:                 "DARK",
+				FinancialYearEndMonth: 4,
+				FinancialYearEndDay:   5,
+				CreatedAt:             now,
+				UpdatedAt:             now,
+			}, nil)
+
+		server := NewUserServer(mockSvc)
+		resp, err := server.UpdateUserPreferences(ctx, &userpb.UpdateUserPreferencesRequest{
+			UserId:                validUUID.String(),
+			FinancialYearEndMonth: &fyM,
+			FinancialYearEndDay:   &fyD,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if resp.Preferences.FinancialYearEndMonth != 4 || resp.Preferences.FinancialYearEndDay != 5 {
+			t.Errorf("expected EOFY 4/5, got: %d/%d", resp.Preferences.FinancialYearEndMonth, resp.Preferences.FinancialYearEndDay)
+		}
+	})
+
+	t.Run("invalid EOFY returns InvalidArgument", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockSvc := mocks.NewMockUserService(ctrl)
+		mockSvc.EXPECT().
+			UpdateUserPreferences(ctx, gomock.Any()).
+			Return(nil, service.ErrInvalidFinancialYearEnd)
+
+		server := NewUserServer(mockSvc)
+		badM := int32(2)
+		badD := int32(31)
+		_, err := server.UpdateUserPreferences(ctx, &userpb.UpdateUserPreferencesRequest{
+			UserId:                validUUID.String(),
+			FinancialYearEndMonth: &badM,
+			FinancialYearEndDay:   &badD,
+		})
+		st, ok := status.FromError(err)
+		if !ok || st.Code() != codes.InvalidArgument {
+			t.Fatalf("expected InvalidArgument for invalid EOFY, got: %v", err)
 		}
 	})
 }

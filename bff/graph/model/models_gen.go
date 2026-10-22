@@ -537,9 +537,11 @@ type UpdateTransactionPayload struct {
 }
 
 type UpdateUserPreferencesInput struct {
-	DisplayName     *string `json:"displayName,omitempty"`
-	DisplayCurrency *string `json:"displayCurrency,omitempty"`
-	Theme           *string `json:"theme,omitempty"`
+	DisplayName           *string `json:"displayName,omitempty"`
+	DisplayCurrency       *string `json:"displayCurrency,omitempty"`
+	Theme                 *string `json:"theme,omitempty"`
+	FinancialYearEndMonth *int    `json:"financialYearEndMonth,omitempty"`
+	FinancialYearEndDay   *int    `json:"financialYearEndDay,omitempty"`
 }
 
 type UpdateUserPreferencesPayload struct {
@@ -548,15 +550,17 @@ type UpdateUserPreferencesPayload struct {
 }
 
 type UserPreferences struct {
-	UserID             string   `json:"userId"`
-	Email              string   `json:"email"`
-	DisplayName        string   `json:"displayName"`
-	DisplayCurrency    string   `json:"displayCurrency"`
-	Theme              string   `json:"theme"`
-	Role               UserRole `json:"role"`
-	MustChangePassword bool     `json:"mustChangePassword"`
-	CreatedAt          string   `json:"createdAt"`
-	UpdatedAt          string   `json:"updatedAt"`
+	UserID                string   `json:"userId"`
+	Email                 string   `json:"email"`
+	DisplayName           string   `json:"displayName"`
+	DisplayCurrency       string   `json:"displayCurrency"`
+	Theme                 string   `json:"theme"`
+	Role                  UserRole `json:"role"`
+	MustChangePassword    bool     `json:"mustChangePassword"`
+	FinancialYearEndMonth int      `json:"financialYearEndMonth"`
+	FinancialYearEndDay   int      `json:"financialYearEndDay"`
+	CreatedAt             string   `json:"createdAt"`
+	UpdatedAt             string   `json:"updatedAt"`
 }
 
 type ValuationPoint struct {

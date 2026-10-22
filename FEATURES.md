@@ -50,6 +50,7 @@ This document catalogs all implemented features, in-progress components, and pla
 | **40** | **Create Cash Withdrawal Against Dividend Transaction** | **DONE** | Web, BFF, Svc | [withdraw-against-dividend-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/withdraw-against-dividend-implementation-plan.md) |
 | **41** | **Filter Transactions by Interest Type in Transaction Ledger** | **DONE** | Web, BFF, Svc, Proto, DB | [filter-transactions-by-interest-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/filter-transactions-by-interest-implementation-plan.md) |
 | **42** | **Record Cash Interest Transactions (Yield Ingestion & Cash Account Reconciliation)** | **DONE** | Proto, Svc, BFF, Web | [record-interest-transaction-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/record-interest-transaction-implementation-plan.md) |
+| **43** | **User Preferences — End of Financial Year (EOFY) Configuration** | **DONE** | Database, Proto, User API, BFF, Web | [user-preferences-financial-year-end-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/user-preferences-financial-year-end-implementation-plan.md) |
 
 
 
@@ -602,6 +603,18 @@ This document catalogs all implemented features, in-progress components, and pla
   - Dynamic form adaptation hiding equity-specific fields (Symbol, Quantity, Price, Split) and presenting Trade Date, Amount, Currency, and Notes.
   - Strict preservation of GIPS® TWR and Modified Dietz investment return metrics by classifying cash yield as internal income rather than external capital contributions ($F_t = 0$).
   - Exact fixed-point arithmetic (`shopspring/decimal.Decimal`) updating portfolio cash balances and reflecting in the Transaction Ledger and Cash Flow Report without full page reloads.
+
+### 2.42 User Preferences — End of Financial Year (EOFY) Configuration
+- **Status**: **DONE**
+- **User Story**: [user-preferences-financial-year-end.md](file:///Users/oscargarcia/workspace/graphfolio/docs/user-stories/user-preferences-financial-year-end.md) (`US-PREF-102`)
+- **Plan Reference**: [user-preferences-financial-year-end-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/user-preferences-financial-year-end-implementation-plan.md)
+- **Scope**: Database (`users.users`), Proto (`proto/user/v1/user.proto`), User Service (`services/user-api`), BFF (`bff/`), Main App (`web/apps/main-app`, `web/packages/api-client`)
+- **Highlights**:
+  - Schema extension with `financial_year_end_month` and `financial_year_end_day` on `users.users` table with standard-based validation constraints (1–12 months, 1–31 days, leap-year-safe February clamping).
+  - Protobuf RPC enhancement in `proto/user/v1/user.proto` (`UserPreferences` and `UpdateUserPreferencesRequest`) and gRPC microservice implementation.
+  - GraphQL API exposure in BFF (`schema.graphqls`, `schema.resolvers.go`) mapping user fiscal calendar parameters.
+  - Interactive preferences modal (`UserPreferencesModal.tsx`) with one-click major tax jurisdiction presets (Australia 30 Jun, UK 5 Apr, US/Canada 31 Dec, NZ/India 31 Mar, South Africa 28 Feb), custom month/day dropdowns with dynamic day clamping, and live fiscal calendar preview card displaying current & previous fiscal year date ranges.
+  - Complete multi-layer test suite: domain validator unit tests in Go (`user_test.go`), gRPC service and server unit tests, BFF GraphQL resolver tests (`schema.resolvers_test.go`), and frontend Vitest suite (`UserPreferencesModal.test.ts`).
 
 ---
 

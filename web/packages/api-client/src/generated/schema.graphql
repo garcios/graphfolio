@@ -377,6 +377,8 @@ type UserPreferences {
   theme: String!
   role: UserRole!
   mustChangePassword: Boolean!
+  financialYearEndMonth: Int!
+  financialYearEndDay: Int!
   createdAt: String!
   updatedAt: String!
 }
@@ -391,6 +393,8 @@ input UpdateUserPreferencesInput {
   displayName: String
   displayCurrency: String
   theme: String
+  financialYearEndMonth: Int
+  financialYearEndDay: Int
 }
 
 type UpdateUserPreferencesPayload {

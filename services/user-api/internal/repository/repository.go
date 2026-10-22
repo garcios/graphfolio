@@ -22,7 +22,7 @@ type Repository interface {
 	GetUserByID(ctx context.Context, id uuid.UUID) (*domain.User, error)
 	GetUserByEmail(ctx context.Context, email string) (*domain.User, error)
 	CreateUser(ctx context.Context, email, passwordHash, displayName, baseCurrency string) (*domain.User, error)
-	UpdateUserPreferences(ctx context.Context, id uuid.UUID, displayName *string, currency *string, theme *string) (*domain.User, error)
+	UpdateUserPreferences(ctx context.Context, id uuid.UUID, displayName *string, currency *string, theme *string, fyMonth *int, fyDay *int) (*domain.User, error)
 	UpdateLastLogin(ctx context.Context, id uuid.UUID) error
 
 	CreateSession(ctx context.Context, session *domain.Session) error

@@ -1756,13 +1756,15 @@ func TestQueryResolver_UserPreferences(t *testing.T) {
 			getUserPreferencesFn: func(ctx context.Context, in *userpb.GetUserPreferencesRequest) (*userpb.GetUserPreferencesResponse, error) {
 				return &userpb.GetUserPreferencesResponse{
 					Preferences: &userpb.UserPreferences{
-						UserId:          "018f0000-0000-7000-8000-000000000001",
-						Email:           "oscar@example.com",
-						DisplayName:     "Oscar Garcia",
-						DisplayCurrency: "USD",
-						Theme:           "DARK",
-						CreatedAt:       "2026-01-01T00:00:00Z",
-						UpdatedAt:       "2026-01-01T00:00:00Z",
+						UserId:                "018f0000-0000-7000-8000-000000000001",
+						Email:                 "oscar@example.com",
+						DisplayName:           "Oscar Garcia",
+						DisplayCurrency:       "USD",
+						Theme:                 "DARK",
+						FinancialYearEndMonth: 6,
+						FinancialYearEndDay:   30,
+						CreatedAt:             "2026-01-01T00:00:00Z",
+						UpdatedAt:             "2026-01-01T00:00:00Z",
 					},
 				}, nil
 			},
@@ -1777,6 +1779,9 @@ func TestQueryResolver_UserPreferences(t *testing.T) {
 		}
 		if prefs.UserID != "018f0000-0000-7000-8000-000000000001" || prefs.DisplayName != "Oscar Garcia" || prefs.DisplayCurrency != "USD" {
 			t.Errorf("unexpected preferences: %+v", prefs)
+		}
+		if prefs.FinancialYearEndMonth != 6 || prefs.FinancialYearEndDay != 30 {
+			t.Errorf("unexpected EOFY preferences: %d/%d", prefs.FinancialYearEndMonth, prefs.FinancialYearEndDay)
 		}
 	})
 
@@ -1905,6 +1910,63 @@ func TestMutationResolver_UpdateUserPreferences(t *testing.T) {
 		}
 		if payload.Portfolio == nil || payload.Portfolio.TotalValue.CurrencyCode != "EUR" {
 			t.Errorf("unexpected portfolio: %+v", payload.Portfolio)
+		}
+	})
+
+	t.Run("successfully updates EOFY preferences", func(t *testing.T) {
+		fyM := 6
+		fyD := 30
+		fakeUser := &fakeUserClient{
+			updateUserPreferencesFn: func(ctx context.Context, in *userpb.UpdateUserPreferencesRequest) (*userpb.UpdateUserPreferencesResponse, error) {
+				if in.FinancialYearEndMonth == nil || *in.FinancialYearEndMonth != 6 {
+					t.Errorf("expected FinancialYearEndMonth 6, got %v", in.FinancialYearEndMonth)
+				}
+				if in.FinancialYearEndDay == nil || *in.FinancialYearEndDay != 30 {
+					t.Errorf("expected FinancialYearEndDay 30, got %v", in.FinancialYearEndDay)
+				}
+				return &userpb.UpdateUserPreferencesResponse{
+					Preferences: &userpb.UserPreferences{
+						UserId:                in.UserId,
+						Email:                 "oscar@example.com",
+						DisplayName:           "Oscar Garcia",
+						DisplayCurrency:       "AUD",
+						Theme:                 "DARK",
+						FinancialYearEndMonth: *in.FinancialYearEndMonth,
+						FinancialYearEndDay:   *in.FinancialYearEndDay,
+						CreatedAt:             "2026-01-01T00:00:00Z",
+						UpdatedAt:             "2026-01-02T00:00:00Z",
+					},
+				}, nil
+			},
+		}
+		fakePort := &fakePortfolioClient{
+			getPortfolioFn: func(ctx context.Context, in *pb.GetPortfolioRequest) (*pb.GetPortfolioResponse, error) {
+				return &pb.GetPortfolioResponse{
+					Portfolio: &pb.Portfolio{
+						TotalValue: &commonpb.Money{
+							Amount:       &commonpb.Decimal{Value: "100000.00"},
+							CurrencyCode: "AUD",
+						},
+					},
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{
+			UserClient:      fakeUser,
+			PortfolioClient: fakePort,
+		}
+		mResolver := resolver.Mutation()
+
+		payload, err := mResolver.UpdateUserPreferences(ctx, model.UpdateUserPreferencesInput{
+			FinancialYearEndMonth: &fyM,
+			FinancialYearEndDay:   &fyD,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if payload.Preferences.FinancialYearEndMonth != 6 || payload.Preferences.FinancialYearEndDay != 30 {
+			t.Errorf("unexpected EOFY in payload: %d/%d", payload.Preferences.FinancialYearEndMonth, payload.Preferences.FinancialYearEndDay)
 		}
 	})
 
