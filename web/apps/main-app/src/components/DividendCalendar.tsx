@@ -279,8 +279,8 @@ export const DividendCalendar: React.FC<DividendCalendarProps> = ({ preferredCur
   }, [currentYear, currentMonth, calendarEvents]);
 
   // Compounding yield on cost expansion
-  const currentYield = Number(analytics?.portfolioCurrentYield || '0') * 100;
-  const yieldOnCost = analytics?.portfolioYieldOnCost ? Number(analytics.portfolioYieldOnCost) * 100 : null;
+  const currentYield = Number(analytics?.portfolioCurrentYield || '0');
+  const yieldOnCost = analytics?.portfolioYieldOnCost != null ? Number(analytics.portfolioYieldOnCost) : null;
   const yieldExpansion = yieldOnCost !== null ? yieldOnCost - currentYield : null;
 
   // Monthly Binned Distribution SVG Chart Calculations
@@ -651,8 +651,8 @@ export const DividendCalendar: React.FC<DividendCalendarProps> = ({ preferredCur
                 </tr>
               ) : (
                 analytics.holdingsYield.map((h) => {
-                  const hYield = Number(h.currentYieldPct) * 100;
-                  const hYoc = h.yieldOnCostPct ? Number(h.yieldOnCostPct) * 100 : null;
+                  const hYield = Number(h.currentYieldPct || '0');
+                  const hYoc = h.yieldOnCostPct != null ? Number(h.yieldOnCostPct) : null;
                   const isExpanding = hYoc !== null && hYoc > hYield;
 
                   return (

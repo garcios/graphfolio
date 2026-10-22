@@ -236,8 +236,10 @@ func CalculateForwardYieldAnalytics(
 		avgBuyPrice := decimal.Zero
 		if h.Quantity.IsPositive() && h.CostBasis.IsPositive() {
 			avgBuyPrice = h.CostBasis.DivRound(h.Quantity, 4)
-			yocVal := annualDPS.DivRound(avgBuyPrice, 6).Mul(hundred)
-			yoc = &yocVal
+			if avgBuyPrice.IsPositive() {
+				yocVal := annualDPS.DivRound(avgBuyPrice, 6).Mul(hundred)
+				yoc = &yocVal
+			}
 		}
 
 		// Calculate 3Y Dividend CAGR if available
