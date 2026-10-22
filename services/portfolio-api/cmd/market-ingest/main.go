@@ -29,6 +29,8 @@ func main() {
 		benchmarkFlag      = flag.String("benchmark", "", "Specific benchmark ID to backfill (e.g. SP500TR, NASDAQ100, ASX200TR)")
 		pairFlag           = flag.String("pair", "", "Specific currency pair to backfill (e.g. EUR/USD)")
 		rebuildProjections = flag.Bool("rebuild-projections", true, "Recompute portfolio projections and valuations after ingestion")
+		syncDividends      = flag.Bool("sync-dividends", false, "Sync forward dividend schedules and cadence projections")
+		dividendSymbols    = flag.String("dividend-symbols", "", "Comma-separated symbols for dividend sync (e.g. AAPL,BHP.AX)")
 	)
 	flag.Parse()
 
@@ -68,7 +70,12 @@ func main() {
 		Limiter: limiter,
 	})
 
-	ingestionSvc := service.NewIngestionService(repo, priceProvider, ecbProvider, limiter)
+	dividendProvider := marketdata.NewResilientDividendProvider(yahooProvider, twelveProvider)
+	ingestionSvc := service.NewIngestionService(repo, priceProvider, ecbProvider, limiter,
+		service.WithDividendProvider(dividendProvider),
+		service.WithYahooDividendProvider(yahooProvider),
+		service.WithTwelveDividendProvider(twelveProvider),
+	)
 	portfolioSvc := service.NewPortfolioService(repo, service.WithIngestionService(ingestionSvc))
 
 	// 3. Determine Execution Mode
@@ -222,6 +229,32 @@ func main() {
 		fmt.Printf("✓ %s\n", result.Message)
 		fmt.Printf("  • Asset Prices Synced:   %d\n", result.PricesSynced)
 		fmt.Printf("  • FX Rates Synced:       %d\n", result.FXRatesSynced)
+		fmt.Println("------------------------------------------------------------")
+	}
+
+	if *syncDividends {
+		log.Println("[market-ingest] Syncing dividend schedules and forward cadence...")
+		var syms []string
+		if *dividendSymbols != "" {
+			for _, s := range strings.Split(*dividendSymbols, ",") {
+				s = strings.TrimSpace(s)
+				if s != "" {
+					syms = append(syms, s)
+				}
+			}
+		}
+		divRes, err := ingestionSvc.IngestDividendSchedules(ctx, domain.DividendSyncOptions{
+			Symbols: syms,
+		})
+		if err != nil {
+			log.Fatalf("[market-ingest] dividend sync failed: %v", err)
+		}
+		fmt.Println("------------------------------------------------------------")
+		fmt.Printf("✓ %s\n", divRes.Message)
+		fmt.Printf("  • Schedules Synced:       %d\n", divRes.SchedulesSynced)
+		fmt.Printf("  • Primary Source (Yahoo): %d\n", divRes.PrimarySourceCount)
+		fmt.Printf("  • Fallback (Twelve Data): %d\n", divRes.FallbackSourceCount)
+		fmt.Printf("  • Estimates Upgraded:     %d\n", divRes.PlaceholdersUpgraded)
 		fmt.Println("------------------------------------------------------------")
 	}
 

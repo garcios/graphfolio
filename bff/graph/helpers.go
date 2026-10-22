@@ -879,3 +879,168 @@ func toModelBenchmarkComparison(resp *pb.GetBenchmarkComparisonResponse) *model.
 	}
 }
 
+func toModelDividendFrequency(freq pb.DividendFrequency) model.DividendFrequency {
+	switch freq {
+	case pb.DividendFrequency_DIVIDEND_FREQUENCY_MONTHLY:
+		return model.DividendFrequencyMonthly
+	case pb.DividendFrequency_DIVIDEND_FREQUENCY_QUARTERLY:
+		return model.DividendFrequencyQuarterly
+	case pb.DividendFrequency_DIVIDEND_FREQUENCY_SEMI_ANNUAL:
+		return model.DividendFrequencySemiAnnual
+	case pb.DividendFrequency_DIVIDEND_FREQUENCY_ANNUAL:
+		return model.DividendFrequencyAnnual
+	case pb.DividendFrequency_DIVIDEND_FREQUENCY_IRREGULAR:
+		return model.DividendFrequencyIrregular
+	default:
+		return model.DividendFrequencyQuarterly
+	}
+}
+
+func toModelDividendStatus(st pb.DividendEventStatus) model.DividendStatus {
+	switch st {
+	case pb.DividendEventStatus_DIVIDEND_EVENT_STATUS_EX_DATE_PASSED:
+		return model.DividendStatusExDatePassed
+	case pb.DividendEventStatus_DIVIDEND_EVENT_STATUS_PAID:
+		return model.DividendStatusPaid
+	case pb.DividendEventStatus_DIVIDEND_EVENT_STATUS_CANCELLED:
+		return model.DividendStatusCancelled
+	default:
+		return model.DividendStatusAnnounced
+	}
+}
+
+func toModelDividendCalendarEvent(ev *pb.DividendCalendarEvent) *model.DividendCalendarEvent {
+	if ev == nil {
+		return nil
+	}
+	var recordDate *string
+	if ev.GetRecordDate() != "" {
+		rd := ev.GetRecordDate()
+		recordDate = &rd
+	}
+	return &model.DividendCalendarEvent{
+		ID:              ev.GetId(),
+		InstrumentID:    ev.GetInstrumentId(),
+		Symbol:          ev.GetSymbol(),
+		Name:            ev.GetName(),
+		ExDate:          ev.GetExDate(),
+		RecordDate:      recordDate,
+		PaymentDate:     ev.GetPaymentDate(),
+		SharesHeld:      toModelDecimal(ev.GetSharesHeld()),
+		DpsDeclared:     toModelMoney(ev.GetDpsDeclared()),
+		GrossAmountBase: toModelMoney(ev.GetGrossAmountBase()),
+		NetAmountBase:   toModelMoney(ev.GetNetAmountBase()),
+		Frequency:       toModelDividendFrequency(ev.GetFrequency()),
+		Status:          toModelDividendStatus(ev.GetStatus()),
+		IsUserEntitled:  ev.GetIsUserEntitled(),
+		IsEstimated:     ev.GetIsEstimated(),
+		FrankingPct:     toModelDecimal(ev.GetFrankingPct()),
+	}
+}
+
+func toModelDividendYieldAnalytics(resp *pb.GetDividendYieldAnalyticsResponse) *model.DividendYieldAnalytics {
+	if resp == nil {
+		return nil
+	}
+
+	var yoc *model.Decimal
+	if resp.GetPortfolioYieldOnCost() != nil {
+		d := toModelDecimal(resp.GetPortfolioYieldOnCost())
+		yoc = &d
+	}
+
+	monthly := make([]*model.MonthlyDividendProjection, len(resp.GetMonthlyProjections()))
+	for i, m := range resp.GetMonthlyProjections() {
+		monthly[i] = &model.MonthlyDividendProjection{
+			Year:            int(m.GetYear()),
+			Month:           int(m.GetMonth()),
+			ProjectedIncome: toModelMoney(m.GetProjectedIncome()),
+			DividendCount:   int(m.GetDividendCount()),
+		}
+	}
+
+	holdings := make([]*model.HoldingYieldItem, len(resp.GetHoldingsYield()))
+	for i, h := range resp.GetHoldingsYield() {
+		var itemYoc *model.Decimal
+		if h.GetYieldOnCostPct() != nil {
+			d := toModelDecimal(h.GetYieldOnCostPct())
+			itemYoc = &d
+		}
+		var cagr *model.Decimal
+		if h.GetDividendCagr_3Y() != nil {
+			d := toModelDecimal(h.GetDividendCagr_3Y())
+			cagr = &d
+		}
+		var nextEx *string
+		if h.GetNextExDate() != "" {
+			s := h.GetNextExDate()
+			nextEx = &s
+		}
+		var nextPay *string
+		if h.GetNextPaymentDate() != "" {
+			s := h.GetNextPaymentDate()
+			nextPay = &s
+		}
+
+		holdings[i] = &model.HoldingYieldItem{
+			InstrumentID:        h.GetInstrumentId(),
+			Symbol:              h.GetSymbol(),
+			Name:                h.GetName(),
+			Quantity:            toModelDecimal(h.GetQuantity()),
+			CurrentPrice:        toModelMoney(h.GetCurrentPrice()),
+			AverageBuyPrice:     toModelMoney(h.GetAverageBuyPrice()),
+			CurrentMarketValue:  toModelMoney(h.GetCurrentMarketValue()),
+			CostBasis:           toModelMoney(h.GetCostBasis()),
+			AnnualDps:           toModelMoney(h.GetAnnualDps()),
+			ProjectedAnnualCash: toModelMoney(h.GetProjectedAnnualCash()),
+			CurrentYieldPct:     toModelDecimal(h.GetCurrentYieldPct()),
+			YieldOnCostPct:      itemYoc,
+			DividendCagr3y:      cagr,
+			Frequency:           toModelDividendFrequency(h.GetFrequency()),
+			NextExDate:          nextEx,
+			NextPaymentDate:     nextPay,
+		}
+	}
+
+	return &model.DividendYieldAnalytics{
+		AnnualForwardIncome:   toModelMoney(resp.GetAnnualForwardIncome()),
+		MonthlyAverageIncome:  toModelMoney(resp.GetMonthlyAverageIncome()),
+		PortfolioCurrentYield: toModelDecimal(resp.GetPortfolioCurrentYield()),
+		PortfolioYieldOnCost:  yoc,
+		PendingCashInflow:     toModelMoney(resp.GetPendingCashInflow()),
+		MonthlyProjections:    monthly,
+		HoldingsYield:         holdings,
+	}
+}
+
+func toModelDRIPSimulationResult(resp *pb.SimulateDRIPResponse) *model.DRIPSimulationResult {
+	if resp == nil {
+		return nil
+	}
+
+	points := make([]*model.DRIPSimulationPoint, len(resp.GetPoints()))
+	for i, pt := range resp.GetPoints() {
+		points[i] = &model.DRIPSimulationPoint{
+			Year:                  int(pt.GetYear()),
+			DripPortfolioValue:    toModelDecimal(pt.GetDripPortfolioValue()),
+			CashPortfolioValue:    toModelDecimal(pt.GetCashPortfolioValue()),
+			DripAccumulatedShares: toModelDecimal(pt.GetDripAccumulatedShares()),
+			CashAccumulatedCash:   toModelDecimal(pt.GetCashAccumulatedCash()),
+			DripAnnualDividend:    toModelDecimal(pt.GetDripAnnualDividend()),
+			CashAnnualDividend:    toModelDecimal(pt.GetCashAnnualDividend()),
+		}
+	}
+
+	return &model.DRIPSimulationResult{
+		StartingPortfolioValue: toModelDecimal(resp.GetStartingPortfolioValue()),
+		StartingAnnualDividend: toModelDecimal(resp.GetStartingAnnualDividend()),
+		BaseCurrency:           resp.GetBaseCurrency(),
+		HorizonYears:           int(resp.GetHorizonYears()),
+		Points:                 points,
+		TerminalDripValue:      toModelDecimal(resp.GetTerminalDripValue()),
+		TerminalCashValue:      toModelDecimal(resp.GetTerminalCashValue()),
+		DripBenefitAmount:      toModelDecimal(resp.GetDripBenefitAmount()),
+	}
+}
+
+

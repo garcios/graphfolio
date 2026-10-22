@@ -203,6 +203,33 @@ type CurrencyPairHistory struct {
 	PeriodLow       Decimal           `json:"periodLow"`
 }
 
+type DRIPSimulationInput struct {
+	HorizonYears           int      `json:"horizonYears"`
+	DividendGrowthRatePct  *Decimal `json:"dividendGrowthRatePct,omitempty"`
+	CapitalAppreciationPct *Decimal `json:"capitalAppreciationPct,omitempty"`
+}
+
+type DRIPSimulationPoint struct {
+	Year                  int     `json:"year"`
+	DripPortfolioValue    Decimal `json:"dripPortfolioValue"`
+	CashPortfolioValue    Decimal `json:"cashPortfolioValue"`
+	DripAccumulatedShares Decimal `json:"dripAccumulatedShares"`
+	CashAccumulatedCash   Decimal `json:"cashAccumulatedCash"`
+	DripAnnualDividend    Decimal `json:"dripAnnualDividend"`
+	CashAnnualDividend    Decimal `json:"cashAnnualDividend"`
+}
+
+type DRIPSimulationResult struct {
+	StartingPortfolioValue Decimal                `json:"startingPortfolioValue"`
+	StartingAnnualDividend Decimal                `json:"startingAnnualDividend"`
+	BaseCurrency           string                 `json:"baseCurrency"`
+	HorizonYears           int                    `json:"horizonYears"`
+	Points                 []*DRIPSimulationPoint `json:"points"`
+	TerminalDripValue      Decimal                `json:"terminalDripValue"`
+	TerminalCashValue      Decimal                `json:"terminalCashValue"`
+	DripBenefitAmount      Decimal                `json:"dripBenefitAmount"`
+}
+
 type DeleteInstrumentPayload struct {
 	Success bool   `json:"success"`
 	ID      string `json:"id"`
@@ -211,6 +238,46 @@ type DeleteInstrumentPayload struct {
 type DeleteTransactionPayload struct {
 	Success   bool       `json:"success"`
 	Portfolio *Portfolio `json:"portfolio"`
+}
+
+type DividendCalendarEvent struct {
+	ID              string            `json:"id"`
+	InstrumentID    string            `json:"instrumentId"`
+	Symbol          string            `json:"symbol"`
+	Name            string            `json:"name"`
+	ExDate          string            `json:"exDate"`
+	RecordDate      *string           `json:"recordDate,omitempty"`
+	PaymentDate     string            `json:"paymentDate"`
+	SharesHeld      Decimal           `json:"sharesHeld"`
+	DpsDeclared     *Money            `json:"dpsDeclared"`
+	GrossAmountBase *Money            `json:"grossAmountBase"`
+	NetAmountBase   *Money            `json:"netAmountBase"`
+	Frequency       DividendFrequency `json:"frequency"`
+	Status          DividendStatus    `json:"status"`
+	IsUserEntitled  bool              `json:"isUserEntitled"`
+	IsEstimated     bool              `json:"isEstimated"`
+	FrankingPct     Decimal           `json:"frankingPct"`
+}
+
+type DividendSyncPayload struct {
+	Success              bool     `json:"success"`
+	SchedulesSynced      int      `json:"schedulesSynced"`
+	PrimarySourceCount   int      `json:"primarySourceCount"`
+	FallbackSourceCount  int      `json:"fallbackSourceCount"`
+	PlaceholdersUpgraded int      `json:"placeholdersUpgraded"`
+	Message              string   `json:"message"`
+	DurationMs           int      `json:"durationMs"`
+	FailedSymbols        []string `json:"failedSymbols"`
+}
+
+type DividendYieldAnalytics struct {
+	AnnualForwardIncome   *Money                       `json:"annualForwardIncome"`
+	MonthlyAverageIncome  *Money                       `json:"monthlyAverageIncome"`
+	PortfolioCurrentYield Decimal                      `json:"portfolioCurrentYield"`
+	PortfolioYieldOnCost  *Decimal                     `json:"portfolioYieldOnCost,omitempty"`
+	PendingCashInflow     *Money                       `json:"pendingCashInflow"`
+	MonthlyProjections    []*MonthlyDividendProjection `json:"monthlyProjections"`
+	HoldingsYield         []*HoldingYieldItem          `json:"holdingsYield"`
 }
 
 // Trading venue reference data identified by its ISO 10383 MIC code.
@@ -260,6 +327,25 @@ type FeedHealthStatus struct {
 	Schedule string `json:"schedule"`
 	LastRun  string `json:"lastRun"`
 	Details  string `json:"details"`
+}
+
+type HoldingYieldItem struct {
+	InstrumentID        string            `json:"instrumentId"`
+	Symbol              string            `json:"symbol"`
+	Name                string            `json:"name"`
+	Quantity            Decimal           `json:"quantity"`
+	CurrentPrice        *Money            `json:"currentPrice"`
+	AverageBuyPrice     *Money            `json:"averageBuyPrice"`
+	CurrentMarketValue  *Money            `json:"currentMarketValue"`
+	CostBasis           *Money            `json:"costBasis"`
+	AnnualDps           *Money            `json:"annualDps"`
+	ProjectedAnnualCash *Money            `json:"projectedAnnualCash"`
+	CurrentYieldPct     Decimal           `json:"currentYieldPct"`
+	YieldOnCostPct      *Decimal          `json:"yieldOnCostPct,omitempty"`
+	DividendCagr3y      *Decimal          `json:"dividendCagr3y,omitempty"`
+	Frequency           DividendFrequency `json:"frequency"`
+	NextExDate          *string           `json:"nextExDate,omitempty"`
+	NextPaymentDate     *string           `json:"nextPaymentDate,omitempty"`
 }
 
 type ImportTransactionInput struct {
@@ -418,6 +504,13 @@ type Money struct {
 	CurrencyCode string  `json:"currencyCode"`
 }
 
+type MonthlyDividendProjection struct {
+	Year            int    `json:"year"`
+	Month           int    `json:"month"`
+	ProjectedIncome *Money `json:"projectedIncome"`
+	DividendCount   int    `json:"dividendCount"`
+}
+
 type Mutation struct {
 }
 
@@ -508,6 +601,13 @@ type TriggerBackfillInput struct {
 	BackfillAssets      *bool    `json:"backfillAssets,omitempty"`
 	BackfillFx          *bool    `json:"backfillFx,omitempty"`
 	RecomputeValuations *bool    `json:"recomputeValuations,omitempty"`
+}
+
+type TriggerDividendSyncInput struct {
+	Symbols        []string `json:"symbols,omitempty"`
+	ExchangeCode   *string  `json:"exchangeCode,omitempty"`
+	SyncHistorical *bool    `json:"syncHistorical,omitempty"`
+	ForceProvider  *string  `json:"forceProvider,omitempty"`
 }
 
 type UpdateInstrumentInput struct {
@@ -811,6 +911,126 @@ func (e *CashFlowTimeframe) UnmarshalJSON(b []byte) error {
 }
 
 func (e CashFlowTimeframe) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type DividendFrequency string
+
+const (
+	DividendFrequencyMonthly    DividendFrequency = "MONTHLY"
+	DividendFrequencyQuarterly  DividendFrequency = "QUARTERLY"
+	DividendFrequencySemiAnnual DividendFrequency = "SEMI_ANNUAL"
+	DividendFrequencyAnnual     DividendFrequency = "ANNUAL"
+	DividendFrequencyIrregular  DividendFrequency = "IRREGULAR"
+)
+
+var AllDividendFrequency = []DividendFrequency{
+	DividendFrequencyMonthly,
+	DividendFrequencyQuarterly,
+	DividendFrequencySemiAnnual,
+	DividendFrequencyAnnual,
+	DividendFrequencyIrregular,
+}
+
+func (e DividendFrequency) IsValid() bool {
+	switch e {
+	case DividendFrequencyMonthly, DividendFrequencyQuarterly, DividendFrequencySemiAnnual, DividendFrequencyAnnual, DividendFrequencyIrregular:
+		return true
+	}
+	return false
+}
+
+func (e DividendFrequency) String() string {
+	return string(e)
+}
+
+func (e *DividendFrequency) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = DividendFrequency(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid DividendFrequency", str)
+	}
+	return nil
+}
+
+func (e DividendFrequency) MarshalGQL(w io.Writer) {
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *DividendFrequency) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e DividendFrequency) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type DividendStatus string
+
+const (
+	DividendStatusAnnounced    DividendStatus = "ANNOUNCED"
+	DividendStatusExDatePassed DividendStatus = "EX_DATE_PASSED"
+	DividendStatusPaid         DividendStatus = "PAID"
+	DividendStatusCancelled    DividendStatus = "CANCELLED"
+)
+
+var AllDividendStatus = []DividendStatus{
+	DividendStatusAnnounced,
+	DividendStatusExDatePassed,
+	DividendStatusPaid,
+	DividendStatusCancelled,
+}
+
+func (e DividendStatus) IsValid() bool {
+	switch e {
+	case DividendStatusAnnounced, DividendStatusExDatePassed, DividendStatusPaid, DividendStatusCancelled:
+		return true
+	}
+	return false
+}
+
+func (e DividendStatus) String() string {
+	return string(e)
+}
+
+func (e *DividendStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = DividendStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid DividendStatus", str)
+	}
+	return nil
+}
+
+func (e DividendStatus) MarshalGQL(w io.Writer) {
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *DividendStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e DividendStatus) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

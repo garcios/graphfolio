@@ -87,4 +87,12 @@ type Repository interface {
 	GetBenchmarkByID(ctx context.Context, id string) (*domain.Benchmark, error)
 	GetBenchmarkPricesWithFX(ctx context.Context, instrumentID uuid.UUID, quoteCurrency, baseCurrency string, fromDate, toDate time.Time) ([]domain.RawBenchmarkQuote, error)
 	ListBenchmarkInstruments(ctx context.Context) ([]domain.Instrument, error)
+
+	// Corporate Actions: Dividend Schedules
+	UpsertDividendSchedulesBatch(ctx context.Context, schedules []domain.DividendSchedule) (int, int, error)
+	GetUpcomingDividendSchedules(ctx context.Context, instrumentIDs []uuid.UUID, fromDate, toDate time.Time) ([]domain.DividendSchedule, error)
+	GetDividendCalendarSchedules(ctx context.Context, instrumentIDs []uuid.UUID, fromDate, toDate time.Time) ([]domain.DividendSchedule, error)
+	ListDividendSchedulesByInstrument(ctx context.Context, instrumentID uuid.UUID) ([]domain.DividendSchedule, error)
+	GetEntitledSharesForExDate(ctx context.Context, portfolioID uuid.UUID, instrumentID uuid.UUID, exDate time.Time) (decimal.Decimal, error)
 }
+

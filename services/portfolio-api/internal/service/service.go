@@ -45,6 +45,7 @@ type PortfolioService interface {
 	// Admin: Ingestion Pipeline & Diagnostics
 	GetIngestionStatus(ctx context.Context) (*domain.IngestionStatus, error)
 	TriggerMarketSync(ctx context.Context, symbols []string, syncFX bool) (*domain.MarketSyncResult, error)
+	TriggerDividendSync(ctx context.Context, symbols []string, exchangeCode *string, syncHistorical bool, forceProvider string) (*domain.DividendSyncResult, error)
 
 	// Admin: FX Rates & Currency Pair Inspection
 	ListCurrencyPairs(ctx context.Context) ([]domain.CurrencyPairSummary, error)
@@ -64,6 +65,11 @@ type PortfolioService interface {
 	// Benchmark Comparison & Relative Performance
 	ListBenchmarks(ctx context.Context) ([]domain.Benchmark, error)
 	GetBenchmarkComparison(ctx context.Context, userID, benchmarkID string, timeframe domain.HistoryTimeframe, mode domain.BenchmarkCurrencyMode) (*domain.BenchmarkComparisonResult, error)
+
+	// Dividend Calendar, Yield Analytics & DRIP Simulator
+	GetDividendCalendar(ctx context.Context, userID string, year, month int) ([]domain.DividendCalendarEvent, error)
+	GetDividendYieldAnalytics(ctx context.Context, userID string) (*domain.DividendYieldAnalytics, error)
+	SimulateDRIP(ctx context.Context, userID string, input domain.DRIPSimulationInput) (*domain.DRIPSimulationResult, error)
 }
 
 
@@ -87,11 +93,18 @@ func WithNowFunc(fn func() time.Time) ServiceOption {
 	}
 }
 
+func WithAsyncRunner(runner func(func())) ServiceOption {
+	return func(s *portfolioService) {
+		s.asyncRunner = runner
+	}
+}
+
 type portfolioService struct {
-	repo       repository.Repository
-	nowFunc    func() time.Time
-	ingestion  IngestionService
-	valuations ValuationService
+	repo        repository.Repository
+	nowFunc     func() time.Time
+	ingestion   IngestionService
+	valuations  ValuationService
+	asyncRunner func(func())
 }
 
 func NewPortfolioService(repo repository.Repository, opts ...ServiceOption) PortfolioService {

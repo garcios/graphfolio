@@ -172,6 +172,11 @@ type Query {
     timeframe: HistoryTimeframe!
     currencyMode: BenchmarkCurrencyMode = PORTFOLIO_BASE
   ): BenchmarkComparisonPayload!
+
+  # Dividend Calendar, Yield Analytics & DRIP Simulator
+  dividendCalendar(year: Int!, month: Int!): [DividendCalendarEvent!]!
+  dividendYieldAnalytics: DividendYieldAnalytics!
+  simulateDRIP(input: DRIPSimulationInput!): DRIPSimulationResult!
 }
 
 enum HistoryTimeframe {
@@ -244,6 +249,7 @@ type Mutation {
   deleteInstrument(id: ID!): DeleteInstrumentPayload!
   recordPriceOverride(input: RecordPriceOverrideInput!): RecordPriceOverridePayload!
   triggerMarketSync(symbols: [String!], syncFx: Boolean): MarketSyncPayload!
+  triggerDividendSync(input: TriggerDividendSyncInput): DividendSyncPayload!
   triggerBackfill(input: TriggerBackfillInput!): BackfillPayload!
 
   # User Preferences Mutations
@@ -391,6 +397,25 @@ type MarketSyncPayload {
   fxRatesSynced: Int!
   message: String!
 }
+
+input TriggerDividendSyncInput {
+  symbols: [String!]
+  exchangeCode: String
+  syncHistorical: Boolean
+  forceProvider: String # 'YAHOO', 'TWELVE_DATA', or null for default cascade
+}
+
+type DividendSyncPayload {
+  success: Boolean!
+  schedulesSynced: Int!
+  primarySourceCount: Int!
+  fallbackSourceCount: Int!
+  placeholdersUpgraded: Int!
+  message: String!
+  durationMs: Int!
+  failedSymbols: [String!]!
+}
+
 
 input TriggerBackfillInput {
   fromDate: String! # YYYY-MM-DD
@@ -765,5 +790,103 @@ type BenchmarkComparisonPayload {
   points: [BenchmarkComparisonPoint!]!
   metrics: BenchmarkMetrics!
 }
+
+enum DividendFrequency {
+  MONTHLY
+  QUARTERLY
+  SEMI_ANNUAL
+  ANNUAL
+  IRREGULAR
+}
+
+enum DividendStatus {
+  ANNOUNCED
+  EX_DATE_PASSED
+  PAID
+  CANCELLED
+}
+
+type DividendCalendarEvent {
+  id: ID!
+  instrumentId: ID!
+  symbol: String!
+  name: String!
+  exDate: String!
+  recordDate: String
+  paymentDate: String!
+  sharesHeld: Decimal!
+  dpsDeclared: Money!
+  grossAmountBase: Money!
+  netAmountBase: Money!
+  frequency: DividendFrequency!
+  status: DividendStatus!
+  isUserEntitled: Boolean!
+  isEstimated: Boolean!
+  frankingPct: Decimal!
+}
+
+type MonthlyDividendProjection {
+  year: Int!
+  month: Int!
+  projectedIncome: Money!
+  dividendCount: Int!
+}
+
+type HoldingYieldItem {
+  instrumentId: ID!
+  symbol: String!
+  name: String!
+  quantity: Decimal!
+  currentPrice: Money!
+  averageBuyPrice: Money!
+  currentMarketValue: Money!
+  costBasis: Money!
+  annualDps: Money!
+  projectedAnnualCash: Money!
+  currentYieldPct: Decimal!
+  yieldOnCostPct: Decimal
+  dividendCagr3y: Decimal
+  frequency: DividendFrequency!
+  nextExDate: String
+  nextPaymentDate: String
+}
+
+type DividendYieldAnalytics {
+  annualForwardIncome: Money!
+  monthlyAverageIncome: Money!
+  portfolioCurrentYield: Decimal!
+  portfolioYieldOnCost: Decimal
+  pendingCashInflow: Money!
+  monthlyProjections: [MonthlyDividendProjection!]!
+  holdingsYield: [HoldingYieldItem!]!
+}
+
+input DRIPSimulationInput {
+  horizonYears: Int!
+  dividendGrowthRatePct: Decimal
+  capitalAppreciationPct: Decimal
+}
+
+type DRIPSimulationPoint {
+  year: Int!
+  dripPortfolioValue: Decimal!
+  cashPortfolioValue: Decimal!
+  dripAccumulatedShares: Decimal!
+  cashAccumulatedCash: Decimal!
+  dripAnnualDividend: Decimal!
+  cashAnnualDividend: Decimal!
+}
+
+type DRIPSimulationResult {
+  startingPortfolioValue: Decimal!
+  startingAnnualDividend: Decimal!
+  baseCurrency: String!
+  horizonYears: Int!
+  points: [DRIPSimulationPoint!]!
+  terminalDripValue: Decimal!
+  terminalCashValue: Decimal!
+  dripBenefitAmount: Decimal!
+}
+
 
 

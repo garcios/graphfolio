@@ -111,6 +111,22 @@ func (s *portfolioService) AddTransaction(ctx context.Context, input domain.AddT
 					_, _ = s.ingestion.BackfillCurrencyPair(ctx, feeCurrencyCode, portfolio.BaseCurrency, tradeDate, todayUTC)
 				}
 			}
+
+			if input.Type == domain.TxTypeBuy {
+				task := func() {
+					bgCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+					defer cancel()
+					scheds, err := s.repo.ListDividendSchedulesByInstrument(bgCtx, *instID)
+					if err == nil && len(scheds) == 0 {
+						_, _ = s.ingestion.BackfillInstrumentDividends(bgCtx, *instID, *input.Symbol, inst.ExchangeCode, inst.CurrencyCode)
+					}
+				}
+				if s.asyncRunner != nil {
+					s.asyncRunner(task)
+				} else {
+					go task()
+				}
+			}
 		}
 
 		summary, err := s.postTransactionUpdate(ctx, userID, portfolio.ID, tradeDate)

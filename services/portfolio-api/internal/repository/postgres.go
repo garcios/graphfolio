@@ -2062,3 +2062,284 @@ func (r *PostgresRepository) ListBenchmarkInstruments(ctx context.Context) ([]do
 
 	return insts, rows.Err()
 }
+
+const upsertDividendScheduleSQL = `
+INSERT INTO portfolio.dividend_schedules (
+    id, instrument_id, ex_date, record_date, payment_date,
+    amount_per_share, currency_code, frequency, status,
+    is_estimated, is_override, franking_percentage, withholding_tax_pct, source,
+    created_at, updated_at
+) VALUES (
+    COALESCE(NULLIF($1, '00000000-0000-0000-0000-000000000000'::uuid), uuidv7()),
+    $2, $3, $4, $5,
+    $6, $7, $8, $9,
+    $10, $11, $12, $13, $14,
+    now(), now()
+)
+ON CONFLICT (instrument_id, ex_date, payment_date)
+DO UPDATE SET
+    record_date = COALESCE(EXCLUDED.record_date, portfolio.dividend_schedules.record_date),
+    amount_per_share = CASE
+        WHEN portfolio.dividend_schedules.is_estimated = true AND EXCLUDED.is_estimated = false THEN EXCLUDED.amount_per_share
+        WHEN portfolio.dividend_schedules.is_estimated = false AND EXCLUDED.is_estimated = true THEN portfolio.dividend_schedules.amount_per_share
+        ELSE EXCLUDED.amount_per_share
+    END,
+    currency_code = EXCLUDED.currency_code,
+    frequency = EXCLUDED.frequency,
+    status = CASE
+        WHEN portfolio.dividend_schedules.is_estimated = true AND EXCLUDED.is_estimated = false THEN EXCLUDED.status
+        WHEN portfolio.dividend_schedules.is_estimated = false AND EXCLUDED.is_estimated = true THEN portfolio.dividend_schedules.status
+        ELSE EXCLUDED.status
+    END,
+    is_estimated = CASE
+        WHEN portfolio.dividend_schedules.is_estimated = false THEN false
+        ELSE EXCLUDED.is_estimated
+    END,
+    franking_percentage = EXCLUDED.franking_percentage,
+    withholding_tax_pct = EXCLUDED.withholding_tax_pct,
+    source = CASE
+        WHEN portfolio.dividend_schedules.is_estimated = false AND EXCLUDED.is_estimated = true THEN portfolio.dividend_schedules.source
+        ELSE EXCLUDED.source
+    END,
+    updated_at = now()
+WHERE portfolio.dividend_schedules.is_override = false
+RETURNING id, (xmax = 0) AS is_insert;
+`
+
+const getUpcomingDividendSchedulesSQL = `
+SELECT id, instrument_id, ex_date, record_date, payment_date,
+       amount_per_share, currency_code, frequency, status,
+       is_estimated, is_override, franking_percentage, withholding_tax_pct, source,
+       created_at, updated_at
+FROM portfolio.dividend_schedules
+WHERE instrument_id = ANY($1)
+  AND ex_date >= $2
+  AND ex_date <= $3
+ORDER BY ex_date ASC, payment_date ASC;
+`
+
+const listDividendSchedulesByInstrumentSQL = `
+SELECT id, instrument_id, ex_date, record_date, payment_date,
+       amount_per_share, currency_code, frequency, status,
+       is_estimated, is_override, franking_percentage, withholding_tax_pct, source,
+       created_at, updated_at
+FROM portfolio.dividend_schedules
+WHERE instrument_id = $1
+ORDER BY ex_date ASC, payment_date ASC;
+`
+
+const getDividendCalendarSchedulesSQL = `
+SELECT id, instrument_id, ex_date, record_date, payment_date,
+       amount_per_share, currency_code, frequency, status,
+       is_estimated, is_override, franking_percentage, withholding_tax_pct, source,
+       created_at, updated_at
+FROM portfolio.dividend_schedules
+WHERE instrument_id = ANY($1)
+  AND ((ex_date >= $2 AND ex_date <= $3) OR (payment_date >= $2 AND payment_date <= $3))
+ORDER BY COALESCE(payment_date, ex_date) ASC, ex_date ASC;
+`
+
+const getEntitledSharesForExDateSQL = `
+SELECT COALESCE(SUM(
+  CASE 
+    WHEN type = 'BUY' THEN quantity
+    WHEN type = 'SELL' THEN -quantity
+    ELSE 0
+  END
+), 0)
+FROM portfolio.transactions
+WHERE portfolio_id = $1
+  AND instrument_id = $2
+  AND trade_date < $3;
+`
+
+
+func (r *PostgresRepository) UpsertDividendSchedulesBatch(ctx context.Context, schedules []domain.DividendSchedule) (int, int, error) {
+	if len(schedules) == 0 {
+		return 0, 0, nil
+	}
+
+	batch := &pgx.Batch{}
+	for _, s := range schedules {
+		batch.Queue(
+			upsertDividendScheduleSQL,
+			s.ID,
+			s.InstrumentID,
+			s.ExDate,
+			s.RecordDate,
+			s.PaymentDate,
+			s.AmountPerShare,
+			s.CurrencyCode,
+			string(s.Frequency),
+			string(s.Status),
+			s.IsEstimated,
+			s.IsOverride,
+			s.FrankingPercentage,
+			s.WithholdingTaxPct,
+			s.Source,
+		)
+	}
+
+	br := r.pool.SendBatch(ctx, batch)
+	defer br.Close()
+
+	syncedCount := 0
+	upgradedCount := 0
+
+	for i := 0; i < len(schedules); i++ {
+		var returnedID uuid.UUID
+		var isInsert bool
+		err := br.QueryRow().Scan(&returnedID, &isInsert)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				// Record exists with is_override = true, skipped by WHERE clause
+				continue
+			}
+			return syncedCount, upgradedCount, fmt.Errorf("repository: upsert dividend schedule #%d failed: %w", i, err)
+		}
+		syncedCount++
+		if !isInsert && !schedules[i].IsEstimated {
+			upgradedCount++
+		}
+	}
+
+	return syncedCount, upgradedCount, nil
+}
+
+func (r *PostgresRepository) GetUpcomingDividendSchedules(ctx context.Context, instrumentIDs []uuid.UUID, fromDate, toDate time.Time) ([]domain.DividendSchedule, error) {
+	if len(instrumentIDs) == 0 {
+		return nil, nil
+	}
+
+	rows, err := r.pool.Query(ctx, getUpcomingDividendSchedulesSQL, instrumentIDs, fromDate, toDate)
+	if err != nil {
+		return nil, fmt.Errorf("repository: get upcoming dividend schedules failed: %w", err)
+	}
+	defer rows.Close()
+
+	var results []domain.DividendSchedule
+	for rows.Next() {
+		var s domain.DividendSchedule
+		var freqStr, statusStr string
+		err := rows.Scan(
+			&s.ID,
+			&s.InstrumentID,
+			&s.ExDate,
+			&s.RecordDate,
+			&s.PaymentDate,
+			&s.AmountPerShare,
+			&s.CurrencyCode,
+			&freqStr,
+			&statusStr,
+			&s.IsEstimated,
+			&s.IsOverride,
+			&s.FrankingPercentage,
+			&s.WithholdingTaxPct,
+			&s.Source,
+			&s.CreatedAt,
+			&s.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("repository: scan dividend schedule failed: %w", err)
+		}
+		s.Frequency = domain.DividendFrequency(freqStr)
+		s.Status = domain.DividendStatus(statusStr)
+		results = append(results, s)
+	}
+
+	return results, rows.Err()
+}
+
+func (r *PostgresRepository) ListDividendSchedulesByInstrument(ctx context.Context, instrumentID uuid.UUID) ([]domain.DividendSchedule, error) {
+	rows, err := r.pool.Query(ctx, listDividendSchedulesByInstrumentSQL, instrumentID)
+	if err != nil {
+		return nil, fmt.Errorf("repository: list dividend schedules by instrument failed: %w", err)
+	}
+	defer rows.Close()
+
+	var results []domain.DividendSchedule
+	for rows.Next() {
+		var s domain.DividendSchedule
+		var freqStr, statusStr string
+		err := rows.Scan(
+			&s.ID,
+			&s.InstrumentID,
+			&s.ExDate,
+			&s.RecordDate,
+			&s.PaymentDate,
+			&s.AmountPerShare,
+			&s.CurrencyCode,
+			&freqStr,
+			&statusStr,
+			&s.IsEstimated,
+			&s.IsOverride,
+			&s.FrankingPercentage,
+			&s.WithholdingTaxPct,
+			&s.Source,
+			&s.CreatedAt,
+			&s.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("repository: scan dividend schedule failed: %w", err)
+		}
+		s.Frequency = domain.DividendFrequency(freqStr)
+		s.Status = domain.DividendStatus(statusStr)
+		results = append(results, s)
+	}
+
+	return results, rows.Err()
+}
+
+func (r *PostgresRepository) GetDividendCalendarSchedules(ctx context.Context, instrumentIDs []uuid.UUID, fromDate, toDate time.Time) ([]domain.DividendSchedule, error) {
+	if len(instrumentIDs) == 0 {
+		return nil, nil
+	}
+
+	rows, err := r.pool.Query(ctx, getDividendCalendarSchedulesSQL, instrumentIDs, fromDate, toDate)
+	if err != nil {
+		return nil, fmt.Errorf("repository: get dividend calendar schedules failed: %w", err)
+	}
+	defer rows.Close()
+
+	var results []domain.DividendSchedule
+	for rows.Next() {
+		var s domain.DividendSchedule
+		var freqStr, statusStr string
+		err := rows.Scan(
+			&s.ID,
+			&s.InstrumentID,
+			&s.ExDate,
+			&s.RecordDate,
+			&s.PaymentDate,
+			&s.AmountPerShare,
+			&s.CurrencyCode,
+			&freqStr,
+			&statusStr,
+			&s.IsEstimated,
+			&s.IsOverride,
+			&s.FrankingPercentage,
+			&s.WithholdingTaxPct,
+			&s.Source,
+			&s.CreatedAt,
+			&s.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("repository: scan dividend calendar schedule failed: %w", err)
+		}
+		s.Frequency = domain.DividendFrequency(freqStr)
+		s.Status = domain.DividendStatus(statusStr)
+		results = append(results, s)
+	}
+
+	return results, rows.Err()
+}
+
+func (r *PostgresRepository) GetEntitledSharesForExDate(ctx context.Context, portfolioID uuid.UUID, instrumentID uuid.UUID, exDate time.Time) (decimal.Decimal, error) {
+	var shares decimal.Decimal
+	err := r.pool.QueryRow(ctx, getEntitledSharesForExDateSQL, portfolioID, instrumentID, exDate).Scan(&shares)
+	if err != nil {
+		return decimal.Zero, fmt.Errorf("repository: get entitled shares for ex-date failed: %w", err)
+	}
+	return shares, nil
+}
+

@@ -310,6 +310,21 @@ func (mr *MockRepositoryMockRecorder) GetCorporateActions(ctx, instrumentIDs any
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCorporateActions", reflect.TypeOf((*MockRepository)(nil).GetCorporateActions), ctx, instrumentIDs)
 }
 
+// GetDividendCalendarSchedules mocks base method.
+func (m *MockRepository) GetDividendCalendarSchedules(ctx context.Context, instrumentIDs []uuid.UUID, fromDate, toDate time.Time) ([]domain.DividendSchedule, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDividendCalendarSchedules", ctx, instrumentIDs, fromDate, toDate)
+	ret0, _ := ret[0].([]domain.DividendSchedule)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDividendCalendarSchedules indicates an expected call of GetDividendCalendarSchedules.
+func (mr *MockRepositoryMockRecorder) GetDividendCalendarSchedules(ctx, instrumentIDs, fromDate, toDate any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDividendCalendarSchedules", reflect.TypeOf((*MockRepository)(nil).GetDividendCalendarSchedules), ctx, instrumentIDs, fromDate, toDate)
+}
+
 // GetEarliestValuation mocks base method.
 func (m *MockRepository) GetEarliestValuation(ctx context.Context, portfolioID uuid.UUID) (*domain.PortfolioValuation, error) {
 	m.ctrl.T.Helper()
@@ -323,6 +338,21 @@ func (m *MockRepository) GetEarliestValuation(ctx context.Context, portfolioID u
 func (mr *MockRepositoryMockRecorder) GetEarliestValuation(ctx, portfolioID any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEarliestValuation", reflect.TypeOf((*MockRepository)(nil).GetEarliestValuation), ctx, portfolioID)
+}
+
+// GetEntitledSharesForExDate mocks base method.
+func (m *MockRepository) GetEntitledSharesForExDate(ctx context.Context, portfolioID, instrumentID uuid.UUID, exDate time.Time) (decimal.Decimal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetEntitledSharesForExDate", ctx, portfolioID, instrumentID, exDate)
+	ret0, _ := ret[0].(decimal.Decimal)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetEntitledSharesForExDate indicates an expected call of GetEntitledSharesForExDate.
+func (mr *MockRepositoryMockRecorder) GetEntitledSharesForExDate(ctx, portfolioID, instrumentID, exDate any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEntitledSharesForExDate", reflect.TypeOf((*MockRepository)(nil).GetEntitledSharesForExDate), ctx, portfolioID, instrumentID, exDate)
 }
 
 // GetExternalCashFlows mocks base method.
@@ -510,6 +540,21 @@ func (mr *MockRepositoryMockRecorder) GetTransactions(ctx, portfolioID any) *gom
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTransactions", reflect.TypeOf((*MockRepository)(nil).GetTransactions), ctx, portfolioID)
 }
 
+// GetUpcomingDividendSchedules mocks base method.
+func (m *MockRepository) GetUpcomingDividendSchedules(ctx context.Context, instrumentIDs []uuid.UUID, fromDate, toDate time.Time) ([]domain.DividendSchedule, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUpcomingDividendSchedules", ctx, instrumentIDs, fromDate, toDate)
+	ret0, _ := ret[0].([]domain.DividendSchedule)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUpcomingDividendSchedules indicates an expected call of GetUpcomingDividendSchedules.
+func (mr *MockRepositoryMockRecorder) GetUpcomingDividendSchedules(ctx, instrumentIDs, fromDate, toDate any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUpcomingDividendSchedules", reflect.TypeOf((*MockRepository)(nil).GetUpcomingDividendSchedules), ctx, instrumentIDs, fromDate, toDate)
+}
+
 // GetValuationAtOrBefore mocks base method.
 func (m *MockRepository) GetValuationAtOrBefore(ctx context.Context, portfolioID uuid.UUID, targetDate time.Time) (*domain.PortfolioValuation, error) {
 	m.ctrl.T.Helper()
@@ -658,6 +703,21 @@ func (m *MockRepository) ListCurrencyPairs(ctx context.Context) ([]domain.Curren
 func (mr *MockRepositoryMockRecorder) ListCurrencyPairs(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListCurrencyPairs", reflect.TypeOf((*MockRepository)(nil).ListCurrencyPairs), ctx)
+}
+
+// ListDividendSchedulesByInstrument mocks base method.
+func (m *MockRepository) ListDividendSchedulesByInstrument(ctx context.Context, instrumentID uuid.UUID) ([]domain.DividendSchedule, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListDividendSchedulesByInstrument", ctx, instrumentID)
+	ret0, _ := ret[0].([]domain.DividendSchedule)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListDividendSchedulesByInstrument indicates an expected call of ListDividendSchedulesByInstrument.
+func (mr *MockRepositoryMockRecorder) ListDividendSchedulesByInstrument(ctx, instrumentID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListDividendSchedulesByInstrument", reflect.TypeOf((*MockRepository)(nil).ListDividendSchedulesByInstrument), ctx, instrumentID)
 }
 
 // ListExchanges mocks base method.
@@ -809,6 +869,22 @@ func (m *MockRepository) UpdateTransaction(ctx context.Context, portfolioID uuid
 func (mr *MockRepositoryMockRecorder) UpdateTransaction(ctx, portfolioID, tx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateTransaction", reflect.TypeOf((*MockRepository)(nil).UpdateTransaction), ctx, portfolioID, tx)
+}
+
+// UpsertDividendSchedulesBatch mocks base method.
+func (m *MockRepository) UpsertDividendSchedulesBatch(ctx context.Context, schedules []domain.DividendSchedule) (int, int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpsertDividendSchedulesBatch", ctx, schedules)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(int)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// UpsertDividendSchedulesBatch indicates an expected call of UpsertDividendSchedulesBatch.
+func (mr *MockRepositoryMockRecorder) UpsertDividendSchedulesBatch(ctx, schedules any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpsertDividendSchedulesBatch", reflect.TypeOf((*MockRepository)(nil).UpsertDividendSchedulesBatch), ctx, schedules)
 }
 
 // UpsertFXRate mocks base method.

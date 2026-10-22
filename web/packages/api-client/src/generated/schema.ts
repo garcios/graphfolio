@@ -79,6 +79,9 @@ export interface Query {
     modifiedDietzReturn: ModifiedDietzReturnPayload
     benchmarks: Benchmark[]
     benchmarkComparison: BenchmarkComparisonPayload
+    dividendCalendar: DividendCalendarEvent[]
+    dividendYieldAnalytics: DividendYieldAnalytics
+    simulateDRIP: DRIPSimulationResult
     __typename: 'Query'
 }
 
@@ -150,6 +153,7 @@ export interface Mutation {
     deleteInstrument: DeleteInstrumentPayload
     recordPriceOverride: RecordPriceOverridePayload
     triggerMarketSync: MarketSyncPayload
+    triggerDividendSync: DividendSyncPayload
     triggerBackfill: BackfillPayload
     updateUserPreferences: UpdateUserPreferencesPayload
     recordFXRateOverride: RecordFXRateOverridePayload
@@ -234,6 +238,18 @@ export interface MarketSyncPayload {
     fxRatesSynced: Scalars['Int']
     message: Scalars['String']
     __typename: 'MarketSyncPayload'
+}
+
+export interface DividendSyncPayload {
+    success: Scalars['Boolean']
+    schedulesSynced: Scalars['Int']
+    primarySourceCount: Scalars['Int']
+    fallbackSourceCount: Scalars['Int']
+    placeholdersUpgraded: Scalars['Int']
+    message: Scalars['String']
+    durationMs: Scalars['Int']
+    failedSymbols: Scalars['String'][]
+    __typename: 'DividendSyncPayload'
 }
 
 export interface BackfillPayload {
@@ -555,6 +571,92 @@ export interface BenchmarkComparisonPayload {
     __typename: 'BenchmarkComparisonPayload'
 }
 
+export type DividendFrequency = 'MONTHLY' | 'QUARTERLY' | 'SEMI_ANNUAL' | 'ANNUAL' | 'IRREGULAR'
+
+export type DividendStatus = 'ANNOUNCED' | 'EX_DATE_PASSED' | 'PAID' | 'CANCELLED'
+
+export interface DividendCalendarEvent {
+    id: Scalars['ID']
+    instrumentId: Scalars['ID']
+    symbol: Scalars['String']
+    name: Scalars['String']
+    exDate: Scalars['String']
+    recordDate: (Scalars['String'] | null)
+    paymentDate: Scalars['String']
+    sharesHeld: Scalars['Decimal']
+    dpsDeclared: Money
+    grossAmountBase: Money
+    netAmountBase: Money
+    frequency: DividendFrequency
+    status: DividendStatus
+    isUserEntitled: Scalars['Boolean']
+    isEstimated: Scalars['Boolean']
+    frankingPct: Scalars['Decimal']
+    __typename: 'DividendCalendarEvent'
+}
+
+export interface MonthlyDividendProjection {
+    year: Scalars['Int']
+    month: Scalars['Int']
+    projectedIncome: Money
+    dividendCount: Scalars['Int']
+    __typename: 'MonthlyDividendProjection'
+}
+
+export interface HoldingYieldItem {
+    instrumentId: Scalars['ID']
+    symbol: Scalars['String']
+    name: Scalars['String']
+    quantity: Scalars['Decimal']
+    currentPrice: Money
+    averageBuyPrice: Money
+    currentMarketValue: Money
+    costBasis: Money
+    annualDps: Money
+    projectedAnnualCash: Money
+    currentYieldPct: Scalars['Decimal']
+    yieldOnCostPct: (Scalars['Decimal'] | null)
+    dividendCagr3y: (Scalars['Decimal'] | null)
+    frequency: DividendFrequency
+    nextExDate: (Scalars['String'] | null)
+    nextPaymentDate: (Scalars['String'] | null)
+    __typename: 'HoldingYieldItem'
+}
+
+export interface DividendYieldAnalytics {
+    annualForwardIncome: Money
+    monthlyAverageIncome: Money
+    portfolioCurrentYield: Scalars['Decimal']
+    portfolioYieldOnCost: (Scalars['Decimal'] | null)
+    pendingCashInflow: Money
+    monthlyProjections: MonthlyDividendProjection[]
+    holdingsYield: HoldingYieldItem[]
+    __typename: 'DividendYieldAnalytics'
+}
+
+export interface DRIPSimulationPoint {
+    year: Scalars['Int']
+    dripPortfolioValue: Scalars['Decimal']
+    cashPortfolioValue: Scalars['Decimal']
+    dripAccumulatedShares: Scalars['Decimal']
+    cashAccumulatedCash: Scalars['Decimal']
+    dripAnnualDividend: Scalars['Decimal']
+    cashAnnualDividend: Scalars['Decimal']
+    __typename: 'DRIPSimulationPoint'
+}
+
+export interface DRIPSimulationResult {
+    startingPortfolioValue: Scalars['Decimal']
+    startingAnnualDividend: Scalars['Decimal']
+    baseCurrency: Scalars['String']
+    horizonYears: Scalars['Int']
+    points: DRIPSimulationPoint[]
+    terminalDripValue: Scalars['Decimal']
+    terminalCashValue: Scalars['Decimal']
+    dripBenefitAmount: Scalars['Decimal']
+    __typename: 'DRIPSimulationResult'
+}
+
 export interface MoneyGenqlSelection{
     amount?: boolean | number
     currencyCode?: boolean | number
@@ -628,6 +730,9 @@ export interface QueryGenqlSelection{
     modifiedDietzReturn?: (ModifiedDietzReturnPayloadGenqlSelection & { __args: {startDate: Scalars['String'], endDate: Scalars['String'], useMonthlyLinking?: (Scalars['Boolean'] | null)} })
     benchmarks?: BenchmarkGenqlSelection
     benchmarkComparison?: (BenchmarkComparisonPayloadGenqlSelection & { __args: {benchmarkId: Scalars['ID'], timeframe: HistoryTimeframe, currencyMode?: (BenchmarkCurrencyMode | null)} })
+    dividendCalendar?: (DividendCalendarEventGenqlSelection & { __args: {year: Scalars['Int'], month: Scalars['Int']} })
+    dividendYieldAnalytics?: DividendYieldAnalyticsGenqlSelection
+    simulateDRIP?: (DRIPSimulationResultGenqlSelection & { __args: {input: DRIPSimulationInput} })
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -704,6 +809,7 @@ export interface MutationGenqlSelection{
     deleteInstrument?: (DeleteInstrumentPayloadGenqlSelection & { __args: {id: Scalars['ID']} })
     recordPriceOverride?: (RecordPriceOverridePayloadGenqlSelection & { __args: {input: RecordPriceOverrideInput} })
     triggerMarketSync?: (MarketSyncPayloadGenqlSelection & { __args?: {symbols?: (Scalars['String'][] | null), syncFx?: (Scalars['Boolean'] | null)} })
+    triggerDividendSync?: (DividendSyncPayloadGenqlSelection & { __args?: {input?: (TriggerDividendSyncInput | null)} })
     triggerBackfill?: (BackfillPayloadGenqlSelection & { __args: {input: TriggerBackfillInput} })
     updateUserPreferences?: (UpdateUserPreferencesPayloadGenqlSelection & { __args: {input: UpdateUserPreferencesInput} })
     recordFXRateOverride?: (RecordFXRateOverridePayloadGenqlSelection & { __args: {input: RecordFXRateOverrideInput} })
@@ -812,6 +918,21 @@ export interface MarketSyncPayloadGenqlSelection{
     pricesSynced?: boolean | number
     fxRatesSynced?: boolean | number
     message?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface TriggerDividendSyncInput {symbols?: (Scalars['String'][] | null),exchangeCode?: (Scalars['String'] | null),syncHistorical?: (Scalars['Boolean'] | null),forceProvider?: (Scalars['String'] | null)}
+
+export interface DividendSyncPayloadGenqlSelection{
+    success?: boolean | number
+    schedulesSynced?: boolean | number
+    primarySourceCount?: boolean | number
+    fallbackSourceCount?: boolean | number
+    placeholdersUpgraded?: boolean | number
+    message?: boolean | number
+    durationMs?: boolean | number
+    failedSymbols?: boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1159,6 +1280,96 @@ export interface BenchmarkComparisonPayloadGenqlSelection{
     __scalar?: boolean | number
 }
 
+export interface DividendCalendarEventGenqlSelection{
+    id?: boolean | number
+    instrumentId?: boolean | number
+    symbol?: boolean | number
+    name?: boolean | number
+    exDate?: boolean | number
+    recordDate?: boolean | number
+    paymentDate?: boolean | number
+    sharesHeld?: boolean | number
+    dpsDeclared?: MoneyGenqlSelection
+    grossAmountBase?: MoneyGenqlSelection
+    netAmountBase?: MoneyGenqlSelection
+    frequency?: boolean | number
+    status?: boolean | number
+    isUserEntitled?: boolean | number
+    isEstimated?: boolean | number
+    frankingPct?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface MonthlyDividendProjectionGenqlSelection{
+    year?: boolean | number
+    month?: boolean | number
+    projectedIncome?: MoneyGenqlSelection
+    dividendCount?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface HoldingYieldItemGenqlSelection{
+    instrumentId?: boolean | number
+    symbol?: boolean | number
+    name?: boolean | number
+    quantity?: boolean | number
+    currentPrice?: MoneyGenqlSelection
+    averageBuyPrice?: MoneyGenqlSelection
+    currentMarketValue?: MoneyGenqlSelection
+    costBasis?: MoneyGenqlSelection
+    annualDps?: MoneyGenqlSelection
+    projectedAnnualCash?: MoneyGenqlSelection
+    currentYieldPct?: boolean | number
+    yieldOnCostPct?: boolean | number
+    dividendCagr3y?: boolean | number
+    frequency?: boolean | number
+    nextExDate?: boolean | number
+    nextPaymentDate?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface DividendYieldAnalyticsGenqlSelection{
+    annualForwardIncome?: MoneyGenqlSelection
+    monthlyAverageIncome?: MoneyGenqlSelection
+    portfolioCurrentYield?: boolean | number
+    portfolioYieldOnCost?: boolean | number
+    pendingCashInflow?: MoneyGenqlSelection
+    monthlyProjections?: MonthlyDividendProjectionGenqlSelection
+    holdingsYield?: HoldingYieldItemGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface DRIPSimulationInput {horizonYears: Scalars['Int'],dividendGrowthRatePct?: (Scalars['Decimal'] | null),capitalAppreciationPct?: (Scalars['Decimal'] | null)}
+
+export interface DRIPSimulationPointGenqlSelection{
+    year?: boolean | number
+    dripPortfolioValue?: boolean | number
+    cashPortfolioValue?: boolean | number
+    dripAccumulatedShares?: boolean | number
+    cashAccumulatedCash?: boolean | number
+    dripAnnualDividend?: boolean | number
+    cashAnnualDividend?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface DRIPSimulationResultGenqlSelection{
+    startingPortfolioValue?: boolean | number
+    startingAnnualDividend?: boolean | number
+    baseCurrency?: boolean | number
+    horizonYears?: boolean | number
+    points?: DRIPSimulationPointGenqlSelection
+    terminalDripValue?: boolean | number
+    terminalCashValue?: boolean | number
+    dripBenefitAmount?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
 
     const Money_possibleTypes: string[] = ['Money']
     export const isMoney = (obj?: { __typename?: any } | null): obj is Money => {
@@ -1332,6 +1543,14 @@ export interface BenchmarkComparisonPayloadGenqlSelection{
     export const isMarketSyncPayload = (obj?: { __typename?: any } | null): obj is MarketSyncPayload => {
       if (!obj?.__typename) throw new Error('__typename is missing in "isMarketSyncPayload"')
       return MarketSyncPayload_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const DividendSyncPayload_possibleTypes: string[] = ['DividendSyncPayload']
+    export const isDividendSyncPayload = (obj?: { __typename?: any } | null): obj is DividendSyncPayload => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isDividendSyncPayload"')
+      return DividendSyncPayload_possibleTypes.includes(obj.__typename)
     }
     
 
@@ -1543,6 +1762,54 @@ export interface BenchmarkComparisonPayloadGenqlSelection{
     }
     
 
+
+    const DividendCalendarEvent_possibleTypes: string[] = ['DividendCalendarEvent']
+    export const isDividendCalendarEvent = (obj?: { __typename?: any } | null): obj is DividendCalendarEvent => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isDividendCalendarEvent"')
+      return DividendCalendarEvent_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const MonthlyDividendProjection_possibleTypes: string[] = ['MonthlyDividendProjection']
+    export const isMonthlyDividendProjection = (obj?: { __typename?: any } | null): obj is MonthlyDividendProjection => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isMonthlyDividendProjection"')
+      return MonthlyDividendProjection_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const HoldingYieldItem_possibleTypes: string[] = ['HoldingYieldItem']
+    export const isHoldingYieldItem = (obj?: { __typename?: any } | null): obj is HoldingYieldItem => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isHoldingYieldItem"')
+      return HoldingYieldItem_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const DividendYieldAnalytics_possibleTypes: string[] = ['DividendYieldAnalytics']
+    export const isDividendYieldAnalytics = (obj?: { __typename?: any } | null): obj is DividendYieldAnalytics => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isDividendYieldAnalytics"')
+      return DividendYieldAnalytics_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const DRIPSimulationPoint_possibleTypes: string[] = ['DRIPSimulationPoint']
+    export const isDRIPSimulationPoint = (obj?: { __typename?: any } | null): obj is DRIPSimulationPoint => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isDRIPSimulationPoint"')
+      return DRIPSimulationPoint_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const DRIPSimulationResult_possibleTypes: string[] = ['DRIPSimulationResult']
+    export const isDRIPSimulationResult = (obj?: { __typename?: any } | null): obj is DRIPSimulationResult => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isDRIPSimulationResult"')
+      return DRIPSimulationResult_possibleTypes.includes(obj.__typename)
+    }
+    
+
 export const enumTransactionType = {
    BUY: 'BUY' as const,
    SELL: 'SELL' as const,
@@ -1606,4 +1873,19 @@ export const enumCashFlowCategory = {
 export const enumBenchmarkCurrencyMode = {
    PORTFOLIO_BASE: 'PORTFOLIO_BASE' as const,
    BENCHMARK_NATIVE: 'BENCHMARK_NATIVE' as const
+}
+
+export const enumDividendFrequency = {
+   MONTHLY: 'MONTHLY' as const,
+   QUARTERLY: 'QUARTERLY' as const,
+   SEMI_ANNUAL: 'SEMI_ANNUAL' as const,
+   ANNUAL: 'ANNUAL' as const,
+   IRREGULAR: 'IRREGULAR' as const
+}
+
+export const enumDividendStatus = {
+   ANNOUNCED: 'ANNOUNCED' as const,
+   EX_DATE_PASSED: 'EX_DATE_PASSED' as const,
+   PAID: 'PAID' as const,
+   CANCELLED: 'CANCELLED' as const
 }

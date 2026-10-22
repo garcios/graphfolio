@@ -1716,6 +1716,42 @@ func TestPortfolioServer_TriggerMarketSync(t *testing.T) {
 	})
 }
 
+func TestPortfolioServer_TriggerDividendSync(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successful trigger dividend sync", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockSvc := mocks.NewMockPortfolioService(ctrl)
+		server := NewPortfolioServer(mockSvc)
+
+		mockSvc.EXPECT().
+			TriggerDividendSync(ctx, []string{"AAPL"}, nil, true, "YAHOO").
+			Return(&domain.DividendSyncResult{
+				Success:              true,
+				SchedulesSynced:      4,
+				PrimarySourceCount:   4,
+				FallbackSourceCount:  0,
+				PlaceholdersUpgraded: 1,
+				Message:              "Synced 4 dividend schedules",
+				DurationMs:           120,
+			}, nil)
+
+		res, err := server.TriggerDividendSync(ctx, &pb.TriggerDividendSyncRequest{
+			Symbols:        []string{"AAPL"},
+			SyncHistorical: true,
+			ForceProvider:  "YAHOO",
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if !res.Success || res.SchedulesSynced != 4 || res.PrimarySourceCount != 4 {
+			t.Errorf("unexpected dividend sync response: %+v", res)
+		}
+	})
+}
+
 func TestPortfolioServer_RebuildValuations(t *testing.T) {
 	ctx := context.Background()
 
@@ -3128,4 +3164,116 @@ func TestPortfolioServer_GetBenchmarkComparison(t *testing.T) {
 		}
 	})
 }
+
+func TestPortfolioServer_GetDividendCalendar(t *testing.T) {
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockSvc := mocks.NewMockPortfolioService(ctrl)
+	server := NewPortfolioServer(mockSvc)
+
+	instID := uuid.New()
+	exDate := time.Date(2026, 11, 10, 0, 0, 0, 0, time.UTC)
+	payDate := time.Date(2026, 11, 25, 0, 0, 0, 0, time.UTC)
+
+	events := []domain.DividendCalendarEvent{
+		{
+			ID:              uuid.New(),
+			InstrumentID:    instID,
+			Symbol:          "AAPL",
+			Name:            "Apple Inc.",
+			ExDate:          exDate,
+			PaymentDate:     payDate,
+			SharesHeld:      decimal.RequireFromString("50"),
+			DPSDeclared:     domain.NewMoney(decimal.RequireFromString("0.50"), "USD"),
+			GrossAmountBase: domain.NewMoney(decimal.RequireFromString("25"), "USD"),
+			NetAmountBase:   domain.NewMoney(decimal.RequireFromString("21.25"), "USD"),
+			Frequency:       domain.DividendFreqQuarterly,
+			Status:          domain.DividendStatusAnnounced,
+			IsUserEntitled:  true,
+		},
+	}
+
+	mockSvc.EXPECT().GetDividendCalendar(ctx, "user-1", 2026, 11).Return(events, nil)
+
+	resp, err := server.GetDividendCalendar(ctx, &pb.GetDividendCalendarRequest{
+		UserId: "user-1",
+		Year:   2026,
+		Month:  11,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(resp.Events) != 1 {
+		t.Fatalf("expected 1 event, got %d", len(resp.Events))
+	}
+	if resp.Events[0].Symbol != "AAPL" {
+		t.Errorf("expected symbol AAPL, got %s", resp.Events[0].Symbol)
+	}
+}
+
+func TestPortfolioServer_GetDividendYieldAnalytics(t *testing.T) {
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockSvc := mocks.NewMockPortfolioService(ctrl)
+	server := NewPortfolioServer(mockSvc)
+
+	analytics := &domain.DividendYieldAnalytics{
+		AnnualForwardIncome:   domain.NewMoney(decimal.RequireFromString("1200"), "USD"),
+		MonthlyAverageIncome:  domain.NewMoney(decimal.RequireFromString("100"), "USD"),
+		PortfolioCurrentYield: decimal.RequireFromString("3.5"),
+		PendingCashInflow:     domain.NewMoney(decimal.RequireFromString("50"), "USD"),
+	}
+
+	mockSvc.EXPECT().GetDividendYieldAnalytics(ctx, "user-1").Return(analytics, nil)
+
+	resp, err := server.GetDividendYieldAnalytics(ctx, &pb.GetDividendYieldAnalyticsRequest{
+		UserId: "user-1",
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if resp == nil {
+		t.Fatalf("expected non-nil response")
+	}
+}
+
+func TestPortfolioServer_SimulateDRIP(t *testing.T) {
+	ctx := context.Background()
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockSvc := mocks.NewMockPortfolioService(ctrl)
+	server := NewPortfolioServer(mockSvc)
+
+	result := &domain.DRIPSimulationResult{
+		StartingPortfolioValue: decimal.RequireFromString("100000"),
+		StartingAnnualDividend: decimal.RequireFromString("4000"),
+		BaseCurrency:           "USD",
+		HorizonYears:           5,
+		TerminalDRIPValue:      decimal.RequireFromString("180000"),
+		TerminalCashValue:      decimal.RequireFromString("150000"),
+		DRIPBenefitAmount:      decimal.RequireFromString("30000"),
+	}
+
+	mockSvc.EXPECT().SimulateDRIP(ctx, "user-1", gomock.Any()).Return(result, nil)
+
+	resp, err := server.SimulateDRIP(ctx, &pb.SimulateDRIPRequest{
+		UserId:       "user-1",
+		HorizonYears: 5,
+	})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if resp == nil {
+		t.Fatalf("expected non-nil response")
+	}
+	if resp.HorizonYears != 5 {
+		t.Errorf("expected horizon 5, got %d", resp.HorizonYears)
+	}
+}
+
 

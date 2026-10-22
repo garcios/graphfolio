@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { client } from '@graphfolio/api-client';
 import { Card, Badge, Button, formatDate } from '@graphfolio/ui';
 import { BackfillModal, type BackfillSubmitData, type BackfillModalResult } from './BackfillModal';
+import { DividendSyncModal, type DividendSyncSubmitData, type DividendSyncModalResult } from './DividendSyncModal';
 import './IngestionPipeline.css';
 
 interface FeedStatus {
@@ -34,6 +35,7 @@ export const IngestionPipeline: React.FC<IngestionPipelineProps> = ({ onNotify }
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncingFeed, setSyncingFeed] = useState<string | null>(null);
   const [isBackfillModalOpen, setIsBackfillModalOpen] = useState(false);
+  const [isDividendModalOpen, setIsDividendModalOpen] = useState(false);
 
   const fetchStatus = useCallback(() => {
     setLoading(true);
@@ -154,6 +156,47 @@ export const IngestionPipeline: React.FC<IngestionPipelineProps> = ({ onNotify }
     }
   };
 
+  const handleExecuteDividendSync = async (
+    submitData: DividendSyncSubmitData
+  ): Promise<DividendSyncModalResult> => {
+    try {
+      const res = await client.mutation({
+        triggerDividendSync: {
+          __args: {
+            input: {
+              symbols: submitData.symbols,
+              exchangeCode: submitData.exchangeCode,
+              syncHistorical: submitData.syncHistorical,
+              forceProvider: submitData.forceProvider,
+            },
+          },
+          success: true,
+          schedulesSynced: true,
+          primarySourceCount: true,
+          fallbackSourceCount: true,
+          placeholdersUpgraded: true,
+          message: true,
+          durationMs: true,
+          failedSymbols: true,
+        },
+      });
+
+      const payload = res.triggerDividendSync;
+      if (payload.success) {
+        onNotify(payload.message || 'Dividend synchronization completed successfully.');
+        fetchStatus();
+      } else {
+        onNotify(`Dividend sync warning: ${payload.message}`);
+      }
+
+      return payload;
+    } catch (err: any) {
+      console.error('Dividend sync failed:', err);
+      onNotify(`Dividend sync failed: ${err?.message || 'Server error'}`);
+      throw err;
+    }
+  };
+
   const getBadgeVariant = (status: string) => {
     switch (status.toUpperCase()) {
       case 'ACTIVE':
@@ -189,6 +232,14 @@ export const IngestionPipeline: React.FC<IngestionPipelineProps> = ({ onNotify }
             disabled={loading || isSyncing}
           >
             ↻ Refresh Metrics
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setIsDividendModalOpen(true)}
+            disabled={loading || isSyncing}
+          >
+            ⚡ Sync Dividends
           </Button>
           <Button
             size="sm"
@@ -365,6 +416,41 @@ export const IngestionPipeline: React.FC<IngestionPipelineProps> = ({ onNotify }
                 </Button>
               </div>
             </Card>
+
+            <Card className="pipeline-card" glow="green">
+              <div className="pipeline-card__header">
+                <span className="pipeline-card__title">Corporate Dividends</span>
+                <Badge variant="active">ACTIVE</Badge>
+              </div>
+              <div className="pipeline-metric">
+                <span>Primary Source</span>
+                <span>Yahoo Finance (Unmetered)</span>
+              </div>
+              <div className="pipeline-metric">
+                <span>Fallback Source</span>
+                <span>Twelve Data (Rate Limited)</span>
+              </div>
+              <div className="pipeline-metric">
+                <span>Cadence Engine</span>
+                <span>Forward 12M Projections</span>
+              </div>
+              <div className="pipeline-metric">
+                <span>Diagnostics</span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                  Auto-sync ex/pay dates, board declarations, ASX franking credits, and estimated cycles.
+                </span>
+              </div>
+              <div style={{ marginTop: '0.5rem' }}>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  style={{ width: '100%' }}
+                  onClick={() => setIsDividendModalOpen(true)}
+                >
+                  ⚡ Sync Dividend Schedules
+                </Button>
+              </div>
+            </Card>
           </div>
         </>
       ) : null}
@@ -377,6 +463,14 @@ export const IngestionPipeline: React.FC<IngestionPipelineProps> = ({ onNotify }
         onSubmit={handleExecuteBackfill}
         onSuccess={() => fetchStatus()}
       />
+
+      <DividendSyncModal
+        isOpen={isDividendModalOpen}
+        onClose={() => setIsDividendModalOpen(false)}
+        onSubmit={handleExecuteDividendSync}
+        onSuccess={() => fetchStatus()}
+      />
     </div>
   );
 };
+

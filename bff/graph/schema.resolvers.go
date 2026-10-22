@@ -12,6 +12,9 @@ import (
 	"fmt"
 	pb "graphfolio/proto/portfolio/v1"
 	userpb "graphfolio/proto/user/v1"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // AddTransaction is the resolver for the addTransaction field.
@@ -215,6 +218,45 @@ func (r *mutationResolver) TriggerMarketSync(ctx context.Context, symbols []stri
 		PricesSynced:  int(resp.PricesSynced),
 		FxRatesSynced: int(resp.FxRatesSynced),
 		Message:       resp.Message,
+	}, nil
+}
+
+// TriggerDividendSync is the resolver for the triggerDividendSync field.
+func (r *mutationResolver) TriggerDividendSync(ctx context.Context, input *model.TriggerDividendSyncInput) (*model.DividendSyncPayload, error) {
+	// 1. RBAC Guard: Verify Admin Role
+	role := r.resolveUserRole(ctx)
+	if role != "ADMIN" {
+		return nil, status.Errorf(codes.PermissionDenied, "forbidden: admin privileges required")
+	}
+
+	// 2. Build gRPC request
+	req := &pb.TriggerDividendSyncRequest{}
+	if input != nil {
+		req.Symbols = input.Symbols
+		req.ExchangeCode = input.ExchangeCode
+		if input.SyncHistorical != nil {
+			req.SyncHistorical = *input.SyncHistorical
+		}
+		if input.ForceProvider != nil {
+			req.ForceProvider = *input.ForceProvider
+		}
+	}
+
+	// 3. Invoke gRPC Client
+	resp, err := r.PortfolioClient.TriggerDividendSync(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.DividendSyncPayload{
+		Success:              resp.Success,
+		SchedulesSynced:      int(resp.SchedulesSynced),
+		PrimarySourceCount:   int(resp.PrimarySourceCount),
+		FallbackSourceCount:  int(resp.FallbackSourceCount),
+		PlaceholdersUpgraded: int(resp.PlaceholdersUpgraded),
+		Message:              resp.Message,
+		DurationMs:           int(resp.DurationMs),
+		FailedSymbols:        resp.FailedSymbols,
 	}, nil
 }
 
@@ -955,6 +997,58 @@ func (r *queryResolver) BenchmarkComparison(ctx context.Context, benchmarkID str
 
 	return toModelBenchmarkComparison(resp), nil
 }
+
+// DividendCalendar is the resolver for the dividendCalendar field.
+func (r *queryResolver) DividendCalendar(ctx context.Context, year int, month int) ([]*model.DividendCalendarEvent, error) {
+	resp, err := r.PortfolioClient.GetDividendCalendar(ctx, &pb.GetDividendCalendarRequest{
+		UserId: r.resolveUserID(ctx),
+		Year:   int32(year),
+		Month:  int32(month),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get dividend calendar: %w", err)
+	}
+
+	events := make([]*model.DividendCalendarEvent, len(resp.GetEvents()))
+	for i, ev := range resp.GetEvents() {
+		events[i] = toModelDividendCalendarEvent(ev)
+	}
+	return events, nil
+}
+
+// DividendYieldAnalytics is the resolver for the dividendYieldAnalytics field.
+func (r *queryResolver) DividendYieldAnalytics(ctx context.Context) (*model.DividendYieldAnalytics, error) {
+	resp, err := r.PortfolioClient.GetDividendYieldAnalytics(ctx, &pb.GetDividendYieldAnalyticsRequest{
+		UserId: r.resolveUserID(ctx),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to get dividend yield analytics: %w", err)
+	}
+
+	return toModelDividendYieldAnalytics(resp), nil
+}
+
+// SimulateDrip is the resolver for the simulateDRIP field.
+func (r *queryResolver) SimulateDrip(ctx context.Context, input model.DRIPSimulationInput) (*model.DRIPSimulationResult, error) {
+	req := &pb.SimulateDRIPRequest{
+		UserId:       r.resolveUserID(ctx),
+		HorizonYears: int32(input.HorizonYears),
+	}
+	if input.DividendGrowthRatePct != nil {
+		req.DividendGrowthRatePct = toProtoDecimal(input.DividendGrowthRatePct)
+	}
+	if input.CapitalAppreciationPct != nil {
+		req.CapitalAppreciationPct = toProtoDecimal(input.CapitalAppreciationPct)
+	}
+
+	resp, err := r.PortfolioClient.SimulateDRIP(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to simulate DRIP: %w", err)
+	}
+
+	return toModelDRIPSimulationResult(resp), nil
+}
+
 
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }

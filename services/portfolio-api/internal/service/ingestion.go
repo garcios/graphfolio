@@ -27,13 +27,42 @@ type IngestionService interface {
 
 	// BackfillCurrencyPair pulls historical FX rates for a currency pair across a date range.
 	BackfillCurrencyPair(ctx context.Context, base, quote string, fromDate, toDate time.Time) (int, error)
+
+	// IngestDividendSchedules syncs upcoming forward schedules and cadence projections for active holdings or specific symbols.
+	IngestDividendSchedules(ctx context.Context, options domain.DividendSyncOptions) (*domain.DividendSyncResult, error)
+
+	// BackfillInstrumentDividends pulls historical and forward dividend schedules for a specific instrument.
+	BackfillInstrumentDividends(ctx context.Context, instrumentID uuid.UUID, symbol, exchange, currency string) (int, error)
+}
+
+type IngestionOption func(*ingestionService)
+
+func WithDividendProvider(p marketdata.DividendProvider) IngestionOption {
+	return func(s *ingestionService) {
+		s.dividendProvider = p
+	}
+}
+
+func WithYahooDividendProvider(p marketdata.DividendProvider) IngestionOption {
+	return func(s *ingestionService) {
+		s.yahooDividend = p
+	}
+}
+
+func WithTwelveDividendProvider(p marketdata.DividendProvider) IngestionOption {
+	return func(s *ingestionService) {
+		s.twelveDividend = p
+	}
 }
 
 type ingestionService struct {
-	repo          repository.Repository
-	priceProvider marketdata.PriceProvider
-	fxProvider    marketdata.FXRateProvider
-	limiter       *marketdata.RateLimiter
+	repo             repository.Repository
+	priceProvider    marketdata.PriceProvider
+	fxProvider       marketdata.FXRateProvider
+	limiter          *marketdata.RateLimiter
+	dividendProvider marketdata.DividendProvider
+	yahooDividend    marketdata.DividendProvider
+	twelveDividend   marketdata.DividendProvider
 }
 
 // NewIngestionService constructs an IngestionService instance.
@@ -42,13 +71,18 @@ func NewIngestionService(
 	priceProvider marketdata.PriceProvider,
 	fxProvider marketdata.FXRateProvider,
 	limiter *marketdata.RateLimiter,
+	opts ...IngestionOption,
 ) IngestionService {
-	return &ingestionService{
+	s := &ingestionService{
 		repo:          repo,
 		priceProvider: priceProvider,
 		fxProvider:    fxProvider,
 		limiter:       limiter,
 	}
+	for _, opt := range opts {
+		opt(s)
+	}
+	return s
 }
 
 // IngestDailyMarketData coordinates daily price and FX updates for a specific trade date.
@@ -288,3 +322,165 @@ func generateCurrencyPairs(currencies []string) []marketdata.CurrencyPair {
 	}
 	return pairs
 }
+
+// IngestDividendSchedules syncs upcoming forward schedules and cadence projections for active holdings or specific symbols.
+func (s *ingestionService) IngestDividendSchedules(ctx context.Context, options domain.DividendSyncOptions) (*domain.DividendSyncResult, error) {
+	start := time.Now()
+
+	// 1. Resolve Dividend Provider based on ForceProvider or default cascade
+	provider := s.dividendProvider
+	if strings.EqualFold(options.ForceProvider, "YAHOO") && s.yahooDividend != nil {
+		provider = s.yahooDividend
+	} else if (strings.EqualFold(options.ForceProvider, "TWELVE_DATA") || strings.EqualFold(options.ForceProvider, "TWELVEDATA")) && s.twelveDividend != nil {
+		provider = s.twelveDividend
+	}
+
+	if provider == nil {
+		return &domain.DividendSyncResult{
+			Success: true,
+			Message: "Dividend sync completed (no provider configured)",
+		}, nil
+	}
+
+	// 2. Resolve target instruments
+	var targets []marketdata.InstrumentRef
+	if len(options.Symbols) > 0 {
+		for _, sym := range options.Symbols {
+			sym = strings.TrimSpace(sym)
+			if sym == "" {
+				continue
+			}
+			inst, err := s.repo.FindInstrumentBySymbol(ctx, sym)
+			if err != nil {
+				log.Printf("ingestion: instrument not found for symbol %s: %v", sym, err)
+				continue
+			}
+			if options.ExchangeCode != nil && *options.ExchangeCode != "" && !strings.EqualFold(inst.ExchangeCode, *options.ExchangeCode) {
+				continue
+			}
+			targets = append(targets, marketdata.InstrumentRef{
+				ID:       inst.ID,
+				Symbol:   inst.Symbol,
+				Exchange: inst.ExchangeCode,
+				Currency: inst.CurrencyCode,
+			})
+		}
+	} else {
+		activeInsts, err := s.repo.ListActiveInstruments(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("ingestion: failed to list active instruments: %w", err)
+		}
+		for _, inst := range activeInsts {
+			if options.ExchangeCode != nil && *options.ExchangeCode != "" && !strings.EqualFold(inst.ExchangeCode, *options.ExchangeCode) {
+				continue
+			}
+			targets = append(targets, marketdata.InstrumentRef{
+				ID:       inst.ID,
+				Symbol:   inst.Symbol,
+				Exchange: inst.ExchangeCode,
+				Currency: inst.CurrencyCode,
+			})
+		}
+	}
+
+	if len(targets) == 0 {
+		return &domain.DividendSyncResult{
+			Success:    true,
+			Message:    "No matching active instruments for dividend sync",
+			DurationMs: time.Since(start).Milliseconds(),
+		}, nil
+	}
+
+	totalSynced := 0
+	primaryCount := 0
+	fallbackCount := 0
+	placeholdersUpgraded := 0
+	var failedSymbols []string
+
+	now := time.Now().UTC()
+
+	for _, inst := range targets {
+		upcoming, upErr := provider.GetUpcomingDividends(ctx, inst)
+		if upErr != nil {
+			log.Printf("ingestion: get upcoming dividends for %s failed: %v", inst.Symbol, upErr)
+		}
+
+		history, histErr := provider.GetHistoricalDividends(ctx, inst, now.AddDate(-5, 0, 0), now)
+		if histErr != nil {
+			log.Printf("ingestion: get historical dividends for %s failed: %v", inst.Symbol, histErr)
+		}
+
+		if upErr != nil && histErr != nil && len(upcoming) == 0 && len(history) == 0 {
+			failedSymbols = append(failedSymbols, inst.Symbol)
+			continue
+		}
+
+		allEvents := marketdata.SynthesizeForwardEstimates(inst, upcoming, history, now)
+		if len(allEvents) == 0 {
+			continue
+		}
+
+		var schedules []domain.DividendSchedule
+		for _, ev := range allEvents {
+			schedules = append(schedules, domain.DividendSchedule{
+				ID:                 uuid.New(),
+				InstrumentID:       inst.ID,
+				ExDate:             ev.ExDate,
+				RecordDate:         ev.RecordDate,
+				PaymentDate:        ev.PaymentDate,
+				AmountPerShare:     ev.AmountPerShare,
+				CurrencyCode:       ev.CurrencyCode,
+				Frequency:          domain.DividendFrequency(ev.Frequency),
+				Status:             domain.DividendStatus(ev.Status),
+				IsEstimated:        ev.IsEstimated,
+				IsOverride:         false,
+				FrankingPercentage: ev.FrankingPct,
+				WithholdingTaxPct:  ev.WithholdingTaxPct,
+				Source:             ev.Source,
+			})
+
+			if !ev.IsEstimated {
+				if ev.Source == "yahoo" {
+					primaryCount++
+				} else if ev.Source == "twelvedata" {
+					fallbackCount++
+				}
+			}
+		}
+
+		synced, upgraded, err := s.repo.UpsertDividendSchedulesBatch(ctx, schedules)
+		if err != nil {
+			log.Printf("ingestion: upsert dividend schedules for %s failed: %v", inst.Symbol, err)
+			failedSymbols = append(failedSymbols, inst.Symbol)
+			continue
+		}
+
+		totalSynced += synced
+		placeholdersUpgraded += upgraded
+	}
+
+	return &domain.DividendSyncResult{
+		Success:              len(failedSymbols) == 0,
+		SchedulesSynced:      totalSynced,
+		PrimarySourceCount:   primaryCount,
+		FallbackSourceCount:  fallbackCount,
+		PlaceholdersUpgraded: placeholdersUpgraded,
+		Message: fmt.Sprintf("Dividend sync completed: %d schedules synced (%d via Yahoo, %d via Twelve Data fallback, %d estimates upgraded)",
+			totalSynced, primaryCount, fallbackCount, placeholdersUpgraded),
+		DurationMs:    time.Since(start).Milliseconds(),
+		FailedSymbols: failedSymbols,
+	}, nil
+}
+
+// BackfillInstrumentDividends pulls historical and forward dividend schedules for a specific instrument.
+func (s *ingestionService) BackfillInstrumentDividends(ctx context.Context, instrumentID uuid.UUID, symbol, exchange, currency string) (int, error) {
+	opts := domain.DividendSyncOptions{
+		Symbols: []string{symbol},
+	}
+	res, err := s.IngestDividendSchedules(ctx, opts)
+	if err != nil {
+		return 0, err
+	}
+	return res.SchedulesSynced, nil
+}
+
