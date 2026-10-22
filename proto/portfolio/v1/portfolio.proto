@@ -35,6 +35,7 @@ service PortfolioService {
   // Admin: Ingestion Pipeline & Diagnostics
   rpc GetIngestionStatus(GetIngestionStatusRequest) returns (GetIngestionStatusResponse) {}
   rpc TriggerMarketSync(TriggerMarketSyncRequest) returns (TriggerMarketSyncResponse) {}
+  rpc TriggerDividendSync(TriggerDividendSyncRequest) returns (TriggerDividendSyncResponse) {}
 
   // Admin: FX Rates & Currency Pair Inspection
   rpc ListCurrencyPairs(ListCurrencyPairsRequest) returns (ListCurrencyPairsResponse) {}
@@ -63,6 +64,11 @@ service PortfolioService {
   // Benchmark Comparison & Relative Performance Analytics
   rpc ListBenchmarks(ListBenchmarksRequest) returns (ListBenchmarksResponse) {}
   rpc GetBenchmarkComparison(GetBenchmarkComparisonRequest) returns (GetBenchmarkComparisonResponse) {}
+
+  // Dividend Calendar, Yield Analytics & DRIP Simulator
+  rpc GetDividendCalendar(GetDividendCalendarRequest) returns (GetDividendCalendarResponse) {}
+  rpc GetDividendYieldAnalytics(GetDividendYieldAnalyticsRequest) returns (GetDividendYieldAnalyticsResponse) {}
+  rpc SimulateDRIP(SimulateDRIPRequest) returns (SimulateDRIPResponse) {}
 }
 
 message RebuildValuationsRequest {
@@ -425,6 +431,25 @@ message TriggerMarketSyncResponse {
   int32  fx_rates_synced = 3;
   string message         = 4;
 }
+
+message TriggerDividendSyncRequest {
+  repeated string symbols         = 1;
+  optional string exchange_code   = 2;
+  bool            sync_historical = 3;
+  string          force_provider  = 4; // 'YAHOO', 'TWELVE_DATA', or empty for default cascade
+}
+
+message TriggerDividendSyncResponse {
+  bool            success               = 1;
+  int32           schedules_synced      = 2;
+  int32           primary_source_count  = 3; // Synced via Yahoo Finance
+  int32           fallback_source_count = 4; // Synced via Twelve Data fallback
+  int32           placeholders_upgraded = 5; // Estimated schedules upgraded to official board declarations
+  string          message               = 6;
+  int64           duration_ms           = 7;
+  repeated string failed_symbols        = 8;
+}
+
 
 // ------------------------------------------------------------------
 // Admin: Foreign Exchange (FX) & Currency Pair Messages
@@ -812,6 +837,121 @@ message GetBenchmarkComparisonResponse {
   repeated BenchmarkComparisonPoint points        = 8;
   BenchmarkMetrics                  metrics       = 9;
 }
+
+enum DividendFrequency {
+  DIVIDEND_FREQUENCY_UNSPECIFIED = 0;
+  DIVIDEND_FREQUENCY_MONTHLY     = 1;
+  DIVIDEND_FREQUENCY_QUARTERLY   = 2;
+  DIVIDEND_FREQUENCY_SEMI_ANNUAL = 3;
+  DIVIDEND_FREQUENCY_ANNUAL      = 4;
+  DIVIDEND_FREQUENCY_IRREGULAR   = 5;
+}
+
+enum DividendEventStatus {
+  DIVIDEND_EVENT_STATUS_UNSPECIFIED    = 0;
+  DIVIDEND_EVENT_STATUS_ANNOUNCED      = 1;
+  DIVIDEND_EVENT_STATUS_EX_DATE_PASSED = 2;
+  DIVIDEND_EVENT_STATUS_PAID           = 3;
+  DIVIDEND_EVENT_STATUS_CANCELLED      = 4;
+}
+
+message GetDividendCalendarRequest {
+  string user_id = 1;
+  int32  year    = 2;
+  int32  month   = 3; // 1..12
+}
+
+message GetDividendCalendarResponse {
+  repeated DividendCalendarEvent events = 1;
+}
+
+message DividendCalendarEvent {
+  string              id                = 1;
+  string              instrument_id     = 2;
+  string              symbol            = 3;
+  string              name              = 4;
+  string              ex_date           = 5; // YYYY-MM-DD
+  string              record_date       = 6; // YYYY-MM-DD
+  string              payment_date      = 7; // YYYY-MM-DD
+  common.v1.Decimal   shares_held       = 8;
+  common.v1.Money     dps_declared      = 9;  // Instrument currency
+  common.v1.Money     gross_amount_base = 10; // Base currency
+  common.v1.Money     net_amount_base   = 11; // After WHT
+  DividendFrequency   frequency         = 12;
+  DividendEventStatus status            = 13;
+  bool                is_user_entitled  = 14;
+  bool                is_estimated      = 15;
+  common.v1.Decimal   franking_pct      = 16;
+}
+
+message GetDividendYieldAnalyticsRequest {
+  string user_id = 1;
+}
+
+message MonthlyDividendProjection {
+  int32           year             = 1;
+  int32           month            = 2;
+  common.v1.Money projected_income = 3;
+  int32           dividend_count   = 4;
+}
+
+message HoldingYieldItem {
+  string            instrument_id         = 1;
+  string            symbol                = 2;
+  string            name                  = 3;
+  common.v1.Decimal quantity              = 4;
+  common.v1.Money   current_price         = 5;
+  common.v1.Money   average_buy_price     = 6;
+  common.v1.Money   current_market_value  = 7;
+  common.v1.Money   cost_basis            = 8;
+  common.v1.Money   annual_dps            = 9;
+  common.v1.Money   projected_annual_cash = 10;
+  common.v1.Decimal current_yield_pct     = 11;
+  common.v1.Decimal yield_on_cost_pct     = 12; // Nullable
+  common.v1.Decimal dividend_cagr_3y      = 13; // Nullable
+  DividendFrequency frequency             = 14;
+  string            next_ex_date          = 15;
+  string            next_payment_date     = 16;
+}
+
+message GetDividendYieldAnalyticsResponse {
+  common.v1.Money                    annual_forward_income   = 1;
+  common.v1.Money                    monthly_average_income  = 2;
+  common.v1.Decimal                  portfolio_current_yield = 3;
+  common.v1.Decimal                  portfolio_yield_on_cost = 4;
+  common.v1.Money                    pending_cash_inflow     = 5;
+  repeated MonthlyDividendProjection monthly_projections     = 6;
+  repeated HoldingYieldItem          holdings_yield          = 7;
+}
+
+message SimulateDRIPRequest {
+  string            user_id                  = 1;
+  int32             horizon_years            = 2;
+  common.v1.Decimal dividend_growth_rate_pct = 3;
+  common.v1.Decimal capital_appreciation_pct = 4;
+}
+
+message DRIPSimulationPoint {
+  int32             year                    = 1;
+  common.v1.Decimal drip_portfolio_value    = 2;
+  common.v1.Decimal cash_portfolio_value    = 3;
+  common.v1.Decimal drip_accumulated_shares = 4;
+  common.v1.Decimal cash_accumulated_cash   = 5;
+  common.v1.Decimal drip_annual_dividend    = 6;
+  common.v1.Decimal cash_annual_dividend    = 7;
+}
+
+message SimulateDRIPResponse {
+  common.v1.Decimal            starting_portfolio_value = 1;
+  common.v1.Decimal            starting_annual_dividend = 2;
+  string                       base_currency            = 3;
+  int32                        horizon_years            = 4;
+  repeated DRIPSimulationPoint points                   = 5;
+  common.v1.Decimal            terminal_drip_value      = 6;
+  common.v1.Decimal            terminal_cash_value      = 7;
+  common.v1.Decimal            drip_benefit_amount      = 8;
+}
+
 
 
 

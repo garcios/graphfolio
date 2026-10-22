@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CashFlowReport } from './CashFlowReport';
+import { DividendCalendar } from './DividendCalendar';
 import './ReportsView.css';
 
 export type ReportType = 'cash-flow' | 'tax-lots' | 'dividends' | 'owner-earnings';
@@ -40,12 +41,10 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ preferredCurrency }) =
 
           <button
             type="button"
-            className="reports-nav-btn disabled"
-            title="Dividend Calendar & Yield Analytics (Coming Soon in Feature #23)"
-            disabled
+            className={`reports-nav-btn ${activeReport === 'dividends' ? 'active' : ''}`}
+            onClick={() => setActiveReport('dividends')}
           >
             <span>📅 Dividend Calendar</span>
-            <span className="report-soon-badge">SOON</span>
           </button>
 
           <button
@@ -64,7 +63,11 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ preferredCurrency }) =
         {activeReport === 'cash-flow' && (
           <CashFlowReport preferredCurrency={preferredCurrency} />
         )}
+        {activeReport === 'dividends' && (
+          <DividendCalendar preferredCurrency={preferredCurrency} />
+        )}
       </div>
     </div>
   );
 };
+

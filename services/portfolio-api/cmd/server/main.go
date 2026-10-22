@@ -68,7 +68,12 @@ func main() {
 			ecbProvider := marketdata.NewECBProvider(marketdata.ECBProviderConfig{
 				Limiter: rateLimiter,
 			})
-			ingestionSvc := service.NewIngestionService(repo, priceProvider, ecbProvider, rateLimiter)
+			dividendProvider := marketdata.NewResilientDividendProvider(yahooProvider, twelveProvider)
+			ingestionSvc := service.NewIngestionService(repo, priceProvider, ecbProvider, rateLimiter,
+				service.WithDividendProvider(dividendProvider),
+				service.WithYahooDividendProvider(yahooProvider),
+				service.WithTwelveDividendProvider(twelveProvider),
+			)
 			valuationSvc := service.NewValuationService(repo)
 
 			svc = service.NewPortfolioService(repo,

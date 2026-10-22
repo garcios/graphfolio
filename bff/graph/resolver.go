@@ -27,3 +27,20 @@ func (r *Resolver) resolveUserID(ctx context.Context) string {
 	}
 	return defaultUserID
 }
+
+func (r *Resolver) resolveUserRole(ctx context.Context) string {
+	if role, err := auth.GetUserRole(ctx); err == nil && role != "" {
+		return role
+	}
+	if uid, err := auth.GetUserID(ctx); err == nil && uid != "" && r.UserClient != nil {
+		resp, err := r.UserClient.GetUserPreferences(ctx, &userpb.GetUserPreferencesRequest{UserId: uid})
+		if err == nil && resp.Preferences != nil {
+			if resp.Preferences.Role == userpb.UserRole_USER_ROLE_ADMIN {
+				return "ADMIN"
+			}
+			return "USER"
+		}
+	}
+	return "USER"
+}
+

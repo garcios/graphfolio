@@ -191,6 +191,27 @@ type ComplexityRoot struct {
 		StartRate       func(childComplexity int) int
 	}
 
+	DRIPSimulationPoint struct {
+		CashAccumulatedCash   func(childComplexity int) int
+		CashAnnualDividend    func(childComplexity int) int
+		CashPortfolioValue    func(childComplexity int) int
+		DripAccumulatedShares func(childComplexity int) int
+		DripAnnualDividend    func(childComplexity int) int
+		DripPortfolioValue    func(childComplexity int) int
+		Year                  func(childComplexity int) int
+	}
+
+	DRIPSimulationResult struct {
+		BaseCurrency           func(childComplexity int) int
+		DripBenefitAmount      func(childComplexity int) int
+		HorizonYears           func(childComplexity int) int
+		Points                 func(childComplexity int) int
+		StartingAnnualDividend func(childComplexity int) int
+		StartingPortfolioValue func(childComplexity int) int
+		TerminalCashValue      func(childComplexity int) int
+		TerminalDripValue      func(childComplexity int) int
+	}
+
 	DeleteInstrumentPayload struct {
 		ID      func(childComplexity int) int
 		Success func(childComplexity int) int
@@ -199,6 +220,46 @@ type ComplexityRoot struct {
 	DeleteTransactionPayload struct {
 		Portfolio func(childComplexity int) int
 		Success   func(childComplexity int) int
+	}
+
+	DividendCalendarEvent struct {
+		DpsDeclared     func(childComplexity int) int
+		ExDate          func(childComplexity int) int
+		FrankingPct     func(childComplexity int) int
+		Frequency       func(childComplexity int) int
+		GrossAmountBase func(childComplexity int) int
+		ID              func(childComplexity int) int
+		InstrumentID    func(childComplexity int) int
+		IsEstimated     func(childComplexity int) int
+		IsUserEntitled  func(childComplexity int) int
+		Name            func(childComplexity int) int
+		NetAmountBase   func(childComplexity int) int
+		PaymentDate     func(childComplexity int) int
+		RecordDate      func(childComplexity int) int
+		SharesHeld      func(childComplexity int) int
+		Status          func(childComplexity int) int
+		Symbol          func(childComplexity int) int
+	}
+
+	DividendSyncPayload struct {
+		DurationMs           func(childComplexity int) int
+		FailedSymbols        func(childComplexity int) int
+		FallbackSourceCount  func(childComplexity int) int
+		Message              func(childComplexity int) int
+		PlaceholdersUpgraded func(childComplexity int) int
+		PrimarySourceCount   func(childComplexity int) int
+		SchedulesSynced      func(childComplexity int) int
+		Success              func(childComplexity int) int
+	}
+
+	DividendYieldAnalytics struct {
+		AnnualForwardIncome   func(childComplexity int) int
+		HoldingsYield         func(childComplexity int) int
+		MonthlyAverageIncome  func(childComplexity int) int
+		MonthlyProjections    func(childComplexity int) int
+		PendingCashInflow     func(childComplexity int) int
+		PortfolioCurrentYield func(childComplexity int) int
+		PortfolioYieldOnCost  func(childComplexity int) int
 	}
 
 	Exchange struct {
@@ -247,6 +308,25 @@ type ComplexityRoot struct {
 		Provider func(childComplexity int) int
 		Schedule func(childComplexity int) int
 		Status   func(childComplexity int) int
+	}
+
+	HoldingYieldItem struct {
+		AnnualDps           func(childComplexity int) int
+		AverageBuyPrice     func(childComplexity int) int
+		CostBasis           func(childComplexity int) int
+		CurrentMarketValue  func(childComplexity int) int
+		CurrentPrice        func(childComplexity int) int
+		CurrentYieldPct     func(childComplexity int) int
+		DividendCagr3y      func(childComplexity int) int
+		Frequency           func(childComplexity int) int
+		InstrumentID        func(childComplexity int) int
+		Name                func(childComplexity int) int
+		NextExDate          func(childComplexity int) int
+		NextPaymentDate     func(childComplexity int) int
+		ProjectedAnnualCash func(childComplexity int) int
+		Quantity            func(childComplexity int) int
+		Symbol              func(childComplexity int) int
+		YieldOnCostPct      func(childComplexity int) int
 	}
 
 	IngestionStatus struct {
@@ -384,6 +464,13 @@ type ComplexityRoot struct {
 		CurrencyCode func(childComplexity int) int
 	}
 
+	MonthlyDividendProjection struct {
+		DividendCount   func(childComplexity int) int
+		Month           func(childComplexity int) int
+		ProjectedIncome func(childComplexity int) int
+		Year            func(childComplexity int) int
+	}
+
 	Mutation struct {
 		AddTransaction        func(childComplexity int, input model.AddTransactionInput) int
 		ChangePassword        func(childComplexity int, input model.ChangePasswordInput) int
@@ -398,6 +485,7 @@ type ComplexityRoot struct {
 		RefreshToken          func(childComplexity int) int
 		Register              func(childComplexity int, input model.RegisterInput) int
 		TriggerBackfill       func(childComplexity int, input model.TriggerBackfillInput) int
+		TriggerDividendSync   func(childComplexity int, input *model.TriggerDividendSyncInput) int
 		TriggerMarketSync     func(childComplexity int, symbols []string, syncFx *bool) int
 		UpdateInstrument      func(childComplexity int, input model.UpdateInstrumentInput) int
 		UpdateTransaction     func(childComplexity int, id string, input model.UpdateTransactionInput) int
@@ -430,6 +518,8 @@ type ComplexityRoot struct {
 		CheckTransactionDuplicates func(childComplexity int, externalRefs []string) int
 		CurrencyPairHistory        func(childComplexity int, baseCurrency string, quoteCurrency string, timeframe model.HistoryTimeframe) int
 		CurrencyPairs              func(childComplexity int) int
+		DividendCalendar           func(childComplexity int, year int, month int) int
+		DividendYieldAnalytics     func(childComplexity int) int
 		Exchanges                  func(childComplexity int) int
 		ExportTransactions         func(childComplexity int, typeArg *model.TransactionType, symbol *string) int
 		FxRates                    func(childComplexity int, baseCurrency *string, quoteCurrency *string, fromDate *string, toDate *string, limit *int, offset *int) int
@@ -442,6 +532,7 @@ type ComplexityRoot struct {
 		ModifiedDietzReturn        func(childComplexity int, startDate string, endDate string, useMonthlyLinking *bool) int
 		Portfolio                  func(childComplexity int, includeClosed *bool) int
 		PortfolioHistory           func(childComplexity int, timeframe model.HistoryTimeframe) int
+		SimulateDrip               func(childComplexity int, input model.DRIPSimulationInput) int
 		SupportedCurrencies        func(childComplexity int) int
 		Transactions               func(childComplexity int, typeArg *model.TransactionType, symbol *string, page *int, pageSize *int, sortDirection *model.SortDirection) int
 		UserPreferences            func(childComplexity int) int
@@ -529,6 +620,7 @@ type MutationResolver interface {
 	DeleteInstrument(ctx context.Context, id string) (*model.DeleteInstrumentPayload, error)
 	RecordPriceOverride(ctx context.Context, input model.RecordPriceOverrideInput) (*model.RecordPriceOverridePayload, error)
 	TriggerMarketSync(ctx context.Context, symbols []string, syncFx *bool) (*model.MarketSyncPayload, error)
+	TriggerDividendSync(ctx context.Context, input *model.TriggerDividendSyncInput) (*model.DividendSyncPayload, error)
 	TriggerBackfill(ctx context.Context, input model.TriggerBackfillInput) (*model.BackfillPayload, error)
 	UpdateUserPreferences(ctx context.Context, input model.UpdateUserPreferencesInput) (*model.UpdateUserPreferencesPayload, error)
 	RecordFXRateOverride(ctx context.Context, input model.RecordFXRateOverrideInput) (*model.RecordFXRateOverridePayload, error)
@@ -562,6 +654,9 @@ type QueryResolver interface {
 	ModifiedDietzReturn(ctx context.Context, startDate string, endDate string, useMonthlyLinking *bool) (*model.ModifiedDietzReturnPayload, error)
 	Benchmarks(ctx context.Context) ([]*model.Benchmark, error)
 	BenchmarkComparison(ctx context.Context, benchmarkID string, timeframe model.HistoryTimeframe, currencyMode *model.BenchmarkCurrencyMode) (*model.BenchmarkComparisonPayload, error)
+	DividendCalendar(ctx context.Context, year int, month int) ([]*model.DividendCalendarEvent, error)
+	DividendYieldAnalytics(ctx context.Context) (*model.DividendYieldAnalytics, error)
+	SimulateDrip(ctx context.Context, input model.DRIPSimulationInput) (*model.DRIPSimulationResult, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -1234,6 +1329,98 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.CurrencyPairHistory.StartRate(childComplexity), true
 
+	case "DRIPSimulationPoint.cashAccumulatedCash":
+		if e.ComplexityRoot.DRIPSimulationPoint.CashAccumulatedCash == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DRIPSimulationPoint.CashAccumulatedCash(childComplexity), true
+	case "DRIPSimulationPoint.cashAnnualDividend":
+		if e.ComplexityRoot.DRIPSimulationPoint.CashAnnualDividend == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DRIPSimulationPoint.CashAnnualDividend(childComplexity), true
+	case "DRIPSimulationPoint.cashPortfolioValue":
+		if e.ComplexityRoot.DRIPSimulationPoint.CashPortfolioValue == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DRIPSimulationPoint.CashPortfolioValue(childComplexity), true
+	case "DRIPSimulationPoint.dripAccumulatedShares":
+		if e.ComplexityRoot.DRIPSimulationPoint.DripAccumulatedShares == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DRIPSimulationPoint.DripAccumulatedShares(childComplexity), true
+	case "DRIPSimulationPoint.dripAnnualDividend":
+		if e.ComplexityRoot.DRIPSimulationPoint.DripAnnualDividend == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DRIPSimulationPoint.DripAnnualDividend(childComplexity), true
+	case "DRIPSimulationPoint.dripPortfolioValue":
+		if e.ComplexityRoot.DRIPSimulationPoint.DripPortfolioValue == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DRIPSimulationPoint.DripPortfolioValue(childComplexity), true
+	case "DRIPSimulationPoint.year":
+		if e.ComplexityRoot.DRIPSimulationPoint.Year == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DRIPSimulationPoint.Year(childComplexity), true
+
+	case "DRIPSimulationResult.baseCurrency":
+		if e.ComplexityRoot.DRIPSimulationResult.BaseCurrency == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DRIPSimulationResult.BaseCurrency(childComplexity), true
+	case "DRIPSimulationResult.dripBenefitAmount":
+		if e.ComplexityRoot.DRIPSimulationResult.DripBenefitAmount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DRIPSimulationResult.DripBenefitAmount(childComplexity), true
+	case "DRIPSimulationResult.horizonYears":
+		if e.ComplexityRoot.DRIPSimulationResult.HorizonYears == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DRIPSimulationResult.HorizonYears(childComplexity), true
+	case "DRIPSimulationResult.points":
+		if e.ComplexityRoot.DRIPSimulationResult.Points == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DRIPSimulationResult.Points(childComplexity), true
+	case "DRIPSimulationResult.startingAnnualDividend":
+		if e.ComplexityRoot.DRIPSimulationResult.StartingAnnualDividend == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DRIPSimulationResult.StartingAnnualDividend(childComplexity), true
+	case "DRIPSimulationResult.startingPortfolioValue":
+		if e.ComplexityRoot.DRIPSimulationResult.StartingPortfolioValue == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DRIPSimulationResult.StartingPortfolioValue(childComplexity), true
+	case "DRIPSimulationResult.terminalCashValue":
+		if e.ComplexityRoot.DRIPSimulationResult.TerminalCashValue == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DRIPSimulationResult.TerminalCashValue(childComplexity), true
+	case "DRIPSimulationResult.terminalDripValue":
+		if e.ComplexityRoot.DRIPSimulationResult.TerminalDripValue == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DRIPSimulationResult.TerminalDripValue(childComplexity), true
+
 	case "DeleteInstrumentPayload.id":
 		if e.ComplexityRoot.DeleteInstrumentPayload.ID == nil {
 			break
@@ -1259,6 +1446,195 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.DeleteTransactionPayload.Success(childComplexity), true
+
+	case "DividendCalendarEvent.dpsDeclared":
+		if e.ComplexityRoot.DividendCalendarEvent.DpsDeclared == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendCalendarEvent.DpsDeclared(childComplexity), true
+	case "DividendCalendarEvent.exDate":
+		if e.ComplexityRoot.DividendCalendarEvent.ExDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendCalendarEvent.ExDate(childComplexity), true
+	case "DividendCalendarEvent.frankingPct":
+		if e.ComplexityRoot.DividendCalendarEvent.FrankingPct == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendCalendarEvent.FrankingPct(childComplexity), true
+	case "DividendCalendarEvent.frequency":
+		if e.ComplexityRoot.DividendCalendarEvent.Frequency == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendCalendarEvent.Frequency(childComplexity), true
+	case "DividendCalendarEvent.grossAmountBase":
+		if e.ComplexityRoot.DividendCalendarEvent.GrossAmountBase == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendCalendarEvent.GrossAmountBase(childComplexity), true
+	case "DividendCalendarEvent.id":
+		if e.ComplexityRoot.DividendCalendarEvent.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendCalendarEvent.ID(childComplexity), true
+	case "DividendCalendarEvent.instrumentId":
+		if e.ComplexityRoot.DividendCalendarEvent.InstrumentID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendCalendarEvent.InstrumentID(childComplexity), true
+	case "DividendCalendarEvent.isEstimated":
+		if e.ComplexityRoot.DividendCalendarEvent.IsEstimated == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendCalendarEvent.IsEstimated(childComplexity), true
+	case "DividendCalendarEvent.isUserEntitled":
+		if e.ComplexityRoot.DividendCalendarEvent.IsUserEntitled == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendCalendarEvent.IsUserEntitled(childComplexity), true
+	case "DividendCalendarEvent.name":
+		if e.ComplexityRoot.DividendCalendarEvent.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendCalendarEvent.Name(childComplexity), true
+	case "DividendCalendarEvent.netAmountBase":
+		if e.ComplexityRoot.DividendCalendarEvent.NetAmountBase == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendCalendarEvent.NetAmountBase(childComplexity), true
+	case "DividendCalendarEvent.paymentDate":
+		if e.ComplexityRoot.DividendCalendarEvent.PaymentDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendCalendarEvent.PaymentDate(childComplexity), true
+	case "DividendCalendarEvent.recordDate":
+		if e.ComplexityRoot.DividendCalendarEvent.RecordDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendCalendarEvent.RecordDate(childComplexity), true
+	case "DividendCalendarEvent.sharesHeld":
+		if e.ComplexityRoot.DividendCalendarEvent.SharesHeld == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendCalendarEvent.SharesHeld(childComplexity), true
+	case "DividendCalendarEvent.status":
+		if e.ComplexityRoot.DividendCalendarEvent.Status == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendCalendarEvent.Status(childComplexity), true
+	case "DividendCalendarEvent.symbol":
+		if e.ComplexityRoot.DividendCalendarEvent.Symbol == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendCalendarEvent.Symbol(childComplexity), true
+
+	case "DividendSyncPayload.durationMs":
+		if e.ComplexityRoot.DividendSyncPayload.DurationMs == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendSyncPayload.DurationMs(childComplexity), true
+	case "DividendSyncPayload.failedSymbols":
+		if e.ComplexityRoot.DividendSyncPayload.FailedSymbols == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendSyncPayload.FailedSymbols(childComplexity), true
+	case "DividendSyncPayload.fallbackSourceCount":
+		if e.ComplexityRoot.DividendSyncPayload.FallbackSourceCount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendSyncPayload.FallbackSourceCount(childComplexity), true
+	case "DividendSyncPayload.message":
+		if e.ComplexityRoot.DividendSyncPayload.Message == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendSyncPayload.Message(childComplexity), true
+	case "DividendSyncPayload.placeholdersUpgraded":
+		if e.ComplexityRoot.DividendSyncPayload.PlaceholdersUpgraded == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendSyncPayload.PlaceholdersUpgraded(childComplexity), true
+	case "DividendSyncPayload.primarySourceCount":
+		if e.ComplexityRoot.DividendSyncPayload.PrimarySourceCount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendSyncPayload.PrimarySourceCount(childComplexity), true
+	case "DividendSyncPayload.schedulesSynced":
+		if e.ComplexityRoot.DividendSyncPayload.SchedulesSynced == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendSyncPayload.SchedulesSynced(childComplexity), true
+	case "DividendSyncPayload.success":
+		if e.ComplexityRoot.DividendSyncPayload.Success == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendSyncPayload.Success(childComplexity), true
+
+	case "DividendYieldAnalytics.annualForwardIncome":
+		if e.ComplexityRoot.DividendYieldAnalytics.AnnualForwardIncome == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendYieldAnalytics.AnnualForwardIncome(childComplexity), true
+	case "DividendYieldAnalytics.holdingsYield":
+		if e.ComplexityRoot.DividendYieldAnalytics.HoldingsYield == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendYieldAnalytics.HoldingsYield(childComplexity), true
+	case "DividendYieldAnalytics.monthlyAverageIncome":
+		if e.ComplexityRoot.DividendYieldAnalytics.MonthlyAverageIncome == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendYieldAnalytics.MonthlyAverageIncome(childComplexity), true
+	case "DividendYieldAnalytics.monthlyProjections":
+		if e.ComplexityRoot.DividendYieldAnalytics.MonthlyProjections == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendYieldAnalytics.MonthlyProjections(childComplexity), true
+	case "DividendYieldAnalytics.pendingCashInflow":
+		if e.ComplexityRoot.DividendYieldAnalytics.PendingCashInflow == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendYieldAnalytics.PendingCashInflow(childComplexity), true
+	case "DividendYieldAnalytics.portfolioCurrentYield":
+		if e.ComplexityRoot.DividendYieldAnalytics.PortfolioCurrentYield == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendYieldAnalytics.PortfolioCurrentYield(childComplexity), true
+	case "DividendYieldAnalytics.portfolioYieldOnCost":
+		if e.ComplexityRoot.DividendYieldAnalytics.PortfolioYieldOnCost == nil {
+			break
+		}
+
+		return e.ComplexityRoot.DividendYieldAnalytics.PortfolioYieldOnCost(childComplexity), true
 
 	case "Exchange.code":
 		if e.ComplexityRoot.Exchange.Code == nil {
@@ -1445,6 +1821,103 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.FeedHealthStatus.Status(childComplexity), true
+
+	case "HoldingYieldItem.annualDps":
+		if e.ComplexityRoot.HoldingYieldItem.AnnualDps == nil {
+			break
+		}
+
+		return e.ComplexityRoot.HoldingYieldItem.AnnualDps(childComplexity), true
+	case "HoldingYieldItem.averageBuyPrice":
+		if e.ComplexityRoot.HoldingYieldItem.AverageBuyPrice == nil {
+			break
+		}
+
+		return e.ComplexityRoot.HoldingYieldItem.AverageBuyPrice(childComplexity), true
+	case "HoldingYieldItem.costBasis":
+		if e.ComplexityRoot.HoldingYieldItem.CostBasis == nil {
+			break
+		}
+
+		return e.ComplexityRoot.HoldingYieldItem.CostBasis(childComplexity), true
+	case "HoldingYieldItem.currentMarketValue":
+		if e.ComplexityRoot.HoldingYieldItem.CurrentMarketValue == nil {
+			break
+		}
+
+		return e.ComplexityRoot.HoldingYieldItem.CurrentMarketValue(childComplexity), true
+	case "HoldingYieldItem.currentPrice":
+		if e.ComplexityRoot.HoldingYieldItem.CurrentPrice == nil {
+			break
+		}
+
+		return e.ComplexityRoot.HoldingYieldItem.CurrentPrice(childComplexity), true
+	case "HoldingYieldItem.currentYieldPct":
+		if e.ComplexityRoot.HoldingYieldItem.CurrentYieldPct == nil {
+			break
+		}
+
+		return e.ComplexityRoot.HoldingYieldItem.CurrentYieldPct(childComplexity), true
+	case "HoldingYieldItem.dividendCagr3y":
+		if e.ComplexityRoot.HoldingYieldItem.DividendCagr3y == nil {
+			break
+		}
+
+		return e.ComplexityRoot.HoldingYieldItem.DividendCagr3y(childComplexity), true
+	case "HoldingYieldItem.frequency":
+		if e.ComplexityRoot.HoldingYieldItem.Frequency == nil {
+			break
+		}
+
+		return e.ComplexityRoot.HoldingYieldItem.Frequency(childComplexity), true
+	case "HoldingYieldItem.instrumentId":
+		if e.ComplexityRoot.HoldingYieldItem.InstrumentID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.HoldingYieldItem.InstrumentID(childComplexity), true
+	case "HoldingYieldItem.name":
+		if e.ComplexityRoot.HoldingYieldItem.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.HoldingYieldItem.Name(childComplexity), true
+	case "HoldingYieldItem.nextExDate":
+		if e.ComplexityRoot.HoldingYieldItem.NextExDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.HoldingYieldItem.NextExDate(childComplexity), true
+	case "HoldingYieldItem.nextPaymentDate":
+		if e.ComplexityRoot.HoldingYieldItem.NextPaymentDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.HoldingYieldItem.NextPaymentDate(childComplexity), true
+	case "HoldingYieldItem.projectedAnnualCash":
+		if e.ComplexityRoot.HoldingYieldItem.ProjectedAnnualCash == nil {
+			break
+		}
+
+		return e.ComplexityRoot.HoldingYieldItem.ProjectedAnnualCash(childComplexity), true
+	case "HoldingYieldItem.quantity":
+		if e.ComplexityRoot.HoldingYieldItem.Quantity == nil {
+			break
+		}
+
+		return e.ComplexityRoot.HoldingYieldItem.Quantity(childComplexity), true
+	case "HoldingYieldItem.symbol":
+		if e.ComplexityRoot.HoldingYieldItem.Symbol == nil {
+			break
+		}
+
+		return e.ComplexityRoot.HoldingYieldItem.Symbol(childComplexity), true
+	case "HoldingYieldItem.yieldOnCostPct":
+		if e.ComplexityRoot.HoldingYieldItem.YieldOnCostPct == nil {
+			break
+		}
+
+		return e.ComplexityRoot.HoldingYieldItem.YieldOnCostPct(childComplexity), true
 
 	case "IngestionStatus.feeds":
 		if e.ComplexityRoot.IngestionStatus.Feeds == nil {
@@ -2052,6 +2525,31 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 
 		return e.ComplexityRoot.Money.CurrencyCode(childComplexity), true
 
+	case "MonthlyDividendProjection.dividendCount":
+		if e.ComplexityRoot.MonthlyDividendProjection.DividendCount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MonthlyDividendProjection.DividendCount(childComplexity), true
+	case "MonthlyDividendProjection.month":
+		if e.ComplexityRoot.MonthlyDividendProjection.Month == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MonthlyDividendProjection.Month(childComplexity), true
+	case "MonthlyDividendProjection.projectedIncome":
+		if e.ComplexityRoot.MonthlyDividendProjection.ProjectedIncome == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MonthlyDividendProjection.ProjectedIncome(childComplexity), true
+	case "MonthlyDividendProjection.year":
+		if e.ComplexityRoot.MonthlyDividendProjection.Year == nil {
+			break
+		}
+
+		return e.ComplexityRoot.MonthlyDividendProjection.Year(childComplexity), true
+
 	case "Mutation.addTransaction":
 		if e.ComplexityRoot.Mutation.AddTransaction == nil {
 			break
@@ -2185,6 +2683,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Mutation.TriggerBackfill(childComplexity, args["input"].(model.TriggerBackfillInput)), true
+	case "Mutation.triggerDividendSync":
+		if e.ComplexityRoot.Mutation.TriggerDividendSync == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_triggerDividendSync_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Mutation.TriggerDividendSync(childComplexity, args["input"].(*model.TriggerDividendSyncInput)), true
 	case "Mutation.triggerMarketSync":
 		if e.ComplexityRoot.Mutation.TriggerMarketSync == nil {
 			break
@@ -2371,6 +2880,23 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.CurrencyPairs(childComplexity), true
+	case "Query.dividendCalendar":
+		if e.ComplexityRoot.Query.DividendCalendar == nil {
+			break
+		}
+
+		args, err := ec.field_Query_dividendCalendar_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.DividendCalendar(childComplexity, args["year"].(int), args["month"].(int)), true
+	case "Query.dividendYieldAnalytics":
+		if e.ComplexityRoot.Query.DividendYieldAnalytics == nil {
+			break
+		}
+
+		return e.ComplexityRoot.Query.DividendYieldAnalytics(childComplexity), true
 	case "Query.exchanges":
 		if e.ComplexityRoot.Query.Exchanges == nil {
 			break
@@ -2484,6 +3010,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.PortfolioHistory(childComplexity, args["timeframe"].(model.HistoryTimeframe)), true
+	case "Query.simulateDRIP":
+		if e.ComplexityRoot.Query.SimulateDrip == nil {
+			break
+		}
+
+		args, err := ec.field_Query_simulateDRIP_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.SimulateDrip(childComplexity, args["input"].(model.DRIPSimulationInput)), true
 	case "Query.supportedCurrencies":
 		if e.ComplexityRoot.Query.SupportedCurrencies == nil {
 			break
@@ -2793,12 +3330,14 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputCashFlowFilterInput,
 		ec.unmarshalInputChangePasswordInput,
 		ec.unmarshalInputCreateInstrumentInput,
+		ec.unmarshalInputDRIPSimulationInput,
 		ec.unmarshalInputImportTransactionInput,
 		ec.unmarshalInputLoginInput,
 		ec.unmarshalInputRecordFXRateOverrideInput,
 		ec.unmarshalInputRecordPriceOverrideInput,
 		ec.unmarshalInputRegisterInput,
 		ec.unmarshalInputTriggerBackfillInput,
+		ec.unmarshalInputTriggerDividendSyncInput,
 		ec.unmarshalInputUpdateInstrumentInput,
 		ec.unmarshalInputUpdateTransactionInput,
 		ec.unmarshalInputUpdateUserPreferencesInput,
@@ -3204,6 +3743,48 @@ func (ec *executionContext) childFields_CurrencyPairHistory(ctx context.Context,
 	return nil, fmt.Errorf("no field named %q was found under type CurrencyPairHistory", field.Name)
 }
 
+func (ec *executionContext) childFields_DRIPSimulationPoint(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "year":
+		return ec.fieldContext_DRIPSimulationPoint_year(ctx, field)
+	case "dripPortfolioValue":
+		return ec.fieldContext_DRIPSimulationPoint_dripPortfolioValue(ctx, field)
+	case "cashPortfolioValue":
+		return ec.fieldContext_DRIPSimulationPoint_cashPortfolioValue(ctx, field)
+	case "dripAccumulatedShares":
+		return ec.fieldContext_DRIPSimulationPoint_dripAccumulatedShares(ctx, field)
+	case "cashAccumulatedCash":
+		return ec.fieldContext_DRIPSimulationPoint_cashAccumulatedCash(ctx, field)
+	case "dripAnnualDividend":
+		return ec.fieldContext_DRIPSimulationPoint_dripAnnualDividend(ctx, field)
+	case "cashAnnualDividend":
+		return ec.fieldContext_DRIPSimulationPoint_cashAnnualDividend(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type DRIPSimulationPoint", field.Name)
+}
+
+func (ec *executionContext) childFields_DRIPSimulationResult(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "startingPortfolioValue":
+		return ec.fieldContext_DRIPSimulationResult_startingPortfolioValue(ctx, field)
+	case "startingAnnualDividend":
+		return ec.fieldContext_DRIPSimulationResult_startingAnnualDividend(ctx, field)
+	case "baseCurrency":
+		return ec.fieldContext_DRIPSimulationResult_baseCurrency(ctx, field)
+	case "horizonYears":
+		return ec.fieldContext_DRIPSimulationResult_horizonYears(ctx, field)
+	case "points":
+		return ec.fieldContext_DRIPSimulationResult_points(ctx, field)
+	case "terminalDripValue":
+		return ec.fieldContext_DRIPSimulationResult_terminalDripValue(ctx, field)
+	case "terminalCashValue":
+		return ec.fieldContext_DRIPSimulationResult_terminalCashValue(ctx, field)
+	case "dripBenefitAmount":
+		return ec.fieldContext_DRIPSimulationResult_dripBenefitAmount(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type DRIPSimulationResult", field.Name)
+}
+
 func (ec *executionContext) childFields_DeleteInstrumentPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "success":
@@ -3222,6 +3803,86 @@ func (ec *executionContext) childFields_DeleteTransactionPayload(ctx context.Con
 		return ec.fieldContext_DeleteTransactionPayload_portfolio(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type DeleteTransactionPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_DividendCalendarEvent(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_DividendCalendarEvent_id(ctx, field)
+	case "instrumentId":
+		return ec.fieldContext_DividendCalendarEvent_instrumentId(ctx, field)
+	case "symbol":
+		return ec.fieldContext_DividendCalendarEvent_symbol(ctx, field)
+	case "name":
+		return ec.fieldContext_DividendCalendarEvent_name(ctx, field)
+	case "exDate":
+		return ec.fieldContext_DividendCalendarEvent_exDate(ctx, field)
+	case "recordDate":
+		return ec.fieldContext_DividendCalendarEvent_recordDate(ctx, field)
+	case "paymentDate":
+		return ec.fieldContext_DividendCalendarEvent_paymentDate(ctx, field)
+	case "sharesHeld":
+		return ec.fieldContext_DividendCalendarEvent_sharesHeld(ctx, field)
+	case "dpsDeclared":
+		return ec.fieldContext_DividendCalendarEvent_dpsDeclared(ctx, field)
+	case "grossAmountBase":
+		return ec.fieldContext_DividendCalendarEvent_grossAmountBase(ctx, field)
+	case "netAmountBase":
+		return ec.fieldContext_DividendCalendarEvent_netAmountBase(ctx, field)
+	case "frequency":
+		return ec.fieldContext_DividendCalendarEvent_frequency(ctx, field)
+	case "status":
+		return ec.fieldContext_DividendCalendarEvent_status(ctx, field)
+	case "isUserEntitled":
+		return ec.fieldContext_DividendCalendarEvent_isUserEntitled(ctx, field)
+	case "isEstimated":
+		return ec.fieldContext_DividendCalendarEvent_isEstimated(ctx, field)
+	case "frankingPct":
+		return ec.fieldContext_DividendCalendarEvent_frankingPct(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type DividendCalendarEvent", field.Name)
+}
+
+func (ec *executionContext) childFields_DividendSyncPayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "success":
+		return ec.fieldContext_DividendSyncPayload_success(ctx, field)
+	case "schedulesSynced":
+		return ec.fieldContext_DividendSyncPayload_schedulesSynced(ctx, field)
+	case "primarySourceCount":
+		return ec.fieldContext_DividendSyncPayload_primarySourceCount(ctx, field)
+	case "fallbackSourceCount":
+		return ec.fieldContext_DividendSyncPayload_fallbackSourceCount(ctx, field)
+	case "placeholdersUpgraded":
+		return ec.fieldContext_DividendSyncPayload_placeholdersUpgraded(ctx, field)
+	case "message":
+		return ec.fieldContext_DividendSyncPayload_message(ctx, field)
+	case "durationMs":
+		return ec.fieldContext_DividendSyncPayload_durationMs(ctx, field)
+	case "failedSymbols":
+		return ec.fieldContext_DividendSyncPayload_failedSymbols(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type DividendSyncPayload", field.Name)
+}
+
+func (ec *executionContext) childFields_DividendYieldAnalytics(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "annualForwardIncome":
+		return ec.fieldContext_DividendYieldAnalytics_annualForwardIncome(ctx, field)
+	case "monthlyAverageIncome":
+		return ec.fieldContext_DividendYieldAnalytics_monthlyAverageIncome(ctx, field)
+	case "portfolioCurrentYield":
+		return ec.fieldContext_DividendYieldAnalytics_portfolioCurrentYield(ctx, field)
+	case "portfolioYieldOnCost":
+		return ec.fieldContext_DividendYieldAnalytics_portfolioYieldOnCost(ctx, field)
+	case "pendingCashInflow":
+		return ec.fieldContext_DividendYieldAnalytics_pendingCashInflow(ctx, field)
+	case "monthlyProjections":
+		return ec.fieldContext_DividendYieldAnalytics_monthlyProjections(ctx, field)
+	case "holdingsYield":
+		return ec.fieldContext_DividendYieldAnalytics_holdingsYield(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type DividendYieldAnalytics", field.Name)
 }
 
 func (ec *executionContext) childFields_Exchange(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -3318,6 +3979,44 @@ func (ec *executionContext) childFields_FeedHealthStatus(ctx context.Context, fi
 		return ec.fieldContext_FeedHealthStatus_details(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type FeedHealthStatus", field.Name)
+}
+
+func (ec *executionContext) childFields_HoldingYieldItem(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "instrumentId":
+		return ec.fieldContext_HoldingYieldItem_instrumentId(ctx, field)
+	case "symbol":
+		return ec.fieldContext_HoldingYieldItem_symbol(ctx, field)
+	case "name":
+		return ec.fieldContext_HoldingYieldItem_name(ctx, field)
+	case "quantity":
+		return ec.fieldContext_HoldingYieldItem_quantity(ctx, field)
+	case "currentPrice":
+		return ec.fieldContext_HoldingYieldItem_currentPrice(ctx, field)
+	case "averageBuyPrice":
+		return ec.fieldContext_HoldingYieldItem_averageBuyPrice(ctx, field)
+	case "currentMarketValue":
+		return ec.fieldContext_HoldingYieldItem_currentMarketValue(ctx, field)
+	case "costBasis":
+		return ec.fieldContext_HoldingYieldItem_costBasis(ctx, field)
+	case "annualDps":
+		return ec.fieldContext_HoldingYieldItem_annualDps(ctx, field)
+	case "projectedAnnualCash":
+		return ec.fieldContext_HoldingYieldItem_projectedAnnualCash(ctx, field)
+	case "currentYieldPct":
+		return ec.fieldContext_HoldingYieldItem_currentYieldPct(ctx, field)
+	case "yieldOnCostPct":
+		return ec.fieldContext_HoldingYieldItem_yieldOnCostPct(ctx, field)
+	case "dividendCagr3y":
+		return ec.fieldContext_HoldingYieldItem_dividendCagr3y(ctx, field)
+	case "frequency":
+		return ec.fieldContext_HoldingYieldItem_frequency(ctx, field)
+	case "nextExDate":
+		return ec.fieldContext_HoldingYieldItem_nextExDate(ctx, field)
+	case "nextPaymentDate":
+		return ec.fieldContext_HoldingYieldItem_nextPaymentDate(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type HoldingYieldItem", field.Name)
 }
 
 func (ec *executionContext) childFields_IngestionStatus(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -3588,6 +4287,20 @@ func (ec *executionContext) childFields_Money(ctx context.Context, field graphql
 		return ec.fieldContext_Money_currencyCode(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type Money", field.Name)
+}
+
+func (ec *executionContext) childFields_MonthlyDividendProjection(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "year":
+		return ec.fieldContext_MonthlyDividendProjection_year(ctx, field)
+	case "month":
+		return ec.fieldContext_MonthlyDividendProjection_month(ctx, field)
+	case "projectedIncome":
+		return ec.fieldContext_MonthlyDividendProjection_projectedIncome(ctx, field)
+	case "dividendCount":
+		return ec.fieldContext_MonthlyDividendProjection_dividendCount(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type MonthlyDividendProjection", field.Name)
 }
 
 func (ec *executionContext) childFields_Portfolio(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -4032,6 +4745,20 @@ func (ec *executionContext) field_Mutation_triggerBackfill_args(ctx context.Cont
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_triggerDividendSync_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (*model.TriggerDividendSyncInput, error) {
+			return ec.unmarshalOTriggerDividendSyncInput2ᚖbffᚋgraphᚋmodelᚐTriggerDividendSyncInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_triggerMarketSync_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -4225,6 +4952,28 @@ func (ec *executionContext) field_Query_currencyPairHistory_args(ctx context.Con
 		return nil, err
 	}
 	args["timeframe"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_dividendCalendar_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "year",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNInt2int(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["year"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "month",
+		func(ctx context.Context, v any) (int, error) {
+			return ec.unmarshalNInt2int(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["month"] = arg1
 	return args, nil
 }
 
@@ -4505,6 +5254,20 @@ func (ec *executionContext) field_Query_portfolio_args(ctx context.Context, rawA
 		return nil, err
 	}
 	args["includeClosed"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_simulateDRIP_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "input",
+		func(ctx context.Context, v any) (model.DRIPSimulationInput, error) {
+			return ec.unmarshalNDRIPSimulationInput2bffᚋgraphᚋmodelᚐDRIPSimulationInput(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -7322,6 +8085,360 @@ func (ec *executionContext) fieldContext_CurrencyPairHistory_periodLow(_ context
 	return graphql.NewScalarFieldContext("CurrencyPairHistory", field, false, false, errors.New("field of type Decimal does not have child fields"))
 }
 
+func (ec *executionContext) _DRIPSimulationPoint_year(ctx context.Context, field graphql.CollectedField, obj *model.DRIPSimulationPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DRIPSimulationPoint_year(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Year, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DRIPSimulationPoint_year(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DRIPSimulationPoint", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _DRIPSimulationPoint_dripPortfolioValue(ctx context.Context, field graphql.CollectedField, obj *model.DRIPSimulationPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DRIPSimulationPoint_dripPortfolioValue(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DripPortfolioValue, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DRIPSimulationPoint_dripPortfolioValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DRIPSimulationPoint", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _DRIPSimulationPoint_cashPortfolioValue(ctx context.Context, field graphql.CollectedField, obj *model.DRIPSimulationPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DRIPSimulationPoint_cashPortfolioValue(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CashPortfolioValue, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DRIPSimulationPoint_cashPortfolioValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DRIPSimulationPoint", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _DRIPSimulationPoint_dripAccumulatedShares(ctx context.Context, field graphql.CollectedField, obj *model.DRIPSimulationPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DRIPSimulationPoint_dripAccumulatedShares(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DripAccumulatedShares, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DRIPSimulationPoint_dripAccumulatedShares(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DRIPSimulationPoint", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _DRIPSimulationPoint_cashAccumulatedCash(ctx context.Context, field graphql.CollectedField, obj *model.DRIPSimulationPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DRIPSimulationPoint_cashAccumulatedCash(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CashAccumulatedCash, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DRIPSimulationPoint_cashAccumulatedCash(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DRIPSimulationPoint", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _DRIPSimulationPoint_dripAnnualDividend(ctx context.Context, field graphql.CollectedField, obj *model.DRIPSimulationPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DRIPSimulationPoint_dripAnnualDividend(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DripAnnualDividend, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DRIPSimulationPoint_dripAnnualDividend(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DRIPSimulationPoint", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _DRIPSimulationPoint_cashAnnualDividend(ctx context.Context, field graphql.CollectedField, obj *model.DRIPSimulationPoint) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DRIPSimulationPoint_cashAnnualDividend(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CashAnnualDividend, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DRIPSimulationPoint_cashAnnualDividend(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DRIPSimulationPoint", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _DRIPSimulationResult_startingPortfolioValue(ctx context.Context, field graphql.CollectedField, obj *model.DRIPSimulationResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DRIPSimulationResult_startingPortfolioValue(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.StartingPortfolioValue, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DRIPSimulationResult_startingPortfolioValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DRIPSimulationResult", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _DRIPSimulationResult_startingAnnualDividend(ctx context.Context, field graphql.CollectedField, obj *model.DRIPSimulationResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DRIPSimulationResult_startingAnnualDividend(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.StartingAnnualDividend, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DRIPSimulationResult_startingAnnualDividend(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DRIPSimulationResult", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _DRIPSimulationResult_baseCurrency(ctx context.Context, field graphql.CollectedField, obj *model.DRIPSimulationResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DRIPSimulationResult_baseCurrency(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.BaseCurrency, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DRIPSimulationResult_baseCurrency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DRIPSimulationResult", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _DRIPSimulationResult_horizonYears(ctx context.Context, field graphql.CollectedField, obj *model.DRIPSimulationResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DRIPSimulationResult_horizonYears(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.HorizonYears, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DRIPSimulationResult_horizonYears(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DRIPSimulationResult", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _DRIPSimulationResult_points(ctx context.Context, field graphql.CollectedField, obj *model.DRIPSimulationResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DRIPSimulationResult_points(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Points, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.DRIPSimulationPoint) graphql.Marshaler {
+			return ec.marshalNDRIPSimulationPoint2ᚕᚖbffᚋgraphᚋmodelᚐDRIPSimulationPointᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DRIPSimulationResult_points(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DRIPSimulationResult",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_DRIPSimulationPoint(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DRIPSimulationResult_terminalDripValue(ctx context.Context, field graphql.CollectedField, obj *model.DRIPSimulationResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DRIPSimulationResult_terminalDripValue(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TerminalDripValue, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DRIPSimulationResult_terminalDripValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DRIPSimulationResult", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _DRIPSimulationResult_terminalCashValue(ctx context.Context, field graphql.CollectedField, obj *model.DRIPSimulationResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DRIPSimulationResult_terminalCashValue(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TerminalCashValue, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DRIPSimulationResult_terminalCashValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DRIPSimulationResult", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _DRIPSimulationResult_dripBenefitAmount(ctx context.Context, field graphql.CollectedField, obj *model.DRIPSimulationResult) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DRIPSimulationResult_dripBenefitAmount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DripBenefitAmount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DRIPSimulationResult_dripBenefitAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DRIPSimulationResult", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
 func (ec *executionContext) _DeleteInstrumentPayload_success(ctx context.Context, field graphql.CollectedField, obj *model.DeleteInstrumentPayload) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -7418,6 +8535,791 @@ func (ec *executionContext) fieldContext_DeleteTransactionPayload_portfolio(_ co
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return ec.childFields_Portfolio(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DividendCalendarEvent_id(ctx context.Context, field graphql.CollectedField, obj *model.DividendCalendarEvent) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendCalendarEvent_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendCalendarEvent_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendCalendarEvent", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _DividendCalendarEvent_instrumentId(ctx context.Context, field graphql.CollectedField, obj *model.DividendCalendarEvent) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendCalendarEvent_instrumentId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.InstrumentID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendCalendarEvent_instrumentId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendCalendarEvent", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _DividendCalendarEvent_symbol(ctx context.Context, field graphql.CollectedField, obj *model.DividendCalendarEvent) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendCalendarEvent_symbol(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Symbol, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendCalendarEvent_symbol(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendCalendarEvent", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _DividendCalendarEvent_name(ctx context.Context, field graphql.CollectedField, obj *model.DividendCalendarEvent) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendCalendarEvent_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendCalendarEvent_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendCalendarEvent", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _DividendCalendarEvent_exDate(ctx context.Context, field graphql.CollectedField, obj *model.DividendCalendarEvent) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendCalendarEvent_exDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ExDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendCalendarEvent_exDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendCalendarEvent", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _DividendCalendarEvent_recordDate(ctx context.Context, field graphql.CollectedField, obj *model.DividendCalendarEvent) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendCalendarEvent_recordDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.RecordDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_DividendCalendarEvent_recordDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendCalendarEvent", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _DividendCalendarEvent_paymentDate(ctx context.Context, field graphql.CollectedField, obj *model.DividendCalendarEvent) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendCalendarEvent_paymentDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PaymentDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendCalendarEvent_paymentDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendCalendarEvent", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _DividendCalendarEvent_sharesHeld(ctx context.Context, field graphql.CollectedField, obj *model.DividendCalendarEvent) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendCalendarEvent_sharesHeld(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.SharesHeld, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendCalendarEvent_sharesHeld(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendCalendarEvent", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _DividendCalendarEvent_dpsDeclared(ctx context.Context, field graphql.CollectedField, obj *model.DividendCalendarEvent) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendCalendarEvent_dpsDeclared(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DpsDeclared, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendCalendarEvent_dpsDeclared(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DividendCalendarEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DividendCalendarEvent_grossAmountBase(ctx context.Context, field graphql.CollectedField, obj *model.DividendCalendarEvent) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendCalendarEvent_grossAmountBase(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.GrossAmountBase, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendCalendarEvent_grossAmountBase(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DividendCalendarEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DividendCalendarEvent_netAmountBase(ctx context.Context, field graphql.CollectedField, obj *model.DividendCalendarEvent) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendCalendarEvent_netAmountBase(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.NetAmountBase, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendCalendarEvent_netAmountBase(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DividendCalendarEvent",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DividendCalendarEvent_frequency(ctx context.Context, field graphql.CollectedField, obj *model.DividendCalendarEvent) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendCalendarEvent_frequency(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Frequency, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.DividendFrequency) graphql.Marshaler {
+			return ec.marshalNDividendFrequency2bffᚋgraphᚋmodelᚐDividendFrequency(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendCalendarEvent_frequency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendCalendarEvent", field, false, false, errors.New("field of type DividendFrequency does not have child fields"))
+}
+
+func (ec *executionContext) _DividendCalendarEvent_status(ctx context.Context, field graphql.CollectedField, obj *model.DividendCalendarEvent) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendCalendarEvent_status(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Status, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.DividendStatus) graphql.Marshaler {
+			return ec.marshalNDividendStatus2bffᚋgraphᚋmodelᚐDividendStatus(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendCalendarEvent_status(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendCalendarEvent", field, false, false, errors.New("field of type DividendStatus does not have child fields"))
+}
+
+func (ec *executionContext) _DividendCalendarEvent_isUserEntitled(ctx context.Context, field graphql.CollectedField, obj *model.DividendCalendarEvent) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendCalendarEvent_isUserEntitled(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.IsUserEntitled, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendCalendarEvent_isUserEntitled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendCalendarEvent", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _DividendCalendarEvent_isEstimated(ctx context.Context, field graphql.CollectedField, obj *model.DividendCalendarEvent) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendCalendarEvent_isEstimated(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.IsEstimated, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendCalendarEvent_isEstimated(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendCalendarEvent", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _DividendCalendarEvent_frankingPct(ctx context.Context, field graphql.CollectedField, obj *model.DividendCalendarEvent) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendCalendarEvent_frankingPct(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FrankingPct, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendCalendarEvent_frankingPct(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendCalendarEvent", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _DividendSyncPayload_success(ctx context.Context, field graphql.CollectedField, obj *model.DividendSyncPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendSyncPayload_success(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Success, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendSyncPayload_success(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendSyncPayload", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _DividendSyncPayload_schedulesSynced(ctx context.Context, field graphql.CollectedField, obj *model.DividendSyncPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendSyncPayload_schedulesSynced(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.SchedulesSynced, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendSyncPayload_schedulesSynced(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendSyncPayload", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _DividendSyncPayload_primarySourceCount(ctx context.Context, field graphql.CollectedField, obj *model.DividendSyncPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendSyncPayload_primarySourceCount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PrimarySourceCount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendSyncPayload_primarySourceCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendSyncPayload", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _DividendSyncPayload_fallbackSourceCount(ctx context.Context, field graphql.CollectedField, obj *model.DividendSyncPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendSyncPayload_fallbackSourceCount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FallbackSourceCount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendSyncPayload_fallbackSourceCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendSyncPayload", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _DividendSyncPayload_placeholdersUpgraded(ctx context.Context, field graphql.CollectedField, obj *model.DividendSyncPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendSyncPayload_placeholdersUpgraded(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PlaceholdersUpgraded, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendSyncPayload_placeholdersUpgraded(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendSyncPayload", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _DividendSyncPayload_message(ctx context.Context, field graphql.CollectedField, obj *model.DividendSyncPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendSyncPayload_message(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Message, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendSyncPayload_message(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendSyncPayload", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _DividendSyncPayload_durationMs(ctx context.Context, field graphql.CollectedField, obj *model.DividendSyncPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendSyncPayload_durationMs(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DurationMs, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendSyncPayload_durationMs(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendSyncPayload", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _DividendSyncPayload_failedSymbols(ctx context.Context, field graphql.CollectedField, obj *model.DividendSyncPayload) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendSyncPayload_failedSymbols(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FailedSymbols, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []string) graphql.Marshaler {
+			return ec.marshalNString2ᚕstringᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendSyncPayload_failedSymbols(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendSyncPayload", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _DividendYieldAnalytics_annualForwardIncome(ctx context.Context, field graphql.CollectedField, obj *model.DividendYieldAnalytics) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendYieldAnalytics_annualForwardIncome(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.AnnualForwardIncome, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendYieldAnalytics_annualForwardIncome(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DividendYieldAnalytics",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DividendYieldAnalytics_monthlyAverageIncome(ctx context.Context, field graphql.CollectedField, obj *model.DividendYieldAnalytics) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendYieldAnalytics_monthlyAverageIncome(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.MonthlyAverageIncome, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendYieldAnalytics_monthlyAverageIncome(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DividendYieldAnalytics",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DividendYieldAnalytics_portfolioCurrentYield(ctx context.Context, field graphql.CollectedField, obj *model.DividendYieldAnalytics) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendYieldAnalytics_portfolioCurrentYield(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PortfolioCurrentYield, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendYieldAnalytics_portfolioCurrentYield(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendYieldAnalytics", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _DividendYieldAnalytics_portfolioYieldOnCost(ctx context.Context, field graphql.CollectedField, obj *model.DividendYieldAnalytics) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendYieldAnalytics_portfolioYieldOnCost(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PortfolioYieldOnCost, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Decimal) graphql.Marshaler {
+			return ec.marshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_DividendYieldAnalytics_portfolioYieldOnCost(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("DividendYieldAnalytics", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _DividendYieldAnalytics_pendingCashInflow(ctx context.Context, field graphql.CollectedField, obj *model.DividendYieldAnalytics) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendYieldAnalytics_pendingCashInflow(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.PendingCashInflow, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendYieldAnalytics_pendingCashInflow(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DividendYieldAnalytics",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DividendYieldAnalytics_monthlyProjections(ctx context.Context, field graphql.CollectedField, obj *model.DividendYieldAnalytics) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendYieldAnalytics_monthlyProjections(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.MonthlyProjections, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.MonthlyDividendProjection) graphql.Marshaler {
+			return ec.marshalNMonthlyDividendProjection2ᚕᚖbffᚋgraphᚋmodelᚐMonthlyDividendProjectionᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendYieldAnalytics_monthlyProjections(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DividendYieldAnalytics",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_MonthlyDividendProjection(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _DividendYieldAnalytics_holdingsYield(ctx context.Context, field graphql.CollectedField, obj *model.DividendYieldAnalytics) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_DividendYieldAnalytics_holdingsYield(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.HoldingsYield, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.HoldingYieldItem) graphql.Marshaler {
+			return ec.marshalNHoldingYieldItem2ᚕᚖbffᚋgraphᚋmodelᚐHoldingYieldItemᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_DividendYieldAnalytics_holdingsYield(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "DividendYieldAnalytics",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_HoldingYieldItem(ctx, field)
 		},
 	}
 	return fc, nil
@@ -8147,6 +10049,428 @@ func (ec *executionContext) _FeedHealthStatus_details(ctx context.Context, field
 }
 func (ec *executionContext) fieldContext_FeedHealthStatus_details(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("FeedHealthStatus", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _HoldingYieldItem_instrumentId(ctx context.Context, field graphql.CollectedField, obj *model.HoldingYieldItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_HoldingYieldItem_instrumentId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.InstrumentID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_HoldingYieldItem_instrumentId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("HoldingYieldItem", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _HoldingYieldItem_symbol(ctx context.Context, field graphql.CollectedField, obj *model.HoldingYieldItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_HoldingYieldItem_symbol(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Symbol, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_HoldingYieldItem_symbol(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("HoldingYieldItem", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _HoldingYieldItem_name(ctx context.Context, field graphql.CollectedField, obj *model.HoldingYieldItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_HoldingYieldItem_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_HoldingYieldItem_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("HoldingYieldItem", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _HoldingYieldItem_quantity(ctx context.Context, field graphql.CollectedField, obj *model.HoldingYieldItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_HoldingYieldItem_quantity(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Quantity, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_HoldingYieldItem_quantity(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("HoldingYieldItem", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _HoldingYieldItem_currentPrice(ctx context.Context, field graphql.CollectedField, obj *model.HoldingYieldItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_HoldingYieldItem_currentPrice(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CurrentPrice, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_HoldingYieldItem_currentPrice(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "HoldingYieldItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _HoldingYieldItem_averageBuyPrice(ctx context.Context, field graphql.CollectedField, obj *model.HoldingYieldItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_HoldingYieldItem_averageBuyPrice(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.AverageBuyPrice, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_HoldingYieldItem_averageBuyPrice(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "HoldingYieldItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _HoldingYieldItem_currentMarketValue(ctx context.Context, field graphql.CollectedField, obj *model.HoldingYieldItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_HoldingYieldItem_currentMarketValue(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CurrentMarketValue, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_HoldingYieldItem_currentMarketValue(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "HoldingYieldItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _HoldingYieldItem_costBasis(ctx context.Context, field graphql.CollectedField, obj *model.HoldingYieldItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_HoldingYieldItem_costBasis(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CostBasis, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_HoldingYieldItem_costBasis(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "HoldingYieldItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _HoldingYieldItem_annualDps(ctx context.Context, field graphql.CollectedField, obj *model.HoldingYieldItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_HoldingYieldItem_annualDps(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.AnnualDps, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_HoldingYieldItem_annualDps(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "HoldingYieldItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _HoldingYieldItem_projectedAnnualCash(ctx context.Context, field graphql.CollectedField, obj *model.HoldingYieldItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_HoldingYieldItem_projectedAnnualCash(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ProjectedAnnualCash, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_HoldingYieldItem_projectedAnnualCash(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "HoldingYieldItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _HoldingYieldItem_currentYieldPct(ctx context.Context, field graphql.CollectedField, obj *model.HoldingYieldItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_HoldingYieldItem_currentYieldPct(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CurrentYieldPct, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_HoldingYieldItem_currentYieldPct(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("HoldingYieldItem", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _HoldingYieldItem_yieldOnCostPct(ctx context.Context, field graphql.CollectedField, obj *model.HoldingYieldItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_HoldingYieldItem_yieldOnCostPct(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.YieldOnCostPct, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Decimal) graphql.Marshaler {
+			return ec.marshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_HoldingYieldItem_yieldOnCostPct(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("HoldingYieldItem", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _HoldingYieldItem_dividendCagr3y(ctx context.Context, field graphql.CollectedField, obj *model.HoldingYieldItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_HoldingYieldItem_dividendCagr3y(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DividendCagr3y, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Decimal) graphql.Marshaler {
+			return ec.marshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_HoldingYieldItem_dividendCagr3y(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("HoldingYieldItem", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _HoldingYieldItem_frequency(ctx context.Context, field graphql.CollectedField, obj *model.HoldingYieldItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_HoldingYieldItem_frequency(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Frequency, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.DividendFrequency) graphql.Marshaler {
+			return ec.marshalNDividendFrequency2bffᚋgraphᚋmodelᚐDividendFrequency(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_HoldingYieldItem_frequency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("HoldingYieldItem", field, false, false, errors.New("field of type DividendFrequency does not have child fields"))
+}
+
+func (ec *executionContext) _HoldingYieldItem_nextExDate(ctx context.Context, field graphql.CollectedField, obj *model.HoldingYieldItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_HoldingYieldItem_nextExDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.NextExDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_HoldingYieldItem_nextExDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("HoldingYieldItem", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _HoldingYieldItem_nextPaymentDate(ctx context.Context, field graphql.CollectedField, obj *model.HoldingYieldItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_HoldingYieldItem_nextPaymentDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.NextPaymentDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_HoldingYieldItem_nextPaymentDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("HoldingYieldItem", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
 func (ec *executionContext) _IngestionStatus_feeds(ctx context.Context, field graphql.CollectedField, obj *model.IngestionStatus) (ret graphql.Marshaler) {
@@ -10615,6 +12939,107 @@ func (ec *executionContext) fieldContext_Money_currencyCode(_ context.Context, f
 	return graphql.NewScalarFieldContext("Money", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
+func (ec *executionContext) _MonthlyDividendProjection_year(ctx context.Context, field graphql.CollectedField, obj *model.MonthlyDividendProjection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MonthlyDividendProjection_year(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Year, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_MonthlyDividendProjection_year(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MonthlyDividendProjection", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _MonthlyDividendProjection_month(ctx context.Context, field graphql.CollectedField, obj *model.MonthlyDividendProjection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MonthlyDividendProjection_month(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Month, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_MonthlyDividendProjection_month(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MonthlyDividendProjection", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _MonthlyDividendProjection_projectedIncome(ctx context.Context, field graphql.CollectedField, obj *model.MonthlyDividendProjection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MonthlyDividendProjection_projectedIncome(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ProjectedIncome, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_MonthlyDividendProjection_projectedIncome(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "MonthlyDividendProjection",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _MonthlyDividendProjection_dividendCount(ctx context.Context, field graphql.CollectedField, obj *model.MonthlyDividendProjection) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_MonthlyDividendProjection_dividendCount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DividendCount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_MonthlyDividendProjection_dividendCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("MonthlyDividendProjection", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
 func (ec *executionContext) _Mutation_addTransaction(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -10961,6 +13386,50 @@ func (ec *executionContext) fieldContext_Mutation_triggerMarketSync(ctx context.
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_triggerMarketSync_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_triggerDividendSync(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Mutation_triggerDividendSync(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Mutation().TriggerDividendSync(ctx, fc.Args["input"].(*model.TriggerDividendSyncInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.DividendSyncPayload) graphql.Marshaler {
+			return ec.marshalNDividendSyncPayload2ᚖbffᚋgraphᚋmodelᚐDividendSyncPayload(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Mutation_triggerDividendSync(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_DividendSyncPayload(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_triggerDividendSync_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -12544,6 +15013,126 @@ func (ec *executionContext) fieldContext_Query_benchmarkComparison(ctx context.C
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_benchmarkComparison_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_dividendCalendar(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_dividendCalendar(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().DividendCalendar(ctx, fc.Args["year"].(int), fc.Args["month"].(int))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.DividendCalendarEvent) graphql.Marshaler {
+			return ec.marshalNDividendCalendarEvent2ᚕᚖbffᚋgraphᚋmodelᚐDividendCalendarEventᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_dividendCalendar(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_DividendCalendarEvent(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_dividendCalendar_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_dividendYieldAnalytics(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_dividendYieldAnalytics(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return ec.Resolvers.Query().DividendYieldAnalytics(ctx)
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.DividendYieldAnalytics) graphql.Marshaler {
+			return ec.marshalNDividendYieldAnalytics2ᚖbffᚋgraphᚋmodelᚐDividendYieldAnalytics(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_dividendYieldAnalytics(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_DividendYieldAnalytics(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_simulateDRIP(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_simulateDRIP(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().SimulateDrip(ctx, fc.Args["input"].(model.DRIPSimulationInput))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.DRIPSimulationResult) graphql.Marshaler {
+			return ec.marshalNDRIPSimulationResult2ᚖbffᚋgraphᚋmodelᚐDRIPSimulationResult(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_simulateDRIP(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_DRIPSimulationResult(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_simulateDRIP_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -15117,6 +17706,50 @@ func (ec *executionContext) unmarshalInputCreateInstrumentInput(ctx context.Cont
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputDRIPSimulationInput(ctx context.Context, obj any) (model.DRIPSimulationInput, error) {
+	var it model.DRIPSimulationInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"horizonYears", "dividendGrowthRatePct", "capitalAppreciationPct"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "horizonYears":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("horizonYears"))
+			data, err := ec.unmarshalNInt2int(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.HorizonYears = data
+		case "dividendGrowthRatePct":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("dividendGrowthRatePct"))
+			data, err := ec.unmarshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.DividendGrowthRatePct = data
+		case "capitalAppreciationPct":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("capitalAppreciationPct"))
+			data, err := ec.unmarshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.CapitalAppreciationPct = data
+		}
+	}
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputImportTransactionInput(ctx context.Context, obj any) (model.ImportTransactionInput, error) {
 	var it model.ImportTransactionInput
 	if obj == nil {
@@ -15509,6 +18142,57 @@ func (ec *executionContext) unmarshalInputTriggerBackfillInput(ctx context.Conte
 				return it, err
 			}
 			it.RecomputeValuations = data
+		}
+	}
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputTriggerDividendSyncInput(ctx context.Context, obj any) (model.TriggerDividendSyncInput, error) {
+	var it model.TriggerDividendSyncInput
+	if obj == nil {
+		return it, nil
+	}
+
+	asMap := map[string]any{}
+	for k, v := range obj.(map[string]any) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"symbols", "exchangeCode", "syncHistorical", "forceProvider"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "symbols":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("symbols"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Symbols = data
+		case "exchangeCode":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("exchangeCode"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ExchangeCode = data
+		case "syncHistorical":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("syncHistorical"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SyncHistorical = data
+		case "forceProvider":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("forceProvider"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ForceProvider = data
 		}
 	}
 	return it, nil
@@ -16782,6 +19466,147 @@ func (ec *executionContext) _CurrencyPairHistory(ctx context.Context, sel ast.Se
 	return out
 }
 
+var dRIPSimulationPointImplementors = []string{"DRIPSimulationPoint"}
+
+func (ec *executionContext) _DRIPSimulationPoint(ctx context.Context, sel ast.SelectionSet, obj *model.DRIPSimulationPoint) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dRIPSimulationPointImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DRIPSimulationPoint")
+		case "year":
+			out.Values[i] = ec._DRIPSimulationPoint_year(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "dripPortfolioValue":
+			out.Values[i] = ec._DRIPSimulationPoint_dripPortfolioValue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cashPortfolioValue":
+			out.Values[i] = ec._DRIPSimulationPoint_cashPortfolioValue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "dripAccumulatedShares":
+			out.Values[i] = ec._DRIPSimulationPoint_dripAccumulatedShares(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cashAccumulatedCash":
+			out.Values[i] = ec._DRIPSimulationPoint_cashAccumulatedCash(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "dripAnnualDividend":
+			out.Values[i] = ec._DRIPSimulationPoint_dripAnnualDividend(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cashAnnualDividend":
+			out.Values[i] = ec._DRIPSimulationPoint_cashAnnualDividend(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var dRIPSimulationResultImplementors = []string{"DRIPSimulationResult"}
+
+func (ec *executionContext) _DRIPSimulationResult(ctx context.Context, sel ast.SelectionSet, obj *model.DRIPSimulationResult) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dRIPSimulationResultImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DRIPSimulationResult")
+		case "startingPortfolioValue":
+			out.Values[i] = ec._DRIPSimulationResult_startingPortfolioValue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "startingAnnualDividend":
+			out.Values[i] = ec._DRIPSimulationResult_startingAnnualDividend(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "baseCurrency":
+			out.Values[i] = ec._DRIPSimulationResult_baseCurrency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "horizonYears":
+			out.Values[i] = ec._DRIPSimulationResult_horizonYears(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "points":
+			out.Values[i] = ec._DRIPSimulationResult_points(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "terminalDripValue":
+			out.Values[i] = ec._DRIPSimulationResult_terminalDripValue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "terminalCashValue":
+			out.Values[i] = ec._DRIPSimulationResult_terminalCashValue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "dripBenefitAmount":
+			out.Values[i] = ec._DRIPSimulationResult_dripBenefitAmount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
 var deleteInstrumentPayloadImplementors = []string{"DeleteInstrumentPayload"}
 
 func (ec *executionContext) _DeleteInstrumentPayload(ctx context.Context, sel ast.SelectionSet, obj *model.DeleteInstrumentPayload) graphql.Marshaler {
@@ -16844,6 +19669,260 @@ func (ec *executionContext) _DeleteTransactionPayload(ctx context.Context, sel a
 			}
 		case "portfolio":
 			out.Values[i] = ec._DeleteTransactionPayload_portfolio(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var dividendCalendarEventImplementors = []string{"DividendCalendarEvent"}
+
+func (ec *executionContext) _DividendCalendarEvent(ctx context.Context, sel ast.SelectionSet, obj *model.DividendCalendarEvent) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dividendCalendarEventImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DividendCalendarEvent")
+		case "id":
+			out.Values[i] = ec._DividendCalendarEvent_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "instrumentId":
+			out.Values[i] = ec._DividendCalendarEvent_instrumentId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "symbol":
+			out.Values[i] = ec._DividendCalendarEvent_symbol(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._DividendCalendarEvent_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "exDate":
+			out.Values[i] = ec._DividendCalendarEvent_exDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "recordDate":
+			out.Values[i] = ec._DividendCalendarEvent_recordDate(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "paymentDate":
+			out.Values[i] = ec._DividendCalendarEvent_paymentDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sharesHeld":
+			out.Values[i] = ec._DividendCalendarEvent_sharesHeld(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "dpsDeclared":
+			out.Values[i] = ec._DividendCalendarEvent_dpsDeclared(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "grossAmountBase":
+			out.Values[i] = ec._DividendCalendarEvent_grossAmountBase(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "netAmountBase":
+			out.Values[i] = ec._DividendCalendarEvent_netAmountBase(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "frequency":
+			out.Values[i] = ec._DividendCalendarEvent_frequency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "status":
+			out.Values[i] = ec._DividendCalendarEvent_status(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isUserEntitled":
+			out.Values[i] = ec._DividendCalendarEvent_isUserEntitled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isEstimated":
+			out.Values[i] = ec._DividendCalendarEvent_isEstimated(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "frankingPct":
+			out.Values[i] = ec._DividendCalendarEvent_frankingPct(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var dividendSyncPayloadImplementors = []string{"DividendSyncPayload"}
+
+func (ec *executionContext) _DividendSyncPayload(ctx context.Context, sel ast.SelectionSet, obj *model.DividendSyncPayload) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dividendSyncPayloadImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DividendSyncPayload")
+		case "success":
+			out.Values[i] = ec._DividendSyncPayload_success(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "schedulesSynced":
+			out.Values[i] = ec._DividendSyncPayload_schedulesSynced(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "primarySourceCount":
+			out.Values[i] = ec._DividendSyncPayload_primarySourceCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fallbackSourceCount":
+			out.Values[i] = ec._DividendSyncPayload_fallbackSourceCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "placeholdersUpgraded":
+			out.Values[i] = ec._DividendSyncPayload_placeholdersUpgraded(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "message":
+			out.Values[i] = ec._DividendSyncPayload_message(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "durationMs":
+			out.Values[i] = ec._DividendSyncPayload_durationMs(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "failedSymbols":
+			out.Values[i] = ec._DividendSyncPayload_failedSymbols(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var dividendYieldAnalyticsImplementors = []string{"DividendYieldAnalytics"}
+
+func (ec *executionContext) _DividendYieldAnalytics(ctx context.Context, sel ast.SelectionSet, obj *model.DividendYieldAnalytics) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, dividendYieldAnalyticsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("DividendYieldAnalytics")
+		case "annualForwardIncome":
+			out.Values[i] = ec._DividendYieldAnalytics_annualForwardIncome(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "monthlyAverageIncome":
+			out.Values[i] = ec._DividendYieldAnalytics_monthlyAverageIncome(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "portfolioCurrentYield":
+			out.Values[i] = ec._DividendYieldAnalytics_portfolioCurrentYield(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "portfolioYieldOnCost":
+			out.Values[i] = ec._DividendYieldAnalytics_portfolioYieldOnCost(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "pendingCashInflow":
+			out.Values[i] = ec._DividendYieldAnalytics_pendingCashInflow(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "monthlyProjections":
+			out.Values[i] = ec._DividendYieldAnalytics_monthlyProjections(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "holdingsYield":
+			out.Values[i] = ec._DividendYieldAnalytics_holdingsYield(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -17193,6 +20272,119 @@ func (ec *executionContext) _FeedHealthStatus(ctx context.Context, sel ast.Selec
 		case "details":
 			out.Values[i] = ec._FeedHealthStatus_details(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var holdingYieldItemImplementors = []string{"HoldingYieldItem"}
+
+func (ec *executionContext) _HoldingYieldItem(ctx context.Context, sel ast.SelectionSet, obj *model.HoldingYieldItem) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, holdingYieldItemImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("HoldingYieldItem")
+		case "instrumentId":
+			out.Values[i] = ec._HoldingYieldItem_instrumentId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "symbol":
+			out.Values[i] = ec._HoldingYieldItem_symbol(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._HoldingYieldItem_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "quantity":
+			out.Values[i] = ec._HoldingYieldItem_quantity(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currentPrice":
+			out.Values[i] = ec._HoldingYieldItem_currentPrice(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "averageBuyPrice":
+			out.Values[i] = ec._HoldingYieldItem_averageBuyPrice(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currentMarketValue":
+			out.Values[i] = ec._HoldingYieldItem_currentMarketValue(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "costBasis":
+			out.Values[i] = ec._HoldingYieldItem_costBasis(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "annualDps":
+			out.Values[i] = ec._HoldingYieldItem_annualDps(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "projectedAnnualCash":
+			out.Values[i] = ec._HoldingYieldItem_projectedAnnualCash(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currentYieldPct":
+			out.Values[i] = ec._HoldingYieldItem_currentYieldPct(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "yieldOnCostPct":
+			out.Values[i] = ec._HoldingYieldItem_yieldOnCostPct(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "dividendCagr3y":
+			out.Values[i] = ec._HoldingYieldItem_dividendCagr3y(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "frequency":
+			out.Values[i] = ec._HoldingYieldItem_frequency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "nextExDate":
+			out.Values[i] = ec._HoldingYieldItem_nextExDate(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "nextPaymentDate":
+			out.Values[i] = ec._HoldingYieldItem_nextPaymentDate(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
 				out.Invalids++
 			}
 		default:
@@ -18107,6 +21299,59 @@ func (ec *executionContext) _Money(ctx context.Context, sel ast.SelectionSet, ob
 	return out
 }
 
+var monthlyDividendProjectionImplementors = []string{"MonthlyDividendProjection"}
+
+func (ec *executionContext) _MonthlyDividendProjection(ctx context.Context, sel ast.SelectionSet, obj *model.MonthlyDividendProjection) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, monthlyDividendProjectionImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MonthlyDividendProjection")
+		case "year":
+			out.Values[i] = ec._MonthlyDividendProjection_year(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "month":
+			out.Values[i] = ec._MonthlyDividendProjection_month(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "projectedIncome":
+			out.Values[i] = ec._MonthlyDividendProjection_projectedIncome(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "dividendCount":
+			out.Values[i] = ec._MonthlyDividendProjection_dividendCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -18179,6 +21424,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "triggerMarketSync":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_triggerMarketSync(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "triggerDividendSync":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_triggerDividendSync(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -18885,6 +22137,72 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_benchmarkComparison(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "dividendCalendar":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_dividendCalendar(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "dividendYieldAnalytics":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_dividendYieldAnalytics(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "simulateDRIP":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_simulateDRIP(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -20129,6 +23447,47 @@ func (ec *executionContext) marshalNCurrencyPairHistory2ᚖbffᚋgraphᚋmodel�
 	return ec._CurrencyPairHistory(ctx, sel, v)
 }
 
+func (ec *executionContext) unmarshalNDRIPSimulationInput2bffᚋgraphᚋmodelᚐDRIPSimulationInput(ctx context.Context, v any) (model.DRIPSimulationInput, error) {
+	res, err := ec.unmarshalInputDRIPSimulationInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNDRIPSimulationPoint2ᚕᚖbffᚋgraphᚋmodelᚐDRIPSimulationPointᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DRIPSimulationPoint) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNDRIPSimulationPoint2ᚖbffᚋgraphᚋmodelᚐDRIPSimulationPoint(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNDRIPSimulationPoint2ᚖbffᚋgraphᚋmodelᚐDRIPSimulationPoint(ctx context.Context, sel ast.SelectionSet, v *model.DRIPSimulationPoint) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DRIPSimulationPoint(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNDRIPSimulationResult2ᚖbffᚋgraphᚋmodelᚐDRIPSimulationResult(ctx context.Context, sel ast.SelectionSet, v *model.DRIPSimulationResult) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DRIPSimulationResult(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx context.Context, v any) (model.Decimal, error) {
 	var res model.Decimal
 	err := res.UnmarshalGQL(v)
@@ -20157,6 +23516,72 @@ func (ec *executionContext) marshalNDeleteTransactionPayload2ᚖbffᚋgraphᚋmo
 		return graphql.Null
 	}
 	return ec._DeleteTransactionPayload(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNDividendCalendarEvent2ᚕᚖbffᚋgraphᚋmodelᚐDividendCalendarEventᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.DividendCalendarEvent) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNDividendCalendarEvent2ᚖbffᚋgraphᚋmodelᚐDividendCalendarEvent(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNDividendCalendarEvent2ᚖbffᚋgraphᚋmodelᚐDividendCalendarEvent(ctx context.Context, sel ast.SelectionSet, v *model.DividendCalendarEvent) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DividendCalendarEvent(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNDividendFrequency2bffᚋgraphᚋmodelᚐDividendFrequency(ctx context.Context, v any) (model.DividendFrequency, error) {
+	var res model.DividendFrequency
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNDividendFrequency2bffᚋgraphᚋmodelᚐDividendFrequency(ctx context.Context, sel ast.SelectionSet, v model.DividendFrequency) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalNDividendStatus2bffᚋgraphᚋmodelᚐDividendStatus(ctx context.Context, v any) (model.DividendStatus, error) {
+	var res model.DividendStatus
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNDividendStatus2bffᚋgraphᚋmodelᚐDividendStatus(ctx context.Context, sel ast.SelectionSet, v model.DividendStatus) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) marshalNDividendSyncPayload2ᚖbffᚋgraphᚋmodelᚐDividendSyncPayload(ctx context.Context, sel ast.SelectionSet, v *model.DividendSyncPayload) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DividendSyncPayload(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNDividendYieldAnalytics2ᚖbffᚋgraphᚋmodelᚐDividendYieldAnalytics(ctx context.Context, sel ast.SelectionSet, v *model.DividendYieldAnalytics) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._DividendYieldAnalytics(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNExchange2ᚕᚖbffᚋgraphᚋmodelᚐExchangeᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.Exchange) graphql.Marshaler {
@@ -20307,6 +23732,32 @@ func (ec *executionContext) unmarshalNHistoryTimeframe2bffᚋgraphᚋmodelᚐHis
 
 func (ec *executionContext) marshalNHistoryTimeframe2bffᚋgraphᚋmodelᚐHistoryTimeframe(ctx context.Context, sel ast.SelectionSet, v model.HistoryTimeframe) graphql.Marshaler {
 	return v
+}
+
+func (ec *executionContext) marshalNHoldingYieldItem2ᚕᚖbffᚋgraphᚋmodelᚐHoldingYieldItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.HoldingYieldItem) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNHoldingYieldItem2ᚖbffᚋgraphᚋmodelᚐHoldingYieldItem(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNHoldingYieldItem2ᚖbffᚋgraphᚋmodelᚐHoldingYieldItem(ctx context.Context, sel ast.SelectionSet, v *model.HoldingYieldItem) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._HoldingYieldItem(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v any) (string, error) {
@@ -20563,6 +24014,32 @@ func (ec *executionContext) marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx con
 		return graphql.Null
 	}
 	return ec._Money(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNMonthlyDividendProjection2ᚕᚖbffᚋgraphᚋmodelᚐMonthlyDividendProjectionᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.MonthlyDividendProjection) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNMonthlyDividendProjection2ᚖbffᚋgraphᚋmodelᚐMonthlyDividendProjection(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNMonthlyDividendProjection2ᚖbffᚋgraphᚋmodelᚐMonthlyDividendProjection(ctx context.Context, sel ast.SelectionSet, v *model.MonthlyDividendProjection) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._MonthlyDividendProjection(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNPortfolio2ᚖbffᚋgraphᚋmodelᚐPortfolio(ctx context.Context, sel ast.SelectionSet, v *model.Portfolio) graphql.Marshaler {
@@ -21132,6 +24609,14 @@ func (ec *executionContext) marshalOTransactionType2ᚖbffᚋgraphᚋmodelᚐTra
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) unmarshalOTriggerDividendSyncInput2ᚖbffᚋgraphᚋmodelᚐTriggerDividendSyncInput(ctx context.Context, v any) (*model.TriggerDividendSyncInput, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalInputTriggerDividendSyncInput(ctx, v)
+	return &res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

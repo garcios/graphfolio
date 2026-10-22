@@ -39,6 +39,7 @@ const (
 	PortfolioService_RecordPriceOverride_FullMethodName           = "/portfolio.v1.PortfolioService/RecordPriceOverride"
 	PortfolioService_GetIngestionStatus_FullMethodName            = "/portfolio.v1.PortfolioService/GetIngestionStatus"
 	PortfolioService_TriggerMarketSync_FullMethodName             = "/portfolio.v1.PortfolioService/TriggerMarketSync"
+	PortfolioService_TriggerDividendSync_FullMethodName           = "/portfolio.v1.PortfolioService/TriggerDividendSync"
 	PortfolioService_ListCurrencyPairs_FullMethodName             = "/portfolio.v1.PortfolioService/ListCurrencyPairs"
 	PortfolioService_ListFXRates_FullMethodName                   = "/portfolio.v1.PortfolioService/ListFXRates"
 	PortfolioService_GetCurrencyPairHistory_FullMethodName        = "/portfolio.v1.PortfolioService/GetCurrencyPairHistory"
@@ -51,6 +52,9 @@ const (
 	PortfolioService_GetModifiedDietzReturn_FullMethodName        = "/portfolio.v1.PortfolioService/GetModifiedDietzReturn"
 	PortfolioService_ListBenchmarks_FullMethodName                = "/portfolio.v1.PortfolioService/ListBenchmarks"
 	PortfolioService_GetBenchmarkComparison_FullMethodName        = "/portfolio.v1.PortfolioService/GetBenchmarkComparison"
+	PortfolioService_GetDividendCalendar_FullMethodName           = "/portfolio.v1.PortfolioService/GetDividendCalendar"
+	PortfolioService_GetDividendYieldAnalytics_FullMethodName     = "/portfolio.v1.PortfolioService/GetDividendYieldAnalytics"
+	PortfolioService_SimulateDRIP_FullMethodName                  = "/portfolio.v1.PortfolioService/SimulateDRIP"
 )
 
 // PortfolioServiceClient is the client API for PortfolioService service.
@@ -81,6 +85,7 @@ type PortfolioServiceClient interface {
 	// Admin: Ingestion Pipeline & Diagnostics
 	GetIngestionStatus(ctx context.Context, in *GetIngestionStatusRequest, opts ...grpc.CallOption) (*GetIngestionStatusResponse, error)
 	TriggerMarketSync(ctx context.Context, in *TriggerMarketSyncRequest, opts ...grpc.CallOption) (*TriggerMarketSyncResponse, error)
+	TriggerDividendSync(ctx context.Context, in *TriggerDividendSyncRequest, opts ...grpc.CallOption) (*TriggerDividendSyncResponse, error)
 	// Admin: FX Rates & Currency Pair Inspection
 	ListCurrencyPairs(ctx context.Context, in *ListCurrencyPairsRequest, opts ...grpc.CallOption) (*ListCurrencyPairsResponse, error)
 	ListFXRates(ctx context.Context, in *ListFXRatesRequest, opts ...grpc.CallOption) (*ListFXRatesResponse, error)
@@ -101,6 +106,10 @@ type PortfolioServiceClient interface {
 	// Benchmark Comparison & Relative Performance Analytics
 	ListBenchmarks(ctx context.Context, in *ListBenchmarksRequest, opts ...grpc.CallOption) (*ListBenchmarksResponse, error)
 	GetBenchmarkComparison(ctx context.Context, in *GetBenchmarkComparisonRequest, opts ...grpc.CallOption) (*GetBenchmarkComparisonResponse, error)
+	// Dividend Calendar, Yield Analytics & DRIP Simulator
+	GetDividendCalendar(ctx context.Context, in *GetDividendCalendarRequest, opts ...grpc.CallOption) (*GetDividendCalendarResponse, error)
+	GetDividendYieldAnalytics(ctx context.Context, in *GetDividendYieldAnalyticsRequest, opts ...grpc.CallOption) (*GetDividendYieldAnalyticsResponse, error)
+	SimulateDRIP(ctx context.Context, in *SimulateDRIPRequest, opts ...grpc.CallOption) (*SimulateDRIPResponse, error)
 }
 
 type portfolioServiceClient struct {
@@ -291,6 +300,15 @@ func (c *portfolioServiceClient) TriggerMarketSync(ctx context.Context, in *Trig
 	return out, nil
 }
 
+func (c *portfolioServiceClient) TriggerDividendSync(ctx context.Context, in *TriggerDividendSyncRequest, opts ...grpc.CallOption) (*TriggerDividendSyncResponse, error) {
+	out := new(TriggerDividendSyncResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_TriggerDividendSync_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *portfolioServiceClient) ListCurrencyPairs(ctx context.Context, in *ListCurrencyPairsRequest, opts ...grpc.CallOption) (*ListCurrencyPairsResponse, error) {
 	out := new(ListCurrencyPairsResponse)
 	err := c.cc.Invoke(ctx, PortfolioService_ListCurrencyPairs_FullMethodName, in, out, opts...)
@@ -399,6 +417,33 @@ func (c *portfolioServiceClient) GetBenchmarkComparison(ctx context.Context, in 
 	return out, nil
 }
 
+func (c *portfolioServiceClient) GetDividendCalendar(ctx context.Context, in *GetDividendCalendarRequest, opts ...grpc.CallOption) (*GetDividendCalendarResponse, error) {
+	out := new(GetDividendCalendarResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_GetDividendCalendar_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portfolioServiceClient) GetDividendYieldAnalytics(ctx context.Context, in *GetDividendYieldAnalyticsRequest, opts ...grpc.CallOption) (*GetDividendYieldAnalyticsResponse, error) {
+	out := new(GetDividendYieldAnalyticsResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_GetDividendYieldAnalytics_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portfolioServiceClient) SimulateDRIP(ctx context.Context, in *SimulateDRIPRequest, opts ...grpc.CallOption) (*SimulateDRIPResponse, error) {
+	out := new(SimulateDRIPResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_SimulateDRIP_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PortfolioServiceServer is the server API for PortfolioService service.
 // All implementations must embed UnimplementedPortfolioServiceServer
 // for forward compatibility
@@ -427,6 +472,7 @@ type PortfolioServiceServer interface {
 	// Admin: Ingestion Pipeline & Diagnostics
 	GetIngestionStatus(context.Context, *GetIngestionStatusRequest) (*GetIngestionStatusResponse, error)
 	TriggerMarketSync(context.Context, *TriggerMarketSyncRequest) (*TriggerMarketSyncResponse, error)
+	TriggerDividendSync(context.Context, *TriggerDividendSyncRequest) (*TriggerDividendSyncResponse, error)
 	// Admin: FX Rates & Currency Pair Inspection
 	ListCurrencyPairs(context.Context, *ListCurrencyPairsRequest) (*ListCurrencyPairsResponse, error)
 	ListFXRates(context.Context, *ListFXRatesRequest) (*ListFXRatesResponse, error)
@@ -447,6 +493,10 @@ type PortfolioServiceServer interface {
 	// Benchmark Comparison & Relative Performance Analytics
 	ListBenchmarks(context.Context, *ListBenchmarksRequest) (*ListBenchmarksResponse, error)
 	GetBenchmarkComparison(context.Context, *GetBenchmarkComparisonRequest) (*GetBenchmarkComparisonResponse, error)
+	// Dividend Calendar, Yield Analytics & DRIP Simulator
+	GetDividendCalendar(context.Context, *GetDividendCalendarRequest) (*GetDividendCalendarResponse, error)
+	GetDividendYieldAnalytics(context.Context, *GetDividendYieldAnalyticsRequest) (*GetDividendYieldAnalyticsResponse, error)
+	SimulateDRIP(context.Context, *SimulateDRIPRequest) (*SimulateDRIPResponse, error)
 	mustEmbedUnimplementedPortfolioServiceServer()
 }
 
@@ -514,6 +564,9 @@ func (UnimplementedPortfolioServiceServer) GetIngestionStatus(context.Context, *
 func (UnimplementedPortfolioServiceServer) TriggerMarketSync(context.Context, *TriggerMarketSyncRequest) (*TriggerMarketSyncResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method TriggerMarketSync not implemented")
 }
+func (UnimplementedPortfolioServiceServer) TriggerDividendSync(context.Context, *TriggerDividendSyncRequest) (*TriggerDividendSyncResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TriggerDividendSync not implemented")
+}
 func (UnimplementedPortfolioServiceServer) ListCurrencyPairs(context.Context, *ListCurrencyPairsRequest) (*ListCurrencyPairsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListCurrencyPairs not implemented")
 }
@@ -549,6 +602,15 @@ func (UnimplementedPortfolioServiceServer) ListBenchmarks(context.Context, *List
 }
 func (UnimplementedPortfolioServiceServer) GetBenchmarkComparison(context.Context, *GetBenchmarkComparisonRequest) (*GetBenchmarkComparisonResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetBenchmarkComparison not implemented")
+}
+func (UnimplementedPortfolioServiceServer) GetDividendCalendar(context.Context, *GetDividendCalendarRequest) (*GetDividendCalendarResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDividendCalendar not implemented")
+}
+func (UnimplementedPortfolioServiceServer) GetDividendYieldAnalytics(context.Context, *GetDividendYieldAnalyticsRequest) (*GetDividendYieldAnalyticsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetDividendYieldAnalytics not implemented")
+}
+func (UnimplementedPortfolioServiceServer) SimulateDRIP(context.Context, *SimulateDRIPRequest) (*SimulateDRIPResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SimulateDRIP not implemented")
 }
 func (UnimplementedPortfolioServiceServer) mustEmbedUnimplementedPortfolioServiceServer() {}
 
@@ -923,6 +985,24 @@ func _PortfolioService_TriggerMarketSync_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortfolioService_TriggerDividendSync_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TriggerDividendSyncRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).TriggerDividendSync(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_TriggerDividendSync_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).TriggerDividendSync(ctx, req.(*TriggerDividendSyncRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _PortfolioService_ListCurrencyPairs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ListCurrencyPairsRequest)
 	if err := dec(in); err != nil {
@@ -1139,6 +1219,60 @@ func _PortfolioService_GetBenchmarkComparison_Handler(srv interface{}, ctx conte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortfolioService_GetDividendCalendar_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDividendCalendarRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).GetDividendCalendar(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_GetDividendCalendar_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).GetDividendCalendar(ctx, req.(*GetDividendCalendarRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortfolioService_GetDividendYieldAnalytics_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetDividendYieldAnalyticsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).GetDividendYieldAnalytics(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_GetDividendYieldAnalytics_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).GetDividendYieldAnalytics(ctx, req.(*GetDividendYieldAnalyticsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortfolioService_SimulateDRIP_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SimulateDRIPRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).SimulateDRIP(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_SimulateDRIP_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).SimulateDRIP(ctx, req.(*SimulateDRIPRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PortfolioService_ServiceDesc is the grpc.ServiceDesc for PortfolioService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1227,6 +1361,10 @@ var PortfolioService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _PortfolioService_TriggerMarketSync_Handler,
 		},
 		{
+			MethodName: "TriggerDividendSync",
+			Handler:    _PortfolioService_TriggerDividendSync_Handler,
+		},
+		{
 			MethodName: "ListCurrencyPairs",
 			Handler:    _PortfolioService_ListCurrencyPairs_Handler,
 		},
@@ -1273,6 +1411,18 @@ var PortfolioService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetBenchmarkComparison",
 			Handler:    _PortfolioService_GetBenchmarkComparison_Handler,
+		},
+		{
+			MethodName: "GetDividendCalendar",
+			Handler:    _PortfolioService_GetDividendCalendar_Handler,
+		},
+		{
+			MethodName: "GetDividendYieldAnalytics",
+			Handler:    _PortfolioService_GetDividendYieldAnalytics_Handler,
+		},
+		{
+			MethodName: "SimulateDRIP",
+			Handler:    _PortfolioService_SimulateDRIP_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

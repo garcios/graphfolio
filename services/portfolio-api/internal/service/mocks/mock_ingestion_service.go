@@ -58,6 +58,21 @@ func (mr *MockIngestionServiceMockRecorder) BackfillCurrencyPair(ctx, base, quot
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BackfillCurrencyPair", reflect.TypeOf((*MockIngestionService)(nil).BackfillCurrencyPair), ctx, base, quote, fromDate, toDate)
 }
 
+// BackfillInstrumentDividends mocks base method.
+func (m *MockIngestionService) BackfillInstrumentDividends(ctx context.Context, instrumentID uuid.UUID, symbol, exchange, currency string) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "BackfillInstrumentDividends", ctx, instrumentID, symbol, exchange, currency)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// BackfillInstrumentDividends indicates an expected call of BackfillInstrumentDividends.
+func (mr *MockIngestionServiceMockRecorder) BackfillInstrumentDividends(ctx, instrumentID, symbol, exchange, currency any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "BackfillInstrumentDividends", reflect.TypeOf((*MockIngestionService)(nil).BackfillInstrumentDividends), ctx, instrumentID, symbol, exchange, currency)
+}
+
 // BackfillInstrumentPrices mocks base method.
 func (m *MockIngestionService) BackfillInstrumentPrices(ctx context.Context, instrumentID uuid.UUID, symbol, exchange string, fromDate, toDate time.Time) (int, error) {
 	m.ctrl.T.Helper()
@@ -86,4 +101,19 @@ func (m *MockIngestionService) IngestDailyMarketData(ctx context.Context, asOfDa
 func (mr *MockIngestionServiceMockRecorder) IngestDailyMarketData(ctx, asOfDate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IngestDailyMarketData", reflect.TypeOf((*MockIngestionService)(nil).IngestDailyMarketData), ctx, asOfDate)
+}
+
+// IngestDividendSchedules mocks base method.
+func (m *MockIngestionService) IngestDividendSchedules(ctx context.Context, options domain.DividendSyncOptions) (*domain.DividendSyncResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IngestDividendSchedules", ctx, options)
+	ret0, _ := ret[0].(*domain.DividendSyncResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IngestDividendSchedules indicates an expected call of IngestDividendSchedules.
+func (mr *MockIngestionServiceMockRecorder) IngestDividendSchedules(ctx, options any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IngestDividendSchedules", reflect.TypeOf((*MockIngestionService)(nil).IngestDividendSchedules), ctx, options)
 }

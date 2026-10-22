@@ -19,6 +19,8 @@ type contextKey string
 
 const (
 	UserIDKey         contextKey = "user_id"
+	UserRoleKey       contextKey = "user_role"
+	ClaimsKey         contextKey = "claims"
 	ResponseWriterKey contextKey = "http_response_writer"
 	RequestKey        contextKey = "http_request"
 )
@@ -38,6 +40,7 @@ type Claims struct {
 	Email        string `json:"email"`
 	DisplayName  string `json:"display_name"`
 	BaseCurrency string `json:"base_currency"`
+	Role         string `json:"role"`
 	IssuedAt     int64  `json:"iat"`
 	ExpiresAt    int64  `json:"exp"`
 }
@@ -92,6 +95,14 @@ func ValidateAccessToken(secret []byte, tokenStr string) (*Claims, error) {
 // GetUserID retrieves the authenticated user ID from context.
 func GetUserID(ctx context.Context) (string, error) {
 	if val, ok := ctx.Value(UserIDKey).(string); ok && val != "" {
+		return val, nil
+	}
+	return "", ErrUnauthenticated
+}
+
+// GetUserRole retrieves the authenticated user's role from context.
+func GetUserRole(ctx context.Context) (string, error) {
+	if val, ok := ctx.Value(UserRoleKey).(string); ok && val != "" {
 		return val, nil
 	}
 	return "", ErrUnauthenticated
@@ -152,6 +163,10 @@ func Middleware(secret []byte) func(http.Handler) http.Handler {
 				claims, err := ValidateAccessToken(secret, tokenStr)
 				if err == nil && claims.Subject != "" {
 					ctx = context.WithValue(ctx, UserIDKey, claims.Subject)
+					if claims.Role != "" {
+						ctx = context.WithValue(ctx, UserRoleKey, claims.Role)
+					}
+					ctx = context.WithValue(ctx, ClaimsKey, claims)
 				}
 			}
 
@@ -159,3 +174,4 @@ func Middleware(secret []byte) func(http.Handler) http.Handler {
 		})
 	}
 }
+

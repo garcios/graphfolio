@@ -218,9 +218,14 @@ func TestPortfolioService_AddTransaction_TriggersIngestionHook(t *testing.T) {
 	}
 	mockRepo.EXPECT().GetLatestValuation(gomock.Any(), portfolioID).Return(mockVal, nil)
 	mockRepo.EXPECT().GetEarliestValuation(gomock.Any(), portfolioID).Return(mockVal, nil)
+	mockRepo.EXPECT().ListDividendSchedulesByInstrument(gomock.Any(), instID).Return(nil, nil)
 
 	ingestionSvc := service.NewIngestionService(mockRepo, priceMock, nil, nil)
-	svc := service.NewPortfolioService(mockRepo, service.WithIngestionService(ingestionSvc))
+	svc := service.NewPortfolioService(
+		mockRepo,
+		service.WithIngestionService(ingestionSvc),
+		service.WithAsyncRunner(func(fn func()) { fn() }),
+	)
 
 	input := domain.AddTransactionInput{
 		UserID:    userID,
@@ -288,3 +293,136 @@ func TestIngestionService_IngestDailyMarketData_WithBenchmarks(t *testing.T) {
 		t.Errorf("expected 2 prices synced (1 active + 1 benchmark), got %d", res.PricesSynced)
 	}
 }
+
+type testDividendProvider struct {
+	name             string
+	upcomingEvents   []marketdata.DividendScheduleEvent
+	historicalPoints []marketdata.DividendHistoryPoint
+	upcomingCalls    int
+}
+
+func (m *testDividendProvider) Name() string { return m.name }
+func (m *testDividendProvider) GetUpcomingDividends(ctx context.Context, inst marketdata.InstrumentRef) ([]marketdata.DividendScheduleEvent, error) {
+	m.upcomingCalls++
+	return m.upcomingEvents, nil
+}
+func (m *testDividendProvider) GetHistoricalDividends(ctx context.Context, inst marketdata.InstrumentRef, fromDate, toDate time.Time) ([]marketdata.DividendHistoryPoint, error) {
+	return m.historicalPoints, nil
+}
+
+func TestIngestionService_IngestDividendSchedules(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := mocks.NewMockRepository(ctrl)
+
+	instID := uuid.New()
+	activeInsts := []domain.Instrument{
+		{ID: instID, Symbol: "AAPL", ExchangeCode: "NASDAQ", CurrencyCode: "USD"},
+	}
+
+	divMock := &testDividendProvider{
+		name: "ResilientProvider",
+		upcomingEvents: []marketdata.DividendScheduleEvent{
+			{
+				InstrumentID:   instID,
+				Symbol:         "AAPL",
+				ExchangeCode:   "NASDAQ",
+				ExDate:         time.Date(2024, 2, 9, 0, 0, 0, 0, time.UTC),
+				PaymentDate:    time.Date(2024, 2, 15, 0, 0, 0, 0, time.UTC),
+				AmountPerShare: decimal.NewFromFloat(0.24),
+				CurrencyCode:   "USD",
+				Frequency:      "QUARTERLY",
+				Status:         "EX_DATE_PASSED",
+				IsEstimated:    false,
+				Source:         "yahoo",
+			},
+		},
+		historicalPoints: []marketdata.DividendHistoryPoint{
+			{Date: time.Date(2023, 5, 12, 0, 0, 0, 0, time.UTC), Amount: decimal.NewFromFloat(0.24)},
+			{Date: time.Date(2023, 8, 11, 0, 0, 0, 0, time.UTC), Amount: decimal.NewFromFloat(0.24)},
+			{Date: time.Date(2023, 11, 10, 0, 0, 0, 0, time.UTC), Amount: decimal.NewFromFloat(0.24)},
+		},
+	}
+
+	mockRepo.EXPECT().ListActiveInstruments(gomock.Any()).Return(activeInsts, nil)
+	mockRepo.EXPECT().UpsertDividendSchedulesBatch(gomock.Any(), gomock.Any()).DoAndReturn(
+		func(ctx context.Context, batch []domain.DividendSchedule) (int, int, error) {
+			if len(batch) == 0 {
+				t.Fatalf("expected non-empty dividend batch")
+			}
+			return len(batch), 1, nil
+		},
+	)
+
+	svc := service.NewIngestionService(mockRepo, nil, nil, nil,
+		service.WithDividendProvider(divMock),
+	)
+
+	res, err := svc.IngestDividendSchedules(context.Background(), domain.DividendSyncOptions{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !res.Success {
+		t.Errorf("expected success true")
+	}
+	if res.SchedulesSynced == 0 {
+		t.Errorf("expected schedules synced > 0")
+	}
+	if res.PrimarySourceCount != 1 {
+		t.Errorf("expected primary source count 1, got %d", res.PrimarySourceCount)
+	}
+	if res.PlaceholdersUpgraded != 1 {
+		t.Errorf("expected placeholders upgraded 1, got %d", res.PlaceholdersUpgraded)
+	}
+}
+
+func TestIngestionService_BackfillInstrumentDividends(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := mocks.NewMockRepository(ctrl)
+	instID := uuid.New()
+
+	mockRepo.EXPECT().FindInstrumentBySymbol(gomock.Any(), "AAPL").Return(&domain.Instrument{
+		ID:           instID,
+		Symbol:       "AAPL",
+		ExchangeCode: "NASDAQ",
+		CurrencyCode: "USD",
+	}, nil)
+
+	divMock := &testDividendProvider{
+		name: "ResilientProvider",
+		upcomingEvents: []marketdata.DividendScheduleEvent{
+			{
+				InstrumentID:   instID,
+				Symbol:         "AAPL",
+				ExchangeCode:   "NASDAQ",
+				ExDate:         time.Date(2024, 2, 9, 0, 0, 0, 0, time.UTC),
+				PaymentDate:    time.Date(2024, 2, 15, 0, 0, 0, 0, time.UTC),
+				AmountPerShare: decimal.NewFromFloat(0.24),
+				CurrencyCode:   "USD",
+				Frequency:      "QUARTERLY",
+				Status:         "EX_DATE_PASSED",
+				IsEstimated:    false,
+				Source:         "yahoo",
+			},
+		},
+	}
+
+	mockRepo.EXPECT().UpsertDividendSchedulesBatch(gomock.Any(), gomock.Any()).Return(1, 0, nil)
+
+	svc := service.NewIngestionService(mockRepo, nil, nil, nil,
+		service.WithDividendProvider(divMock),
+	)
+
+	synced, err := svc.BackfillInstrumentDividends(context.Background(), instID, "AAPL", "NASDAQ", "USD")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if synced != 1 {
+		t.Errorf("expected 1 synced, got %d", synced)
+	}
+}
+

@@ -1273,3 +1273,56 @@ func TestPortfolioService_ListMissingFXRateTransactions(t *testing.T) {
 		}
 	})
 }
+
+func TestPortfolioService_TriggerDividendSync(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("delegates to ingestion service when configured", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		mockIngestion := servicemocks.NewMockIngestionService(ctrl)
+
+		expectedRes := &domain.DividendSyncResult{
+			Success:         true,
+			SchedulesSynced: 5,
+			Message:         "synced 5",
+		}
+
+		mockIngestion.EXPECT().
+			IngestDividendSchedules(ctx, domain.DividendSyncOptions{
+				Symbols:        []string{"AAPL"},
+				SyncHistorical: true,
+				ForceProvider:  "YAHOO",
+			}).
+			Return(expectedRes, nil)
+
+		svc := service.NewPortfolioService(mockRepo, service.WithIngestionService(mockIngestion))
+
+		res, err := svc.TriggerDividendSync(ctx, []string{"AAPL"}, nil, true, "YAHOO")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if res.SchedulesSynced != 5 {
+			t.Errorf("expected 5 schedules synced, got %d", res.SchedulesSynced)
+		}
+	})
+
+	t.Run("returns no-op result when ingestion service is nil", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockRepo := mocks.NewMockRepository(ctrl)
+		svc := service.NewPortfolioService(mockRepo)
+
+		res, err := svc.TriggerDividendSync(ctx, []string{"AAPL"}, nil, false, "")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if !res.Success {
+			t.Errorf("expected success true on fallback")
+		}
+	})
+}
+

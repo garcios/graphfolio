@@ -62,3 +62,37 @@ type FXRateProvider interface {
 	// FetchHistoricalFXRates retrieves daily fixing rates for a currency pair across an inclusive date range [from, to].
 	FetchHistoricalFXRates(ctx context.Context, pair CurrencyPair, from, to time.Time) ([]FXRecord, error)
 }
+
+// DividendScheduleEvent represents an authoritative or estimated forward dividend corporate action.
+type DividendScheduleEvent struct {
+	InstrumentID      uuid.UUID
+	Symbol            string
+	ExchangeCode      string
+	ExDate            time.Time
+	RecordDate        *time.Time
+	PaymentDate       time.Time
+	AmountPerShare    decimal.Decimal
+	CurrencyCode      string
+	Frequency         string // MONTHLY, QUARTERLY, SEMI_ANNUAL, ANNUAL, IRREGULAR
+	Status            string // ANNOUNCED, EX_DATE_PASSED, PAID, CANCELLED
+	IsEstimated       bool
+	FrankingPct       decimal.Decimal
+	WithholdingTaxPct decimal.Decimal
+	Source            string // yahoo, twelvedata, admin_override
+}
+
+// DividendHistoryPoint represents a single historical cash dividend distribution.
+type DividendHistoryPoint struct {
+	Date   time.Time
+	Amount decimal.Decimal
+}
+
+// DividendProvider defines the interface for sourcing upcoming and historical corporate dividend actions.
+type DividendProvider interface {
+	// Name returns the provider's human-readable identifier (e.g. "Yahoo Finance", "Twelve Data").
+	Name() string
+	// GetUpcomingDividends retrieves announced or upcoming forward dividends for an instrument.
+	GetUpcomingDividends(ctx context.Context, inst InstrumentRef) ([]DividendScheduleEvent, error)
+	// GetHistoricalDividends retrieves historical cash distributions across an inclusive date range.
+	GetHistoricalDividends(ctx context.Context, inst InstrumentRef, fromDate, toDate time.Time) ([]DividendHistoryPoint, error)
+}

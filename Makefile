@@ -80,6 +80,10 @@ ingest-market-data:
 	@echo "Running Market Data Ingestion Pipeline..."
 	cd services/portfolio-api && go run cmd/market-ingest/main.go $(ARGS)
 
+ingest-dividends:
+	@echo "Running Dividend Corporate Action Ingestion Pipeline..."
+	cd services/portfolio-api && go run cmd/market-ingest/main.go --sync-dividends $(ARGS)
+
 run-valuation-job:
 	@echo "Running Daily Portfolio Valuation Job..."
 	cd services/portfolio-api && go run cmd/worker/main.go $(ARGS)

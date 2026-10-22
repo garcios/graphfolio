@@ -240,6 +240,23 @@ func (s *portfolioService) TriggerMarketSync(ctx context.Context, symbols []stri
 	}, nil
 }
 
+func (s *portfolioService) TriggerDividendSync(ctx context.Context, symbols []string, exchangeCode *string, syncHistorical bool, forceProvider string) (*domain.DividendSyncResult, error) {
+	if s.ingestion != nil {
+		opts := domain.DividendSyncOptions{
+			Symbols:        symbols,
+			ExchangeCode:   exchangeCode,
+			SyncHistorical: syncHistorical,
+			ForceProvider:  forceProvider,
+		}
+		return s.ingestion.IngestDividendSchedules(ctx, opts)
+	}
+
+	return &domain.DividendSyncResult{
+		Success: true,
+		Message: "Dividend sync completed (ingestion service not configured)",
+	}, nil
+}
+
 func (s *portfolioService) TriggerBackfill(ctx context.Context, input domain.BackfillInput) (*domain.BackfillResult, error) {
 	if input.FromDate.IsZero() || input.ToDate.IsZero() {
 		return nil, ErrDateRequired

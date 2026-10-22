@@ -8,11 +8,13 @@ export default {
         11,
         14,
         15,
-        44,
-        56,
-        57,
+        46,
         58,
-        70
+        59,
+        60,
+        72,
+        77,
+        78
     ],
     "types": {
         "Decimal": {},
@@ -70,7 +72,7 @@ export default {
                 2
             ],
             "portfolio": [
-                42
+                44
             ],
             "__typename": [
                 2
@@ -119,7 +121,7 @@ export default {
                 18
             ],
             "portfolio": [
-                42
+                44
             ],
             "__typename": [
                 2
@@ -175,7 +177,7 @@ export default {
         },
         "Query": {
             "portfolio": [
-                42,
+                44,
                 {
                     "includeClosed": [
                         9
@@ -263,19 +265,19 @@ export default {
                 38
             ],
             "me": [
-                45
+                47
             ],
             "userPreferences": [
-                45
+                47
             ],
             "supportedCurrencies": [
-                46
+                48
             ],
             "currencyPairs": [
-                49
+                51
             ],
             "currencyPairHistory": [
-                53,
+                55,
                 {
                     "baseCurrency": [
                         2,
@@ -292,7 +294,7 @@ export default {
                 }
             ],
             "fxRates": [
-                51,
+                53,
                 {
                     "baseCurrency": [
                         2
@@ -324,16 +326,16 @@ export default {
                 }
             ],
             "cashFlowReport": [
-                63,
+                65,
                 {
                     "filter": [
-                        59,
+                        61,
                         "CashFlowFilterInput!"
                     ]
                 }
             ],
             "missingPriceTransactions": [
-                65,
+                67,
                 {
                     "symbol": [
                         2
@@ -353,7 +355,7 @@ export default {
                 }
             ],
             "missingFXRateTransactions": [
-                67,
+                69,
                 {
                     "currencyPair": [
                         2
@@ -376,7 +378,7 @@ export default {
                 }
             ],
             "modifiedDietzReturn": [
-                68,
+                70,
                 {
                     "startDate": [
                         2,
@@ -392,10 +394,10 @@ export default {
                 }
             ],
             "benchmarks": [
-                71
+                73
             ],
             "benchmarkComparison": [
-                74,
+                76,
                 {
                     "benchmarkId": [
                         11,
@@ -406,7 +408,32 @@ export default {
                         "HistoryTimeframe!"
                     ],
                     "currencyMode": [
-                        70
+                        72
+                    ]
+                }
+            ],
+            "dividendCalendar": [
+                79,
+                {
+                    "year": [
+                        14,
+                        "Int!"
+                    ],
+                    "month": [
+                        14,
+                        "Int!"
+                    ]
+                }
+            ],
+            "dividendYieldAnalytics": [
+                82
+            ],
+            "simulateDRIP": [
+                85,
+                {
+                    "input": [
+                        83,
+                        "DRIPSimulationInput!"
                     ]
                 }
             ],
@@ -528,7 +555,7 @@ export default {
                 9
             ],
             "portfolio": [
-                42
+                44
             ],
             "__typename": [
                 2
@@ -625,29 +652,37 @@ export default {
                     ]
                 }
             ],
-            "triggerBackfill": [
+            "triggerDividendSync": [
                 41,
                 {
                     "input": [
-                        40,
+                        40
+                    ]
+                }
+            ],
+            "triggerBackfill": [
+                43,
+                {
+                    "input": [
+                        42,
                         "TriggerBackfillInput!"
                     ]
                 }
             ],
             "updateUserPreferences": [
-                48,
+                50,
                 {
                     "input": [
-                        47,
+                        49,
                         "UpdateUserPreferencesInput!"
                     ]
                 }
             ],
             "recordFXRateOverride": [
-                55,
+                57,
                 {
                     "input": [
-                        54,
+                        56,
                         "RecordFXRateOverrideInput!"
                     ]
                 }
@@ -700,7 +735,7 @@ export default {
         },
         "AuthPayload": {
             "user": [
-                45
+                47
             ],
             "accessToken": [
                 2
@@ -831,7 +866,7 @@ export default {
                 14
             ],
             "portfolio": [
-                42
+                44
             ],
             "message": [
                 2
@@ -1014,6 +1049,52 @@ export default {
                 2
             ]
         },
+        "TriggerDividendSyncInput": {
+            "symbols": [
+                2
+            ],
+            "exchangeCode": [
+                2
+            ],
+            "syncHistorical": [
+                9
+            ],
+            "forceProvider": [
+                2
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "DividendSyncPayload": {
+            "success": [
+                9
+            ],
+            "schedulesSynced": [
+                14
+            ],
+            "primarySourceCount": [
+                14
+            ],
+            "fallbackSourceCount": [
+                14
+            ],
+            "placeholdersUpgraded": [
+                14
+            ],
+            "message": [
+                2
+            ],
+            "durationMs": [
+                14
+            ],
+            "failedSymbols": [
+                2
+            ],
+            "__typename": [
+                2
+            ]
+        },
         "TriggerBackfillInput": {
             "fromDate": [
                 2
@@ -1077,7 +1158,7 @@ export default {
                 1
             ],
             "investments": [
-                43
+                45
             ],
             "inceptionDate": [
                 2
@@ -1166,7 +1247,7 @@ export default {
                 2
             ],
             "role": [
-                44
+                46
             ],
             "mustChangePassword": [
                 9
@@ -1223,10 +1304,10 @@ export default {
         },
         "UpdateUserPreferencesPayload": {
             "preferences": [
-                45
+                47
             ],
             "portfolio": [
-                42
+                44
             ],
             "__typename": [
                 2
@@ -1301,7 +1382,7 @@ export default {
         },
         "FXRatesConnection": {
             "items": [
-                50
+                52
             ],
             "totalCount": [
                 14
@@ -1338,7 +1419,7 @@ export default {
                 2
             ],
             "points": [
-                52
+                54
             ],
             "startRate": [
                 0
@@ -1387,7 +1468,7 @@ export default {
         },
         "RecordFXRateOverridePayload": {
             "rate": [
-                50
+                52
             ],
             "valuationsRecomputed": [
                 9
@@ -1401,7 +1482,7 @@ export default {
         "CashFlowCategory": {},
         "CashFlowFilterInput": {
             "timeframe": [
-                56
+                58
             ],
             "fromDate": [
                 2
@@ -1476,10 +1557,10 @@ export default {
                 3
             ],
             "flowDirection": [
-                57
+                59
             ],
             "category": [
-                58
+                60
             ],
             "symbol": [
                 2
@@ -1511,13 +1592,13 @@ export default {
         },
         "CashFlowReport": {
             "summary": [
-                60
+                62
             ],
             "breakdown": [
-                61
+                63
             ],
             "items": [
-                62
+                64
             ],
             "baseCurrency": [
                 2
@@ -1572,7 +1653,7 @@ export default {
         },
         "MissingPriceReport": {
             "items": [
-                64
+                66
             ],
             "totalCount": [
                 14
@@ -1636,7 +1717,7 @@ export default {
         },
         "MissingFXRatesReport": {
             "items": [
-                66
+                68
             ],
             "totalCount": [
                 14
@@ -1701,7 +1782,7 @@ export default {
                 2
             ],
             "cashFlowWeights": [
-                69
+                71
             ],
             "__typename": [
                 2
@@ -1826,10 +1907,10 @@ export default {
                 2
             ],
             "benchmark": [
-                71
+                73
             ],
             "currencyMode": [
-                70
+                72
             ],
             "startDate": [
                 2
@@ -1841,10 +1922,230 @@ export default {
                 14
             ],
             "points": [
-                72
+                74
             ],
             "metrics": [
-                73
+                75
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "DividendFrequency": {},
+        "DividendStatus": {},
+        "DividendCalendarEvent": {
+            "id": [
+                11
+            ],
+            "instrumentId": [
+                11
+            ],
+            "symbol": [
+                2
+            ],
+            "name": [
+                2
+            ],
+            "exDate": [
+                2
+            ],
+            "recordDate": [
+                2
+            ],
+            "paymentDate": [
+                2
+            ],
+            "sharesHeld": [
+                0
+            ],
+            "dpsDeclared": [
+                1
+            ],
+            "grossAmountBase": [
+                1
+            ],
+            "netAmountBase": [
+                1
+            ],
+            "frequency": [
+                77
+            ],
+            "status": [
+                78
+            ],
+            "isUserEntitled": [
+                9
+            ],
+            "isEstimated": [
+                9
+            ],
+            "frankingPct": [
+                0
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "MonthlyDividendProjection": {
+            "year": [
+                14
+            ],
+            "month": [
+                14
+            ],
+            "projectedIncome": [
+                1
+            ],
+            "dividendCount": [
+                14
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "HoldingYieldItem": {
+            "instrumentId": [
+                11
+            ],
+            "symbol": [
+                2
+            ],
+            "name": [
+                2
+            ],
+            "quantity": [
+                0
+            ],
+            "currentPrice": [
+                1
+            ],
+            "averageBuyPrice": [
+                1
+            ],
+            "currentMarketValue": [
+                1
+            ],
+            "costBasis": [
+                1
+            ],
+            "annualDps": [
+                1
+            ],
+            "projectedAnnualCash": [
+                1
+            ],
+            "currentYieldPct": [
+                0
+            ],
+            "yieldOnCostPct": [
+                0
+            ],
+            "dividendCagr3y": [
+                0
+            ],
+            "frequency": [
+                77
+            ],
+            "nextExDate": [
+                2
+            ],
+            "nextPaymentDate": [
+                2
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "DividendYieldAnalytics": {
+            "annualForwardIncome": [
+                1
+            ],
+            "monthlyAverageIncome": [
+                1
+            ],
+            "portfolioCurrentYield": [
+                0
+            ],
+            "portfolioYieldOnCost": [
+                0
+            ],
+            "pendingCashInflow": [
+                1
+            ],
+            "monthlyProjections": [
+                80
+            ],
+            "holdingsYield": [
+                81
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "DRIPSimulationInput": {
+            "horizonYears": [
+                14
+            ],
+            "dividendGrowthRatePct": [
+                0
+            ],
+            "capitalAppreciationPct": [
+                0
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "DRIPSimulationPoint": {
+            "year": [
+                14
+            ],
+            "dripPortfolioValue": [
+                0
+            ],
+            "cashPortfolioValue": [
+                0
+            ],
+            "dripAccumulatedShares": [
+                0
+            ],
+            "cashAccumulatedCash": [
+                0
+            ],
+            "dripAnnualDividend": [
+                0
+            ],
+            "cashAnnualDividend": [
+                0
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "DRIPSimulationResult": {
+            "startingPortfolioValue": [
+                0
+            ],
+            "startingAnnualDividend": [
+                0
+            ],
+            "baseCurrency": [
+                2
+            ],
+            "horizonYears": [
+                14
+            ],
+            "points": [
+                84
+            ],
+            "terminalDripValue": [
+                0
+            ],
+            "terminalCashValue": [
+                0
+            ],
+            "dripBenefitAmount": [
+                0
             ],
             "__typename": [
                 2

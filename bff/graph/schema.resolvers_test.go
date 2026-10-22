@@ -114,6 +114,7 @@ type fakePortfolioClient struct {
 	recordPriceOverrideFn          func(ctx context.Context, in *pb.RecordPriceOverrideRequest) (*pb.RecordPriceOverrideResponse, error)
 	getIngestionStatusFn           func(ctx context.Context, in *pb.GetIngestionStatusRequest) (*pb.GetIngestionStatusResponse, error)
 	triggerMarketSyncFn            func(ctx context.Context, in *pb.TriggerMarketSyncRequest) (*pb.TriggerMarketSyncResponse, error)
+	triggerDividendSyncFn          func(ctx context.Context, in *pb.TriggerDividendSyncRequest) (*pb.TriggerDividendSyncResponse, error)
 	triggerBackfillFn              func(ctx context.Context, in *pb.TriggerBackfillRequest) (*pb.TriggerBackfillResponse, error)
 	listCurrencyPairsFn            func(ctx context.Context, in *pb.ListCurrencyPairsRequest) (*pb.ListCurrencyPairsResponse, error)
 	listFXRatesFn                  func(ctx context.Context, in *pb.ListFXRatesRequest) (*pb.ListFXRatesResponse, error)
@@ -128,6 +129,9 @@ type fakePortfolioClient struct {
 	listBenchmarksFn                func(ctx context.Context, in *pb.ListBenchmarksRequest) (*pb.ListBenchmarksResponse, error)
 	getBenchmarkComparisonFn        func(ctx context.Context, in *pb.GetBenchmarkComparisonRequest) (*pb.GetBenchmarkComparisonResponse, error)
 	createPortfolioFn               func(ctx context.Context, in *pb.CreatePortfolioRequest) (*pb.CreatePortfolioResponse, error)
+	getDividendCalendarFn           func(ctx context.Context, in *pb.GetDividendCalendarRequest) (*pb.GetDividendCalendarResponse, error)
+	getDividendYieldAnalyticsFn     func(ctx context.Context, in *pb.GetDividendYieldAnalyticsRequest) (*pb.GetDividendYieldAnalyticsResponse, error)
+	simulateDRIPFn                  func(ctx context.Context, in *pb.SimulateDRIPRequest) (*pb.SimulateDRIPResponse, error)
 }
 
 func (f *fakePortfolioClient) CreatePortfolio(ctx context.Context, in *pb.CreatePortfolioRequest, opts ...grpc.CallOption) (*pb.CreatePortfolioResponse, error) {
@@ -255,6 +259,14 @@ func (f *fakePortfolioClient) TriggerMarketSync(ctx context.Context, in *pb.Trig
 	}
 	return nil, nil
 }
+
+func (f *fakePortfolioClient) TriggerDividendSync(ctx context.Context, in *pb.TriggerDividendSyncRequest, opts ...grpc.CallOption) (*pb.TriggerDividendSyncResponse, error) {
+	if f.triggerDividendSyncFn != nil {
+		return f.triggerDividendSyncFn(ctx, in)
+	}
+	return nil, nil
+}
+
 
 func (f *fakePortfolioClient) TriggerBackfill(ctx context.Context, in *pb.TriggerBackfillRequest, opts ...grpc.CallOption) (*pb.TriggerBackfillResponse, error) {
 	if f.triggerBackfillFn != nil {
@@ -1628,6 +1640,58 @@ func TestMutationResolver_TriggerMarketSync(t *testing.T) {
 		}
 	})
 }
+
+func TestMutationResolver_TriggerDividendSync(t *testing.T) {
+	t.Run("successfully triggers dividend sync for admin user", func(t *testing.T) {
+		adminCtx := context.WithValue(context.Background(), auth.UserRoleKey, "ADMIN")
+
+		fakeClient := &fakePortfolioClient{
+			triggerDividendSyncFn: func(ctx context.Context, in *pb.TriggerDividendSyncRequest) (*pb.TriggerDividendSyncResponse, error) {
+				return &pb.TriggerDividendSyncResponse{
+					Success:              true,
+					SchedulesSynced:      4,
+					PrimarySourceCount:   3,
+					FallbackSourceCount:  1,
+					PlaceholdersUpgraded: 1,
+					Message:              "Synced 4 dividend schedules",
+					DurationMs:           250,
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		mResolver := resolver.Mutation()
+
+		syncHistorical := true
+		forceProvider := "YAHOO"
+		input := &model.TriggerDividendSyncInput{
+			Symbols:        []string{"AAPL", "BHP.AX"},
+			SyncHistorical: &syncHistorical,
+			ForceProvider:  &forceProvider,
+		}
+
+		payload, err := mResolver.TriggerDividendSync(adminCtx, input)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if !payload.Success || payload.SchedulesSynced != 4 || payload.PrimarySourceCount != 3 {
+			t.Errorf("unexpected dividend sync payload: %+v", payload)
+		}
+	})
+
+	t.Run("returns forbidden error for standard non-admin user", func(t *testing.T) {
+		userCtx := context.WithValue(context.Background(), auth.UserRoleKey, "USER")
+
+		resolver := &Resolver{PortfolioClient: &fakePortfolioClient{}}
+		mResolver := resolver.Mutation()
+
+		_, err := mResolver.TriggerDividendSync(userCtx, nil)
+		if err == nil {
+			t.Fatalf("expected error for non-admin, got nil")
+		}
+	})
+}
+
 
 func TestMutationResolver_TriggerBackfill(t *testing.T) {
 	ctx := context.Background()
@@ -3404,6 +3468,198 @@ func TestMutationResolver_ChangePassword(t *testing.T) {
 		}
 	})
 }
+
+func (f *fakePortfolioClient) GetDividendCalendar(ctx context.Context, in *pb.GetDividendCalendarRequest, opts ...grpc.CallOption) (*pb.GetDividendCalendarResponse, error) {
+	if f.getDividendCalendarFn != nil {
+		return f.getDividendCalendarFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakePortfolioClient) GetDividendYieldAnalytics(ctx context.Context, in *pb.GetDividendYieldAnalyticsRequest, opts ...grpc.CallOption) (*pb.GetDividendYieldAnalyticsResponse, error) {
+	if f.getDividendYieldAnalyticsFn != nil {
+		return f.getDividendYieldAnalyticsFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakePortfolioClient) SimulateDRIP(ctx context.Context, in *pb.SimulateDRIPRequest, opts ...grpc.CallOption) (*pb.SimulateDRIPResponse, error) {
+	if f.simulateDRIPFn != nil {
+		return f.simulateDRIPFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func TestQueryResolver_DividendCalendar(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully resolves dividend calendar", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			getDividendCalendarFn: func(ctx context.Context, in *pb.GetDividendCalendarRequest) (*pb.GetDividendCalendarResponse, error) {
+				if in.GetYear() != 2026 || in.GetMonth() != 5 {
+					t.Errorf("unexpected year/month: %d/%d", in.GetYear(), in.GetMonth())
+				}
+				return &pb.GetDividendCalendarResponse{
+					Events: []*pb.DividendCalendarEvent{
+						{
+							Id:              "div-1",
+							InstrumentId:    "inst-1",
+							Symbol:          "BHP.AX",
+							Name:            "BHP Group",
+							ExDate:          "2026-05-15",
+							PaymentDate:     "2026-05-28",
+							SharesHeld:      decimalpb.ToProto(decimal.NewFromInt(100)),
+							DpsDeclared:     decimalpb.MoneyToProto(decimal.NewFromFloat(1.50), "AUD"),
+							GrossAmountBase: decimalpb.MoneyToProto(decimal.NewFromFloat(150.00), "USD"),
+							NetAmountBase:   decimalpb.MoneyToProto(decimal.NewFromFloat(150.00), "USD"),
+							Frequency:       pb.DividendFrequency_DIVIDEND_FREQUENCY_SEMI_ANNUAL,
+							Status:          pb.DividendEventStatus_DIVIDEND_EVENT_STATUS_ANNOUNCED,
+							IsUserEntitled:  true,
+							IsEstimated:     false,
+							FrankingPct:     decimalpb.ToProto(decimal.NewFromInt(100)),
+						},
+					},
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		res, err := resolver.Query().DividendCalendar(ctx, 2026, 5)
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if len(res) != 1 {
+			t.Fatalf("expected 1 event, got %d", len(res))
+		}
+		if res[0].Symbol != "BHP.AX" {
+			t.Errorf("expected BHP.AX, got %s", res[0].Symbol)
+		}
+		if res[0].Status != model.DividendStatusAnnounced {
+			t.Errorf("expected ANNOUNCED status, got %s", res[0].Status)
+		}
+	})
+
+	t.Run("returns error when portfolioClient fails", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			getDividendCalendarFn: func(ctx context.Context, in *pb.GetDividendCalendarRequest) (*pb.GetDividendCalendarResponse, error) {
+				return nil, errors.New("rpc failed")
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		_, err := resolver.Query().DividendCalendar(ctx, 2026, 5)
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+	})
+}
+
+func TestQueryResolver_DividendYieldAnalytics(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully resolves yield analytics", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			getDividendYieldAnalyticsFn: func(ctx context.Context, in *pb.GetDividendYieldAnalyticsRequest) (*pb.GetDividendYieldAnalyticsResponse, error) {
+				return &pb.GetDividendYieldAnalyticsResponse{
+					AnnualForwardIncome:   decimalpb.MoneyToProto(decimal.NewFromInt(1200), "USD"),
+					MonthlyAverageIncome:  decimalpb.MoneyToProto(decimal.NewFromInt(100), "USD"),
+					PortfolioCurrentYield: decimalpb.ToProto(decimal.NewFromFloat(0.045)),
+					PortfolioYieldOnCost:  decimalpb.ToProto(decimal.NewFromFloat(0.060)),
+					PendingCashInflow:     decimalpb.MoneyToProto(decimal.NewFromInt(300), "USD"),
+					MonthlyProjections: []*pb.MonthlyDividendProjection{
+						{
+							Year:            2026,
+							Month:           5,
+							ProjectedIncome: decimalpb.MoneyToProto(decimal.NewFromInt(100), "USD"),
+							DividendCount:   2,
+						},
+					},
+					HoldingsYield: []*pb.HoldingYieldItem{
+						{
+							InstrumentId:        "inst-1",
+							Symbol:              "AAPL",
+							Name:                "Apple Inc.",
+							Quantity:            decimalpb.ToProto(decimal.NewFromInt(50)),
+							CurrentPrice:        decimalpb.MoneyToProto(decimal.NewFromInt(200), "USD"),
+							AverageBuyPrice:     decimalpb.MoneyToProto(decimal.NewFromInt(150), "USD"),
+							CurrentMarketValue:  decimalpb.MoneyToProto(decimal.NewFromInt(10000), "USD"),
+							CostBasis:           decimalpb.MoneyToProto(decimal.NewFromInt(7500), "USD"),
+							AnnualDps:           decimalpb.MoneyToProto(decimal.NewFromFloat(1.00), "USD"),
+							ProjectedAnnualCash: decimalpb.MoneyToProto(decimal.NewFromInt(50), "USD"),
+							CurrentYieldPct:     decimalpb.ToProto(decimal.NewFromFloat(0.005)),
+							YieldOnCostPct:      decimalpb.ToProto(decimal.NewFromFloat(0.0066)),
+							DividendCagr_3Y:     decimalpb.ToProto(decimal.NewFromFloat(0.05)),
+							Frequency:           pb.DividendFrequency_DIVIDEND_FREQUENCY_QUARTERLY,
+							NextExDate:          "2026-05-10",
+							NextPaymentDate:     "2026-05-24",
+						},
+					},
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		res, err := resolver.Query().DividendYieldAnalytics(ctx)
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if res.AnnualForwardIncome.CurrencyCode != "USD" {
+			t.Errorf("expected USD currency, got %s", res.AnnualForwardIncome.CurrencyCode)
+		}
+		if len(res.HoldingsYield) != 1 {
+			t.Fatalf("expected 1 holding, got %d", len(res.HoldingsYield))
+		}
+		if res.HoldingsYield[0].Symbol != "AAPL" {
+			t.Errorf("expected AAPL, got %s", res.HoldingsYield[0].Symbol)
+		}
+	})
+}
+
+func TestQueryResolver_SimulateDRIP(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully resolves DRIP simulation", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			simulateDRIPFn: func(ctx context.Context, in *pb.SimulateDRIPRequest) (*pb.SimulateDRIPResponse, error) {
+				return &pb.SimulateDRIPResponse{
+					StartingPortfolioValue: decimalpb.ToProto(decimal.NewFromInt(100000)),
+					StartingAnnualDividend: decimalpb.ToProto(decimal.NewFromInt(4000)),
+					BaseCurrency:           "USD",
+					HorizonYears:           in.GetHorizonYears(),
+					Points: []*pb.DRIPSimulationPoint{
+						{
+							Year:                  1,
+							DripPortfolioValue:    decimalpb.ToProto(decimal.NewFromInt(110000)),
+							CashPortfolioValue:    decimalpb.ToProto(decimal.NewFromInt(105000)),
+							DripAccumulatedShares: decimalpb.ToProto(decimal.NewFromInt(1040)),
+							CashAccumulatedCash:   decimalpb.ToProto(decimal.NewFromInt(4000)),
+							DripAnnualDividend:    decimalpb.ToProto(decimal.NewFromInt(4400)),
+							CashAnnualDividend:    decimalpb.ToProto(decimal.NewFromInt(4200)),
+						},
+					},
+					TerminalDripValue: decimalpb.ToProto(decimal.NewFromInt(110000)),
+					TerminalCashValue: decimalpb.ToProto(decimal.NewFromInt(105000)),
+					DripBenefitAmount: decimalpb.ToProto(decimal.NewFromInt(5000)),
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		res, err := resolver.Query().SimulateDrip(ctx, model.DRIPSimulationInput{
+			HorizonYears: 10,
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if res.HorizonYears != 10 {
+			t.Errorf("expected 10 horizon years, got %d", res.HorizonYears)
+		}
+		if len(res.Points) != 1 {
+			t.Fatalf("expected 1 point, got %d", len(res.Points))
+		}
+	})
+}
+
 
 
 

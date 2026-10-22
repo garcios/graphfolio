@@ -193,6 +193,36 @@ func (mr *MockPortfolioServiceMockRecorder) GetCurrencyPairHistory(ctx, baseCurr
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetCurrencyPairHistory", reflect.TypeOf((*MockPortfolioService)(nil).GetCurrencyPairHistory), ctx, baseCurrency, quoteCurrency, timeframe)
 }
 
+// GetDividendCalendar mocks base method.
+func (m *MockPortfolioService) GetDividendCalendar(ctx context.Context, userID string, year, month int) ([]domain.DividendCalendarEvent, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDividendCalendar", ctx, userID, year, month)
+	ret0, _ := ret[0].([]domain.DividendCalendarEvent)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDividendCalendar indicates an expected call of GetDividendCalendar.
+func (mr *MockPortfolioServiceMockRecorder) GetDividendCalendar(ctx, userID, year, month any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDividendCalendar", reflect.TypeOf((*MockPortfolioService)(nil).GetDividendCalendar), ctx, userID, year, month)
+}
+
+// GetDividendYieldAnalytics mocks base method.
+func (m *MockPortfolioService) GetDividendYieldAnalytics(ctx context.Context, userID string) (*domain.DividendYieldAnalytics, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDividendYieldAnalytics", ctx, userID)
+	ret0, _ := ret[0].(*domain.DividendYieldAnalytics)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDividendYieldAnalytics indicates an expected call of GetDividendYieldAnalytics.
+func (mr *MockPortfolioServiceMockRecorder) GetDividendYieldAnalytics(ctx, userID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDividendYieldAnalytics", reflect.TypeOf((*MockPortfolioService)(nil).GetDividendYieldAnalytics), ctx, userID)
+}
+
 // GetIngestionStatus mocks base method.
 func (m *MockPortfolioService) GetIngestionStatus(ctx context.Context) (*domain.IngestionStatus, error) {
 	m.ctrl.T.Helper()
@@ -472,6 +502,21 @@ func (mr *MockPortfolioServiceMockRecorder) RecordPriceOverride(ctx, input any) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecordPriceOverride", reflect.TypeOf((*MockPortfolioService)(nil).RecordPriceOverride), ctx, input)
 }
 
+// SimulateDRIP mocks base method.
+func (m *MockPortfolioService) SimulateDRIP(ctx context.Context, userID string, input domain.DRIPSimulationInput) (*domain.DRIPSimulationResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SimulateDRIP", ctx, userID, input)
+	ret0, _ := ret[0].(*domain.DRIPSimulationResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SimulateDRIP indicates an expected call of SimulateDRIP.
+func (mr *MockPortfolioServiceMockRecorder) SimulateDRIP(ctx, userID, input any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SimulateDRIP", reflect.TypeOf((*MockPortfolioService)(nil).SimulateDRIP), ctx, userID, input)
+}
+
 // TriggerBackfill mocks base method.
 func (m *MockPortfolioService) TriggerBackfill(ctx context.Context, input domain.BackfillInput) (*domain.BackfillResult, error) {
 	m.ctrl.T.Helper()
@@ -485,6 +530,21 @@ func (m *MockPortfolioService) TriggerBackfill(ctx context.Context, input domain
 func (mr *MockPortfolioServiceMockRecorder) TriggerBackfill(ctx, input any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TriggerBackfill", reflect.TypeOf((*MockPortfolioService)(nil).TriggerBackfill), ctx, input)
+}
+
+// TriggerDividendSync mocks base method.
+func (m *MockPortfolioService) TriggerDividendSync(ctx context.Context, symbols []string, exchangeCode *string, syncHistorical bool, forceProvider string) (*domain.DividendSyncResult, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "TriggerDividendSync", ctx, symbols, exchangeCode, syncHistorical, forceProvider)
+	ret0, _ := ret[0].(*domain.DividendSyncResult)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// TriggerDividendSync indicates an expected call of TriggerDividendSync.
+func (mr *MockPortfolioServiceMockRecorder) TriggerDividendSync(ctx, symbols, exchangeCode, syncHistorical, forceProvider any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "TriggerDividendSync", reflect.TypeOf((*MockPortfolioService)(nil).TriggerDividendSync), ctx, symbols, exchangeCode, syncHistorical, forceProvider)
 }
 
 // TriggerMarketSync mocks base method.

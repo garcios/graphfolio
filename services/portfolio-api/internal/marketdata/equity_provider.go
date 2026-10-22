@@ -360,6 +360,219 @@ func twelveDataExchangeParam(exchange string) (string, string) {
 	return "exchange", ex
 }
 
+// Twelve Data Dividends Response
+type twelveDataDividendsResponse struct {
+	Meta struct {
+		Symbol   string `json:"symbol"`
+		Name     string `json:"name"`
+		Currency string `json:"currency"`
+		Exchange string `json:"exchange"`
+	} `json:"meta"`
+	Dividends []struct {
+		ExDate      string      `json:"ex_date"`
+		PaymentDate string      `json:"payment_date"`
+		RecordDate  string      `json:"record_date"`
+		Amount      json.Number `json:"amount"`
+	} `json:"dividends"`
+	Status  string `json:"status"`
+	Code    int    `json:"code,omitempty"`
+	Message string `json:"message,omitempty"`
+}
+
+func (p *TwelveDataProvider) fetchDividends(ctx context.Context, symbol string, params url.Values) (*twelveDataDividendsResponse, error) {
+	params.Set("symbol", symbol)
+	params.Set("apikey", p.apiKey)
+
+	endpoint := fmt.Sprintf("%s/dividends?%s", p.baseURL, params.Encode())
+
+	var result twelveDataDividendsResponse
+	err := ExecuteWithRetry(ctx, p.retryCfg, func(attempt int) error {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+		if err != nil {
+			return err
+		}
+
+		if p.limiter != nil {
+			if err := p.limiter.Wait(ctx); err != nil {
+				return err
+			}
+		}
+
+		resp, err := p.httpClient.Do(req)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode == http.StatusTooManyRequests {
+			return ErrProviderQuota
+		}
+		if resp.StatusCode != http.StatusOK {
+			bodySnippet, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
+			return &HTTPStatusError{
+				StatusCode: resp.StatusCode,
+				Status:     resp.Status,
+				Body:       string(bodySnippet),
+			}
+		}
+
+		decoder := json.NewDecoder(resp.Body)
+		decoder.UseNumber()
+
+		if err := decoder.Decode(&result); err != nil {
+			return fmt.Errorf("%w: %v", ErrInvalidAPIResponse, err)
+		}
+
+		if result.Status == "error" || result.Code != 0 {
+			msgLower := strings.ToLower(result.Message)
+			if strings.Contains(msgLower, "api key") || strings.Contains(msgLower, "credit") || strings.Contains(msgLower, "limit") {
+				return ErrProviderQuota
+			}
+			return fmt.Errorf("twelve data error: %s (code %d)", result.Message, result.Code)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+// GetUpcomingDividends retrieves announced or upcoming forward dividends using Twelve Data.
+func (p *TwelveDataProvider) GetUpcomingDividends(ctx context.Context, inst InstrumentRef) ([]DividendScheduleEvent, error) {
+	sym := resolveTwelveDataSymbol(inst)
+	params := url.Values{}
+	params.Set("range", "1y")
+
+	resp, err := p.fetchDividends(ctx, sym, params)
+	if err != nil {
+		return nil, fmt.Errorf("twelve data get upcoming dividends failed for %s: %w", inst.Symbol, err)
+	}
+
+	if len(resp.Dividends) == 0 {
+		return nil, nil
+	}
+
+	now := time.Now().UTC().Truncate(24 * time.Hour)
+	currency := inst.Currency
+	if resp.Meta.Currency != "" {
+		currency = strings.ToUpper(resp.Meta.Currency)
+	}
+	if currency == "" {
+		currency = "USD"
+	}
+
+	frankingPct := decimal.Zero
+	if strings.ToUpper(inst.Exchange) == "ASX" || strings.ToUpper(inst.Exchange) == "XASX" {
+		frankingPct = decimal.NewFromInt(100)
+	}
+
+	var events []DividendScheduleEvent
+	for _, div := range resp.Dividends {
+		exDate, err := time.Parse("2006-01-02", div.ExDate)
+		if err != nil {
+			continue
+		}
+		exDate = exDate.UTC().Truncate(24 * time.Hour)
+
+		var payDate time.Time
+		if div.PaymentDate != "" {
+			if pd, err := time.Parse("2006-01-02", div.PaymentDate); err == nil {
+				payDate = pd.UTC().Truncate(24 * time.Hour)
+			}
+		}
+		if payDate.IsZero() || payDate.Before(exDate) {
+			payDate = exDate.AddDate(0, 0, 14)
+		}
+
+		var recDate *time.Time
+		if div.RecordDate != "" {
+			if rd, err := time.Parse("2006-01-02", div.RecordDate); err == nil {
+				t := rd.UTC().Truncate(24 * time.Hour)
+				recDate = &t
+			}
+		}
+
+		amt, err := decimal.NewFromString(string(div.Amount))
+		if err != nil || !amt.IsPositive() {
+			continue
+		}
+
+		status := "ANNOUNCED"
+		if payDate.Before(now) {
+			status = "PAID"
+		} else if exDate.Before(now) {
+			status = "EX_DATE_PASSED"
+		}
+
+		events = append(events, DividendScheduleEvent{
+			InstrumentID:      inst.ID,
+			Symbol:            inst.Symbol,
+			ExchangeCode:      inst.Exchange,
+			ExDate:            exDate,
+			RecordDate:        recDate,
+			PaymentDate:       payDate,
+			AmountPerShare:    amt,
+			CurrencyCode:      currency,
+			Frequency:         "QUARTERLY",
+			Status:            status,
+			IsEstimated:       false,
+			FrankingPct:       frankingPct,
+			WithholdingTaxPct: decimal.Zero,
+			Source:            "twelvedata",
+		})
+	}
+
+	return events, nil
+}
+
+// GetHistoricalDividends retrieves historical cash distributions using Twelve Data.
+func (p *TwelveDataProvider) GetHistoricalDividends(ctx context.Context, inst InstrumentRef, fromDate, toDate time.Time) ([]DividendHistoryPoint, error) {
+	sym := resolveTwelveDataSymbol(inst)
+	params := url.Values{}
+	params.Set("range", "5y")
+
+	resp, err := p.fetchDividends(ctx, sym, params)
+	if err != nil {
+		return nil, fmt.Errorf("twelve data get historical dividends failed for %s: %w", inst.Symbol, err)
+	}
+
+	var points []DividendHistoryPoint
+	for _, div := range resp.Dividends {
+		exDate, err := time.Parse("2006-01-02", div.ExDate)
+		if err != nil {
+			continue
+		}
+		exDate = exDate.UTC().Truncate(24 * time.Hour)
+		if !fromDate.IsZero() && exDate.Before(fromDate) {
+			continue
+		}
+		if !toDate.IsZero() && exDate.After(toDate) {
+			continue
+		}
+
+		amt, err := decimal.NewFromString(string(div.Amount))
+		if err != nil || !amt.IsPositive() {
+			continue
+		}
+
+		points = append(points, DividendHistoryPoint{
+			Date:   exDate,
+			Amount: amt,
+		})
+	}
+
+	sort.Slice(points, func(i, j int) bool {
+		return points[i].Date.Before(points[j].Date)
+	})
+
+	return points, nil
+}
+
+
 // resolveYahooSymbol maps internal symbols and regional exchanges to Yahoo Finance tickers.
 func resolveYahooSymbol(inst InstrumentRef) string {
 	if inst.ProviderSymbol != "" {
@@ -465,6 +678,12 @@ type yahooChartResponse struct {
 					Adjclose []json.Number `json:"adjclose"`
 				} `json:"adjclose"`
 			} `json:"indicators"`
+			Events *struct {
+				Dividends map[string]struct {
+					Amount json.Number `json:"amount"`
+					Date   int64       `json:"date"`
+				} `json:"dividends"`
+			} `json:"events"`
 		} `json:"result"`
 		Error *struct {
 			Code        string `json:"code"`
@@ -472,6 +691,42 @@ type yahooChartResponse struct {
 		} `json:"error"`
 	} `json:"chart"`
 }
+
+type yahooTimestamp struct {
+	Raw int64  `json:"raw"`
+	Fmt string `json:"fmt"`
+}
+
+type yahooNumber struct {
+	Raw json.Number `json:"raw"`
+	Fmt string      `json:"fmt"`
+}
+
+type yahooQuoteSummaryResponse struct {
+	QuoteSummary struct {
+		Result []struct {
+			CalendarEvents *struct {
+				ExDividendDate *yahooTimestamp `json:"exDividendDate"`
+				DividendDate   *yahooTimestamp `json:"dividendDate"`
+			} `json:"calendarEvents"`
+			DefaultKeyStatistics *struct {
+				LastDividendValue *yahooNumber    `json:"lastDividendValue"`
+				LastDividendDate  *yahooTimestamp `json:"lastDividendDate"`
+			} `json:"defaultKeyStatistics"`
+			SummaryDetail *struct {
+				Currency       string          `json:"currency"`
+				DividendRate   *yahooNumber    `json:"dividendRate"`
+				DividendYield  *yahooNumber    `json:"dividendYield"`
+				ExDividendDate *yahooTimestamp `json:"exDividendDate"`
+			} `json:"summaryDetail"`
+		} `json:"result"`
+		Error *struct {
+			Code        string `json:"code"`
+			Description string `json:"description"`
+		} `json:"error"`
+	} `json:"quoteSummary"`
+}
+
 
 func (p *YahooFinanceProvider) fetchChart(ctx context.Context, symbol string, params url.Values) (*yahooChartResponse, error) {
 	endpoint := fmt.Sprintf("%s/v8/finance/chart/%s?%s", p.baseURL, url.PathEscape(symbol), params.Encode())
@@ -714,6 +969,220 @@ func (p *YahooFinanceProvider) FetchHistoricalPrices(ctx context.Context, inst I
 
 	return records, nil
 }
+
+func (p *YahooFinanceProvider) fetchQuoteSummary(ctx context.Context, symbol string, modules string) (*yahooQuoteSummaryResponse, error) {
+	endpoint := fmt.Sprintf("%s/v10/finance/quoteSummary/%s?modules=%s", p.baseURL, url.PathEscape(symbol), modules)
+
+	var result yahooQuoteSummaryResponse
+	err := ExecuteWithRetry(ctx, p.retryCfg, func(attempt int) error {
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
+		if err != nil {
+			return err
+		}
+
+		req.Header.Set("User-Agent", p.userAgent)
+		req.Header.Set("Accept", "application/json")
+
+		if p.limiter != nil {
+			if err := p.limiter.Wait(ctx); err != nil {
+				return err
+			}
+		}
+
+		resp, err := p.httpClient.Do(req)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode == http.StatusTooManyRequests {
+			return ErrProviderQuota
+		}
+		if resp.StatusCode != http.StatusOK {
+			bodySnippet, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
+			return &HTTPStatusError{
+				StatusCode: resp.StatusCode,
+				Status:     resp.Status,
+				Body:       string(bodySnippet),
+			}
+		}
+
+		decoder := json.NewDecoder(resp.Body)
+		decoder.UseNumber()
+
+		if err := decoder.Decode(&result); err != nil {
+			return fmt.Errorf("%w: %v", ErrInvalidAPIResponse, err)
+		}
+
+		if result.QuoteSummary.Error != nil {
+			return fmt.Errorf("yahoo finance quoteSummary error: %s (%s)", result.QuoteSummary.Error.Description, result.QuoteSummary.Error.Code)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+// GetUpcomingDividends retrieves announced or upcoming forward dividends using Yahoo Finance.
+func (p *YahooFinanceProvider) GetUpcomingDividends(ctx context.Context, inst InstrumentRef) ([]DividendScheduleEvent, error) {
+	targetSym := resolveYahooSymbol(inst)
+	summaryResp, err := p.fetchQuoteSummary(ctx, targetSym, "calendarEvents,defaultKeyStatistics,summaryDetail")
+	if err != nil {
+		return nil, fmt.Errorf("yahoo get upcoming dividends failed for %s: %w", inst.Symbol, err)
+	}
+
+	if len(summaryResp.QuoteSummary.Result) == 0 {
+		return nil, fmt.Errorf("yahoo quoteSummary returned empty result for %s", inst.Symbol)
+	}
+
+	res := summaryResp.QuoteSummary.Result[0]
+	var exDate time.Time
+	var payDate time.Time
+
+	if res.CalendarEvents != nil {
+		if res.CalendarEvents.ExDividendDate != nil && res.CalendarEvents.ExDividendDate.Raw > 0 {
+			exDate = time.Unix(res.CalendarEvents.ExDividendDate.Raw, 0).UTC().Truncate(24 * time.Hour)
+		}
+		if res.CalendarEvents.DividendDate != nil && res.CalendarEvents.DividendDate.Raw > 0 {
+			payDate = time.Unix(res.CalendarEvents.DividendDate.Raw, 0).UTC().Truncate(24 * time.Hour)
+		}
+	}
+
+	if exDate.IsZero() && res.SummaryDetail != nil && res.SummaryDetail.ExDividendDate != nil && res.SummaryDetail.ExDividendDate.Raw > 0 {
+		exDate = time.Unix(res.SummaryDetail.ExDividendDate.Raw, 0).UTC().Truncate(24 * time.Hour)
+	}
+
+	if exDate.IsZero() {
+		// No upcoming ex-dividend date announced
+		return nil, nil
+	}
+
+	if payDate.IsZero() || payDate.Before(exDate) {
+		payDate = exDate.AddDate(0, 0, 14)
+	}
+
+	// Determine amount per share
+	var dps decimal.Decimal
+	if res.DefaultKeyStatistics != nil && res.DefaultKeyStatistics.LastDividendValue != nil {
+		if d, err := decimal.NewFromString(string(res.DefaultKeyStatistics.LastDividendValue.Raw)); err == nil && d.IsPositive() {
+			dps = d
+		}
+	}
+
+	if dps.IsZero() && res.SummaryDetail != nil && res.SummaryDetail.DividendRate != nil {
+		if d, err := decimal.NewFromString(string(res.SummaryDetail.DividendRate.Raw)); err == nil && d.IsPositive() {
+			dps = d.Div(decimal.NewFromInt(4))
+		}
+	}
+
+	// Fallback to recent historical dividend if DPS is still 0
+	if dps.IsZero() {
+		history, histErr := p.GetHistoricalDividends(ctx, inst, time.Now().UTC().AddDate(-2, 0, 0), time.Now().UTC())
+		if histErr == nil && len(history) > 0 {
+			dps = history[len(history)-1].Amount
+		}
+	}
+
+	if dps.IsZero() {
+		return nil, fmt.Errorf("unable to determine dividend amount per share for %s", inst.Symbol)
+	}
+
+	currency := inst.Currency
+	if res.SummaryDetail != nil && res.SummaryDetail.Currency != "" {
+		currency = strings.ToUpper(res.SummaryDetail.Currency)
+	}
+	if currency == "" {
+		currency = "USD"
+	}
+
+	frankingPct := decimal.Zero
+	if strings.HasSuffix(strings.ToUpper(targetSym), ".AX") || strings.ToUpper(inst.Exchange) == "ASX" || strings.ToUpper(inst.Exchange) == "XASX" {
+		frankingPct = decimal.NewFromInt(100)
+	}
+
+	now := time.Now().UTC().Truncate(24 * time.Hour)
+	status := "ANNOUNCED"
+	if payDate.Before(now) {
+		status = "PAID"
+	} else if exDate.Before(now) {
+		status = "EX_DATE_PASSED"
+	}
+
+	event := DividendScheduleEvent{
+		InstrumentID:      inst.ID,
+		Symbol:            inst.Symbol,
+		ExchangeCode:      inst.Exchange,
+		ExDate:            exDate,
+		PaymentDate:       payDate,
+		AmountPerShare:    dps,
+		CurrencyCode:      currency,
+		Frequency:         "QUARTERLY",
+		Status:            status,
+		IsEstimated:       false,
+		FrankingPct:       frankingPct,
+		WithholdingTaxPct: decimal.Zero,
+		Source:            "yahoo",
+	}
+
+	return []DividendScheduleEvent{event}, nil
+}
+
+// GetHistoricalDividends retrieves historical cash distributions using Yahoo Finance.
+func (p *YahooFinanceProvider) GetHistoricalDividends(ctx context.Context, inst InstrumentRef, fromDate, toDate time.Time) ([]DividendHistoryPoint, error) {
+	targetSym := resolveYahooSymbol(inst)
+
+	params := url.Values{}
+	params.Set("interval", "1d")
+	params.Set("range", "5y")
+	params.Set("events", "div")
+
+	chartResp, err := p.fetchChart(ctx, targetSym, params)
+	if err != nil {
+		return nil, fmt.Errorf("yahoo get historical dividends failed for %s: %w", inst.Symbol, err)
+	}
+
+	if len(chartResp.Chart.Result) == 0 {
+		return nil, nil
+	}
+
+	res := chartResp.Chart.Result[0]
+	if res.Events == nil || len(res.Events.Dividends) == 0 {
+		return nil, nil
+	}
+
+	var points []DividendHistoryPoint
+	for _, div := range res.Events.Dividends {
+		t := time.Unix(div.Date, 0).UTC().Truncate(24 * time.Hour)
+		if !fromDate.IsZero() && t.Before(fromDate) {
+			continue
+		}
+		if !toDate.IsZero() && t.After(toDate) {
+			continue
+		}
+
+		amt, err := decimal.NewFromString(string(div.Amount))
+		if err != nil || !amt.IsPositive() {
+			continue
+		}
+
+		points = append(points, DividendHistoryPoint{
+			Date:   t,
+			Amount: amt,
+		})
+	}
+
+	sort.Slice(points, func(i, j int) bool {
+		return points[i].Date.Before(points[j].Date)
+	})
+
+	return points, nil
+}
+
 
 // ============================================================================
 // 3. Resilient / Fallback Price Provider

@@ -58,9 +58,18 @@ A modern portfolio tracker built for serious investors. GraphFolio accurately me
   - **Automated Idempotent Admin Bootstrapping**: Migration `000004_add_role_and_password_policy` and seeds provision `admin@graphfolio.app` with `Password123!` (Argon2id RFC 9106 hash), `role = 'ADMIN'`, and `must_change_password = true` without overwriting rotated passwords upon restarts.
   - **Role-Based Access Control (RBAC)**: Distinguishes between standard investors (`USER`) and administrators (`ADMIN`) across PostgreSQL constraints, Protobuf contracts, GraphQL schemas, and JWT claims. Investors attempting access to `:5174` receive an explicit 403 Forbidden `AccessDeniedView` with sign-out controls.
   - **Mandatory First-Login Password Rotation**: Unrotated credentials trigger `must_change_password = true`, locking navigation to `AdminChangePasswordView` until NIST SP 800-63B complexity standards ($\ge 10$ characters, uppercase, lowercase, digit, symbol) are met. Operational consoles (Assets, Prices, Ingestion, FX) remain unmounted until rotated.
-  - **Admin Session Lifecycle & Header Menu**: Powered by `AdminAuthContext` with silent cookie refresh, in-memory bearer token storage, and an `AdminLayout` header pill displaying user email, `ADMIN` badge, password change modal trigger, and sign out.
+- **Automated Dividend Corporate Action Ingestion Pipeline**: Resilient multi-provider architecture featuring Yahoo Finance as the primary source with HTML scrape fallback and Twelve Data as the authoritative secondary fallback. Features automated cadence frequency inference (`MONTHLY`, `QUARTERLY`, `SEMI_ANNUAL`, `ANNUAL`, `IRREGULAR`), database persistence in `portfolio.dividend_schedules`, and on-demand synchronization via CLI (`make ingest-dividends`) or the Admin Portal (`DividendSyncModal` in `IngestionPipeline`).
+- **Dividend Calendar, Forward Income & Yield Analytics**: Dedicated income analytics and passive cash flow forecasting hub in the Reports view (`web/apps/main-app/src/components/DividendCalendar.tsx`):
+  - **Summary KPI Strip**: Annual Forward Income, Monthly Average Income, Portfolio Current Yield %, Portfolio Yield on Cost (YOC) % with compounding expansion badge (`+X.XX% EXPANSION` when YOC exceeds Current Yield), and Pending Cash Inflows (accrued distributions past Ex-Date awaiting Pay Date).
+  - **12-Month Forward Distribution Bar Chart**: SVG binned monthly cash flow visualizer with hover company tooltips displaying projected payout and payment counts.
+  - **Tri-View Presentation**:
+    - **Monthly Calendar Grid**: Full interactive month grid with ex-date alerts (amber `EX`) and pay-date cash badges (emerald `PAY`), month navigation (`‹`, `›`, `Today`), and event slide-over detail drawers.
+    - **Chronological Agenda List**: Time-sequenced stream of upcoming payouts detailing ex-date, payment date, shares held, declared DPS, projected payout, frequency, and status badges.
+    - **Holdings Yield Matrix**: Asset-level matrix detailing current prices, average buy prices, market values, annual DPS, projected annual cash, current yields, YOC with compounding indicators, 3-year dividend CAGR, and next ex/pay dates.
+  - **Trade-Date Entitlement Verification**: Strictly enforces $T_{\text{trade}} < T_{\text{ex}}$ for dividend entitlement, distinguishing eligible shares from unentitled shares acquired on or after the ex-dividend date.
+  - **DRIP Compounding Simulator**: Interactive modal (`DRIPSimulatorModal`) modeling 1-to-30-year projections comparing 100% automated Dividend Reinvestment Plans (DRIP) against Cash Payout strategies, featuring dual SVG compounding curves, configurable dividend growth and capital appreciation rates, and terminal wealth delta analysis.
 - **Clean Microservice Monorepo**: Contract-first gRPC services with a Go GraphQL Backend-for-Frontend (BFF) and strongly-typed frontend queries.
-- **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, Vite, modal transaction entry (`AddTransactionModal` with Buy, Sell, Deposit, Withdrawal, Dividend, Interest, and Split support), statement import (`ImportTransactionsModal`), investor preferences dialog (`UserPreferencesModal`), reports hub (`ReportsView`), return calculator (`ModifiedDietzModal`), and instant reactive state refresh.
+- **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, Vite, modal transaction entry (`AddTransactionModal` with Buy, Sell, Deposit, Withdrawal, Dividend, Interest, and Split support), statement import (`ImportTransactionsModal`), investor preferences dialog (`UserPreferencesModal`), reports hub (`ReportsView`), return calculator (`ModifiedDietzModal`), dividend calendar (`DividendCalendar`), DRIP simulator (`DRIPSimulatorModal`), and instant reactive state refresh.
 
 > 📋 *For a comprehensive list of completed milestones, in-progress components, and planned roadmap items, see [`FEATURES.md`](file:///Users/oscargarcia/workspace/graphfolio/FEATURES.md).*
 
@@ -191,12 +200,12 @@ GraphFolio enforces a strict separation of concerns across contract-first, micro
 flowchart TB
     subgraph WebMonorepo ["Frontend Workspace Monorepo (web/)"]
         subgraph MainApp ["Primary Investor Application (:5173)"]
-            MAIN_UI["Investor Views and Dashboards<br/>• AuthView (Login and Register)<br/>• 10-Col Holdings Return Attribution<br/>• Benchmark SVG Chart and Metrics Strip<br/>• Cash Flow Report and Modified Dietz Modal<br/>• User Preferences and Change Password Modal"]
+            MAIN_UI["Investor Views and Dashboards<br/>• AuthView (Login and Register)<br/>• 10-Col Holdings Return Attribution<br/>• Benchmark SVG Chart and Metrics Strip<br/>• Cash Flow Report and Modified Dietz Modal<br/>• Dividend Calendar and DRIP Simulator Modal<br/>• User Preferences and Change Password Modal"]
             AUTH_CTX["AuthContext and State<br/>• In-Memory Bearer Token<br/>• Silent Refresh Timer (~60s Pre-Expiry)"]
         end
 
         subgraph AdminApp ["Internal Operations Portal (:5174)"]
-            ADMIN_UI["Administrative Portals<br/>• AdminLoginView and AccessDeniedView<br/>• Mandatory AdminChangePasswordView<br/>• Price Management and Override Presets<br/>• Missing Price and FX Diagnostics<br/>• FX Rates and Backfill Range Dispatcher"]
+            ADMIN_UI["Administrative Portals<br/>• AdminLoginView and AccessDeniedView<br/>• Mandatory AdminChangePasswordView<br/>• Price Management and Override Presets<br/>• Missing Price and FX Diagnostics<br/>• FX Rates and Backfill Range Dispatcher<br/>• Ingestion Pipeline and Dividend Sync Modal"]
             ADMIN_AUTH_CTX["AdminAuthContext and State<br/>• Silent Refresh and Bearer Token<br/>• Role Guard and Password Policy"]
         end
 
@@ -208,18 +217,18 @@ flowchart TB
 
     subgraph BFFLayer ["GraphQL Backend-for-Frontend (:8080)"]
         BFF_MW["HTTP Auth Middleware<br/>• HMAC-SHA256 JWT Verification<br/>• httpOnly Cookie Management<br/>• Scoped ctx.UserID Injection"]
-        BFF_RESOLVER["GraphQL Resolvers and Orchestrator<br/>• Auth: register, login, refresh, changePassword<br/>• Portfolio: holdings, transactions, CSV import<br/>• Performance: history, Dietz, benchmarks<br/>• Admin: prices, FX, diagnostics, backfills<br/>• Dynamic Base Currency Re-anchoring"]
+        BFF_RESOLVER["GraphQL Resolvers and Orchestrator<br/>• Auth: register, login, refresh, changePassword<br/>• Portfolio: holdings, transactions, CSV import<br/>• Performance: history, Dietz, benchmarks<br/>• Dividends: calendar, yield analytics, DRIP, sync<br/>• Admin: prices, FX, diagnostics, backfills<br/>• Dynamic Base Currency Re-anchoring"]
     end
 
     subgraph ProtoLayer ["Protocol Buffers Contract Layer (proto/)"]
         COMMON_PB["common/v1/decimal.proto<br/>• Exact Decimal and Money Contracts"]
-        PORT_PB["portfolio/v1/portfolio.proto<br/>• Portfolio, Benchmarks and Ledger RPCs"]
+        PORT_PB["portfolio/v1/portfolio.proto<br/>• Portfolio, Benchmarks, Dividends and Ledger RPCs"]
         USER_PB["user/v1/user.proto<br/>• User Auth, Sessions and Preferences RPCs"]
     end
 
     subgraph ServiceLayer ["Core Domain Microservices (services/)"]
         subgraph PortService ["Portfolio API (:50051) and Worker"]
-            PORT_SERVER["Portfolio gRPC Server<br/>• Deterministic Ledger Replay Engine<br/>• 3-Pillar Return Attribution Calculator<br/>• Benchmark Comparison and Risk Engine<br/>• Modified Dietz Actual/Actual Engine<br/>• Cash Flow Reconciliation Engine<br/>• Historical Valuation Snapshots and Backfill"]
+            PORT_SERVER["Portfolio gRPC Server<br/>• Deterministic Ledger Replay Engine<br/>• 3-Pillar Return Attribution Calculator<br/>• Forward Income, Yield Analytics and DRIP Engine<br/>• Benchmark Comparison and Risk Engine<br/>• Modified Dietz Actual/Actual Engine<br/>• Cash Flow Reconciliation Engine<br/>• Resilient Dividend Ingestion (Yahoo/TwelveData)"]
         end
 
         subgraph UserService ["User API (:50052)"]
@@ -228,7 +237,7 @@ flowchart TB
     end
 
     subgraph DBLayer ["PostgreSQL 17 Database (:5432/graphfolio)"]
-        PORT_DB["Portfolio Schema [portfolio_svc]<br/>• portfolios, transactions, holding_projections<br/>• tax_lots, lot_disposals, portfolio_valuations<br/>• daily_prices, fx_rates, benchmarks"]
+        PORT_DB["Portfolio Schema [portfolio_svc]<br/>• portfolios, transactions, holding_projections<br/>• tax_lots, lot_disposals, portfolio_valuations<br/>• daily_prices, fx_rates, benchmarks, dividend_schedules"]
         USER_DB["Users Schema [user_svc]<br/>• users (password_hash, role, must_change_password)<br/>• sessions (token_hash, family_id, is_revoked)"]
     end
 
@@ -448,6 +457,7 @@ make generate
 | `make db-reset` | Recreates database from scratch: drop, bootstrap, migrate, and seed |
 | `make test` | Runs unit tests across all modules in `go.work` with race detection |
 | `make ingest-market-data` | Runs the market data closing price and ECB FX fixing ingestion pipeline |
+| `make ingest-dividends` | Runs the dividend corporate action ingestion pipeline (Yahoo Finance & Twelve Data) |
 | `make run-valuation-job` | Runs the scheduled EOD valuation snapshot across active portfolios or historical backfills |
 | `make run-portfolio` | Starts the Portfolio gRPC microservice on port 50051 |
 | `make run-user` | Starts the User gRPC microservice on port 50052 |
@@ -472,6 +482,10 @@ make generate
 - **Cost Basis Switching Plan**: [`docs/plans/cost-basis-switching-implementation-plan.md`](./docs/plans/cost-basis-switching-implementation-plan.md)
 - **Portfolio Valuation Engine Plan**: [`docs/plans/portfolio-valuation-engine-implementation-plan.md`](./docs/plans/portfolio-valuation-engine-implementation-plan.md)
 - **Market Data Ingestion Plan**: [`docs/plans/market-data-ingestion-implementation-plan.md`](./docs/plans/market-data-ingestion-implementation-plan.md)
+- **Dividend Market Data Ingestion Implementation Plan**: [`docs/plans/dividend-market-data-ingestion-implementation-plan.md`](./docs/plans/dividend-market-data-ingestion-implementation-plan.md)
+- **Dividend Market Data Ingestion User Story**: [`docs/user-stories/dividend-market-data-ingestion-pipeline.md`](./docs/user-stories/dividend-market-data-ingestion-pipeline.md)
+- **Dividend Calendar & Yield Analytics Implementation Plan**: [`docs/plans/dividend-calendar-yield-analytics-implementation-plan.md`](./docs/plans/dividend-calendar-yield-analytics-implementation-plan.md)
+- **Dividend Calendar & Yield Analytics User Story**: [`docs/user-stories/dividend-calendar-yield-analytics.md`](./docs/user-stories/dividend-calendar-yield-analytics.md)
 - **User Preferences Implementation Plan**: [`docs/plans/user-preferences-implementation-plan.md`](./docs/plans/user-preferences-implementation-plan.md)
 - **Fundamental & Cash Flow Quality Engine Plan**: [`docs/plans/fundamental-cash-flow-engine-implementation-plan.md`](./docs/plans/fundamental-cash-flow-engine-implementation-plan.md)
 - **Currency Pair Historical Prices Plan**: [`docs/plans/currency-pair-historical-prices-implementation-plan.md`](./docs/plans/currency-pair-historical-prices-implementation-plan.md)

@@ -1176,6 +1176,34 @@ func (s *PortfolioServer) TriggerMarketSync(ctx context.Context, req *pb.Trigger
 	}, nil
 }
 
+func (s *PortfolioServer) TriggerDividendSync(ctx context.Context, req *pb.TriggerDividendSyncRequest) (*pb.TriggerDividendSyncResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	var exchangeCode *string
+	if req.ExchangeCode != nil && *req.ExchangeCode != "" {
+		exchangeCode = req.ExchangeCode
+	}
+
+	res, err := s.svc.TriggerDividendSync(ctx, req.GetSymbols(), exchangeCode, req.GetSyncHistorical(), req.GetForceProvider())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to trigger dividend sync: %v", err)
+	}
+
+	return &pb.TriggerDividendSyncResponse{
+		Success:              res.Success,
+		SchedulesSynced:      int32(res.SchedulesSynced),
+		PrimarySourceCount:   int32(res.PrimarySourceCount),
+		FallbackSourceCount:  int32(res.FallbackSourceCount),
+		PlaceholdersUpgraded: int32(res.PlaceholdersUpgraded),
+		Message:              res.Message,
+		DurationMs:           res.DurationMs,
+		FailedSymbols:        res.FailedSymbols,
+	}, nil
+}
+
+
 func (s *PortfolioServer) RebuildValuations(ctx context.Context, req *pb.RebuildValuationsRequest) (*pb.RebuildValuationsResponse, error) {
 	if s.svc == nil {
 		return nil, status.Error(codes.Unavailable, "service not initialized")
@@ -2210,3 +2238,218 @@ func fallbackMock() *pb.Portfolio {
 		},
 	}
 }
+
+func (s *PortfolioServer) GetDividendCalendar(ctx context.Context, req *pb.GetDividendCalendarRequest) (*pb.GetDividendCalendarResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	events, err := s.svc.GetDividendCalendar(ctx, req.GetUserId(), int(req.GetYear()), int(req.GetMonth()))
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get dividend calendar: %v", err)
+	}
+
+	var pbEvents []*pb.DividendCalendarEvent
+	for _, ev := range events {
+		pbFreq := pb.DividendFrequency_DIVIDEND_FREQUENCY_UNSPECIFIED
+		switch ev.Frequency {
+		case domain.DividendFreqMonthly:
+			pbFreq = pb.DividendFrequency_DIVIDEND_FREQUENCY_MONTHLY
+		case domain.DividendFreqQuarterly:
+			pbFreq = pb.DividendFrequency_DIVIDEND_FREQUENCY_QUARTERLY
+		case domain.DividendFreqSemiAnnual:
+			pbFreq = pb.DividendFrequency_DIVIDEND_FREQUENCY_SEMI_ANNUAL
+		case domain.DividendFreqAnnual:
+			pbFreq = pb.DividendFrequency_DIVIDEND_FREQUENCY_ANNUAL
+		case domain.DividendFreqIrregular:
+			pbFreq = pb.DividendFrequency_DIVIDEND_FREQUENCY_IRREGULAR
+		}
+
+		pbStatus := pb.DividendEventStatus_DIVIDEND_EVENT_STATUS_UNSPECIFIED
+		switch ev.Status {
+		case domain.DividendStatusAnnounced:
+			pbStatus = pb.DividendEventStatus_DIVIDEND_EVENT_STATUS_ANNOUNCED
+		case domain.DividendStatusExPassed:
+			pbStatus = pb.DividendEventStatus_DIVIDEND_EVENT_STATUS_EX_DATE_PASSED
+		case domain.DividendStatusPaid:
+			pbStatus = pb.DividendEventStatus_DIVIDEND_EVENT_STATUS_PAID
+		case domain.DividendStatusCancelled:
+			pbStatus = pb.DividendEventStatus_DIVIDEND_EVENT_STATUS_CANCELLED
+		}
+
+		recordDate := ""
+		if ev.RecordDate != nil {
+			recordDate = ev.RecordDate.Format("2006-01-02")
+		}
+
+		pbEvents = append(pbEvents, &pb.DividendCalendarEvent{
+			Id:              ev.ID.String(),
+			InstrumentId:    ev.InstrumentID.String(),
+			Symbol:          ev.Symbol,
+			Name:            ev.Name,
+			ExDate:          ev.ExDate.Format("2006-01-02"),
+			RecordDate:      recordDate,
+			PaymentDate:     ev.PaymentDate.Format("2006-01-02"),
+			SharesHeld:      decimalpb.ToProto(ev.SharesHeld),
+			DpsDeclared:     decimalpb.MoneyToProto(ev.DPSDeclared.Amount, ev.DPSDeclared.CurrencyCode),
+			GrossAmountBase: decimalpb.MoneyToProto(ev.GrossAmountBase.Amount, ev.GrossAmountBase.CurrencyCode),
+			NetAmountBase:   decimalpb.MoneyToProto(ev.NetAmountBase.Amount, ev.NetAmountBase.CurrencyCode),
+			Frequency:       pbFreq,
+			Status:          pbStatus,
+			IsUserEntitled:  ev.IsUserEntitled,
+			IsEstimated:     ev.IsEstimated,
+			FrankingPct:     decimalpb.ToProto(ev.FrankingPct),
+		})
+	}
+
+	return &pb.GetDividendCalendarResponse{
+		Events: pbEvents,
+	}, nil
+}
+
+func (s *PortfolioServer) GetDividendYieldAnalytics(ctx context.Context, req *pb.GetDividendYieldAnalyticsRequest) (*pb.GetDividendYieldAnalyticsResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	analytics, err := s.svc.GetDividendYieldAnalytics(ctx, req.GetUserId())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get dividend yield analytics: %v", err)
+	}
+
+	var pbProjections []*pb.MonthlyDividendProjection
+	for _, mp := range analytics.MonthlyProjections {
+		pbProjections = append(pbProjections, &pb.MonthlyDividendProjection{
+			Year:            int32(mp.Year),
+			Month:           int32(mp.Month),
+			ProjectedIncome: decimalpb.MoneyToProto(mp.ProjectedIncome.Amount, mp.ProjectedIncome.CurrencyCode),
+			DividendCount:   int32(mp.DividendCount),
+		})
+	}
+
+	var pbHoldings []*pb.HoldingYieldItem
+	for _, hy := range analytics.HoldingsYield {
+		var yocProto *commonpb.Decimal
+		if hy.YieldOnCostPct != nil {
+			yocProto = decimalpb.ToProto(*hy.YieldOnCostPct)
+		}
+		var cagrProto *commonpb.Decimal
+		if hy.DividendCAGR3Y != nil {
+			cagrProto = decimalpb.ToProto(*hy.DividendCAGR3Y)
+		}
+
+		nextEx := ""
+		if hy.NextExDate != nil {
+			nextEx = hy.NextExDate.Format("2006-01-02")
+		}
+		nextPay := ""
+		if hy.NextPaymentDate != nil {
+			nextPay = hy.NextPaymentDate.Format("2006-01-02")
+		}
+
+		pbFreq := pb.DividendFrequency_DIVIDEND_FREQUENCY_UNSPECIFIED
+		switch hy.Frequency {
+		case domain.DividendFreqMonthly:
+			pbFreq = pb.DividendFrequency_DIVIDEND_FREQUENCY_MONTHLY
+		case domain.DividendFreqQuarterly:
+			pbFreq = pb.DividendFrequency_DIVIDEND_FREQUENCY_QUARTERLY
+		case domain.DividendFreqSemiAnnual:
+			pbFreq = pb.DividendFrequency_DIVIDEND_FREQUENCY_SEMI_ANNUAL
+		case domain.DividendFreqAnnual:
+			pbFreq = pb.DividendFrequency_DIVIDEND_FREQUENCY_ANNUAL
+		case domain.DividendFreqIrregular:
+			pbFreq = pb.DividendFrequency_DIVIDEND_FREQUENCY_IRREGULAR
+		}
+
+		pbHoldings = append(pbHoldings, &pb.HoldingYieldItem{
+			InstrumentId:        hy.InstrumentID.String(),
+			Symbol:              hy.Symbol,
+			Name:                hy.Name,
+			Quantity:            decimalpb.ToProto(hy.Quantity),
+			CurrentPrice:        decimalpb.MoneyToProto(hy.CurrentPrice.Amount, hy.CurrentPrice.CurrencyCode),
+			AverageBuyPrice:     decimalpb.MoneyToProto(hy.AverageBuyPrice.Amount, hy.AverageBuyPrice.CurrencyCode),
+			CurrentMarketValue:  decimalpb.MoneyToProto(hy.CurrentMarketValue.Amount, hy.CurrentMarketValue.CurrencyCode),
+			CostBasis:           decimalpb.MoneyToProto(hy.CostBasis.Amount, hy.CostBasis.CurrencyCode),
+			AnnualDps:           decimalpb.MoneyToProto(hy.AnnualDPS.Amount, hy.AnnualDPS.CurrencyCode),
+			ProjectedAnnualCash: decimalpb.MoneyToProto(hy.ProjectedAnnualCash.Amount, hy.ProjectedAnnualCash.CurrencyCode),
+			CurrentYieldPct:     decimalpb.ToProto(hy.CurrentYieldPct),
+			YieldOnCostPct:      yocProto,
+			DividendCagr_3Y:     cagrProto,
+			Frequency:           pbFreq,
+			NextExDate:          nextEx,
+			NextPaymentDate:     nextPay,
+		})
+	}
+
+	var portfolioYOCProto *commonpb.Decimal
+	if analytics.PortfolioYieldOnCost != nil {
+		portfolioYOCProto = decimalpb.ToProto(*analytics.PortfolioYieldOnCost)
+	}
+
+	return &pb.GetDividendYieldAnalyticsResponse{
+		AnnualForwardIncome:   decimalpb.MoneyToProto(analytics.AnnualForwardIncome.Amount, analytics.AnnualForwardIncome.CurrencyCode),
+		MonthlyAverageIncome:  decimalpb.MoneyToProto(analytics.MonthlyAverageIncome.Amount, analytics.MonthlyAverageIncome.CurrencyCode),
+		PortfolioCurrentYield: decimalpb.ToProto(analytics.PortfolioCurrentYield),
+		PortfolioYieldOnCost:  portfolioYOCProto,
+		PendingCashInflow:     decimalpb.MoneyToProto(analytics.PendingCashInflow.Amount, analytics.PendingCashInflow.CurrencyCode),
+		MonthlyProjections:    pbProjections,
+		HoldingsYield:         pbHoldings,
+	}, nil
+}
+
+func (s *PortfolioServer) SimulateDRIP(ctx context.Context, req *pb.SimulateDRIPRequest) (*pb.SimulateDRIPResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	var divGrowth decimal.Decimal
+	if req.DividendGrowthRatePct != nil {
+		d, err := decimalpb.FromProto(req.DividendGrowthRatePct)
+		if err == nil {
+			divGrowth = d
+		}
+	}
+	var capGrowth decimal.Decimal
+	if req.CapitalAppreciationPct != nil {
+		c, err := decimalpb.FromProto(req.CapitalAppreciationPct)
+		if err == nil {
+			capGrowth = c
+		}
+	}
+
+	input := domain.DRIPSimulationInput{
+		HorizonYears:           int(req.GetHorizonYears()),
+		DividendGrowthRatePct:  divGrowth,
+		CapitalAppreciationPct: capGrowth,
+	}
+
+	res, err := s.svc.SimulateDRIP(ctx, req.GetUserId(), input)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to simulate DRIP: %v", err)
+	}
+
+	var pbPoints []*pb.DRIPSimulationPoint
+	for _, pt := range res.Points {
+		pbPoints = append(pbPoints, &pb.DRIPSimulationPoint{
+			Year:                  int32(pt.Year),
+			DripPortfolioValue:    decimalpb.ToProto(pt.DRIPPortfolioValue),
+			CashPortfolioValue:    decimalpb.ToProto(pt.CashPortfolioValue),
+			DripAccumulatedShares: decimalpb.ToProto(pt.DRIPAccumulatedShares),
+			CashAccumulatedCash:   decimalpb.ToProto(pt.CashAccumulatedCash),
+			DripAnnualDividend:    decimalpb.ToProto(pt.DRIPAnnualDividend),
+			CashAnnualDividend:    decimalpb.ToProto(pt.CashAnnualDividend),
+		})
+	}
+
+	return &pb.SimulateDRIPResponse{
+		StartingPortfolioValue: decimalpb.ToProto(res.StartingPortfolioValue),
+		StartingAnnualDividend: decimalpb.ToProto(res.StartingAnnualDividend),
+		BaseCurrency:           res.BaseCurrency,
+		HorizonYears:           int32(res.HorizonYears),
+		Points:                 pbPoints,
+		TerminalDripValue:      decimalpb.ToProto(res.TerminalDRIPValue),
+		TerminalCashValue:      decimalpb.ToProto(res.TerminalCashValue),
+		DripBenefitAmount:      decimalpb.ToProto(res.DRIPBenefitAmount),
+	}, nil
+}
+
