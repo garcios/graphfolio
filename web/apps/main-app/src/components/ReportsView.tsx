@@ -7,9 +7,15 @@ export type ReportType = 'cash-flow' | 'tax-lots' | 'dividends' | 'owner-earning
 
 interface ReportsViewProps {
   preferredCurrency?: string;
+  financialYearEndMonth?: number;
+  financialYearEndDay?: number;
 }
 
-export const ReportsView: React.FC<ReportsViewProps> = ({ preferredCurrency }) => {
+export const ReportsView: React.FC<ReportsViewProps> = ({
+  preferredCurrency,
+  financialYearEndMonth,
+  financialYearEndDay,
+}) => {
   const [activeReport, setActiveReport] = useState<ReportType>('cash-flow');
 
   return (
@@ -61,7 +67,11 @@ export const ReportsView: React.FC<ReportsViewProps> = ({ preferredCurrency }) =
 
       <div className="reports-content">
         {activeReport === 'cash-flow' && (
-          <CashFlowReport preferredCurrency={preferredCurrency} />
+          <CashFlowReport
+            preferredCurrency={preferredCurrency}
+            financialYearEndMonth={financialYearEndMonth}
+            financialYearEndDay={financialYearEndDay}
+          />
         )}
         {activeReport === 'dividends' && (
           <DividendCalendar preferredCurrency={preferredCurrency} />

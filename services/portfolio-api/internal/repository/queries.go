@@ -35,6 +35,11 @@ SET cost_basis_base   = ROUND((cost_basis_base * $2)::numeric, 10),
     dividends_base    = ROUND((dividends_base * $2)::numeric, 10)
 WHERE portfolio_id = $1;`
 
+	updateTransactionsBaseCurrencySQL = `
+UPDATE portfolio.transactions
+SET fx_rate_to_base = ROUND((COALESCE(fx_rate_to_base, 1.0) * $2)::numeric, 10)
+WHERE portfolio_id = $1;`
+
 	getHoldingsWithMarketDataSQL = `
 WITH combined_holdings AS (
     -- 1. Active open holdings from portfolio.holdings
@@ -222,11 +227,45 @@ WHERE portfolio_id = $1 AND valuation_date >= $2
 ORDER BY valuation_date ASC;`
 
 	getCashFXRatesSQL = `
-SELECT DISTINCT ON (base_currency) 
-    base_currency, rate
-FROM portfolio.fx_rates
-WHERE quote_currency = $1
-ORDER BY base_currency, rate_date DESC;`
+WITH latest_rates AS (
+    SELECT DISTINCT ON (base_currency, quote_currency)
+        base_currency, quote_currency, rate
+    FROM portfolio.fx_rates
+    ORDER BY base_currency, quote_currency, rate_date DESC
+)
+SELECT 
+    TRIM(c.code) AS foreign_currency,
+    COALESCE(
+        direct.rate,
+        CASE WHEN inverse.rate > 0 THEN 1.0 / inverse.rate ELSE NULL END,
+        triangulated_usd.rate,
+        triangulated_eur.rate,
+        1.0
+    ) AS fx_rate_to_base
+FROM portfolio.currencies c
+LEFT JOIN latest_rates direct 
+    ON direct.base_currency = c.code AND direct.quote_currency = $1
+LEFT JOIN latest_rates inverse 
+    ON inverse.base_currency = $1 AND inverse.quote_currency = c.code
+LEFT JOIN LATERAL (
+    SELECT (usd_base.rate / usd_foreign.rate) AS rate
+    FROM latest_rates usd_base
+    JOIN latest_rates usd_foreign 
+      ON usd_foreign.base_currency = 'USD' AND usd_foreign.quote_currency = c.code
+    WHERE usd_base.base_currency = 'USD' 
+      AND usd_base.quote_currency = $1 
+      AND usd_foreign.rate > 0
+) triangulated_usd ON (direct.rate IS NULL AND inverse.rate IS NULL)
+LEFT JOIN LATERAL (
+    SELECT (eur_base.rate / eur_foreign.rate) AS rate
+    FROM latest_rates eur_base
+    JOIN latest_rates eur_foreign 
+      ON eur_foreign.base_currency = 'EUR' AND eur_foreign.quote_currency = c.code
+    WHERE eur_base.base_currency = 'EUR' 
+      AND eur_base.quote_currency = $1 
+      AND eur_foreign.rate > 0
+) triangulated_eur ON (direct.rate IS NULL AND inverse.rate IS NULL AND triangulated_usd.rate IS NULL)
+WHERE c.code <> $1;`
 
 	getTransactionsSQL = `
 SELECT 
@@ -295,6 +334,7 @@ ORDER BY symbol ASC;`
 SELECT rate
 FROM portfolio.fx_rates
 WHERE base_currency = $1 AND quote_currency = $2
+  AND ($3::date IS NULL OR rate_date <= $3)
 ORDER BY rate_date DESC
 LIMIT 1;`
 
@@ -302,6 +342,7 @@ LIMIT 1;`
 SELECT rate
 FROM portfolio.fx_rates
 WHERE base_currency = $2 AND quote_currency = $1
+  AND ($3::date IS NULL OR rate_date <= $3)
 ORDER BY rate_date DESC
 LIMIT 1;`
 

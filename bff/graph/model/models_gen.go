@@ -142,11 +142,12 @@ type CashFlowReport struct {
 }
 
 type CashFlowSummary struct {
-	StartingCashBalance *Money `json:"startingCashBalance"`
-	TotalInflows        *Money `json:"totalInflows"`
-	TotalOutflows       *Money `json:"totalOutflows"`
-	NetCashFlow         *Money `json:"netCashFlow"`
-	EndingCashBalance   *Money `json:"endingCashBalance"`
+	StartingCashBalance  *Money `json:"startingCashBalance"`
+	TotalInflows         *Money `json:"totalInflows"`
+	TotalOutflows        *Money `json:"totalOutflows"`
+	NetCashFlow          *Money `json:"netCashFlow"`
+	EndingCashBalance    *Money `json:"endingCashBalance"`
+	UnrealizedFxGainLoss *Money `json:"unrealizedFxGainLoss"`
 }
 
 type ChangePasswordInput struct {

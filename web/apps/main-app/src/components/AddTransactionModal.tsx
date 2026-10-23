@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { client } from '@graphfolio/api-client';
 import './AddTransactionModal.css';
 
-export type TransactionType = 'BUY' | 'SELL' | 'DIVIDEND' | 'INTEREST' | 'SPLIT' | 'DEPOSIT' | 'WITHDRAWAL';
+export type TransactionType = 'BUY' | 'SELL' | 'DIVIDEND' | 'INTEREST' | 'SPLIT' | 'DEPOSIT' | 'WITHDRAWAL' | 'FX_CONVERSION';
 
 export const transactionTypes: TransactionType[] = [
   'BUY',
@@ -12,6 +12,7 @@ export const transactionTypes: TransactionType[] = [
   'SPLIT',
   'DEPOSIT',
   'WITHDRAWAL',
+  'FX_CONVERSION',
 ];
 
 export function validateTransactionInput(params: {
@@ -20,10 +21,12 @@ export function validateTransactionInput(params: {
   quantity?: string;
   price?: string;
   amount?: string;
+  currencyCode?: string;
+  targetCurrency?: string;
   splitRatioTo?: string;
   splitRatioFrom?: string;
 }): void {
-  const { type, symbol, quantity, price, amount, splitRatioTo, splitRatioFrom } = params;
+  const { type, symbol, quantity, price, amount, currencyCode, targetCurrency, splitRatioTo, splitRatioFrom } = params;
   if (type === 'BUY' || type === 'SELL') {
     if (!symbol) throw new Error('Please select or specify a symbol.');
     if (!quantity || parseFloat(quantity) <= 0) throw new Error('Quantity must be greater than zero.');
@@ -39,6 +42,18 @@ export function validateTransactionInput(params: {
     const from = parseFloat(splitRatioFrom || '');
     if (isNaN(to) || to <= 0) throw new Error('New shares ratio must be greater than zero.');
     if (isNaN(from) || from <= 0) throw new Error('Old shares ratio must be greater than zero.');
+  } else if (type === 'FX_CONVERSION') {
+    if (!amount || parseFloat(amount) <= 0) throw new Error('Source amount must be greater than zero.');
+    const target = targetCurrency || symbol;
+    if (!target) throw new Error('Target currency is required.');
+    if (currencyCode && target.toUpperCase() === currencyCode.toUpperCase()) {
+      throw new Error('Source and target currency cannot be identical.');
+    }
+    const q = quantity ? parseFloat(quantity) : 0;
+    const p = price ? parseFloat(price) : 0;
+    if (q <= 0 && p <= 0) {
+      throw new Error('Target amount received or conversion rate must be greater than zero.');
+    }
   }
 }
 
@@ -55,6 +70,7 @@ export function buildAddTransactionPayload(params: {
   notes?: string;
   splitRatioTo?: string;
   splitRatioFrom?: string;
+  targetCurrency?: string;
 }) {
   const {
     type,
@@ -69,6 +85,7 @@ export function buildAddTransactionPayload(params: {
     notes,
     splitRatioTo,
     splitRatioFrom,
+    targetCurrency,
   } = params;
 
   const input: any = {
@@ -77,7 +94,7 @@ export function buildAddTransactionPayload(params: {
     currencyCode,
     notes: notes || undefined,
     fee: fee ? fee : undefined,
-    feeCurrencyCode: type === 'BUY' || type === 'SELL' ? feeCurrencyCode : feeCurrencyCode || undefined,
+    feeCurrencyCode: type === 'BUY' || type === 'SELL' || type === 'FX_CONVERSION' ? feeCurrencyCode : feeCurrencyCode || undefined,
   };
 
   if (type === 'BUY' || type === 'SELL') {
@@ -100,6 +117,15 @@ export function buildAddTransactionPayload(params: {
     input.amount = '0.00';
     if (!notes) {
       input.notes = `${splitRatioTo || '2'}-for-${splitRatioFrom || '1'} Stock Split`;
+    }
+  } else if (type === 'FX_CONVERSION') {
+    const target = targetCurrency || symbol || 'USD';
+    input.symbol = target;
+    input.amount = amount;
+    input.quantity = quantity;
+    input.price = price;
+    if (!notes) {
+      input.notes = `Converted ${amount} ${currencyCode} to ${quantity || ''} ${target} @ ${price || ''}`;
     }
   }
 
@@ -146,6 +172,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   const [feeCurrencyCode, setFeeCurrencyCode] = useState(preferredCurrency || 'USD');
   const [prevPreferredCurrency, setPrevPreferredCurrency] = useState(preferredCurrency);
   const [currencyCode, setCurrencyCode] = useState('USD');
+  const [targetCurrency, setTargetCurrency] = useState('USD');
   const [notes, setNotes] = useState('');
 
   if (preferredCurrency && preferredCurrency !== prevPreferredCurrency) {
@@ -234,6 +261,37 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
     }
   };
 
+  const handleFXAmountChange = (val: string) => {
+    setAmount(val);
+    const src = parseFloat(val);
+    const p = parseFloat(price);
+    const tgt = parseFloat(quantity);
+    if (!isNaN(src) && src > 0) {
+      if (!isNaN(p) && p > 0) {
+        setQuantity((src * p).toFixed(2));
+      } else if (!isNaN(tgt) && tgt > 0) {
+        setPrice((tgt / src).toFixed(6));
+      }
+    }
+  };
+
+  const handleFXTargetAmountChange = (val: string) => {
+    setQuantity(val);
+    const tgt = parseFloat(val);
+    const src = parseFloat(amount);
+    if (!isNaN(tgt) && !isNaN(src) && src > 0 && tgt > 0) {
+      setPrice((tgt / src).toFixed(6));
+    }
+  };
+
+  const handleFXRateChange = (val: string) => {
+    setPrice(val);
+    const p = parseFloat(val);
+    const src = parseFloat(amount);
+    if (!isNaN(p) && !isNaN(src) && src > 0 && p > 0) {
+      setQuantity((src * p).toFixed(2));
+    }
+  };
 
   // Handle instrument selection
   const handleInstrumentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -253,10 +311,12 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
     try {
       validateTransactionInput({
         type,
-        symbol,
+        symbol: type === 'FX_CONVERSION' ? targetCurrency : symbol,
         quantity,
         price,
         amount,
+        currencyCode,
+        targetCurrency,
         splitRatioTo,
         splitRatioFrom,
       });
@@ -265,7 +325,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
         type,
         tradeDate,
         currencyCode,
-        symbol,
+        symbol: type === 'FX_CONVERSION' ? targetCurrency : symbol,
         quantity,
         price,
         amount,
@@ -274,6 +334,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
         notes,
         splitRatioTo,
         splitRatioFrom,
+        targetCurrency,
       });
 
       const res = await client.mutation({
@@ -314,6 +375,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
         setFee('0.00');
         setFeeCurrencyCode(preferredCurrency || 'USD');
         setNotes('');
+        setTargetCurrency('USD');
       }
     } catch (err: any) {
       console.error('Error adding transaction:', err);
@@ -341,13 +403,16 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
             <button
               key={t}
               type="button"
-              className={`type-tab ${type === t ? 'active' : ''} ${type === 'SELL' ? 'sell' : ''} ${type === 'SPLIT' ? 'split' : ''} ${type === 'INTEREST' ? 'interest' : ''}`}
+              className={`type-tab ${type === t ? 'active' : ''} ${type === 'SELL' ? 'sell' : ''} ${type === 'SPLIT' ? 'split' : ''} ${type === 'INTEREST' ? 'interest' : ''} ${type === 'FX_CONVERSION' ? 'fx' : ''}`}
               onClick={() => {
                 setType(t);
                 setError(null);
+                if (t === 'FX_CONVERSION' && currencyCode === targetCurrency) {
+                  setTargetCurrency(currencyCode === 'AUD' ? 'USD' : 'AUD');
+                }
               }}
             >
-              {t}
+              {t === 'FX_CONVERSION' ? 'FX Conv' : t}
             </button>
           ))}
         </div>
@@ -375,7 +440,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 
           {/* Trade Date & Currency */}
           <div className="form-row">
-            <div className="form-group">
+            <div className="form-group" style={{ flex: type === 'FX_CONVERSION' ? 1 : undefined }}>
               <label>Date</label>
               <input
                 type="date"
@@ -386,20 +451,22 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
               />
             </div>
 
-            <div className="form-group">
-              <label>Currency</label>
-              <select
-                className="form-select"
-                value={currencyCode}
-                onChange={(e) => setCurrencyCode(e.target.value)}
-              >
-                {availableCurrencies.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {type !== 'FX_CONVERSION' && (
+              <div className="form-group">
+                <label>Currency</label>
+                <select
+                  className="form-select"
+                  value={currencyCode}
+                  onChange={(e) => setCurrencyCode(e.target.value)}
+                >
+                  {availableCurrencies.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Stock Split specific: Ratio & Presets */}
@@ -490,8 +557,114 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
             </div>
           )}
 
+          {/* FX Conversion specific: From/To Amounts & Currencies */}
+          {type === 'FX_CONVERSION' && (
+            <>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>From Amount (Source)</label>
+                  <input
+                    type="number"
+                    step="any"
+                    placeholder="0.00"
+                    className="form-input"
+                    value={amount}
+                    onChange={(e) => handleFXAmountChange(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>From Currency</label>
+                  <select
+                    className="form-select"
+                    value={currencyCode}
+                    onChange={(e) => setCurrencyCode(e.target.value)}
+                  >
+                    {availableCurrencies.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>To Amount Received (Target)</label>
+                  <input
+                    type="number"
+                    step="any"
+                    placeholder="0.00"
+                    className="form-input"
+                    value={quantity}
+                    onChange={(e) => handleFXTargetAmountChange(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>To Currency</label>
+                  <select
+                    className="form-select"
+                    value={targetCurrency}
+                    onChange={(e) => setTargetCurrency(e.target.value)}
+                  >
+                    {availableCurrencies.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Exchange Rate (1 {currencyCode} = ? {targetCurrency})</label>
+                  <input
+                    type="number"
+                    step="any"
+                    placeholder="e.g. 0.6667"
+                    className="form-input"
+                    value={price}
+                    onChange={(e) => handleFXRateChange(e.target.value)}
+                  />
+                  <span className="form-calculated-note">
+                    Auto-computed from To Amount &divide; From Amount
+                  </span>
+                </div>
+
+                <div className="form-group">
+                  <label>Conversion / Wire Fee</label>
+                  <div className="fee-input-row">
+                    <input
+                      type="number"
+                      step="any"
+                      placeholder="0.00"
+                      className="form-input fee-amount-input"
+                      value={fee}
+                      onChange={(e) => setFee(e.target.value)}
+                    />
+                    <select
+                      className="form-select fee-currency-select"
+                      value={feeCurrencyCode}
+                      onChange={(e) => setFeeCurrencyCode(e.target.value)}
+                      title="Conversion Fee Currency"
+                    >
+                      {availableCurrencies.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
           {/* Total Amount & Brokerage Fee (BUY/SELL/DIVIDEND/DEPOSIT/WITHDRAWAL) */}
-          {type !== 'SPLIT' && (
+          {type !== 'SPLIT' && type !== 'FX_CONVERSION' && (
             <div className="form-row">
               <div className="form-group">
                 <label>Total Amount</label>

@@ -113,6 +113,9 @@ func (r *PostgresRepository) UpdatePortfolioBaseCurrency(ctx context.Context, po
 		if _, err := tx.Exec(ctx, updateHoldingsBaseCurrencySQL, portfolioID, fxRate); err != nil {
 			return fmt.Errorf("repository: failed to update holdings base currency: %w", err)
 		}
+		if _, err := tx.Exec(ctx, updateTransactionsBaseCurrencySQL, portfolioID, fxRate); err != nil {
+			return fmt.Errorf("repository: failed to update transactions base currency: %w", err)
+		}
 	}
 
 	return tx.Commit(ctx)
@@ -261,20 +264,22 @@ func (r *PostgresRepository) GetPortfolioValuations(ctx context.Context, portfol
 }
 
 func (r *PostgresRepository) GetCashFXRates(ctx context.Context, baseCurrency string) (map[string]decimal.Decimal, error) {
-	rows, err := r.pool.Query(ctx, getCashFXRatesSQL, baseCurrency)
+	cleanBase := strings.TrimSpace(baseCurrency)
+	rows, err := r.pool.Query(ctx, getCashFXRatesSQL, cleanBase)
 	if err != nil {
 		return nil, fmt.Errorf("repository: query fx rates failed: %w", err)
 	}
 	defer rows.Close()
 
 	rates := make(map[string]decimal.Decimal)
+	rates[cleanBase] = decimal.NewFromInt(1)
 	for rows.Next() {
 		var ccy string
 		var rate decimal.Decimal
 		if err := rows.Scan(&ccy, &rate); err != nil {
 			return nil, fmt.Errorf("repository: scan fx rate failed: %w", err)
 		}
-		rates[ccy] = rate
+		rates[strings.TrimSpace(ccy)] = rate
 	}
 
 	return rates, rows.Err()
@@ -816,29 +821,35 @@ func (r *PostgresRepository) ListActiveInstruments(ctx context.Context) ([]domai
 	return insts, rows.Err()
 }
 
-func (r *PostgresRepository) GetFXRate(ctx context.Context, fromCurrency, toCurrency string) (decimal.Decimal, error) {
+func (r *PostgresRepository) GetFXRate(ctx context.Context, fromCurrency, toCurrency string, asOf ...time.Time) (decimal.Decimal, error) {
 	if fromCurrency == toCurrency {
 		return decimal.NewFromInt(1), nil
 	}
 
+	var asOfParam *time.Time
+	if len(asOf) > 0 && !asOf[0].IsZero() {
+		t := asOf[0].UTC()
+		asOfParam = &t
+	}
+
 	// Try direct rate
 	var directRate decimal.Decimal
-	err := r.pool.QueryRow(ctx, getDirectFXRateSQL, fromCurrency, toCurrency).Scan(&directRate)
+	err := r.pool.QueryRow(ctx, getDirectFXRateSQL, fromCurrency, toCurrency, asOfParam).Scan(&directRate)
 	if err == nil && directRate.IsPositive() {
 		return directRate, nil
 	}
 
 	// Try inverse rate
 	var inverseRate decimal.Decimal
-	err = r.pool.QueryRow(ctx, getInverseFXRateSQL, fromCurrency, toCurrency).Scan(&inverseRate)
+	err = r.pool.QueryRow(ctx, getInverseFXRateSQL, fromCurrency, toCurrency, asOfParam).Scan(&inverseRate)
 	if err == nil && inverseRate.IsPositive() {
 		return decimal.NewFromInt(1).Div(inverseRate), nil
 	}
 
 	// Try triangulation via USD
 	if fromCurrency != "USD" && toCurrency != "USD" {
-		rateFromUSD, err1 := r.GetFXRate(ctx, "USD", fromCurrency)
-		rateToUSD, err2 := r.GetFXRate(ctx, "USD", toCurrency)
+		rateFromUSD, err1 := r.GetFXRate(ctx, "USD", fromCurrency, asOf...)
+		rateToUSD, err2 := r.GetFXRate(ctx, "USD", toCurrency, asOf...)
 		if err1 == nil && err2 == nil && rateFromUSD.IsPositive() && rateToUSD.IsPositive() {
 			return rateToUSD.Div(rateFromUSD), nil
 		}

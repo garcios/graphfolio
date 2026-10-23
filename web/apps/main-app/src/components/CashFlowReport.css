@@ -56,6 +56,35 @@
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.25);
 }
 
+.cfr-fy-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: 0.35rem;
+  padding: 0.25rem 0.65rem;
+  background: rgba(56, 189, 248, 0.08);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.cfr-fy-badge {
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.04em;
+  background: rgba(56, 189, 248, 0.16);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+}
+
+.cfr-fy-range {
+  color: var(--text-secondary);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+}
+
 .cfr-custom-dates {
   display: flex;
   align-items: center;

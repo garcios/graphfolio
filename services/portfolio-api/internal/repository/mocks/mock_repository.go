@@ -371,18 +371,23 @@ func (mr *MockRepositoryMockRecorder) GetExternalCashFlows(ctx, portfolioID, fro
 }
 
 // GetFXRate mocks base method.
-func (m *MockRepository) GetFXRate(ctx context.Context, fromCurrency, toCurrency string) (decimal.Decimal, error) {
+func (m *MockRepository) GetFXRate(ctx context.Context, fromCurrency, toCurrency string, asOf ...time.Time) (decimal.Decimal, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "GetFXRate", ctx, fromCurrency, toCurrency)
+	varargs := []any{ctx, fromCurrency, toCurrency}
+	for _, a := range asOf {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetFXRate", varargs...)
 	ret0, _ := ret[0].(decimal.Decimal)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // GetFXRate indicates an expected call of GetFXRate.
-func (mr *MockRepositoryMockRecorder) GetFXRate(ctx, fromCurrency, toCurrency any) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) GetFXRate(ctx, fromCurrency, toCurrency any, asOf ...any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFXRate", reflect.TypeOf((*MockRepository)(nil).GetFXRate), ctx, fromCurrency, toCurrency)
+	varargs := append([]any{ctx, fromCurrency, toCurrency}, asOf...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetFXRate", reflect.TypeOf((*MockRepository)(nil).GetFXRate), varargs...)
 }
 
 // GetHistoricalFXMatrix mocks base method.

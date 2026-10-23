@@ -35,6 +35,9 @@ func TestGetCashFlowReport(t *testing.T) {
 		nowFunc: func() time.Time { return fixedNow },
 	}
 
+	mockRepo.EXPECT().GetCashBalances(gomock.Any(), portfolioID).Return(nil, nil).AnyTimes()
+	mockRepo.EXPECT().GetCashFXRates(gomock.Any(), gomock.Any()).Return(nil, nil).AnyTimes()
+
 	symBHP := "BHP.AX"
 	symAAPL := "AAPL"
 	instNameBHP := "BHP Group Ltd"

@@ -1,17 +1,17 @@
 .drip-modal-container {
-  max-width: 820px;
+  max-width: 1100px;
   width: 95%;
   background: var(--card-bg, #0f172a);
   border: 1px solid var(--card-border, rgba(255, 255, 255, 0.1));
   border-radius: var(--radius-xl, 16px);
-  padding: 1.75rem;
+  padding: 2rem 2.25rem;
   backdrop-filter: blur(24px);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
   color: var(--text-primary, #f8fafc);
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
-  max-height: 90vh;
+  max-height: 92vh;
   overflow-y: auto;
 }
 
@@ -278,7 +278,7 @@
 
 .drip-chart-svg {
   width: 100%;
-  height: 240px;
+  height: 320px;
   overflow: visible;
 }
 
@@ -325,7 +325,7 @@
   overflow-x: auto;
   border-radius: var(--radius-lg, 12px);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  max-height: 260px;
+  max-height: 380px;
 }
 
 .drip-data-table {

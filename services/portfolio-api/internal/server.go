@@ -1310,11 +1310,12 @@ func (s *PortfolioServer) GetCashFlowReport(ctx context.Context, req *pb.GetCash
 
 	return &pb.GetCashFlowReportResponse{
 		Summary: &pb.CashFlowSummary{
-			StartingCashBalance: decimalpb.MoneyToProto(report.Summary.StartingCashBalance.Amount, report.Summary.StartingCashBalance.CurrencyCode),
-			TotalInflows:        decimalpb.MoneyToProto(report.Summary.TotalInflows.Amount, report.Summary.TotalInflows.CurrencyCode),
-			TotalOutflows:       decimalpb.MoneyToProto(report.Summary.TotalOutflows.Amount, report.Summary.TotalOutflows.CurrencyCode),
-			NetCashFlow:         decimalpb.MoneyToProto(report.Summary.NetCashFlow.Amount, report.Summary.NetCashFlow.CurrencyCode),
-			EndingCashBalance:   decimalpb.MoneyToProto(report.Summary.EndingCashBalance.Amount, report.Summary.EndingCashBalance.CurrencyCode),
+			StartingCashBalance:  decimalpb.MoneyToProto(report.Summary.StartingCashBalance.Amount, report.Summary.StartingCashBalance.CurrencyCode),
+			TotalInflows:         decimalpb.MoneyToProto(report.Summary.TotalInflows.Amount, report.Summary.TotalInflows.CurrencyCode),
+			TotalOutflows:        decimalpb.MoneyToProto(report.Summary.TotalOutflows.Amount, report.Summary.TotalOutflows.CurrencyCode),
+			NetCashFlow:          decimalpb.MoneyToProto(report.Summary.NetCashFlow.Amount, report.Summary.NetCashFlow.CurrencyCode),
+			EndingCashBalance:    decimalpb.MoneyToProto(report.Summary.EndingCashBalance.Amount, report.Summary.EndingCashBalance.CurrencyCode),
+			UnrealizedFxGainLoss: decimalpb.MoneyToProto(report.Summary.UnrealizedFXGainLoss.Amount, report.Summary.UnrealizedFXGainLoss.CurrencyCode),
 		},
 		Breakdown: &pb.CashFlowCategoryBreakdown{
 			Deposits:      decimalpb.MoneyToProto(report.Breakdown.Deposits.Amount, report.Breakdown.Deposits.CurrencyCode),

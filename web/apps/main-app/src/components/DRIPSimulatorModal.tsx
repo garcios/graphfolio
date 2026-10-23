@@ -101,9 +101,9 @@ export const DRIPSimulatorModal: React.FC<DRIPSimulatorModalProps> = ({
   if (!isOpen) return null;
 
   // Chart coordinate calculations
-  const chartWidth = 680;
-  const chartHeight = 240;
-  const padding = { top: 20, right: 30, bottom: 40, left: 70 };
+  const chartWidth = 980;
+  const chartHeight = 320;
+  const padding = { top: 20, right: 30, bottom: 40, left: 75 };
   const innerWidth = chartWidth - padding.left - padding.right;
   const innerHeight = chartHeight - padding.top - padding.bottom;
 
@@ -248,15 +248,15 @@ export const DRIPSimulatorModal: React.FC<DRIPSimulatorModalProps> = ({
                 <span className="drip-kpi-val text-emerald">
                   {formatMoney(result.terminalDripValue, currencyCode)}
                 </span>
-                <span className="drip-kpi-sub">Full Dividend Reinvestment</span>
+                <span className="drip-kpi-sub">100% Reinvested into Compounding Shares</span>
               </div>
 
               <div className="drip-kpi-card">
-                <span className="drip-kpi-label">Terminal Cash Payout ({result.horizonYears}y)</span>
+                <span className="drip-kpi-label">Terminal Cash Strategy ({result.horizonYears}y)</span>
                 <span className="drip-kpi-val text-sky">
                   {formatMoney(result.terminalCashValue, currencyCode)}
                 </span>
-                <span className="drip-kpi-sub">Taking Dividends as Cash</span>
+                <span className="drip-kpi-sub">Stock Value + Accumulated Cash</span>
               </div>
 
               <div className="drip-kpi-card highlight-benefit">
@@ -265,7 +265,7 @@ export const DRIPSimulatorModal: React.FC<DRIPSimulatorModalProps> = ({
                   +{formatMoney(result.dripBenefitAmount, currencyCode)}
                 </span>
                 <span className="drip-kpi-sub text-emerald">
-                  +{formatPercent(benefitPct.toString(), 1, false)} Extra Wealth Generated
+                  +{formatPercent(benefitPct.toString(), 1, false)} Net Wealth Advantage vs Cash
                 </span>
               </div>
             </div>
@@ -298,7 +298,7 @@ export const DRIPSimulatorModal: React.FC<DRIPSimulatorModalProps> = ({
                   </span>
                   <span className="legend-item cash-legend">
                     <span className="legend-dot dot-cash" />
-                    <strong>Cash Payout</strong> ({formatMoney(result.terminalCashValue, currencyCode)})
+                    <strong>Cash Strategy (Stock + Cash)</strong> ({formatMoney(result.terminalCashValue, currencyCode)})
                   </span>
                 </div>
 
@@ -414,12 +414,16 @@ export const DRIPSimulatorModal: React.FC<DRIPSimulatorModalProps> = ({
                     >
                       <div className="tooltip-year">Year {hoveredPoint.year}</div>
                       <div className="tooltip-row text-emerald">
-                        <span>DRIP:</span>
+                        <span>DRIP Value:</span>
                         <strong>{formatMoney(hoveredPoint.dripPortfolioValue, currencyCode)}</strong>
                       </div>
                       <div className="tooltip-row text-sky">
-                        <span>Cash:</span>
+                        <span>Cash Strategy:</span>
                         <strong>{formatMoney(hoveredPoint.cashPortfolioValue, currencyCode)}</strong>
+                      </div>
+                      <div className="tooltip-row">
+                        <span>Cash Accumulated:</span>
+                        <strong>{formatMoney(hoveredPoint.cashAccumulatedCash, currencyCode)}</strong>
                       </div>
                       <div className="tooltip-row">
                         <span>Annual Div:</span>

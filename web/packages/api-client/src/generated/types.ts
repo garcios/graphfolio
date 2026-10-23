@@ -1513,6 +1513,9 @@ export default {
             "endingCashBalance": [
                 1
             ],
+            "unrealizedFxGainLoss": [
+                1
+            ],
             "__typename": [
                 2
             ]

@@ -616,11 +616,12 @@ message GetCashFlowReportRequest {
 }
 
 message CashFlowSummary {
-  common.v1.Money starting_cash_balance = 1;
-  common.v1.Money total_inflows         = 2;
-  common.v1.Money total_outflows        = 3;
-  common.v1.Money net_cash_flow         = 4;
-  common.v1.Money ending_cash_balance   = 5;
+  common.v1.Money starting_cash_balance   = 1;
+  common.v1.Money total_inflows           = 2;
+  common.v1.Money total_outflows          = 3;
+  common.v1.Money net_cash_flow           = 4;
+  common.v1.Money ending_cash_balance     = 5;
+  common.v1.Money unrealized_fx_gain_loss = 6;
 }
 
 message CashFlowCategoryBreakdown {

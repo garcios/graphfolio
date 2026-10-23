@@ -174,12 +174,33 @@ func (s *portfolioService) GetCashFlowReport(ctx context.Context, input domain.C
 	netCashFlow := totalInflows.Sub(totalOutflows)
 	endingCash := startingCash.Add(netCashFlow)
 
+	// Fetch cash balances & spot FX rates to reconcile ending cash with portfolio cash balance if at or near today
+	unrealizedFX := decimal.Zero
+	if cashBalances, err := s.repo.GetCashBalances(ctx, portfolio.ID); err == nil && len(cashBalances) > 0 {
+		if fxRates, err := s.repo.GetCashFXRates(ctx, baseCurrency); err == nil {
+			spotCashBase := decimal.Zero
+			for _, c := range cashBalances {
+				rate := decimal.NewFromInt(1)
+				if r, ok := fxRates[c.CurrencyCode]; ok && r.IsPositive() {
+					rate = r
+				}
+				spotCashBase = spotCashBase.Add(c.Balance.Mul(rate))
+			}
+			// If toDate is on or after today, reconcile with spot cash balance
+			if !toDate.Before(now.Truncate(24 * time.Hour)) {
+				unrealizedFX = spotCashBase.Sub(endingCash)
+				endingCash = spotCashBase
+			}
+		}
+	}
+
 	summary := domain.CashFlowSummary{
-		StartingCashBalance: domain.NewMoney(startingCash.Round(2), baseCurrency),
-		TotalInflows:        domain.NewMoney(totalInflows.Round(2), baseCurrency),
-		TotalOutflows:       domain.NewMoney(totalOutflows.Round(2), baseCurrency),
-		NetCashFlow:         domain.NewMoney(netCashFlow.Round(2), baseCurrency),
-		EndingCashBalance:   domain.NewMoney(endingCash.Round(2), baseCurrency),
+		StartingCashBalance:  domain.NewMoney(startingCash.Round(2), baseCurrency),
+		TotalInflows:         domain.NewMoney(totalInflows.Round(2), baseCurrency),
+		TotalOutflows:        domain.NewMoney(totalOutflows.Round(2), baseCurrency),
+		NetCashFlow:          domain.NewMoney(netCashFlow.Round(2), baseCurrency),
+		UnrealizedFXGainLoss: domain.NewMoney(unrealizedFX.Round(2), baseCurrency),
+		EndingCashBalance:    domain.NewMoney(endingCash.Round(2), baseCurrency),
 	}
 
 	breakdown := domain.CashFlowCategoryBreakdown{

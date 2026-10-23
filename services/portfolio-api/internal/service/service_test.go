@@ -399,6 +399,13 @@ func TestPortfolioService_UpdatePortfolioBaseCurrency(t *testing.T) {
 		mockRepo.EXPECT().GetFXRate(ctx, "USD", "AUD").Return(decimal.NewFromFloat(1.523), nil)
 		mockRepo.EXPECT().UpdatePortfolioBaseCurrency(ctx, portfolioID, "AUD", decimal.NewFromFloat(1.523)).Return(nil)
 
+		// RebuildProjections calls
+		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(pAUD, nil)
+		mockRepo.EXPECT().GetTransactions(ctx, portfolioID).Return([]domain.Transaction{}, nil)
+		mockRepo.EXPECT().GetCorporateActions(ctx, gomock.Any()).Return([]domain.CorporateAction{}, nil)
+		mockRepo.EXPECT().SaveProjectionsTx(ctx, portfolioID, gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
+
+		// GetPortfolio calls
 		mockRepo.EXPECT().FindPortfolioByUser(ctx, userID).Return(pAUD, nil)
 		mockRepo.EXPECT().GetHoldingsWithMarketData(ctx, portfolioID).Return([]domain.HoldingWithPrice{}, nil)
 		mockRepo.EXPECT().GetCashBalances(ctx, portfolioID).Return([]domain.CashBalance{}, nil)

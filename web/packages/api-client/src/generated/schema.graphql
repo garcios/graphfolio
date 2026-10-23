@@ -528,6 +528,7 @@ type CashFlowSummary {
   totalOutflows: Money!
   netCashFlow: Money!
   endingCashBalance: Money!
+  unrealizedFxGainLoss: Money!
 }
 
 type CashFlowCategoryBreakdown {

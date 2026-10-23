@@ -1,11 +1,19 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { client } from '@graphfolio/api-client';
 import { formatMoney } from '@graphfolio/ui';
+import { calculateFiscalYearBounds } from './UserPreferencesModal';
 import './CashFlowReport.css';
 
-type CashFlowTimeframe = 'MTD' | 'YTD' | 'M1' | 'M3' | 'M6' | 'Y1' | 'ALL' | 'CUSTOM';
+type CashFlowTimeframe = 'MTD' | 'YTD' | 'LAST_FY' | 'M1' | 'M3' | 'M6' | 'Y1' | 'ALL' | 'CUSTOM';
 type SortField = 'date' | 'amount' | 'type';
 type SortDirection = 'asc' | 'desc';
+
+const formatDateToISO = (d: Date): string => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
 
 export const CATEGORY_OPTIONS = [
   { id: 'CAPITAL_DEPOSITS', label: 'Capital Deposits', shortLabel: 'Deposits' },
@@ -20,17 +28,62 @@ export const CATEGORY_OPTIONS = [
 
 export const ALL_CATEGORY_IDS = CATEGORY_OPTIONS.map((c) => c.id);
 
-interface CashFlowReportProps {
+export interface CashFlowReportProps {
   preferredCurrency?: string;
+  financialYearEndMonth?: number;
+  financialYearEndDay?: number;
 }
 
-export const CashFlowReport: React.FC<CashFlowReportProps> = ({ preferredCurrency }) => {
+export const CashFlowReport: React.FC<CashFlowReportProps> = ({
+  preferredCurrency,
+  financialYearEndMonth,
+  financialYearEndDay,
+}) => {
   const [timeframe, setTimeframe] = useState<CashFlowTimeframe>('MTD');
   const [customFromDate, setCustomFromDate] = useState<string>('');
   const [customToDate, setCustomToDate] = useState<string>('');
   const [reportData, setReportData] = useState<any>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [fyEndMonth, setFyEndMonth] = useState<number>(financialYearEndMonth ?? 6);
+  const [fyEndDay, setFyEndDay] = useState<number>(financialYearEndDay ?? 30);
+
+  useEffect(() => {
+    if (financialYearEndMonth !== undefined && financialYearEndDay !== undefined) {
+      setFyEndMonth(financialYearEndMonth);
+      setFyEndDay(financialYearEndDay);
+    } else {
+      client
+        .query({
+          userPreferences: {
+            financialYearEndMonth: true,
+            financialYearEndDay: true,
+          },
+        })
+        .then((res: any) => {
+          if (res?.userPreferences) {
+            if (res.userPreferences.financialYearEndMonth != null) {
+              setFyEndMonth(res.userPreferences.financialYearEndMonth);
+            }
+            if (res.userPreferences.financialYearEndDay != null) {
+              setFyEndDay(res.userPreferences.financialYearEndDay);
+            }
+          }
+        })
+        .catch(() => {});
+    }
+  }, [financialYearEndMonth, financialYearEndDay]);
+
+  const lastFYBounds = useMemo(() => {
+    const bounds = calculateFiscalYearBounds(fyEndMonth, fyEndDay);
+    return {
+      fromDate: formatDateToISO(bounds.prevStartDate),
+      toDate: formatDateToISO(bounds.prevEndDate),
+      label: bounds.prevLabel,
+      periodString: bounds.prevPeriod,
+    };
+  }, [fyEndMonth, fyEndDay]);
 
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([...ALL_CATEGORY_IDS]);
@@ -43,12 +96,17 @@ export const CashFlowReport: React.FC<CashFlowReportProps> = ({ preferredCurrenc
     setLoading(true);
     setError(null);
 
-    const filterArgs: any = {
-      timeframe,
-    };
-    if (timeframe === 'CUSTOM') {
+    const filterArgs: any = {};
+    if (timeframe === 'LAST_FY') {
+      filterArgs.timeframe = 'CUSTOM';
+      filterArgs.fromDate = lastFYBounds.fromDate;
+      filterArgs.toDate = lastFYBounds.toDate;
+    } else if (timeframe === 'CUSTOM') {
+      filterArgs.timeframe = 'CUSTOM';
       if (customFromDate) filterArgs.fromDate = customFromDate;
       if (customToDate) filterArgs.toDate = customToDate;
+    } else {
+      filterArgs.timeframe = timeframe;
     }
     if (preferredCurrency) {
       filterArgs.currency = preferredCurrency;
@@ -67,6 +125,7 @@ export const CashFlowReport: React.FC<CashFlowReportProps> = ({ preferredCurrenc
             totalOutflows: { amount: true, currencyCode: true },
             netCashFlow: { amount: true, currencyCode: true },
             endingCashBalance: { amount: true, currencyCode: true },
+            unrealizedFxGainLoss: { amount: true, currencyCode: true },
           },
           breakdown: {
             deposits: { amount: true, currencyCode: true },
@@ -107,7 +166,7 @@ export const CashFlowReport: React.FC<CashFlowReportProps> = ({ preferredCurrenc
 
   useEffect(() => {
     fetchReport();
-  }, [timeframe, customFromDate, customToDate, preferredCurrency]);
+  }, [timeframe, customFromDate, customToDate, preferredCurrency, lastFYBounds]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -253,7 +312,11 @@ export const CashFlowReport: React.FC<CashFlowReportProps> = ({ preferredCurrenc
 
     const lines: string[] = [];
     lines.push('GraphFolio Portfolio Cash Flow Report');
-    lines.push(`Reporting Period,${reportData.fromDate || 'Inception'} to ${reportData.toDate}`);
+    const periodStr =
+      timeframe === 'LAST_FY'
+        ? `Last Financial Year (${lastFYBounds.label}: ${lastFYBounds.periodString})`
+        : `${reportData.fromDate || 'Inception'} to ${reportData.toDate}`;
+    lines.push(`Reporting Period,${periodStr}`);
     lines.push(`Base Currency,${baseCcy}`);
     lines.push(`Exported At,${new Date().toISOString()}`);
     lines.push('');
@@ -303,7 +366,11 @@ export const CashFlowReport: React.FC<CashFlowReportProps> = ({ preferredCurrenc
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `GraphFolio_CashFlow_${reportData.toDate || 'Report'}.csv`);
+    const filename =
+      timeframe === 'LAST_FY'
+        ? `GraphFolio_CashFlow_${lastFYBounds.label}_${reportData.toDate || 'Report'}.csv`
+        : `GraphFolio_CashFlow_${reportData.toDate || 'Report'}.csv`;
+    link.setAttribute('download', filename);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -335,16 +402,36 @@ export const CashFlowReport: React.FC<CashFlowReportProps> = ({ preferredCurrenc
       {/* Control Toolbar */}
       <div className="cfr-toolbar">
         <div className="cfr-timeframe-group">
-          {(['MTD', 'YTD', 'M1', 'M3', 'M6', 'Y1', 'ALL', 'CUSTOM'] as CashFlowTimeframe[]).map((tf) => (
+          {(['MTD', 'YTD', 'LAST_FY', 'M1', 'M3', 'M6', 'Y1', 'ALL', 'CUSTOM'] as CashFlowTimeframe[]).map((tf) => (
             <button
               key={tf}
               type="button"
               className={`cfr-pill-btn ${timeframe === tf ? 'active' : ''}`}
               onClick={() => setTimeframe(tf)}
+              title={tf === 'LAST_FY' ? `Last Financial Year (${lastFYBounds.periodString})` : undefined}
             >
-              {tf === 'M1' ? '1M' : tf === 'M3' ? '3M' : tf === 'M6' ? '6M' : tf === 'Y1' ? '1Y' : tf === 'ALL' ? 'All Time' : tf}
+              {tf === 'M1'
+                ? '1M'
+                : tf === 'M3'
+                ? '3M'
+                : tf === 'M6'
+                ? '6M'
+                : tf === 'Y1'
+                ? '1Y'
+                : tf === 'ALL'
+                ? 'All Time'
+                : tf === 'LAST_FY'
+                ? 'Last Financial Year'
+                : tf}
             </button>
           ))}
+
+          {timeframe === 'LAST_FY' && (
+            <div className="cfr-fy-indicator" title={`Financial Year Period: ${lastFYBounds.periodString}`}>
+              <span className="cfr-fy-badge">{lastFYBounds.label}</span>
+              <span className="cfr-fy-range">{lastFYBounds.periodString}</span>
+            </div>
+          )}
 
           {timeframe === 'CUSTOM' && (
             <div className="cfr-custom-dates">
@@ -419,7 +506,13 @@ export const CashFlowReport: React.FC<CashFlowReportProps> = ({ preferredCurrenc
             <div className="cfr-kpi-card reconciled">
               <span className="cfr-kpi-label">Ending Cash</span>
               <span className="cfr-kpi-value">{formatMoney(summary?.endingCashBalance)}</span>
-              <span className="reconciled-badge">✓ Reconciled Balance</span>
+              {summary?.unrealizedFxGainLoss && Number(summary.unrealizedFxGainLoss.amount) !== 0 ? (
+                <span className="reconciled-badge" style={{ color: Number(summary.unrealizedFxGainLoss.amount) >= 0 ? '#34d399' : '#f87171' }}>
+                  {Number(summary.unrealizedFxGainLoss.amount) >= 0 ? '+' : ''}{formatMoney(summary.unrealizedFxGainLoss)} FX gain/loss
+                </span>
+              ) : (
+                <span className="reconciled-badge">✓ Reconciled Balance</span>
+              )}
             </div>
           </div>
 

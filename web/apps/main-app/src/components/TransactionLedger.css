@@ -340,6 +340,12 @@
   border: 1px solid rgba(249, 115, 22, 0.3);
 }
 
+.badge-type.fx {
+  background: rgba(234, 179, 8, 0.14);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.35);
+}
+
 .badge-type.other {
   background: rgba(161, 161, 170, 0.14);
   color: #d4d4d8;

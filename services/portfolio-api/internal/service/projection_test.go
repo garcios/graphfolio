@@ -432,3 +432,61 @@ func TestProcessLedgerMultiCurrencyBrokerageFee(t *testing.T) {
 		t.Errorf("expected RealizedPnLBase 720, got %s", disposals[0].RealizedPnLBase)
 	}
 }
+
+func TestProcessLedgerFXConversion(t *testing.T) {
+	portfolioID := uuid.New()
+	p := domain.Portfolio{
+		ID:           portfolioID,
+		BaseCurrency: "AUD",
+	}
+
+	depositAmt := decimal.NewFromInt(10000)
+	depositTx := domain.Transaction{
+		ID:           uuid.New(),
+		PortfolioID:  portfolioID,
+		Type:         domain.TxTypeDeposit,
+		TradeDate:    time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC),
+		Amount:       depositAmt,
+		CurrencyCode: "AUD",
+	}
+
+	// FX Conversion: Convert 1500 AUD to 1000 USD
+	convertAmt := decimal.NewFromInt(1500)
+	targetQty := decimal.NewFromInt(1000)
+	feeAmt := decimal.NewFromInt(5)
+	notes := "Converted 1500 AUD to 1000 USD @ 0.6667"
+	fxTx := domain.Transaction{
+		ID:           uuid.New(),
+		PortfolioID:  portfolioID,
+		Type:         domain.TxTypeFXConversion,
+		TradeDate:    time.Date(2025, 1, 2, 0, 0, 0, 0, time.UTC),
+		Quantity:     &targetQty,
+		Amount:       convertAmt,
+		CurrencyCode: "AUD",
+		Fee:          feeAmt,
+		Notes:        &notes,
+	}
+
+	_, _, _, cashBalances, err := service.ProcessLedger(p, []domain.Transaction{depositTx, fxTx}, nil)
+	if err != nil {
+		t.Fatalf("ProcessLedger failed: %v", err)
+	}
+
+	cashMap := make(map[string]decimal.Decimal)
+	for _, c := range cashBalances {
+		cashMap[c.CurrencyCode] = c.Balance
+	}
+
+	// AUD: 10000 - 1500 - 5 = 8495
+	expectedAUD := decimal.NewFromInt(8495)
+	if !cashMap["AUD"].Equal(expectedAUD) {
+		t.Errorf("expected AUD cash %s, got %s", expectedAUD, cashMap["AUD"])
+	}
+
+	// USD: +1000
+	expectedUSD := decimal.NewFromInt(1000)
+	if !cashMap["USD"].Equal(expectedUSD) {
+		t.Errorf("expected USD cash %s, got %s", expectedUSD, cashMap["USD"])
+	}
+}
+

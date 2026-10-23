@@ -83,7 +83,9 @@ func (s *portfolioService) GetDividendCalendar(ctx context.Context, userID strin
 		}
 
 		fx := decimal.NewFromInt(1)
-		if r, ok := fxRates[sched.CurrencyCode]; ok && r.IsPositive() {
+		if h.FXRateToBase.IsPositive() && (sched.CurrencyCode == "" || sched.CurrencyCode == h.InstrumentCurrency) {
+			fx = h.FXRateToBase
+		} else if r, ok := fxRates[sched.CurrencyCode]; ok && r.IsPositive() {
 			fx = r
 		}
 
@@ -225,16 +227,20 @@ func (s *portfolioService) SimulateDRIP(ctx context.Context, userID string, inpu
 		return nil, fmt.Errorf("service: get yield analytics for DRIP failed: %w", err)
 	}
 
-	val, err := s.repo.GetLatestValuation(ctx, portfolio.ID)
+	// Calculate starting portfolio value from current active holdings (Invested Assets)
 	startVal := decimal.Zero
-	if err == nil && val != nil && val.MarketValueBase.IsPositive() {
-		startVal = val.MarketValueBase
-	} else {
-		for _, h := range analytics.HoldingsYield {
-			startVal = startVal.Add(h.CurrentMarketValue.Amount)
+	for _, h := range analytics.HoldingsYield {
+		startVal = startVal.Add(h.CurrentMarketValue.Amount)
+	}
+
+	// Fallback to latest valuation snapshot only if active holdings market value is zero
+	if !startVal.IsPositive() {
+		if val, err := s.repo.GetLatestValuation(ctx, portfolio.ID); err == nil && val != nil && val.MarketValueBase.IsPositive() {
+			startVal = val.MarketValueBase
 		}
 	}
 
+	startVal = startVal.Round(2)
 	startDiv := analytics.AnnualForwardIncome.Amount
 
 	result := domain.SimulateDRIPCompounding(

@@ -172,6 +172,7 @@ describe('Transaction Ledger Interest Filter (US-TX-106)', () => {
         'SPLIT',
         'DEPOSIT',
         'WITHDRAWAL',
+        'FX_CONVERSION',
       ]);
     });
   });
@@ -218,6 +219,7 @@ describe('Transaction Ledger Interest Filter (US-TX-106)', () => {
       expect(getBadgeClass('SPLIT')).toBe('badge-type split');
       expect(getBadgeClass('DEPOSIT')).toBe('badge-type deposit');
       expect(getBadgeClass('WITHDRAWAL')).toBe('badge-type withdrawal');
+      expect(getBadgeClass('FX_CONVERSION')).toBe('badge-type fx');
     });
 
     it('returns "badge-type other" for unknown or unexpected types', () => {

@@ -151,5 +151,82 @@ describe('Add Transaction Modal - Interest Support (US-TX-107)', () => {
         })
       ).not.toThrow();
     });
+
+    it('FX_CONVERSION validates positive source amount, distinct target currency, and target amount/rate', () => {
+      // Valid conversion: 1500 AUD to 1000 USD @ 0.6667
+      expect(() =>
+        validateTransactionInput({
+          type: 'FX_CONVERSION',
+          currencyCode: 'AUD',
+          targetCurrency: 'USD',
+          amount: '1500.00',
+          quantity: '1000.00',
+          price: '0.6667',
+        })
+      ).not.toThrow();
+
+      // Zero or missing source amount
+      expect(() =>
+        validateTransactionInput({
+          type: 'FX_CONVERSION',
+          currencyCode: 'AUD',
+          targetCurrency: 'USD',
+          amount: '0.00',
+          quantity: '1000.00',
+        })
+      ).toThrow('Source amount must be greater than zero.');
+
+      // Identical currencies
+      expect(() =>
+        validateTransactionInput({
+          type: 'FX_CONVERSION',
+          currencyCode: 'USD',
+          targetCurrency: 'USD',
+          amount: '1000.00',
+          quantity: '1000.00',
+        })
+      ).toThrow('Source and target currency cannot be identical.');
+
+      // Missing target amount and price
+      expect(() =>
+        validateTransactionInput({
+          type: 'FX_CONVERSION',
+          currencyCode: 'AUD',
+          targetCurrency: 'USD',
+          amount: '1500.00',
+          quantity: '0.00',
+          price: '0.00',
+        })
+      ).toThrow('Target amount received or conversion rate must be greater than zero.');
+    });
+  });
+
+  describe('buildAddTransactionPayload for FX_CONVERSION', () => {
+    it('builds a complete FX conversion payload with target currency as symbol', () => {
+      const payload = buildAddTransactionPayload({
+        type: 'FX_CONVERSION',
+        tradeDate: '2026-10-23',
+        currencyCode: 'AUD',
+        targetCurrency: 'USD',
+        amount: '1500.00',
+        quantity: '1000.00',
+        price: '0.6667',
+        fee: '5.00',
+        feeCurrencyCode: 'AUD',
+      });
+
+      expect(payload).toEqual({
+        type: 'FX_CONVERSION',
+        tradeDate: '2026-10-23',
+        currencyCode: 'AUD',
+        symbol: 'USD',
+        amount: '1500.00',
+        quantity: '1000.00',
+        price: '0.6667',
+        fee: '5.00',
+        feeCurrencyCode: 'AUD',
+        notes: 'Converted 1500.00 AUD to 1000.00 USD @ 0.6667',
+      });
+    });
   });
 });
