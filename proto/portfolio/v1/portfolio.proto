@@ -69,6 +69,11 @@ service PortfolioService {
   rpc GetDividendCalendar(GetDividendCalendarRequest) returns (GetDividendCalendarResponse) {}
   rpc GetDividendYieldAnalytics(GetDividendYieldAnalyticsRequest) returns (GetDividendYieldAnalyticsResponse) {}
   rpc SimulateDRIP(SimulateDRIPRequest) returns (SimulateDRIPResponse) {}
+
+  // Tax Lot Inspector, Capital Gains & Annual Tax Report
+  rpc ListTaxLots(ListTaxLotsRequest) returns (ListTaxLotsResponse) {}
+  rpc GetRealizedGainsReport(GetRealizedGainsReportRequest) returns (GetRealizedGainsReportResponse) {}
+  rpc GetTaxReport(GetTaxReportRequest) returns (GetTaxReportResponse) {}
 }
 
 message RebuildValuationsRequest {
@@ -952,6 +957,157 @@ message SimulateDRIPResponse {
   common.v1.Decimal            terminal_cash_value      = 7;
   common.v1.Decimal            drip_benefit_amount      = 8;
 }
+
+// ------------------------------------------------------------------
+// Tax Lot Inspector & Capital Gains Messages
+// ------------------------------------------------------------------
+
+enum TaxLotStatus {
+  TAX_LOT_STATUS_UNSPECIFIED = 0;
+  TAX_LOT_STATUS_OPEN        = 1;
+  TAX_LOT_STATUS_CLOSED      = 2;
+  TAX_LOT_STATUS_ALL         = 3;
+}
+
+enum HoldingTermClassification {
+  HOLDING_TERM_UNSPECIFIED = 0;
+  HOLDING_TERM_SHORT_TERM  = 1; // Held < 365 days
+  HOLDING_TERM_LONG_TERM   = 2; // Held >= 365 days (CGT discount eligible)
+}
+
+message TaxLotItem {
+  string                    id                          = 1;
+  string                    portfolio_id                = 2;
+  string                    instrument_id               = 3;
+  string                    ticker                      = 4;
+  string                    name                        = 5;
+  string                    open_transaction_id         = 6;
+  string                    acquired_date               = 7;  // YYYY-MM-DD
+  string                    closed_date                 = 8;  // YYYY-MM-DD (null if open)
+  common.v1.Decimal         original_quantity           = 9;
+  common.v1.Decimal         remaining_quantity          = 10;
+  common.v1.Money           cost_basis                  = 11; // In instrument currency
+  common.v1.Money           cost_basis_base             = 12; // In portfolio base currency
+  common.v1.Money           unit_cost_base              = 13; // Cost basis per share
+  common.v1.Money           current_price               = 14;
+  common.v1.Money           market_value_base           = 15;
+  common.v1.Money           unrealized_pnl_base         = 16;
+  common.v1.Decimal         unrealized_pnl_percent      = 17;
+  int32                     holding_period_days         = 18;
+  HoldingTermClassification term_classification         = 19;
+  bool                      is_cgt_discount_eligible    = 20;
+  bool                      is_loss_harvesting_candidate = 21;
+  bool                      has_wash_sale_risk          = 22;
+}
+
+message ListTaxLotsRequest {
+  string          user_id       = 1;
+  optional string instrument_id = 2; // Optional filter by ticker / asset
+  TaxLotStatus    status        = 3; // OPEN, CLOSED, or ALL
+}
+
+message ListTaxLotsResponse {
+  repeated TaxLotItem tax_lots = 1;
+}
+
+message RealizedDisposalItem {
+  string                    disposal_id                 = 1;
+  string                    tax_lot_id                  = 2;
+  string                    sell_transaction_id         = 3;
+  string                    instrument_id               = 4;
+  string                    ticker                      = 5;
+  string                    name                        = 6;
+  string                    acquired_date               = 7;  // YYYY-MM-DD
+  string                    disposed_date               = 8;  // YYYY-MM-DD
+  common.v1.Decimal         quantity_disposed           = 9;
+  common.v1.Money           cost_basis_relieved_base    = 10;
+  common.v1.Money           proceeds_base               = 11;
+  common.v1.Money           realized_pnl_base           = 12;
+  common.v1.Decimal         realized_pnl_percent        = 13;
+  int32                     holding_period_days         = 14;
+  HoldingTermClassification term_classification         = 15;
+  bool                      is_cgt_discount_eligible    = 16;
+  common.v1.Money           discounted_taxable_pnl_base = 17; // 50% discount if eligible
+}
+
+message TaxableIncomeSummary {
+  common.v1.Money   dividend_and_interest_income = 1;
+  common.v1.Money   net_capital_gains            = 2;
+  common.v1.Money   franking_credits             = 3;
+  common.v1.Money   total_assessable_income      = 4;
+  common.v1.Decimal dividend_interest_ratio_pct  = 5; // e.g. 48.44%
+  common.v1.Decimal capital_gains_ratio_pct      = 6; // e.g. 46.66%
+  common.v1.Decimal franking_credits_ratio_pct   = 7; // e.g. 4.90%
+}
+
+message CapitalGainsSummary {
+  common.v1.Money   total_capital_gains          = 1;
+  common.v1.Money   losses_applied               = 2;
+  common.v1.Money   cgt_discount_amount          = 3; // 50% discount for eligible long-term
+  common.v1.Money   net_capital_gain             = 4;
+  common.v1.Decimal cgt_discount_rate_pct        = 5; // e.g. 50.0%
+  int32             gain_disposals_count         = 6;
+  int32             loss_disposals_count         = 7;
+}
+
+message TaxOffsetsSummary {
+  common.v1.Money   franking_credits_offset      = 1; // Available refundable imputation offset
+  common.v1.Money   foreign_tax_offsets          = 2; // Available non-refundable foreign withholding offset (FITO)
+  common.v1.Money   total_available_offsets      = 3;
+}
+
+message TaxReportSummary {
+  TaxableIncomeSummary taxable_income            = 1;
+  CapitalGainsSummary  capital_gains             = 2;
+  TaxOffsetsSummary    tax_offsets               = 3;
+  string               fiscal_year_label         = 4; // e.g. "FY2025-2026"
+  string               base_currency             = 5;
+}
+
+message GetTaxReportRequest {
+  string          user_id      = 1;
+  optional int32  fiscal_year  = 2; // e.g. 2026
+  optional string from_date    = 3; // YYYY-MM-DD
+  optional string to_date      = 4; // YYYY-MM-DD
+}
+
+message GetTaxReportResponse {
+  TaxReportSummary              summary              = 1;
+  repeated RealizedDisposalItem disposals            = 2;
+  repeated TaxLotItem           open_lots            = 3;
+  string                        from_date            = 4;
+  string                        to_date              = 5;
+  string                        fiscal_year_label    = 6;
+  string                        base_currency        = 7;
+}
+
+message RealizedGainsSummary {
+  common.v1.Money   total_proceeds_base         = 1;
+  common.v1.Money   total_cost_basis_relieved   = 2;
+  common.v1.Money   gross_realized_gains_base   = 3;
+  common.v1.Money   gross_realized_losses_base  = 4;
+  common.v1.Money   net_realized_pnl_base       = 5;
+  common.v1.Money   short_term_gains_base       = 6;
+  common.v1.Money   long_term_gains_base        = 7;
+  common.v1.Money   discounted_taxable_gain_base = 8;
+  int32             total_disposal_count        = 9;
+}
+
+message GetRealizedGainsReportRequest {
+  string          user_id     = 1;
+  optional string from_date   = 2; // YYYY-MM-DD
+  optional string to_date     = 3; // YYYY-MM-DD
+  optional int32  fiscal_year = 4; // e.g. 2025 (FY25)
+}
+
+message GetRealizedGainsReportResponse {
+  RealizedGainsSummary          summary       = 1;
+  repeated RealizedDisposalItem disposals     = 2;
+  string                        from_date     = 3;
+  string                        to_date       = 4;
+  string                        base_currency = 5;
+}
+
 
 
 

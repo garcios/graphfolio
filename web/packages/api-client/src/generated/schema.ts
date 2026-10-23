@@ -82,6 +82,10 @@ export interface Query {
     dividendCalendar: DividendCalendarEvent[]
     dividendYieldAnalytics: DividendYieldAnalytics
     simulateDRIP: DRIPSimulationResult
+    taxReport: TaxReport
+    taxLots: TaxLot[]
+    realizedCapitalGainsReport: RealizedGainsReport
+    exportTaxScheduleCSV: Scalars['String']
     __typename: 'Query'
 }
 
@@ -658,6 +662,127 @@ export interface DRIPSimulationResult {
     __typename: 'DRIPSimulationResult'
 }
 
+export type TaxLotStatus = 'OPEN' | 'CLOSED' | 'ALL'
+
+export type HoldingTermClassification = 'SHORT_TERM' | 'LONG_TERM'
+
+export interface TaxLot {
+    id: Scalars['ID']
+    instrumentId: Scalars['ID']
+    ticker: Scalars['String']
+    name: Scalars['String']
+    openTransactionId: Scalars['ID']
+    acquiredDate: Scalars['String']
+    closedDate: (Scalars['String'] | null)
+    originalQuantity: Scalars['Decimal']
+    remainingQuantity: Scalars['Decimal']
+    costBasis: Money
+    costBasisBase: Money
+    unitCostBase: Money
+    currentPrice: Money
+    marketValueBase: Money
+    unrealizedPnlBase: Money
+    unrealizedPnlPercent: Scalars['Decimal']
+    holdingPeriodDays: Scalars['Int']
+    termClassification: HoldingTermClassification
+    isCgtDiscountEligible: Scalars['Boolean']
+    isLossHarvestingCandidate: Scalars['Boolean']
+    hasWashSaleRisk: Scalars['Boolean']
+    __typename: 'TaxLot'
+}
+
+export interface RealizedDisposal {
+    disposalId: Scalars['ID']
+    taxLotId: Scalars['ID']
+    sellTransactionId: Scalars['ID']
+    instrumentId: Scalars['ID']
+    ticker: Scalars['String']
+    name: Scalars['String']
+    acquiredDate: Scalars['String']
+    disposedDate: Scalars['String']
+    quantityDisposed: Scalars['Decimal']
+    costBasisRelievedBase: Money
+    proceedsBase: Money
+    realizedPnlBase: Money
+    realizedPnlPercent: Scalars['Decimal']
+    holdingPeriodDays: Scalars['Int']
+    termClassification: HoldingTermClassification
+    isCgtDiscountEligible: Scalars['Boolean']
+    discountedTaxablePnlBase: Money
+    __typename: 'RealizedDisposal'
+}
+
+export interface TaxableIncomeSummary {
+    dividendAndInterestIncome: Money
+    netCapitalGains: Money
+    frankingCredits: Money
+    totalAssessableIncome: Money
+    dividendInterestRatioPct: Scalars['Decimal']
+    capitalGainsRatioPct: Scalars['Decimal']
+    frankingCreditsRatioPct: Scalars['Decimal']
+    __typename: 'TaxableIncomeSummary'
+}
+
+export interface CapitalGainsSummary {
+    totalCapitalGains: Money
+    lossesApplied: Money
+    cgtDiscountAmount: Money
+    netCapitalGain: Money
+    cgtDiscountRatePct: Scalars['Decimal']
+    gainDisposalsCount: Scalars['Int']
+    lossDisposalsCount: Scalars['Int']
+    __typename: 'CapitalGainsSummary'
+}
+
+export interface TaxOffsetsSummary {
+    frankingCreditsOffset: Money
+    foreignTaxOffsets: Money
+    totalAvailableOffsets: Money
+    __typename: 'TaxOffsetsSummary'
+}
+
+export interface TaxReportSummary {
+    taxableIncome: TaxableIncomeSummary
+    capitalGains: CapitalGainsSummary
+    taxOffsets: TaxOffsetsSummary
+    fiscalYearLabel: Scalars['String']
+    baseCurrency: Scalars['String']
+    __typename: 'TaxReportSummary'
+}
+
+export interface TaxReport {
+    summary: TaxReportSummary
+    disposals: RealizedDisposal[]
+    openLots: TaxLot[]
+    fromDate: Scalars['String']
+    toDate: Scalars['String']
+    fiscalYearLabel: Scalars['String']
+    baseCurrency: Scalars['String']
+    __typename: 'TaxReport'
+}
+
+export interface RealizedGainsSummary {
+    totalProceedsBase: Money
+    totalCostBasisRelieved: Money
+    grossRealizedGainsBase: Money
+    grossRealizedLossesBase: Money
+    netRealizedPnlBase: Money
+    shortTermGainsBase: Money
+    longTermGainsBase: Money
+    discountedTaxableGainBase: Money
+    totalDisposalCount: Scalars['Int']
+    __typename: 'RealizedGainsSummary'
+}
+
+export interface RealizedGainsReport {
+    summary: RealizedGainsSummary
+    disposals: RealizedDisposal[]
+    fromDate: Scalars['String']
+    toDate: Scalars['String']
+    baseCurrency: Scalars['String']
+    __typename: 'RealizedGainsReport'
+}
+
 export interface MoneyGenqlSelection{
     amount?: boolean | number
     currencyCode?: boolean | number
@@ -734,6 +859,10 @@ export interface QueryGenqlSelection{
     dividendCalendar?: (DividendCalendarEventGenqlSelection & { __args: {year: Scalars['Int'], month: Scalars['Int']} })
     dividendYieldAnalytics?: DividendYieldAnalyticsGenqlSelection
     simulateDRIP?: (DRIPSimulationResultGenqlSelection & { __args: {input: DRIPSimulationInput} })
+    taxReport?: (TaxReportGenqlSelection & { __args?: {financialYear?: (Scalars['Int'] | null), fromDate?: (Scalars['String'] | null), toDate?: (Scalars['String'] | null)} })
+    taxLots?: (TaxLotGenqlSelection & { __args?: {instrumentId?: (Scalars['ID'] | null), status?: (TaxLotStatus | null)} })
+    realizedCapitalGainsReport?: (RealizedGainsReportGenqlSelection & { __args?: {financialYear?: (Scalars['Int'] | null), fromDate?: (Scalars['String'] | null), toDate?: (Scalars['String'] | null)} })
+    exportTaxScheduleCSV?: { __args: {financialYear?: (Scalars['Int'] | null), fromDate?: (Scalars['String'] | null), toDate?: (Scalars['String'] | null)} } | boolean | number
     __typename?: boolean | number
     __scalar?: boolean | number
 }
@@ -1372,6 +1501,132 @@ export interface DRIPSimulationResultGenqlSelection{
     __scalar?: boolean | number
 }
 
+export interface TaxLotGenqlSelection{
+    id?: boolean | number
+    instrumentId?: boolean | number
+    ticker?: boolean | number
+    name?: boolean | number
+    openTransactionId?: boolean | number
+    acquiredDate?: boolean | number
+    closedDate?: boolean | number
+    originalQuantity?: boolean | number
+    remainingQuantity?: boolean | number
+    costBasis?: MoneyGenqlSelection
+    costBasisBase?: MoneyGenqlSelection
+    unitCostBase?: MoneyGenqlSelection
+    currentPrice?: MoneyGenqlSelection
+    marketValueBase?: MoneyGenqlSelection
+    unrealizedPnlBase?: MoneyGenqlSelection
+    unrealizedPnlPercent?: boolean | number
+    holdingPeriodDays?: boolean | number
+    termClassification?: boolean | number
+    isCgtDiscountEligible?: boolean | number
+    isLossHarvestingCandidate?: boolean | number
+    hasWashSaleRisk?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface RealizedDisposalGenqlSelection{
+    disposalId?: boolean | number
+    taxLotId?: boolean | number
+    sellTransactionId?: boolean | number
+    instrumentId?: boolean | number
+    ticker?: boolean | number
+    name?: boolean | number
+    acquiredDate?: boolean | number
+    disposedDate?: boolean | number
+    quantityDisposed?: boolean | number
+    costBasisRelievedBase?: MoneyGenqlSelection
+    proceedsBase?: MoneyGenqlSelection
+    realizedPnlBase?: MoneyGenqlSelection
+    realizedPnlPercent?: boolean | number
+    holdingPeriodDays?: boolean | number
+    termClassification?: boolean | number
+    isCgtDiscountEligible?: boolean | number
+    discountedTaxablePnlBase?: MoneyGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface TaxableIncomeSummaryGenqlSelection{
+    dividendAndInterestIncome?: MoneyGenqlSelection
+    netCapitalGains?: MoneyGenqlSelection
+    frankingCredits?: MoneyGenqlSelection
+    totalAssessableIncome?: MoneyGenqlSelection
+    dividendInterestRatioPct?: boolean | number
+    capitalGainsRatioPct?: boolean | number
+    frankingCreditsRatioPct?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface CapitalGainsSummaryGenqlSelection{
+    totalCapitalGains?: MoneyGenqlSelection
+    lossesApplied?: MoneyGenqlSelection
+    cgtDiscountAmount?: MoneyGenqlSelection
+    netCapitalGain?: MoneyGenqlSelection
+    cgtDiscountRatePct?: boolean | number
+    gainDisposalsCount?: boolean | number
+    lossDisposalsCount?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface TaxOffsetsSummaryGenqlSelection{
+    frankingCreditsOffset?: MoneyGenqlSelection
+    foreignTaxOffsets?: MoneyGenqlSelection
+    totalAvailableOffsets?: MoneyGenqlSelection
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface TaxReportSummaryGenqlSelection{
+    taxableIncome?: TaxableIncomeSummaryGenqlSelection
+    capitalGains?: CapitalGainsSummaryGenqlSelection
+    taxOffsets?: TaxOffsetsSummaryGenqlSelection
+    fiscalYearLabel?: boolean | number
+    baseCurrency?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface TaxReportGenqlSelection{
+    summary?: TaxReportSummaryGenqlSelection
+    disposals?: RealizedDisposalGenqlSelection
+    openLots?: TaxLotGenqlSelection
+    fromDate?: boolean | number
+    toDate?: boolean | number
+    fiscalYearLabel?: boolean | number
+    baseCurrency?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface RealizedGainsSummaryGenqlSelection{
+    totalProceedsBase?: MoneyGenqlSelection
+    totalCostBasisRelieved?: MoneyGenqlSelection
+    grossRealizedGainsBase?: MoneyGenqlSelection
+    grossRealizedLossesBase?: MoneyGenqlSelection
+    netRealizedPnlBase?: MoneyGenqlSelection
+    shortTermGainsBase?: MoneyGenqlSelection
+    longTermGainsBase?: MoneyGenqlSelection
+    discountedTaxableGainBase?: MoneyGenqlSelection
+    totalDisposalCount?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
+export interface RealizedGainsReportGenqlSelection{
+    summary?: RealizedGainsSummaryGenqlSelection
+    disposals?: RealizedDisposalGenqlSelection
+    fromDate?: boolean | number
+    toDate?: boolean | number
+    baseCurrency?: boolean | number
+    __typename?: boolean | number
+    __scalar?: boolean | number
+}
+
 
     const Money_possibleTypes: string[] = ['Money']
     export const isMoney = (obj?: { __typename?: any } | null): obj is Money => {
@@ -1812,6 +2067,78 @@ export interface DRIPSimulationResultGenqlSelection{
     }
     
 
+
+    const TaxLot_possibleTypes: string[] = ['TaxLot']
+    export const isTaxLot = (obj?: { __typename?: any } | null): obj is TaxLot => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isTaxLot"')
+      return TaxLot_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const RealizedDisposal_possibleTypes: string[] = ['RealizedDisposal']
+    export const isRealizedDisposal = (obj?: { __typename?: any } | null): obj is RealizedDisposal => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isRealizedDisposal"')
+      return RealizedDisposal_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const TaxableIncomeSummary_possibleTypes: string[] = ['TaxableIncomeSummary']
+    export const isTaxableIncomeSummary = (obj?: { __typename?: any } | null): obj is TaxableIncomeSummary => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isTaxableIncomeSummary"')
+      return TaxableIncomeSummary_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const CapitalGainsSummary_possibleTypes: string[] = ['CapitalGainsSummary']
+    export const isCapitalGainsSummary = (obj?: { __typename?: any } | null): obj is CapitalGainsSummary => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isCapitalGainsSummary"')
+      return CapitalGainsSummary_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const TaxOffsetsSummary_possibleTypes: string[] = ['TaxOffsetsSummary']
+    export const isTaxOffsetsSummary = (obj?: { __typename?: any } | null): obj is TaxOffsetsSummary => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isTaxOffsetsSummary"')
+      return TaxOffsetsSummary_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const TaxReportSummary_possibleTypes: string[] = ['TaxReportSummary']
+    export const isTaxReportSummary = (obj?: { __typename?: any } | null): obj is TaxReportSummary => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isTaxReportSummary"')
+      return TaxReportSummary_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const TaxReport_possibleTypes: string[] = ['TaxReport']
+    export const isTaxReport = (obj?: { __typename?: any } | null): obj is TaxReport => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isTaxReport"')
+      return TaxReport_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const RealizedGainsSummary_possibleTypes: string[] = ['RealizedGainsSummary']
+    export const isRealizedGainsSummary = (obj?: { __typename?: any } | null): obj is RealizedGainsSummary => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isRealizedGainsSummary"')
+      return RealizedGainsSummary_possibleTypes.includes(obj.__typename)
+    }
+    
+
+
+    const RealizedGainsReport_possibleTypes: string[] = ['RealizedGainsReport']
+    export const isRealizedGainsReport = (obj?: { __typename?: any } | null): obj is RealizedGainsReport => {
+      if (!obj?.__typename) throw new Error('__typename is missing in "isRealizedGainsReport"')
+      return RealizedGainsReport_possibleTypes.includes(obj.__typename)
+    }
+    
+
 export const enumTransactionType = {
    BUY: 'BUY' as const,
    SELL: 'SELL' as const,
@@ -1890,4 +2217,15 @@ export const enumDividendStatus = {
    EX_DATE_PASSED: 'EX_DATE_PASSED' as const,
    PAID: 'PAID' as const,
    CANCELLED: 'CANCELLED' as const
+}
+
+export const enumTaxLotStatus = {
+   OPEN: 'OPEN' as const,
+   CLOSED: 'CLOSED' as const,
+   ALL: 'ALL' as const
+}
+
+export const enumHoldingTermClassification = {
+   SHORT_TERM: 'SHORT_TERM' as const,
+   LONG_TERM: 'LONG_TERM' as const
 }

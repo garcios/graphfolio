@@ -55,6 +55,9 @@ const (
 	PortfolioService_GetDividendCalendar_FullMethodName           = "/portfolio.v1.PortfolioService/GetDividendCalendar"
 	PortfolioService_GetDividendYieldAnalytics_FullMethodName     = "/portfolio.v1.PortfolioService/GetDividendYieldAnalytics"
 	PortfolioService_SimulateDRIP_FullMethodName                  = "/portfolio.v1.PortfolioService/SimulateDRIP"
+	PortfolioService_ListTaxLots_FullMethodName                   = "/portfolio.v1.PortfolioService/ListTaxLots"
+	PortfolioService_GetRealizedGainsReport_FullMethodName        = "/portfolio.v1.PortfolioService/GetRealizedGainsReport"
+	PortfolioService_GetTaxReport_FullMethodName                  = "/portfolio.v1.PortfolioService/GetTaxReport"
 )
 
 // PortfolioServiceClient is the client API for PortfolioService service.
@@ -110,6 +113,10 @@ type PortfolioServiceClient interface {
 	GetDividendCalendar(ctx context.Context, in *GetDividendCalendarRequest, opts ...grpc.CallOption) (*GetDividendCalendarResponse, error)
 	GetDividendYieldAnalytics(ctx context.Context, in *GetDividendYieldAnalyticsRequest, opts ...grpc.CallOption) (*GetDividendYieldAnalyticsResponse, error)
 	SimulateDRIP(ctx context.Context, in *SimulateDRIPRequest, opts ...grpc.CallOption) (*SimulateDRIPResponse, error)
+	// Tax Lot Inspector, Capital Gains & Annual Tax Report
+	ListTaxLots(ctx context.Context, in *ListTaxLotsRequest, opts ...grpc.CallOption) (*ListTaxLotsResponse, error)
+	GetRealizedGainsReport(ctx context.Context, in *GetRealizedGainsReportRequest, opts ...grpc.CallOption) (*GetRealizedGainsReportResponse, error)
+	GetTaxReport(ctx context.Context, in *GetTaxReportRequest, opts ...grpc.CallOption) (*GetTaxReportResponse, error)
 }
 
 type portfolioServiceClient struct {
@@ -444,6 +451,33 @@ func (c *portfolioServiceClient) SimulateDRIP(ctx context.Context, in *SimulateD
 	return out, nil
 }
 
+func (c *portfolioServiceClient) ListTaxLots(ctx context.Context, in *ListTaxLotsRequest, opts ...grpc.CallOption) (*ListTaxLotsResponse, error) {
+	out := new(ListTaxLotsResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_ListTaxLots_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portfolioServiceClient) GetRealizedGainsReport(ctx context.Context, in *GetRealizedGainsReportRequest, opts ...grpc.CallOption) (*GetRealizedGainsReportResponse, error) {
+	out := new(GetRealizedGainsReportResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_GetRealizedGainsReport_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *portfolioServiceClient) GetTaxReport(ctx context.Context, in *GetTaxReportRequest, opts ...grpc.CallOption) (*GetTaxReportResponse, error) {
+	out := new(GetTaxReportResponse)
+	err := c.cc.Invoke(ctx, PortfolioService_GetTaxReport_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // PortfolioServiceServer is the server API for PortfolioService service.
 // All implementations must embed UnimplementedPortfolioServiceServer
 // for forward compatibility
@@ -497,6 +531,10 @@ type PortfolioServiceServer interface {
 	GetDividendCalendar(context.Context, *GetDividendCalendarRequest) (*GetDividendCalendarResponse, error)
 	GetDividendYieldAnalytics(context.Context, *GetDividendYieldAnalyticsRequest) (*GetDividendYieldAnalyticsResponse, error)
 	SimulateDRIP(context.Context, *SimulateDRIPRequest) (*SimulateDRIPResponse, error)
+	// Tax Lot Inspector, Capital Gains & Annual Tax Report
+	ListTaxLots(context.Context, *ListTaxLotsRequest) (*ListTaxLotsResponse, error)
+	GetRealizedGainsReport(context.Context, *GetRealizedGainsReportRequest) (*GetRealizedGainsReportResponse, error)
+	GetTaxReport(context.Context, *GetTaxReportRequest) (*GetTaxReportResponse, error)
 	mustEmbedUnimplementedPortfolioServiceServer()
 }
 
@@ -611,6 +649,15 @@ func (UnimplementedPortfolioServiceServer) GetDividendYieldAnalytics(context.Con
 }
 func (UnimplementedPortfolioServiceServer) SimulateDRIP(context.Context, *SimulateDRIPRequest) (*SimulateDRIPResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SimulateDRIP not implemented")
+}
+func (UnimplementedPortfolioServiceServer) ListTaxLots(context.Context, *ListTaxLotsRequest) (*ListTaxLotsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListTaxLots not implemented")
+}
+func (UnimplementedPortfolioServiceServer) GetRealizedGainsReport(context.Context, *GetRealizedGainsReportRequest) (*GetRealizedGainsReportResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRealizedGainsReport not implemented")
+}
+func (UnimplementedPortfolioServiceServer) GetTaxReport(context.Context, *GetTaxReportRequest) (*GetTaxReportResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTaxReport not implemented")
 }
 func (UnimplementedPortfolioServiceServer) mustEmbedUnimplementedPortfolioServiceServer() {}
 
@@ -1273,6 +1320,60 @@ func _PortfolioService_SimulateDRIP_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _PortfolioService_ListTaxLots_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListTaxLotsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).ListTaxLots(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_ListTaxLots_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).ListTaxLots(ctx, req.(*ListTaxLotsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortfolioService_GetRealizedGainsReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetRealizedGainsReportRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).GetRealizedGainsReport(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_GetRealizedGainsReport_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).GetRealizedGainsReport(ctx, req.(*GetRealizedGainsReportRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PortfolioService_GetTaxReport_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTaxReportRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PortfolioServiceServer).GetTaxReport(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PortfolioService_GetTaxReport_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PortfolioServiceServer).GetTaxReport(ctx, req.(*GetTaxReportRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // PortfolioService_ServiceDesc is the grpc.ServiceDesc for PortfolioService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -1423,6 +1524,18 @@ var PortfolioService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SimulateDRIP",
 			Handler:    _PortfolioService_SimulateDRIP_Handler,
+		},
+		{
+			MethodName: "ListTaxLots",
+			Handler:    _PortfolioService_ListTaxLots_Handler,
+		},
+		{
+			MethodName: "GetRealizedGainsReport",
+			Handler:    _PortfolioService_GetRealizedGainsReport_Handler,
+		},
+		{
+			MethodName: "GetTaxReport",
+			Handler:    _PortfolioService_GetTaxReport_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -2454,3 +2454,221 @@ func (s *PortfolioServer) SimulateDRIP(ctx context.Context, req *pb.SimulateDRIP
 	}, nil
 }
 
+func (s *PortfolioServer) ListTaxLots(ctx context.Context, req *pb.ListTaxLotsRequest) (*pb.ListTaxLotsResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	var statusFilter domain.TaxLotStatus
+	switch req.GetStatus() {
+	case pb.TaxLotStatus_TAX_LOT_STATUS_OPEN:
+		statusFilter = domain.TaxLotStatusOpen
+	case pb.TaxLotStatus_TAX_LOT_STATUS_CLOSED:
+		statusFilter = domain.TaxLotStatusClosed
+	default:
+		statusFilter = domain.TaxLotStatusAll
+	}
+
+	var instID *string
+	if req.InstrumentId != nil && req.GetInstrumentId() != "" {
+		idStr := req.GetInstrumentId()
+		instID = &idStr
+	}
+
+	lots, err := s.svc.ListTaxLots(ctx, req.GetUserId(), instID, statusFilter)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to list tax lots: %v", err)
+	}
+
+	port, _ := s.svc.GetPortfolioSummary(ctx, req.GetUserId())
+	baseCurr := "AUD"
+	if port != nil {
+		baseCurr = port.Portfolio.BaseCurrency
+	}
+
+	var pbLots []*pb.TaxLotItem
+	for _, l := range lots {
+		pbLots = append(pbLots, mapDomainTaxLotToProto(l, baseCurr))
+	}
+
+	return &pb.ListTaxLotsResponse{
+		TaxLots: pbLots,
+	}, nil
+}
+
+func (s *PortfolioServer) GetRealizedGainsReport(ctx context.Context, req *pb.GetRealizedGainsReportRequest) (*pb.GetRealizedGainsReportResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	var fromDate, toDate *string
+	if req.FromDate != nil && req.GetFromDate() != "" {
+		fd := req.GetFromDate()
+		fromDate = &fd
+	}
+	if req.ToDate != nil && req.GetToDate() != "" {
+		td := req.GetToDate()
+		toDate = &td
+	}
+
+	rep, err := s.svc.GetRealizedGainsReport(ctx, req.GetUserId(), fromDate, toDate, req.FiscalYear)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get realized gains report: %v", err)
+	}
+
+	var pbDisposals []*pb.RealizedDisposalItem
+	for _, d := range rep.Disposals {
+		pbDisposals = append(pbDisposals, mapDomainDisposalToProto(d, rep.BaseCurrency))
+	}
+
+	return &pb.GetRealizedGainsReportResponse{
+		Summary: &pb.RealizedGainsSummary{
+			TotalProceedsBase:         decimalpb.MoneyToProto(rep.Summary.TotalProceedsBase, rep.BaseCurrency),
+			TotalCostBasisRelieved:     decimalpb.MoneyToProto(rep.Summary.TotalCostBasisRelieved, rep.BaseCurrency),
+			GrossRealizedGainsBase:     decimalpb.MoneyToProto(rep.Summary.GrossRealizedGainsBase, rep.BaseCurrency),
+			GrossRealizedLossesBase:    decimalpb.MoneyToProto(rep.Summary.GrossRealizedLossesBase, rep.BaseCurrency),
+			NetRealizedPnlBase:         decimalpb.MoneyToProto(rep.Summary.NetRealizedPnLBase, rep.BaseCurrency),
+			ShortTermGainsBase:         decimalpb.MoneyToProto(rep.Summary.ShortTermGainsBase, rep.BaseCurrency),
+			LongTermGainsBase:          decimalpb.MoneyToProto(rep.Summary.LongTermGainsBase, rep.BaseCurrency),
+			DiscountedTaxableGainBase:  decimalpb.MoneyToProto(rep.Summary.DiscountedTaxableGainBase, rep.BaseCurrency),
+			TotalDisposalCount:         int32(rep.Summary.TotalDisposalCount),
+		},
+		Disposals:    pbDisposals,
+		FromDate:     rep.FromDate,
+		ToDate:       rep.ToDate,
+		BaseCurrency: rep.BaseCurrency,
+	}, nil
+}
+
+func (s *PortfolioServer) GetTaxReport(ctx context.Context, req *pb.GetTaxReportRequest) (*pb.GetTaxReportResponse, error) {
+	if s.svc == nil {
+		return nil, status.Error(codes.Unavailable, "service not initialized")
+	}
+
+	var fromDate, toDate *string
+	if req.FromDate != nil && req.GetFromDate() != "" {
+		fd := req.GetFromDate()
+		fromDate = &fd
+	}
+	if req.ToDate != nil && req.GetToDate() != "" {
+		td := req.GetToDate()
+		toDate = &td
+	}
+
+	rep, err := s.svc.GetTaxReport(ctx, req.GetUserId(), req.FiscalYear, fromDate, toDate)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "failed to get tax report: %v", err)
+	}
+
+	var pbDisposals []*pb.RealizedDisposalItem
+	for _, d := range rep.Disposals {
+		pbDisposals = append(pbDisposals, mapDomainDisposalToProto(d, rep.BaseCurrency))
+	}
+
+	var pbLots []*pb.TaxLotItem
+	for _, l := range rep.OpenLots {
+		pbLots = append(pbLots, mapDomainTaxLotToProto(l, rep.BaseCurrency))
+	}
+
+	return &pb.GetTaxReportResponse{
+		Summary: &pb.TaxReportSummary{
+			TaxableIncome: &pb.TaxableIncomeSummary{
+				DividendAndInterestIncome: decimalpb.MoneyToProto(rep.Summary.TaxableIncome.DividendAndInterestIncome, rep.BaseCurrency),
+				NetCapitalGains:            decimalpb.MoneyToProto(rep.Summary.TaxableIncome.NetCapitalGains, rep.BaseCurrency),
+				FrankingCredits:            decimalpb.MoneyToProto(rep.Summary.TaxableIncome.FrankingCredits, rep.BaseCurrency),
+				TotalAssessableIncome:      decimalpb.MoneyToProto(rep.Summary.TaxableIncome.TotalAssessableIncome, rep.BaseCurrency),
+				DividendInterestRatioPct:  decimalpb.ToProto(rep.Summary.TaxableIncome.DividendInterestRatioPct),
+				CapitalGainsRatioPct:      decimalpb.ToProto(rep.Summary.TaxableIncome.CapitalGainsRatioPct),
+				FrankingCreditsRatioPct:   decimalpb.ToProto(rep.Summary.TaxableIncome.FrankingCreditsRatioPct),
+			},
+			CapitalGains: &pb.CapitalGainsSummary{
+				TotalCapitalGains:  decimalpb.MoneyToProto(rep.Summary.CapitalGains.TotalCapitalGains, rep.BaseCurrency),
+				LossesApplied:      decimalpb.MoneyToProto(rep.Summary.CapitalGains.LossesApplied, rep.BaseCurrency),
+				CgtDiscountAmount:  decimalpb.MoneyToProto(rep.Summary.CapitalGains.CGTDiscountAmount, rep.BaseCurrency),
+				NetCapitalGain:     decimalpb.MoneyToProto(rep.Summary.CapitalGains.NetCapitalGain, rep.BaseCurrency),
+				CgtDiscountRatePct: decimalpb.ToProto(rep.Summary.CapitalGains.CGTDiscountRatePct),
+				GainDisposalsCount: int32(rep.Summary.CapitalGains.GainDisposalsCount),
+				LossDisposalsCount: int32(rep.Summary.CapitalGains.LossDisposalsCount),
+			},
+			TaxOffsets: &pb.TaxOffsetsSummary{
+				FrankingCreditsOffset: decimalpb.MoneyToProto(rep.Summary.TaxOffsets.FrankingCreditsOffset, rep.BaseCurrency),
+				ForeignTaxOffsets:     decimalpb.MoneyToProto(rep.Summary.TaxOffsets.ForeignTaxOffsets, rep.BaseCurrency),
+				TotalAvailableOffsets: decimalpb.MoneyToProto(rep.Summary.TaxOffsets.TotalAvailableOffsets, rep.BaseCurrency),
+			},
+			FiscalYearLabel: rep.Summary.FiscalYearLabel,
+			BaseCurrency:    rep.Summary.BaseCurrency,
+		},
+		Disposals:       pbDisposals,
+		OpenLots:        pbLots,
+		FromDate:        rep.FromDate,
+		ToDate:          rep.ToDate,
+		FiscalYearLabel: rep.FiscalYearLabel,
+		BaseCurrency:    rep.BaseCurrency,
+	}, nil
+}
+
+func mapDomainTaxLotToProto(tl domain.TaxLot, baseCurrency string) *pb.TaxLotItem {
+	var closedDateStr string
+	if tl.ClosedDate != nil {
+		closedDateStr = tl.ClosedDate.Format("2006-01-02")
+	}
+
+	termClassification := pb.HoldingTermClassification_HOLDING_TERM_SHORT_TERM
+	if tl.TermClassification == domain.TermLongTerm {
+		termClassification = pb.HoldingTermClassification_HOLDING_TERM_LONG_TERM
+	}
+
+	return &pb.TaxLotItem{
+		Id:                          tl.ID.String(),
+		PortfolioId:                 tl.PortfolioID.String(),
+		InstrumentId:                tl.InstrumentID.String(),
+		Ticker:                      tl.Ticker,
+		Name:                        tl.Name,
+		OpenTransactionId:           tl.OpenTransactionID.String(),
+		AcquiredDate:                tl.AcquiredDate.Format("2006-01-02"),
+		ClosedDate:                  closedDateStr,
+		OriginalQuantity:            decimalpb.ToProto(tl.OriginalQuantity),
+		RemainingQuantity:           decimalpb.ToProto(tl.RemainingQuantity),
+		CostBasis:                   decimalpb.MoneyToProto(tl.CostBasis, baseCurrency),
+		CostBasisBase:               decimalpb.MoneyToProto(tl.CostBasisBase, baseCurrency),
+		UnitCostBase:                decimalpb.MoneyToProto(tl.UnitCostBase, baseCurrency),
+		CurrentPrice:                decimalpb.MoneyToProto(tl.CurrentPrice, baseCurrency),
+		MarketValueBase:             decimalpb.MoneyToProto(tl.MarketValueBase, baseCurrency),
+		UnrealizedPnlBase:           decimalpb.MoneyToProto(tl.UnrealizedPnLBase, baseCurrency),
+		UnrealizedPnlPercent:        decimalpb.ToProto(tl.UnrealizedPnLPercent),
+		HoldingPeriodDays:           int32(tl.HoldingPeriodDays),
+		TermClassification:          termClassification,
+		IsCgtDiscountEligible:       tl.IsCGTDiscountEligible,
+		IsLossHarvestingCandidate:   tl.IsLossHarvestCandidate,
+		HasWashSaleRisk:             tl.HasWashSaleRisk,
+	}
+}
+
+func mapDomainDisposalToProto(d domain.LotDisposal, baseCurrency string) *pb.RealizedDisposalItem {
+	termClassification := pb.HoldingTermClassification_HOLDING_TERM_SHORT_TERM
+	if d.TermClassification == domain.TermLongTerm {
+		termClassification = pb.HoldingTermClassification_HOLDING_TERM_LONG_TERM
+	}
+
+	return &pb.RealizedDisposalItem{
+		DisposalId:                 d.ID.String(),
+		TaxLotId:                   d.TaxLotID.String(),
+		SellTransactionId:          d.SellTransactionID.String(),
+		InstrumentId:               d.InstrumentID.String(),
+		Ticker:                     d.Ticker,
+		Name:                       d.Name,
+		AcquiredDate:               d.AcquiredDate.Format("2006-01-02"),
+		DisposedDate:               d.DisposedDate.Format("2006-01-02"),
+		QuantityDisposed:           decimalpb.ToProto(d.Quantity),
+		CostBasisRelievedBase:      decimalpb.MoneyToProto(d.CostBasisReleasedBase, baseCurrency),
+		ProceedsBase:               decimalpb.MoneyToProto(d.ProceedsBase, baseCurrency),
+		RealizedPnlBase:            decimalpb.MoneyToProto(d.RealizedPnLBase, baseCurrency),
+		RealizedPnlPercent:         decimalpb.ToProto(d.RealizedPnLPercent),
+		HoldingPeriodDays:          int32(d.HoldingPeriodDays),
+		TermClassification:         termClassification,
+		IsCgtDiscountEligible:      d.IsCGTDiscountEligible,
+		DiscountedTaxablePnlBase:   decimalpb.MoneyToProto(d.DiscountedTaxablePnLBase, baseCurrency),
+	}
+}
+
+

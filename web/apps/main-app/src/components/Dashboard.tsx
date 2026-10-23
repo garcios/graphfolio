@@ -11,6 +11,7 @@ import { UserPreferencesModal, type UserPreferencesData, type CurrencyItem } fro
 import { ModifiedDietzModal } from './ModifiedDietzModal';
 import { UserProfileMenu } from './UserProfileMenu';
 import { ChangePasswordModal } from './ChangePasswordModal';
+import { TaxLotInspectorModal } from './TaxLotInspectorModal';
 
 type SortField = 'ticker' | 'price' | 'averageBuyPrice' | 'quantity' | 'totalValue' | 'capitalGain' | 'income' | 'currencyGain' | 'totalReturn' | 'todayReturn';
 type SortDirection = 'asc' | 'desc';
@@ -27,6 +28,7 @@ export const Dashboard = () => {
   const [isPreferencesOpen, setIsPreferencesOpen] = useState(false);
   const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [isDietzModalOpen, setIsDietzModalOpen] = useState(false);
+  const [selectedHoldingForTaxLots, setSelectedHoldingForTaxLots] = useState<any | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'overview' | 'ledger' | 'reports'>('overview');
   const [ledgerRefreshKey, setLedgerRefreshKey] = useState(0);
@@ -571,6 +573,17 @@ export const Dashboard = () => {
                                 {inv.isInternational && (
                                   <span className="intl-badge" title={`International holding denominated in ${inv.price?.currencyCode || 'foreign currency'}`}>INTL</span>
                                 )}
+                                <button
+                                  type="button"
+                                  className="tax-lots-drilldown-btn"
+                                  title={`Inspect tax lots & parcels for ${inv.ticker}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedHoldingForTaxLots(inv);
+                                  }}
+                                >
+                                  📜 Lots
+                                </button>
                               </div>
                               <span className="name">{inv.name}</span>
                             </div>
@@ -799,6 +812,16 @@ export const Dashboard = () => {
       <ChangePasswordModal
         isOpen={isChangePasswordOpen}
         onClose={() => setIsChangePasswordOpen(false)}
+      />
+
+      <TaxLotInspectorModal
+        isOpen={!!selectedHoldingForTaxLots}
+        onClose={() => setSelectedHoldingForTaxLots(null)}
+        instrumentId={selectedHoldingForTaxLots?.id}
+        ticker={selectedHoldingForTaxLots?.ticker}
+        name={selectedHoldingForTaxLots?.name}
+        currentPrice={selectedHoldingForTaxLots?.price}
+        baseCurrency={currencyCode}
       />
 
       {toastMessage && (

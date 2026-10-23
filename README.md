@@ -68,8 +68,19 @@ A modern portfolio tracker built for serious investors. GraphFolio accurately me
     - **Holdings Yield Matrix**: Asset-level matrix detailing current prices, average buy prices, market values, annual DPS, projected annual cash, current yields, YOC with compounding indicators, 3-year dividend CAGR, and next ex/pay dates.
   - **Trade-Date Entitlement Verification**: Strictly enforces $T_{\text{trade}} < T_{\text{ex}}$ for dividend entitlement, distinguishing eligible shares from unentitled shares acquired on or after the ex-dividend date.
   - **DRIP Compounding Simulator**: Interactive modal (`DRIPSimulatorModal`) modeling 1-to-30-year projections comparing 100% automated Dividend Reinvestment Plans (DRIP) against Cash Payout strategies, featuring dual SVG compounding curves, configurable dividend growth and capital appreciation rates, and terminal wealth delta analysis.
+- **Tax Lot Inspector, Realized Capital Gains & Comprehensive Annual Tax Report**: End-to-end statutory tax reporting and lot-level parcel inspection hub in the Reports view (`web/apps/main-app/src/components/TaxLotsReport.tsx`) and in-row Dashboard drilldown modal (`TaxLotInspectorModal.tsx`):
+  - **4 Top KPI Metric Cards**: Total Assessable Income, Net Capital Gain (statutory net taxable gain after losses and 50% CGT discount concession), Franking Credits (corporate tax imputation gross-up), and Foreign Tax Offsets / FITO (foreign withholding tax offset).
+  - **Dual Summary Reconciliation Cards**:
+    - **Taxable Income Breakdown**: Proportional horizontal progress bars colored with Amber (`#f59e0b`) for Dividends & Interest, Coral (`#ef4444`) for Net Realized Capital Gains, and Royal Purple (`#8b5cf6`) for Franking Credits gross-up.
+    - **Capital Gains Waterfall**: Visual statutory waterfall from Gross Capital Gains, subtracting losses applied, subtracting the 50% CGT discount concession, to yield Statutory Net Capital Gain. Features an interactive loss allocation tooltip (`ⓘ`) explaining the optimal sequencing principle: capital losses are applied against short-term gains first before long-term gains, preserving the maximum benefit of the 50% CGT discount.
+  - **Sub-Tab Workspaces**:
+    - **Tax Return Summary**: Top-level tax year reconciliation, dual summary cards, and quick preview table.
+    - **Realized Disposals Schedule**: Granular lot depletion audit trail showing sell date, acquisition date, holding period days, term classification (`SHORT_TERM` vs `LONG_TERM`), relieved cost basis, gross proceeds, discount taxable gain, and direct RFC 4180 CSV export for accounting and tax software (myTax, Sharesight, Excel).
+    - **Open Tax Lots & Tax-Loss Harvesting (TLH) Scanner**: Active parcel inventory displaying acquisition dates, remaining quantities, unit costs, cost bases, unrealized gain/loss, countdown badges to 365-day 50% CGT discount eligibility, TLH candidate scoring ($<-10\%$ and $> \$500$ loss threshold), and wash-sale risk warnings ($\pm 30$ day buy detection).
+    - **Income & Tax Offsets Reconciliation**: Itemized view of assessable investment income streams (cash distributions, franking gross-ups) and available statutory tax offsets (refundable franking credits and non-refundable foreign tax offsets / FITO).
+  - **Dashboard Holdings Parcel Drilldown (`TaxLotInspectorModal`)**: Clickable parcel inspector trigger (`📜 Lots`) on every holding row in the investor dashboard. Provides an in-place modal inspecting all open and closed acquisition tax lots for that specific security, complete with holding days, cost basis relief, unrealized P&L, 50% CGT discount eligibility status, and wash-sale warnings.
 - **Clean Microservice Monorepo**: Contract-first gRPC services with a Go GraphQL Backend-for-Frontend (BFF) and strongly-typed frontend queries.
-- **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, Vite, modal transaction entry (`AddTransactionModal` with Buy, Sell, Deposit, Withdrawal, Dividend, Interest, and Split support), statement import (`ImportTransactionsModal`), investor preferences dialog (`UserPreferencesModal`), reports hub (`ReportsView`), return calculator (`ModifiedDietzModal`), dividend calendar (`DividendCalendar`), DRIP simulator (`DRIPSimulatorModal`), and instant reactive state refresh.
+- **Responsive UI**: Glassmorphic, dark-mode dashboard built with React 19, TypeScript, Vite, modal transaction entry (`AddTransactionModal` with Buy, Sell, Deposit, Withdrawal, Dividend, Interest, and Split support), statement import (`ImportTransactionsModal`), investor preferences dialog (`UserPreferencesModal`), reports hub (`ReportsView`), return calculator (`ModifiedDietzModal`), dividend calendar (`DividendCalendar`), DRIP simulator (`DRIPSimulatorModal`), tax lot inspector (`TaxLotInspectorModal`), tax reports hub (`TaxLotsReport`), and instant reactive state refresh.
 
 > 📋 *For a comprehensive list of completed milestones, in-progress components, and planned roadmap items, see [`FEATURES.md`](file:///Users/oscargarcia/workspace/graphfolio/FEATURES.md).*
 
@@ -200,7 +211,7 @@ GraphFolio enforces a strict separation of concerns across contract-first, micro
 flowchart TB
     subgraph WebMonorepo ["Frontend Workspace Monorepo (web/)"]
         subgraph MainApp ["Primary Investor Application (:5173)"]
-            MAIN_UI["Investor Views and Dashboards<br/>• AuthView (Login and Register)<br/>• 10-Col Holdings Return Attribution<br/>• Benchmark SVG Chart and Metrics Strip<br/>• Cash Flow Report and Modified Dietz Modal<br/>• Dividend Calendar and DRIP Simulator Modal<br/>• User Preferences and Change Password Modal"]
+            MAIN_UI["Investor Views and Dashboards<br/>• AuthView (Login and Register)<br/>• 10-Col Holdings Return Attribution<br/>• Benchmark SVG Chart and Metrics Strip<br/>• Cash Flow Report and Modified Dietz Modal<br/>• Dividend Calendar and DRIP Simulator Modal<br/>• Tax Lots & CGT Report & Inspector Modal<br/>• User Preferences and Change Password Modal"]
             AUTH_CTX["AuthContext and State<br/>• In-Memory Bearer Token<br/>• Silent Refresh Timer (~60s Pre-Expiry)"]
         end
 
@@ -217,18 +228,18 @@ flowchart TB
 
     subgraph BFFLayer ["GraphQL Backend-for-Frontend (:8080)"]
         BFF_MW["HTTP Auth Middleware<br/>• HMAC-SHA256 JWT Verification<br/>• httpOnly Cookie Management<br/>• Scoped ctx.UserID Injection"]
-        BFF_RESOLVER["GraphQL Resolvers and Orchestrator<br/>• Auth: register, login, refresh, changePassword<br/>• Portfolio: holdings, transactions, CSV import<br/>• Performance: history, Dietz, benchmarks<br/>• Dividends: calendar, yield analytics, DRIP, sync<br/>• Admin: prices, FX, diagnostics, backfills<br/>• Dynamic Base Currency Re-anchoring"]
+        BFF_RESOLVER["GraphQL Resolvers and Orchestrator<br/>• Auth: register, login, refresh, changePassword<br/>• Portfolio: holdings, transactions, CSV import<br/>• Performance: history, Dietz, benchmarks<br/>• Dividends: calendar, yield analytics, DRIP, sync<br/>• Tax: taxReport, taxLots, capital gains, CSV<br/>• Admin: prices, FX, diagnostics, backfills<br/>• Dynamic Base Currency Re-anchoring"]
     end
 
     subgraph ProtoLayer ["Protocol Buffers Contract Layer (proto/)"]
         COMMON_PB["common/v1/decimal.proto<br/>• Exact Decimal and Money Contracts"]
-        PORT_PB["portfolio/v1/portfolio.proto<br/>• Portfolio, Benchmarks, Dividends and Ledger RPCs"]
+        PORT_PB["portfolio/v1/portfolio.proto<br/>• Portfolio, Benchmarks, Dividends, Tax and Ledger RPCs"]
         USER_PB["user/v1/user.proto<br/>• User Auth, Sessions and Preferences RPCs"]
     end
 
     subgraph ServiceLayer ["Core Domain Microservices (services/)"]
         subgraph PortService ["Portfolio API (:50051) and Worker"]
-            PORT_SERVER["Portfolio gRPC Server<br/>• Deterministic Ledger Replay Engine<br/>• 3-Pillar Return Attribution Calculator<br/>• Forward Income, Yield Analytics and DRIP Engine<br/>• Benchmark Comparison and Risk Engine<br/>• Modified Dietz Actual/Actual Engine<br/>• Cash Flow Reconciliation Engine<br/>• Resilient Dividend Ingestion (Yahoo/TwelveData)"]
+            PORT_SERVER["Portfolio gRPC Server<br/>• Deterministic Ledger Replay Engine<br/>• 3-Pillar Return Attribution Calculator<br/>• Forward Income, Yield Analytics and DRIP Engine<br/>• Tax Lot Inspector & Capital Gains Waterfall<br/>• Benchmark Comparison and Risk Engine<br/>• Modified Dietz Actual/Actual Engine<br/>• Cash Flow Reconciliation Engine<br/>• Resilient Dividend Ingestion (Yahoo/TwelveData)"]
         end
 
         subgraph UserService ["User API (:50052)"]
@@ -237,7 +248,7 @@ flowchart TB
     end
 
     subgraph DBLayer ["PostgreSQL 17 Database (:5432/graphfolio)"]
-        PORT_DB["Portfolio Schema [portfolio_svc]<br/>• portfolios, transactions, holding_projections<br/>• tax_lots, lot_disposals, portfolio_valuations<br/>• daily_prices, fx_rates, benchmarks, dividend_schedules"]
+        PORT_DB["Portfolio Schema [portfolio_svc]<br/>• portfolios, transactions, holding_projections<br/>• tax_lots, lot_disposals, portfolio_valuations<br/>• daily_prices, fx_rates, benchmarks, dividend_schedules<br/>• idx_lot_disposals_reporting index"]
         USER_DB["Users Schema [user_svc]<br/>• users (password_hash, role, must_change_password)<br/>• sessions (token_hash, family_id, is_revoked)"]
     end
 
@@ -329,7 +340,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 ```text
 ├── proto/                        # Single Source of Truth for APIs (Protobuf definitions)
 │   ├── common/v1/decimal.proto   # Decimal and Money contracts
-│   ├── portfolio/v1/             # Portfolio gRPC service (GetPortfolio, CreatePortfolio, UpdatePortfolioBaseCurrency, AddTransaction, GetCashFlowReport, ListMissingFXRateTransactions, DeleteInstrument, TriggerBackfill, etc.)
+│   ├── portfolio/v1/             # Portfolio gRPC service (GetPortfolio, CreatePortfolio, UpdatePortfolioBaseCurrency, AddTransaction, GetCashFlowReport, ListTaxLots, GetRealizedGainsReport, GetTaxReport, ListMissingFXRateTransactions, DeleteInstrument, TriggerBackfill, etc.)
 │   └── user/v1/user.proto        # User gRPC service (Register, Login, RefreshToken, Logout, GetMe, GetUserPreferences, UpdateUserPreferences, ListSupportedCurrencies)
 ├── pkg/                          # Shared Go infrastructure
 │   ├── database/                 # pgx connection pooling, auto .env loading, migration runner
@@ -340,8 +351,8 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── cmd/server/           # Application entrypoint (:50051)
 │   │   ├── cmd/worker/           # Scheduled EOD & on-demand valuation worker (make run-valuation-job)
 │   │   ├── cmd/market-ingest/    # Market data ingestion & historical backfill CLI (make ingest-market-data)
-│   │   ├── internal/             # Domain entities (incl. missing_fx.go), repository, service (incl. cash flow report & engine), and gRPC server
-│   │   ├── migrations/           # Versioned schema migrations (000001 - 000010)
+│   │   ├── internal/             # Domain entities (tax_lot.go, tax_report.go, etc.), repository, service (tax_lot.go, cash flow, etc.), and gRPC server
+│   │   ├── migrations/           # Versioned schema migrations (000001 - 000012_lot_disposals_reporting_index)
 │   │   └── seeds/                # Seed fixtures (dev_seed.sql with 365-day history)
 │   └── user-api/                 # User domain microservice (:50052)
 │       ├── cmd/server/           # Application entrypoint (:50052)
@@ -355,7 +366,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 ├── web/                          # Frontend Workspace Monorepo
 │   │   ├── main-app/             # Primary Investor React App (:5173)
 │   │   │   ├── src/context/      # AuthContext.tsx (in-memory access token, silent refresh, session state)
-│   │   │   └── src/components/   # AuthView, LoginForm, RegisterForm, PasswordStrengthMeter, UserProfileMenu, Dashboard, PerformanceChart, ModifiedDietzModal, TransactionLedger, ReportsView, CashFlowReport, AddTransactionModal, ImportTransactionsModal, UserPreferencesModal, ChangePasswordModal
+│   │   │   └── src/components/   # AuthView, LoginForm, RegisterForm, PasswordStrengthMeter, UserProfileMenu, Dashboard, PerformanceChart, ModifiedDietzModal, TransactionLedger, ReportsView, CashFlowReport, DividendCalendar, DRIPSimulatorModal, TaxLotsReport, TaxLotInspectorModal, AddTransactionModal, ImportTransactionsModal, UserPreferencesModal, ChangePasswordModal
 │   │   └── admin-app/            # Internal Operations Portal (:5174)
 │   │       ├── src/context/      # AdminAuthContext.tsx (admin session state, silent refresh, role guard)
 │   │       └── src/components/   # AdminLoginView, AdminChangePasswordView, AccessDeniedView, AdminLayout, AssetManagement, DeleteAssetModal, PriceManagement, MissingPricesReport, MissingFXRatesReport, FXManagement, FXTrendChart, FXOverrideModal, BackfillModal, IngestionPipeline, AdminAuth.test.ts
@@ -393,6 +404,7 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── user-registration-and-login-implementation-plan.md
 │   │   ├── user-change-password-implementation-plan.md
 │   │   ├── admin-portal-login-implementation-plan.md
+│   │   ├── tax-lot-inspector-capital-gains-implementation-plan.md
 │   │   └── web-workspace-refactoring-plan.md
 │   ├── user-stories/             # Product specifications & acceptance criteria
 │   │   ├── investment-holding-capital-gain-income-currency.md
@@ -405,7 +417,8 @@ Financial applications cannot tolerate IEEE 754 binary floating-point rounding e
 │   │   ├── download-transactions-ledger.md
 │   │   ├── user-registration-and-login.md
 │   │   ├── user-change-password.md
-│   │   └── admin-portal-login-and-provisioning.md
+│   │   ├── admin-portal-login-and-provisioning.md
+│   │   └── tax-lot-inspector-capital-gains.md
 │   ├── negative-cash-balance-investigation-report.md # Cash ledger overdraft root cause & remediation report
 │   ├── competitive-analysis.md
 │   └── genql-usage.md
@@ -519,6 +532,8 @@ make generate
 - **Admin Portal Authentication & Auto-Provisioning User Story**: [`docs/user-stories/admin-portal-login-and-provisioning.md`](./docs/user-stories/admin-portal-login-and-provisioning.md)
 - **Edit Transaction in Ledger Implementation Plan**: [`docs/plans/edit-transaction-implementation-plan.md`](./docs/plans/edit-transaction-implementation-plan.md)
 - **Edit Transaction in Ledger User Story**: [`docs/user-stories/edit-transaction-ledger.md`](./docs/user-stories/edit-transaction-ledger.md)
+- **Tax Lot Inspector & Capital Gains Implementation Plan**: [`docs/plans/tax-lot-inspector-capital-gains-implementation-plan.md`](./docs/plans/tax-lot-inspector-capital-gains-implementation-plan.md)
+- **Tax Lot Inspector & Capital Gains User Story**: [`docs/user-stories/tax-lot-inspector-capital-gains.md`](./docs/user-stories/tax-lot-inspector-capital-gains.md)
 - **Negative Cash Balance Investigation Report**: [`docs/negative-cash-balance-investigation-report.md`](./docs/negative-cash-balance-investigation-report.md)
 - **Competitive Strategy Analysis**: [`docs/competitive-analysis.md`](./docs/competitive-analysis.md)
 - **Frontend GraphQL Setup**: [`docs/genql-usage.md`](./docs/genql-usage.md)

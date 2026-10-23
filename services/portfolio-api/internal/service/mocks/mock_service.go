@@ -289,6 +289,36 @@ func (mr *MockPortfolioServiceMockRecorder) GetPortfolioSummary(ctx, userID any,
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPortfolioSummary", reflect.TypeOf((*MockPortfolioService)(nil).GetPortfolioSummary), varargs...)
 }
 
+// GetRealizedGainsReport mocks base method.
+func (m *MockPortfolioService) GetRealizedGainsReport(ctx context.Context, userID string, fromDate, toDate *string, fiscalYear *int32) (*domain.RealizedGainsReport, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRealizedGainsReport", ctx, userID, fromDate, toDate, fiscalYear)
+	ret0, _ := ret[0].(*domain.RealizedGainsReport)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRealizedGainsReport indicates an expected call of GetRealizedGainsReport.
+func (mr *MockPortfolioServiceMockRecorder) GetRealizedGainsReport(ctx, userID, fromDate, toDate, fiscalYear any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRealizedGainsReport", reflect.TypeOf((*MockPortfolioService)(nil).GetRealizedGainsReport), ctx, userID, fromDate, toDate, fiscalYear)
+}
+
+// GetTaxReport mocks base method.
+func (m *MockPortfolioService) GetTaxReport(ctx context.Context, userID string, fiscalYear *int32, fromDate, toDate *string) (*domain.TaxReport, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTaxReport", ctx, userID, fiscalYear, fromDate, toDate)
+	ret0, _ := ret[0].(*domain.TaxReport)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTaxReport indicates an expected call of GetTaxReport.
+func (mr *MockPortfolioServiceMockRecorder) GetTaxReport(ctx, userID, fiscalYear, fromDate, toDate any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTaxReport", reflect.TypeOf((*MockPortfolioService)(nil).GetTaxReport), ctx, userID, fiscalYear, fromDate, toDate)
+}
+
 // ListAllInstruments mocks base method.
 func (m *MockPortfolioService) ListAllInstruments(ctx context.Context, isActive *bool, search *string) ([]domain.Instrument, error) {
 	m.ctrl.T.Helper()
@@ -424,6 +454,21 @@ func (m *MockPortfolioService) ListMissingPriceTransactions(ctx context.Context,
 func (mr *MockPortfolioServiceMockRecorder) ListMissingPriceTransactions(ctx, filter any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListMissingPriceTransactions", reflect.TypeOf((*MockPortfolioService)(nil).ListMissingPriceTransactions), ctx, filter)
+}
+
+// ListTaxLots mocks base method.
+func (m *MockPortfolioService) ListTaxLots(ctx context.Context, userID string, instrumentID *string, status domain.TaxLotStatus) ([]domain.TaxLot, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListTaxLots", ctx, userID, instrumentID, status)
+	ret0, _ := ret[0].([]domain.TaxLot)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListTaxLots indicates an expected call of ListTaxLots.
+func (mr *MockPortfolioServiceMockRecorder) ListTaxLots(ctx, userID, instrumentID, status any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListTaxLots", reflect.TypeOf((*MockPortfolioService)(nil).ListTaxLots), ctx, userID, instrumentID, status)
 }
 
 // ListTransactions mocks base method.

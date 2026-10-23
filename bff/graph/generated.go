@@ -108,6 +108,16 @@ type ComplexityRoot struct {
 		TrackingErrorPercent             func(childComplexity int) int
 	}
 
+	CapitalGainsSummary struct {
+		CgtDiscountAmount  func(childComplexity int) int
+		CgtDiscountRatePct func(childComplexity int) int
+		GainDisposalsCount func(childComplexity int) int
+		LossDisposalsCount func(childComplexity int) int
+		LossesApplied      func(childComplexity int) int
+		NetCapitalGain     func(childComplexity int) int
+		TotalCapitalGains  func(childComplexity int) int
+	}
+
 	CashFlowCategoryBreakdown struct {
 		Deposits      func(childComplexity int) int
 		Dividends     func(childComplexity int) int
@@ -522,6 +532,7 @@ type ComplexityRoot struct {
 		DividendCalendar           func(childComplexity int, year int, month int) int
 		DividendYieldAnalytics     func(childComplexity int) int
 		Exchanges                  func(childComplexity int) int
+		ExportTaxScheduleCSV       func(childComplexity int, financialYear *int, fromDate *string, toDate *string) int
 		ExportTransactions         func(childComplexity int, typeArg *model.TransactionType, symbol *string) int
 		FxRates                    func(childComplexity int, baseCurrency *string, quoteCurrency *string, fromDate *string, toDate *string, limit *int, offset *int) int
 		IngestionStatus            func(childComplexity int) int
@@ -533,10 +544,53 @@ type ComplexityRoot struct {
 		ModifiedDietzReturn        func(childComplexity int, startDate string, endDate string, useMonthlyLinking *bool) int
 		Portfolio                  func(childComplexity int, includeClosed *bool) int
 		PortfolioHistory           func(childComplexity int, timeframe model.HistoryTimeframe) int
+		RealizedCapitalGainsReport func(childComplexity int, financialYear *int, fromDate *string, toDate *string) int
 		SimulateDrip               func(childComplexity int, input model.DRIPSimulationInput) int
 		SupportedCurrencies        func(childComplexity int) int
+		TaxLots                    func(childComplexity int, instrumentID *string, status *model.TaxLotStatus) int
+		TaxReport                  func(childComplexity int, financialYear *int, fromDate *string, toDate *string) int
 		Transactions               func(childComplexity int, typeArg *model.TransactionType, symbol *string, page *int, pageSize *int, sortDirection *model.SortDirection) int
 		UserPreferences            func(childComplexity int) int
+	}
+
+	RealizedDisposal struct {
+		AcquiredDate             func(childComplexity int) int
+		CostBasisRelievedBase    func(childComplexity int) int
+		DiscountedTaxablePnlBase func(childComplexity int) int
+		DisposalID               func(childComplexity int) int
+		DisposedDate             func(childComplexity int) int
+		HoldingPeriodDays        func(childComplexity int) int
+		InstrumentID             func(childComplexity int) int
+		IsCgtDiscountEligible    func(childComplexity int) int
+		Name                     func(childComplexity int) int
+		ProceedsBase             func(childComplexity int) int
+		QuantityDisposed         func(childComplexity int) int
+		RealizedPnlBase          func(childComplexity int) int
+		RealizedPnlPercent       func(childComplexity int) int
+		SellTransactionID        func(childComplexity int) int
+		TaxLotID                 func(childComplexity int) int
+		TermClassification       func(childComplexity int) int
+		Ticker                   func(childComplexity int) int
+	}
+
+	RealizedGainsReport struct {
+		BaseCurrency func(childComplexity int) int
+		Disposals    func(childComplexity int) int
+		FromDate     func(childComplexity int) int
+		Summary      func(childComplexity int) int
+		ToDate       func(childComplexity int) int
+	}
+
+	RealizedGainsSummary struct {
+		DiscountedTaxableGainBase func(childComplexity int) int
+		GrossRealizedGainsBase    func(childComplexity int) int
+		GrossRealizedLossesBase   func(childComplexity int) int
+		LongTermGainsBase         func(childComplexity int) int
+		NetRealizedPnlBase        func(childComplexity int) int
+		ShortTermGainsBase        func(childComplexity int) int
+		TotalCostBasisRelieved    func(childComplexity int) int
+		TotalDisposalCount        func(childComplexity int) int
+		TotalProceedsBase         func(childComplexity int) int
 	}
 
 	RecordFXRateOverridePayload struct {
@@ -547,6 +601,64 @@ type ComplexityRoot struct {
 	RecordPriceOverridePayload struct {
 		Price                func(childComplexity int) int
 		ValuationsRecomputed func(childComplexity int) int
+	}
+
+	TaxLot struct {
+		AcquiredDate              func(childComplexity int) int
+		ClosedDate                func(childComplexity int) int
+		CostBasis                 func(childComplexity int) int
+		CostBasisBase             func(childComplexity int) int
+		CurrentPrice              func(childComplexity int) int
+		HasWashSaleRisk           func(childComplexity int) int
+		HoldingPeriodDays         func(childComplexity int) int
+		ID                        func(childComplexity int) int
+		InstrumentID              func(childComplexity int) int
+		IsCgtDiscountEligible     func(childComplexity int) int
+		IsLossHarvestingCandidate func(childComplexity int) int
+		MarketValueBase           func(childComplexity int) int
+		Name                      func(childComplexity int) int
+		OpenTransactionID         func(childComplexity int) int
+		OriginalQuantity          func(childComplexity int) int
+		RemainingQuantity         func(childComplexity int) int
+		TermClassification        func(childComplexity int) int
+		Ticker                    func(childComplexity int) int
+		UnitCostBase              func(childComplexity int) int
+		UnrealizedPnlBase         func(childComplexity int) int
+		UnrealizedPnlPercent      func(childComplexity int) int
+	}
+
+	TaxOffsetsSummary struct {
+		ForeignTaxOffsets     func(childComplexity int) int
+		FrankingCreditsOffset func(childComplexity int) int
+		TotalAvailableOffsets func(childComplexity int) int
+	}
+
+	TaxReport struct {
+		BaseCurrency    func(childComplexity int) int
+		Disposals       func(childComplexity int) int
+		FiscalYearLabel func(childComplexity int) int
+		FromDate        func(childComplexity int) int
+		OpenLots        func(childComplexity int) int
+		Summary         func(childComplexity int) int
+		ToDate          func(childComplexity int) int
+	}
+
+	TaxReportSummary struct {
+		BaseCurrency    func(childComplexity int) int
+		CapitalGains    func(childComplexity int) int
+		FiscalYearLabel func(childComplexity int) int
+		TaxOffsets      func(childComplexity int) int
+		TaxableIncome   func(childComplexity int) int
+	}
+
+	TaxableIncomeSummary struct {
+		CapitalGainsRatioPct      func(childComplexity int) int
+		DividendAndInterestIncome func(childComplexity int) int
+		DividendInterestRatioPct  func(childComplexity int) int
+		FrankingCredits           func(childComplexity int) int
+		FrankingCreditsRatioPct   func(childComplexity int) int
+		NetCapitalGains           func(childComplexity int) int
+		TotalAssessableIncome     func(childComplexity int) int
 	}
 
 	TransactionItem struct {
@@ -658,6 +770,10 @@ type QueryResolver interface {
 	DividendCalendar(ctx context.Context, year int, month int) ([]*model.DividendCalendarEvent, error)
 	DividendYieldAnalytics(ctx context.Context) (*model.DividendYieldAnalytics, error)
 	SimulateDrip(ctx context.Context, input model.DRIPSimulationInput) (*model.DRIPSimulationResult, error)
+	TaxReport(ctx context.Context, financialYear *int, fromDate *string, toDate *string) (*model.TaxReport, error)
+	TaxLots(ctx context.Context, instrumentID *string, status *model.TaxLotStatus) ([]*model.TaxLot, error)
+	RealizedCapitalGainsReport(ctx context.Context, financialYear *int, fromDate *string, toDate *string) (*model.RealizedGainsReport, error)
+	ExportTaxScheduleCSV(ctx context.Context, financialYear *int, fromDate *string, toDate *string) (string, error)
 }
 
 // endregion ************************** generated!.gotpl **************************
@@ -967,6 +1083,49 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.BenchmarkMetrics.TrackingErrorPercent(childComplexity), true
+
+	case "CapitalGainsSummary.cgtDiscountAmount":
+		if e.ComplexityRoot.CapitalGainsSummary.CgtDiscountAmount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CapitalGainsSummary.CgtDiscountAmount(childComplexity), true
+	case "CapitalGainsSummary.cgtDiscountRatePct":
+		if e.ComplexityRoot.CapitalGainsSummary.CgtDiscountRatePct == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CapitalGainsSummary.CgtDiscountRatePct(childComplexity), true
+	case "CapitalGainsSummary.gainDisposalsCount":
+		if e.ComplexityRoot.CapitalGainsSummary.GainDisposalsCount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CapitalGainsSummary.GainDisposalsCount(childComplexity), true
+	case "CapitalGainsSummary.lossDisposalsCount":
+		if e.ComplexityRoot.CapitalGainsSummary.LossDisposalsCount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CapitalGainsSummary.LossDisposalsCount(childComplexity), true
+	case "CapitalGainsSummary.lossesApplied":
+		if e.ComplexityRoot.CapitalGainsSummary.LossesApplied == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CapitalGainsSummary.LossesApplied(childComplexity), true
+	case "CapitalGainsSummary.netCapitalGain":
+		if e.ComplexityRoot.CapitalGainsSummary.NetCapitalGain == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CapitalGainsSummary.NetCapitalGain(childComplexity), true
+	case "CapitalGainsSummary.totalCapitalGains":
+		if e.ComplexityRoot.CapitalGainsSummary.TotalCapitalGains == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CapitalGainsSummary.TotalCapitalGains(childComplexity), true
 
 	case "CashFlowCategoryBreakdown.deposits":
 		if e.ComplexityRoot.CashFlowCategoryBreakdown.Deposits == nil {
@@ -2910,6 +3069,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.Exchanges(childComplexity), true
+	case "Query.exportTaxScheduleCSV":
+		if e.ComplexityRoot.Query.ExportTaxScheduleCSV == nil {
+			break
+		}
+
+		args, err := ec.field_Query_exportTaxScheduleCSV_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.ExportTaxScheduleCSV(childComplexity, args["financialYear"].(*int), args["fromDate"].(*string), args["toDate"].(*string)), true
 	case "Query.exportTransactions":
 		if e.ComplexityRoot.Query.ExportTransactions == nil {
 			break
@@ -3017,6 +3187,17 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.PortfolioHistory(childComplexity, args["timeframe"].(model.HistoryTimeframe)), true
+	case "Query.realizedCapitalGainsReport":
+		if e.ComplexityRoot.Query.RealizedCapitalGainsReport == nil {
+			break
+		}
+
+		args, err := ec.field_Query_realizedCapitalGainsReport_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.RealizedCapitalGainsReport(childComplexity, args["financialYear"].(*int), args["fromDate"].(*string), args["toDate"].(*string)), true
 	case "Query.simulateDRIP":
 		if e.ComplexityRoot.Query.SimulateDrip == nil {
 			break
@@ -3034,6 +3215,28 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.SupportedCurrencies(childComplexity), true
+	case "Query.taxLots":
+		if e.ComplexityRoot.Query.TaxLots == nil {
+			break
+		}
+
+		args, err := ec.field_Query_taxLots_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.TaxLots(childComplexity, args["instrumentId"].(*string), args["status"].(*model.TaxLotStatus)), true
+	case "Query.taxReport":
+		if e.ComplexityRoot.Query.TaxReport == nil {
+			break
+		}
+
+		args, err := ec.field_Query_taxReport_args(ctx, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.ComplexityRoot.Query.TaxReport(childComplexity, args["financialYear"].(*int), args["fromDate"].(*string), args["toDate"].(*string)), true
 	case "Query.transactions":
 		if e.ComplexityRoot.Query.Transactions == nil {
 			break
@@ -3051,6 +3254,195 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.Query.UserPreferences(childComplexity), true
+
+	case "RealizedDisposal.acquiredDate":
+		if e.ComplexityRoot.RealizedDisposal.AcquiredDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedDisposal.AcquiredDate(childComplexity), true
+	case "RealizedDisposal.costBasisRelievedBase":
+		if e.ComplexityRoot.RealizedDisposal.CostBasisRelievedBase == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedDisposal.CostBasisRelievedBase(childComplexity), true
+	case "RealizedDisposal.discountedTaxablePnlBase":
+		if e.ComplexityRoot.RealizedDisposal.DiscountedTaxablePnlBase == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedDisposal.DiscountedTaxablePnlBase(childComplexity), true
+	case "RealizedDisposal.disposalId":
+		if e.ComplexityRoot.RealizedDisposal.DisposalID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedDisposal.DisposalID(childComplexity), true
+	case "RealizedDisposal.disposedDate":
+		if e.ComplexityRoot.RealizedDisposal.DisposedDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedDisposal.DisposedDate(childComplexity), true
+	case "RealizedDisposal.holdingPeriodDays":
+		if e.ComplexityRoot.RealizedDisposal.HoldingPeriodDays == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedDisposal.HoldingPeriodDays(childComplexity), true
+	case "RealizedDisposal.instrumentId":
+		if e.ComplexityRoot.RealizedDisposal.InstrumentID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedDisposal.InstrumentID(childComplexity), true
+	case "RealizedDisposal.isCgtDiscountEligible":
+		if e.ComplexityRoot.RealizedDisposal.IsCgtDiscountEligible == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedDisposal.IsCgtDiscountEligible(childComplexity), true
+	case "RealizedDisposal.name":
+		if e.ComplexityRoot.RealizedDisposal.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedDisposal.Name(childComplexity), true
+	case "RealizedDisposal.proceedsBase":
+		if e.ComplexityRoot.RealizedDisposal.ProceedsBase == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedDisposal.ProceedsBase(childComplexity), true
+	case "RealizedDisposal.quantityDisposed":
+		if e.ComplexityRoot.RealizedDisposal.QuantityDisposed == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedDisposal.QuantityDisposed(childComplexity), true
+	case "RealizedDisposal.realizedPnlBase":
+		if e.ComplexityRoot.RealizedDisposal.RealizedPnlBase == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedDisposal.RealizedPnlBase(childComplexity), true
+	case "RealizedDisposal.realizedPnlPercent":
+		if e.ComplexityRoot.RealizedDisposal.RealizedPnlPercent == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedDisposal.RealizedPnlPercent(childComplexity), true
+	case "RealizedDisposal.sellTransactionId":
+		if e.ComplexityRoot.RealizedDisposal.SellTransactionID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedDisposal.SellTransactionID(childComplexity), true
+	case "RealizedDisposal.taxLotId":
+		if e.ComplexityRoot.RealizedDisposal.TaxLotID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedDisposal.TaxLotID(childComplexity), true
+	case "RealizedDisposal.termClassification":
+		if e.ComplexityRoot.RealizedDisposal.TermClassification == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedDisposal.TermClassification(childComplexity), true
+	case "RealizedDisposal.ticker":
+		if e.ComplexityRoot.RealizedDisposal.Ticker == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedDisposal.Ticker(childComplexity), true
+
+	case "RealizedGainsReport.baseCurrency":
+		if e.ComplexityRoot.RealizedGainsReport.BaseCurrency == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedGainsReport.BaseCurrency(childComplexity), true
+	case "RealizedGainsReport.disposals":
+		if e.ComplexityRoot.RealizedGainsReport.Disposals == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedGainsReport.Disposals(childComplexity), true
+	case "RealizedGainsReport.fromDate":
+		if e.ComplexityRoot.RealizedGainsReport.FromDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedGainsReport.FromDate(childComplexity), true
+	case "RealizedGainsReport.summary":
+		if e.ComplexityRoot.RealizedGainsReport.Summary == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedGainsReport.Summary(childComplexity), true
+	case "RealizedGainsReport.toDate":
+		if e.ComplexityRoot.RealizedGainsReport.ToDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedGainsReport.ToDate(childComplexity), true
+
+	case "RealizedGainsSummary.discountedTaxableGainBase":
+		if e.ComplexityRoot.RealizedGainsSummary.DiscountedTaxableGainBase == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedGainsSummary.DiscountedTaxableGainBase(childComplexity), true
+	case "RealizedGainsSummary.grossRealizedGainsBase":
+		if e.ComplexityRoot.RealizedGainsSummary.GrossRealizedGainsBase == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedGainsSummary.GrossRealizedGainsBase(childComplexity), true
+	case "RealizedGainsSummary.grossRealizedLossesBase":
+		if e.ComplexityRoot.RealizedGainsSummary.GrossRealizedLossesBase == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedGainsSummary.GrossRealizedLossesBase(childComplexity), true
+	case "RealizedGainsSummary.longTermGainsBase":
+		if e.ComplexityRoot.RealizedGainsSummary.LongTermGainsBase == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedGainsSummary.LongTermGainsBase(childComplexity), true
+	case "RealizedGainsSummary.netRealizedPnlBase":
+		if e.ComplexityRoot.RealizedGainsSummary.NetRealizedPnlBase == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedGainsSummary.NetRealizedPnlBase(childComplexity), true
+	case "RealizedGainsSummary.shortTermGainsBase":
+		if e.ComplexityRoot.RealizedGainsSummary.ShortTermGainsBase == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedGainsSummary.ShortTermGainsBase(childComplexity), true
+	case "RealizedGainsSummary.totalCostBasisRelieved":
+		if e.ComplexityRoot.RealizedGainsSummary.TotalCostBasisRelieved == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedGainsSummary.TotalCostBasisRelieved(childComplexity), true
+	case "RealizedGainsSummary.totalDisposalCount":
+		if e.ComplexityRoot.RealizedGainsSummary.TotalDisposalCount == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedGainsSummary.TotalDisposalCount(childComplexity), true
+	case "RealizedGainsSummary.totalProceedsBase":
+		if e.ComplexityRoot.RealizedGainsSummary.TotalProceedsBase == nil {
+			break
+		}
+
+		return e.ComplexityRoot.RealizedGainsSummary.TotalProceedsBase(childComplexity), true
 
 	case "RecordFXRateOverridePayload.rate":
 		if e.ComplexityRoot.RecordFXRateOverridePayload.Rate == nil {
@@ -3077,6 +3469,269 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.RecordPriceOverridePayload.ValuationsRecomputed(childComplexity), true
+
+	case "TaxLot.acquiredDate":
+		if e.ComplexityRoot.TaxLot.AcquiredDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxLot.AcquiredDate(childComplexity), true
+	case "TaxLot.closedDate":
+		if e.ComplexityRoot.TaxLot.ClosedDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxLot.ClosedDate(childComplexity), true
+	case "TaxLot.costBasis":
+		if e.ComplexityRoot.TaxLot.CostBasis == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxLot.CostBasis(childComplexity), true
+	case "TaxLot.costBasisBase":
+		if e.ComplexityRoot.TaxLot.CostBasisBase == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxLot.CostBasisBase(childComplexity), true
+	case "TaxLot.currentPrice":
+		if e.ComplexityRoot.TaxLot.CurrentPrice == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxLot.CurrentPrice(childComplexity), true
+	case "TaxLot.hasWashSaleRisk":
+		if e.ComplexityRoot.TaxLot.HasWashSaleRisk == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxLot.HasWashSaleRisk(childComplexity), true
+	case "TaxLot.holdingPeriodDays":
+		if e.ComplexityRoot.TaxLot.HoldingPeriodDays == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxLot.HoldingPeriodDays(childComplexity), true
+	case "TaxLot.id":
+		if e.ComplexityRoot.TaxLot.ID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxLot.ID(childComplexity), true
+	case "TaxLot.instrumentId":
+		if e.ComplexityRoot.TaxLot.InstrumentID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxLot.InstrumentID(childComplexity), true
+	case "TaxLot.isCgtDiscountEligible":
+		if e.ComplexityRoot.TaxLot.IsCgtDiscountEligible == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxLot.IsCgtDiscountEligible(childComplexity), true
+	case "TaxLot.isLossHarvestingCandidate":
+		if e.ComplexityRoot.TaxLot.IsLossHarvestingCandidate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxLot.IsLossHarvestingCandidate(childComplexity), true
+	case "TaxLot.marketValueBase":
+		if e.ComplexityRoot.TaxLot.MarketValueBase == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxLot.MarketValueBase(childComplexity), true
+	case "TaxLot.name":
+		if e.ComplexityRoot.TaxLot.Name == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxLot.Name(childComplexity), true
+	case "TaxLot.openTransactionId":
+		if e.ComplexityRoot.TaxLot.OpenTransactionID == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxLot.OpenTransactionID(childComplexity), true
+	case "TaxLot.originalQuantity":
+		if e.ComplexityRoot.TaxLot.OriginalQuantity == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxLot.OriginalQuantity(childComplexity), true
+	case "TaxLot.remainingQuantity":
+		if e.ComplexityRoot.TaxLot.RemainingQuantity == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxLot.RemainingQuantity(childComplexity), true
+	case "TaxLot.termClassification":
+		if e.ComplexityRoot.TaxLot.TermClassification == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxLot.TermClassification(childComplexity), true
+	case "TaxLot.ticker":
+		if e.ComplexityRoot.TaxLot.Ticker == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxLot.Ticker(childComplexity), true
+	case "TaxLot.unitCostBase":
+		if e.ComplexityRoot.TaxLot.UnitCostBase == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxLot.UnitCostBase(childComplexity), true
+	case "TaxLot.unrealizedPnlBase":
+		if e.ComplexityRoot.TaxLot.UnrealizedPnlBase == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxLot.UnrealizedPnlBase(childComplexity), true
+	case "TaxLot.unrealizedPnlPercent":
+		if e.ComplexityRoot.TaxLot.UnrealizedPnlPercent == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxLot.UnrealizedPnlPercent(childComplexity), true
+
+	case "TaxOffsetsSummary.foreignTaxOffsets":
+		if e.ComplexityRoot.TaxOffsetsSummary.ForeignTaxOffsets == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxOffsetsSummary.ForeignTaxOffsets(childComplexity), true
+	case "TaxOffsetsSummary.frankingCreditsOffset":
+		if e.ComplexityRoot.TaxOffsetsSummary.FrankingCreditsOffset == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxOffsetsSummary.FrankingCreditsOffset(childComplexity), true
+	case "TaxOffsetsSummary.totalAvailableOffsets":
+		if e.ComplexityRoot.TaxOffsetsSummary.TotalAvailableOffsets == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxOffsetsSummary.TotalAvailableOffsets(childComplexity), true
+
+	case "TaxReport.baseCurrency":
+		if e.ComplexityRoot.TaxReport.BaseCurrency == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxReport.BaseCurrency(childComplexity), true
+	case "TaxReport.disposals":
+		if e.ComplexityRoot.TaxReport.Disposals == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxReport.Disposals(childComplexity), true
+	case "TaxReport.fiscalYearLabel":
+		if e.ComplexityRoot.TaxReport.FiscalYearLabel == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxReport.FiscalYearLabel(childComplexity), true
+	case "TaxReport.fromDate":
+		if e.ComplexityRoot.TaxReport.FromDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxReport.FromDate(childComplexity), true
+	case "TaxReport.openLots":
+		if e.ComplexityRoot.TaxReport.OpenLots == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxReport.OpenLots(childComplexity), true
+	case "TaxReport.summary":
+		if e.ComplexityRoot.TaxReport.Summary == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxReport.Summary(childComplexity), true
+	case "TaxReport.toDate":
+		if e.ComplexityRoot.TaxReport.ToDate == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxReport.ToDate(childComplexity), true
+
+	case "TaxReportSummary.baseCurrency":
+		if e.ComplexityRoot.TaxReportSummary.BaseCurrency == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxReportSummary.BaseCurrency(childComplexity), true
+	case "TaxReportSummary.capitalGains":
+		if e.ComplexityRoot.TaxReportSummary.CapitalGains == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxReportSummary.CapitalGains(childComplexity), true
+	case "TaxReportSummary.fiscalYearLabel":
+		if e.ComplexityRoot.TaxReportSummary.FiscalYearLabel == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxReportSummary.FiscalYearLabel(childComplexity), true
+	case "TaxReportSummary.taxOffsets":
+		if e.ComplexityRoot.TaxReportSummary.TaxOffsets == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxReportSummary.TaxOffsets(childComplexity), true
+	case "TaxReportSummary.taxableIncome":
+		if e.ComplexityRoot.TaxReportSummary.TaxableIncome == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxReportSummary.TaxableIncome(childComplexity), true
+
+	case "TaxableIncomeSummary.capitalGainsRatioPct":
+		if e.ComplexityRoot.TaxableIncomeSummary.CapitalGainsRatioPct == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxableIncomeSummary.CapitalGainsRatioPct(childComplexity), true
+	case "TaxableIncomeSummary.dividendAndInterestIncome":
+		if e.ComplexityRoot.TaxableIncomeSummary.DividendAndInterestIncome == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxableIncomeSummary.DividendAndInterestIncome(childComplexity), true
+	case "TaxableIncomeSummary.dividendInterestRatioPct":
+		if e.ComplexityRoot.TaxableIncomeSummary.DividendInterestRatioPct == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxableIncomeSummary.DividendInterestRatioPct(childComplexity), true
+	case "TaxableIncomeSummary.frankingCredits":
+		if e.ComplexityRoot.TaxableIncomeSummary.FrankingCredits == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxableIncomeSummary.FrankingCredits(childComplexity), true
+	case "TaxableIncomeSummary.frankingCreditsRatioPct":
+		if e.ComplexityRoot.TaxableIncomeSummary.FrankingCreditsRatioPct == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxableIncomeSummary.FrankingCreditsRatioPct(childComplexity), true
+	case "TaxableIncomeSummary.netCapitalGains":
+		if e.ComplexityRoot.TaxableIncomeSummary.NetCapitalGains == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxableIncomeSummary.NetCapitalGains(childComplexity), true
+	case "TaxableIncomeSummary.totalAssessableIncome":
+		if e.ComplexityRoot.TaxableIncomeSummary.TotalAssessableIncome == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TaxableIncomeSummary.TotalAssessableIncome(childComplexity), true
 
 	case "TransactionItem.amount":
 		if e.ComplexityRoot.TransactionItem.Amount == nil {
@@ -3582,6 +4237,26 @@ func (ec *executionContext) childFields_BenchmarkMetrics(ctx context.Context, fi
 		return ec.fieldContext_BenchmarkMetrics_informationRatio(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type BenchmarkMetrics", field.Name)
+}
+
+func (ec *executionContext) childFields_CapitalGainsSummary(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "totalCapitalGains":
+		return ec.fieldContext_CapitalGainsSummary_totalCapitalGains(ctx, field)
+	case "lossesApplied":
+		return ec.fieldContext_CapitalGainsSummary_lossesApplied(ctx, field)
+	case "cgtDiscountAmount":
+		return ec.fieldContext_CapitalGainsSummary_cgtDiscountAmount(ctx, field)
+	case "netCapitalGain":
+		return ec.fieldContext_CapitalGainsSummary_netCapitalGain(ctx, field)
+	case "cgtDiscountRatePct":
+		return ec.fieldContext_CapitalGainsSummary_cgtDiscountRatePct(ctx, field)
+	case "gainDisposalsCount":
+		return ec.fieldContext_CapitalGainsSummary_gainDisposalsCount(ctx, field)
+	case "lossDisposalsCount":
+		return ec.fieldContext_CapitalGainsSummary_lossDisposalsCount(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type CapitalGainsSummary", field.Name)
 }
 
 func (ec *executionContext) childFields_CashFlowCategoryBreakdown(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -4348,6 +5023,86 @@ func (ec *executionContext) childFields_PortfolioHistory(ctx context.Context, fi
 	return nil, fmt.Errorf("no field named %q was found under type PortfolioHistory", field.Name)
 }
 
+func (ec *executionContext) childFields_RealizedDisposal(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "disposalId":
+		return ec.fieldContext_RealizedDisposal_disposalId(ctx, field)
+	case "taxLotId":
+		return ec.fieldContext_RealizedDisposal_taxLotId(ctx, field)
+	case "sellTransactionId":
+		return ec.fieldContext_RealizedDisposal_sellTransactionId(ctx, field)
+	case "instrumentId":
+		return ec.fieldContext_RealizedDisposal_instrumentId(ctx, field)
+	case "ticker":
+		return ec.fieldContext_RealizedDisposal_ticker(ctx, field)
+	case "name":
+		return ec.fieldContext_RealizedDisposal_name(ctx, field)
+	case "acquiredDate":
+		return ec.fieldContext_RealizedDisposal_acquiredDate(ctx, field)
+	case "disposedDate":
+		return ec.fieldContext_RealizedDisposal_disposedDate(ctx, field)
+	case "quantityDisposed":
+		return ec.fieldContext_RealizedDisposal_quantityDisposed(ctx, field)
+	case "costBasisRelievedBase":
+		return ec.fieldContext_RealizedDisposal_costBasisRelievedBase(ctx, field)
+	case "proceedsBase":
+		return ec.fieldContext_RealizedDisposal_proceedsBase(ctx, field)
+	case "realizedPnlBase":
+		return ec.fieldContext_RealizedDisposal_realizedPnlBase(ctx, field)
+	case "realizedPnlPercent":
+		return ec.fieldContext_RealizedDisposal_realizedPnlPercent(ctx, field)
+	case "holdingPeriodDays":
+		return ec.fieldContext_RealizedDisposal_holdingPeriodDays(ctx, field)
+	case "termClassification":
+		return ec.fieldContext_RealizedDisposal_termClassification(ctx, field)
+	case "isCgtDiscountEligible":
+		return ec.fieldContext_RealizedDisposal_isCgtDiscountEligible(ctx, field)
+	case "discountedTaxablePnlBase":
+		return ec.fieldContext_RealizedDisposal_discountedTaxablePnlBase(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type RealizedDisposal", field.Name)
+}
+
+func (ec *executionContext) childFields_RealizedGainsReport(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "summary":
+		return ec.fieldContext_RealizedGainsReport_summary(ctx, field)
+	case "disposals":
+		return ec.fieldContext_RealizedGainsReport_disposals(ctx, field)
+	case "fromDate":
+		return ec.fieldContext_RealizedGainsReport_fromDate(ctx, field)
+	case "toDate":
+		return ec.fieldContext_RealizedGainsReport_toDate(ctx, field)
+	case "baseCurrency":
+		return ec.fieldContext_RealizedGainsReport_baseCurrency(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type RealizedGainsReport", field.Name)
+}
+
+func (ec *executionContext) childFields_RealizedGainsSummary(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "totalProceedsBase":
+		return ec.fieldContext_RealizedGainsSummary_totalProceedsBase(ctx, field)
+	case "totalCostBasisRelieved":
+		return ec.fieldContext_RealizedGainsSummary_totalCostBasisRelieved(ctx, field)
+	case "grossRealizedGainsBase":
+		return ec.fieldContext_RealizedGainsSummary_grossRealizedGainsBase(ctx, field)
+	case "grossRealizedLossesBase":
+		return ec.fieldContext_RealizedGainsSummary_grossRealizedLossesBase(ctx, field)
+	case "netRealizedPnlBase":
+		return ec.fieldContext_RealizedGainsSummary_netRealizedPnlBase(ctx, field)
+	case "shortTermGainsBase":
+		return ec.fieldContext_RealizedGainsSummary_shortTermGainsBase(ctx, field)
+	case "longTermGainsBase":
+		return ec.fieldContext_RealizedGainsSummary_longTermGainsBase(ctx, field)
+	case "discountedTaxableGainBase":
+		return ec.fieldContext_RealizedGainsSummary_discountedTaxableGainBase(ctx, field)
+	case "totalDisposalCount":
+		return ec.fieldContext_RealizedGainsSummary_totalDisposalCount(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type RealizedGainsSummary", field.Name)
+}
+
 func (ec *executionContext) childFields_RecordFXRateOverridePayload(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch field.Name {
 	case "rate":
@@ -4366,6 +5121,122 @@ func (ec *executionContext) childFields_RecordPriceOverridePayload(ctx context.C
 		return ec.fieldContext_RecordPriceOverridePayload_valuationsRecomputed(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type RecordPriceOverridePayload", field.Name)
+}
+
+func (ec *executionContext) childFields_TaxLot(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "id":
+		return ec.fieldContext_TaxLot_id(ctx, field)
+	case "instrumentId":
+		return ec.fieldContext_TaxLot_instrumentId(ctx, field)
+	case "ticker":
+		return ec.fieldContext_TaxLot_ticker(ctx, field)
+	case "name":
+		return ec.fieldContext_TaxLot_name(ctx, field)
+	case "openTransactionId":
+		return ec.fieldContext_TaxLot_openTransactionId(ctx, field)
+	case "acquiredDate":
+		return ec.fieldContext_TaxLot_acquiredDate(ctx, field)
+	case "closedDate":
+		return ec.fieldContext_TaxLot_closedDate(ctx, field)
+	case "originalQuantity":
+		return ec.fieldContext_TaxLot_originalQuantity(ctx, field)
+	case "remainingQuantity":
+		return ec.fieldContext_TaxLot_remainingQuantity(ctx, field)
+	case "costBasis":
+		return ec.fieldContext_TaxLot_costBasis(ctx, field)
+	case "costBasisBase":
+		return ec.fieldContext_TaxLot_costBasisBase(ctx, field)
+	case "unitCostBase":
+		return ec.fieldContext_TaxLot_unitCostBase(ctx, field)
+	case "currentPrice":
+		return ec.fieldContext_TaxLot_currentPrice(ctx, field)
+	case "marketValueBase":
+		return ec.fieldContext_TaxLot_marketValueBase(ctx, field)
+	case "unrealizedPnlBase":
+		return ec.fieldContext_TaxLot_unrealizedPnlBase(ctx, field)
+	case "unrealizedPnlPercent":
+		return ec.fieldContext_TaxLot_unrealizedPnlPercent(ctx, field)
+	case "holdingPeriodDays":
+		return ec.fieldContext_TaxLot_holdingPeriodDays(ctx, field)
+	case "termClassification":
+		return ec.fieldContext_TaxLot_termClassification(ctx, field)
+	case "isCgtDiscountEligible":
+		return ec.fieldContext_TaxLot_isCgtDiscountEligible(ctx, field)
+	case "isLossHarvestingCandidate":
+		return ec.fieldContext_TaxLot_isLossHarvestingCandidate(ctx, field)
+	case "hasWashSaleRisk":
+		return ec.fieldContext_TaxLot_hasWashSaleRisk(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type TaxLot", field.Name)
+}
+
+func (ec *executionContext) childFields_TaxOffsetsSummary(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "frankingCreditsOffset":
+		return ec.fieldContext_TaxOffsetsSummary_frankingCreditsOffset(ctx, field)
+	case "foreignTaxOffsets":
+		return ec.fieldContext_TaxOffsetsSummary_foreignTaxOffsets(ctx, field)
+	case "totalAvailableOffsets":
+		return ec.fieldContext_TaxOffsetsSummary_totalAvailableOffsets(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type TaxOffsetsSummary", field.Name)
+}
+
+func (ec *executionContext) childFields_TaxReport(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "summary":
+		return ec.fieldContext_TaxReport_summary(ctx, field)
+	case "disposals":
+		return ec.fieldContext_TaxReport_disposals(ctx, field)
+	case "openLots":
+		return ec.fieldContext_TaxReport_openLots(ctx, field)
+	case "fromDate":
+		return ec.fieldContext_TaxReport_fromDate(ctx, field)
+	case "toDate":
+		return ec.fieldContext_TaxReport_toDate(ctx, field)
+	case "fiscalYearLabel":
+		return ec.fieldContext_TaxReport_fiscalYearLabel(ctx, field)
+	case "baseCurrency":
+		return ec.fieldContext_TaxReport_baseCurrency(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type TaxReport", field.Name)
+}
+
+func (ec *executionContext) childFields_TaxReportSummary(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "taxableIncome":
+		return ec.fieldContext_TaxReportSummary_taxableIncome(ctx, field)
+	case "capitalGains":
+		return ec.fieldContext_TaxReportSummary_capitalGains(ctx, field)
+	case "taxOffsets":
+		return ec.fieldContext_TaxReportSummary_taxOffsets(ctx, field)
+	case "fiscalYearLabel":
+		return ec.fieldContext_TaxReportSummary_fiscalYearLabel(ctx, field)
+	case "baseCurrency":
+		return ec.fieldContext_TaxReportSummary_baseCurrency(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type TaxReportSummary", field.Name)
+}
+
+func (ec *executionContext) childFields_TaxableIncomeSummary(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+	switch field.Name {
+	case "dividendAndInterestIncome":
+		return ec.fieldContext_TaxableIncomeSummary_dividendAndInterestIncome(ctx, field)
+	case "netCapitalGains":
+		return ec.fieldContext_TaxableIncomeSummary_netCapitalGains(ctx, field)
+	case "frankingCredits":
+		return ec.fieldContext_TaxableIncomeSummary_frankingCredits(ctx, field)
+	case "totalAssessableIncome":
+		return ec.fieldContext_TaxableIncomeSummary_totalAssessableIncome(ctx, field)
+	case "dividendInterestRatioPct":
+		return ec.fieldContext_TaxableIncomeSummary_dividendInterestRatioPct(ctx, field)
+	case "capitalGainsRatioPct":
+		return ec.fieldContext_TaxableIncomeSummary_capitalGainsRatioPct(ctx, field)
+	case "frankingCreditsRatioPct":
+		return ec.fieldContext_TaxableIncomeSummary_frankingCreditsRatioPct(ctx, field)
+	}
+	return nil, fmt.Errorf("no field named %q was found under type TaxableIncomeSummary", field.Name)
 }
 
 func (ec *executionContext) childFields_TransactionItem(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -4986,6 +5857,36 @@ func (ec *executionContext) field_Query_dividendCalendar_args(ctx context.Contex
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_exportTaxScheduleCSV_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "financialYear",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["financialYear"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "fromDate",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["fromDate"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "toDate",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["toDate"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_exportTransactions_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -5266,6 +6167,36 @@ func (ec *executionContext) field_Query_portfolio_args(ctx context.Context, rawA
 	return args, nil
 }
 
+func (ec *executionContext) field_Query_realizedCapitalGainsReport_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "financialYear",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["financialYear"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "fromDate",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["fromDate"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "toDate",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["toDate"] = arg2
+	return args, nil
+}
+
 func (ec *executionContext) field_Query_simulateDRIP_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
 	var err error
 	args := map[string]any{}
@@ -5277,6 +6208,58 @@ func (ec *executionContext) field_Query_simulateDRIP_args(ctx context.Context, r
 		return nil, err
 	}
 	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_taxLots_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "instrumentId",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOID2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["instrumentId"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "status",
+		func(ctx context.Context, v any) (*model.TaxLotStatus, error) {
+			return ec.unmarshalOTaxLotStatus2ᚖbffᚋgraphᚋmodelᚐTaxLotStatus(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["status"] = arg1
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_taxReport_args(ctx context.Context, rawArgs map[string]any) (map[string]any, error) {
+	var err error
+	args := map[string]any{}
+	arg0, err := graphql.ProcessArgField(ctx, rawArgs, "financialYear",
+		func(ctx context.Context, v any) (*int, error) {
+			return ec.unmarshalOInt2ᚖint(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["financialYear"] = arg0
+	arg1, err := graphql.ProcessArgField(ctx, rawArgs, "fromDate",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["fromDate"] = arg1
+	arg2, err := graphql.ProcessArgField(ctx, rawArgs, "toDate",
+		func(ctx context.Context, v any) (*string, error) {
+			return ec.unmarshalOString2ᚖstring(ctx, v)
+		})
+	if err != nil {
+		return nil, err
+	}
+	args["toDate"] = arg2
 	return args, nil
 }
 
@@ -6537,6 +7520,203 @@ func (ec *executionContext) _BenchmarkMetrics_informationRatio(ctx context.Conte
 }
 func (ec *executionContext) fieldContext_BenchmarkMetrics_informationRatio(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("BenchmarkMetrics", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _CapitalGainsSummary_totalCapitalGains(ctx context.Context, field graphql.CollectedField, obj *model.CapitalGainsSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CapitalGainsSummary_totalCapitalGains(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TotalCapitalGains, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CapitalGainsSummary_totalCapitalGains(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CapitalGainsSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CapitalGainsSummary_lossesApplied(ctx context.Context, field graphql.CollectedField, obj *model.CapitalGainsSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CapitalGainsSummary_lossesApplied(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LossesApplied, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CapitalGainsSummary_lossesApplied(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CapitalGainsSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CapitalGainsSummary_cgtDiscountAmount(ctx context.Context, field graphql.CollectedField, obj *model.CapitalGainsSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CapitalGainsSummary_cgtDiscountAmount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CgtDiscountAmount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CapitalGainsSummary_cgtDiscountAmount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CapitalGainsSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CapitalGainsSummary_netCapitalGain(ctx context.Context, field graphql.CollectedField, obj *model.CapitalGainsSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CapitalGainsSummary_netCapitalGain(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.NetCapitalGain, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CapitalGainsSummary_netCapitalGain(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CapitalGainsSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CapitalGainsSummary_cgtDiscountRatePct(ctx context.Context, field graphql.CollectedField, obj *model.CapitalGainsSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CapitalGainsSummary_cgtDiscountRatePct(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CgtDiscountRatePct, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CapitalGainsSummary_cgtDiscountRatePct(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CapitalGainsSummary", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _CapitalGainsSummary_gainDisposalsCount(ctx context.Context, field graphql.CollectedField, obj *model.CapitalGainsSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CapitalGainsSummary_gainDisposalsCount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.GainDisposalsCount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CapitalGainsSummary_gainDisposalsCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CapitalGainsSummary", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _CapitalGainsSummary_lossDisposalsCount(ctx context.Context, field graphql.CollectedField, obj *model.CapitalGainsSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CapitalGainsSummary_lossDisposalsCount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LossDisposalsCount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CapitalGainsSummary_lossDisposalsCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("CapitalGainsSummary", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _CashFlowCategoryBreakdown_deposits(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowCategoryBreakdown) (ret graphql.Marshaler) {
@@ -15180,6 +16360,182 @@ func (ec *executionContext) fieldContext_Query_simulateDRIP(ctx context.Context,
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_taxReport(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_taxReport(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().TaxReport(ctx, fc.Args["financialYear"].(*int), fc.Args["fromDate"].(*string), fc.Args["toDate"].(*string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.TaxReport) graphql.Marshaler {
+			return ec.marshalNTaxReport2ᚖbffᚋgraphᚋmodelᚐTaxReport(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_taxReport(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_TaxReport(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_taxReport_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_taxLots(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_taxLots(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().TaxLots(ctx, fc.Args["instrumentId"].(*string), fc.Args["status"].(*model.TaxLotStatus))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.TaxLot) graphql.Marshaler {
+			return ec.marshalNTaxLot2ᚕᚖbffᚋgraphᚋmodelᚐTaxLotᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_taxLots(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_TaxLot(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_taxLots_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_realizedCapitalGainsReport(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_realizedCapitalGainsReport(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().RealizedCapitalGainsReport(ctx, fc.Args["financialYear"].(*int), fc.Args["fromDate"].(*string), fc.Args["toDate"].(*string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.RealizedGainsReport) graphql.Marshaler {
+			return ec.marshalNRealizedGainsReport2ᚖbffᚋgraphᚋmodelᚐRealizedGainsReport(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_realizedCapitalGainsReport(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_RealizedGainsReport(ctx, field)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_realizedCapitalGainsReport_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_exportTaxScheduleCSV(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_Query_exportTaxScheduleCSV(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			fc := graphql.GetFieldContext(ctx)
+			return ec.Resolvers.Query().ExportTaxScheduleCSV(ctx, fc.Args["financialYear"].(*int), fc.Args["fromDate"].(*string), fc.Args["toDate"].(*string))
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_Query_exportTaxScheduleCSV(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_exportTaxScheduleCSV_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -15254,6 +16610,845 @@ func (ec *executionContext) fieldContext_Query___schema(_ context.Context, field
 		},
 	}
 	return fc, nil
+}
+
+func (ec *executionContext) _RealizedDisposal_disposalId(ctx context.Context, field graphql.CollectedField, obj *model.RealizedDisposal) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedDisposal_disposalId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DisposalID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedDisposal_disposalId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("RealizedDisposal", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _RealizedDisposal_taxLotId(ctx context.Context, field graphql.CollectedField, obj *model.RealizedDisposal) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedDisposal_taxLotId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TaxLotID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedDisposal_taxLotId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("RealizedDisposal", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _RealizedDisposal_sellTransactionId(ctx context.Context, field graphql.CollectedField, obj *model.RealizedDisposal) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedDisposal_sellTransactionId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.SellTransactionID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedDisposal_sellTransactionId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("RealizedDisposal", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _RealizedDisposal_instrumentId(ctx context.Context, field graphql.CollectedField, obj *model.RealizedDisposal) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedDisposal_instrumentId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.InstrumentID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedDisposal_instrumentId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("RealizedDisposal", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _RealizedDisposal_ticker(ctx context.Context, field graphql.CollectedField, obj *model.RealizedDisposal) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedDisposal_ticker(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Ticker, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedDisposal_ticker(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("RealizedDisposal", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _RealizedDisposal_name(ctx context.Context, field graphql.CollectedField, obj *model.RealizedDisposal) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedDisposal_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedDisposal_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("RealizedDisposal", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _RealizedDisposal_acquiredDate(ctx context.Context, field graphql.CollectedField, obj *model.RealizedDisposal) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedDisposal_acquiredDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.AcquiredDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedDisposal_acquiredDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("RealizedDisposal", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _RealizedDisposal_disposedDate(ctx context.Context, field graphql.CollectedField, obj *model.RealizedDisposal) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedDisposal_disposedDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DisposedDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedDisposal_disposedDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("RealizedDisposal", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _RealizedDisposal_quantityDisposed(ctx context.Context, field graphql.CollectedField, obj *model.RealizedDisposal) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedDisposal_quantityDisposed(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.QuantityDisposed, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedDisposal_quantityDisposed(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("RealizedDisposal", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _RealizedDisposal_costBasisRelievedBase(ctx context.Context, field graphql.CollectedField, obj *model.RealizedDisposal) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedDisposal_costBasisRelievedBase(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CostBasisRelievedBase, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedDisposal_costBasisRelievedBase(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RealizedDisposal",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RealizedDisposal_proceedsBase(ctx context.Context, field graphql.CollectedField, obj *model.RealizedDisposal) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedDisposal_proceedsBase(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ProceedsBase, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedDisposal_proceedsBase(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RealizedDisposal",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RealizedDisposal_realizedPnlBase(ctx context.Context, field graphql.CollectedField, obj *model.RealizedDisposal) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedDisposal_realizedPnlBase(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.RealizedPnlBase, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedDisposal_realizedPnlBase(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RealizedDisposal",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RealizedDisposal_realizedPnlPercent(ctx context.Context, field graphql.CollectedField, obj *model.RealizedDisposal) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedDisposal_realizedPnlPercent(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.RealizedPnlPercent, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedDisposal_realizedPnlPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("RealizedDisposal", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _RealizedDisposal_holdingPeriodDays(ctx context.Context, field graphql.CollectedField, obj *model.RealizedDisposal) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedDisposal_holdingPeriodDays(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.HoldingPeriodDays, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedDisposal_holdingPeriodDays(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("RealizedDisposal", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _RealizedDisposal_termClassification(ctx context.Context, field graphql.CollectedField, obj *model.RealizedDisposal) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedDisposal_termClassification(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TermClassification, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.HoldingTermClassification) graphql.Marshaler {
+			return ec.marshalNHoldingTermClassification2bffᚋgraphᚋmodelᚐHoldingTermClassification(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedDisposal_termClassification(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("RealizedDisposal", field, false, false, errors.New("field of type HoldingTermClassification does not have child fields"))
+}
+
+func (ec *executionContext) _RealizedDisposal_isCgtDiscountEligible(ctx context.Context, field graphql.CollectedField, obj *model.RealizedDisposal) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedDisposal_isCgtDiscountEligible(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.IsCgtDiscountEligible, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedDisposal_isCgtDiscountEligible(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("RealizedDisposal", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _RealizedDisposal_discountedTaxablePnlBase(ctx context.Context, field graphql.CollectedField, obj *model.RealizedDisposal) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedDisposal_discountedTaxablePnlBase(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DiscountedTaxablePnlBase, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedDisposal_discountedTaxablePnlBase(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RealizedDisposal",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RealizedGainsReport_summary(ctx context.Context, field graphql.CollectedField, obj *model.RealizedGainsReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedGainsReport_summary(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Summary, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.RealizedGainsSummary) graphql.Marshaler {
+			return ec.marshalNRealizedGainsSummary2ᚖbffᚋgraphᚋmodelᚐRealizedGainsSummary(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedGainsReport_summary(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RealizedGainsReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_RealizedGainsSummary(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RealizedGainsReport_disposals(ctx context.Context, field graphql.CollectedField, obj *model.RealizedGainsReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedGainsReport_disposals(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Disposals, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.RealizedDisposal) graphql.Marshaler {
+			return ec.marshalNRealizedDisposal2ᚕᚖbffᚋgraphᚋmodelᚐRealizedDisposalᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedGainsReport_disposals(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RealizedGainsReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_RealizedDisposal(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RealizedGainsReport_fromDate(ctx context.Context, field graphql.CollectedField, obj *model.RealizedGainsReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedGainsReport_fromDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FromDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedGainsReport_fromDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("RealizedGainsReport", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _RealizedGainsReport_toDate(ctx context.Context, field graphql.CollectedField, obj *model.RealizedGainsReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedGainsReport_toDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ToDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedGainsReport_toDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("RealizedGainsReport", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _RealizedGainsReport_baseCurrency(ctx context.Context, field graphql.CollectedField, obj *model.RealizedGainsReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedGainsReport_baseCurrency(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.BaseCurrency, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedGainsReport_baseCurrency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("RealizedGainsReport", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _RealizedGainsSummary_totalProceedsBase(ctx context.Context, field graphql.CollectedField, obj *model.RealizedGainsSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedGainsSummary_totalProceedsBase(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TotalProceedsBase, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedGainsSummary_totalProceedsBase(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RealizedGainsSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RealizedGainsSummary_totalCostBasisRelieved(ctx context.Context, field graphql.CollectedField, obj *model.RealizedGainsSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedGainsSummary_totalCostBasisRelieved(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TotalCostBasisRelieved, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedGainsSummary_totalCostBasisRelieved(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RealizedGainsSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RealizedGainsSummary_grossRealizedGainsBase(ctx context.Context, field graphql.CollectedField, obj *model.RealizedGainsSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedGainsSummary_grossRealizedGainsBase(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.GrossRealizedGainsBase, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedGainsSummary_grossRealizedGainsBase(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RealizedGainsSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RealizedGainsSummary_grossRealizedLossesBase(ctx context.Context, field graphql.CollectedField, obj *model.RealizedGainsSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedGainsSummary_grossRealizedLossesBase(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.GrossRealizedLossesBase, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedGainsSummary_grossRealizedLossesBase(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RealizedGainsSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RealizedGainsSummary_netRealizedPnlBase(ctx context.Context, field graphql.CollectedField, obj *model.RealizedGainsSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedGainsSummary_netRealizedPnlBase(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.NetRealizedPnlBase, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedGainsSummary_netRealizedPnlBase(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RealizedGainsSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RealizedGainsSummary_shortTermGainsBase(ctx context.Context, field graphql.CollectedField, obj *model.RealizedGainsSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedGainsSummary_shortTermGainsBase(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ShortTermGainsBase, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedGainsSummary_shortTermGainsBase(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RealizedGainsSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RealizedGainsSummary_longTermGainsBase(ctx context.Context, field graphql.CollectedField, obj *model.RealizedGainsSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedGainsSummary_longTermGainsBase(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.LongTermGainsBase, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedGainsSummary_longTermGainsBase(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RealizedGainsSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RealizedGainsSummary_discountedTaxableGainBase(ctx context.Context, field graphql.CollectedField, obj *model.RealizedGainsSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedGainsSummary_discountedTaxableGainBase(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DiscountedTaxableGainBase, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedGainsSummary_discountedTaxableGainBase(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "RealizedGainsSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _RealizedGainsSummary_totalDisposalCount(ctx context.Context, field graphql.CollectedField, obj *model.RealizedGainsSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_RealizedGainsSummary_totalDisposalCount(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TotalDisposalCount, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_RealizedGainsSummary_totalDisposalCount(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("RealizedGainsSummary", field, false, false, errors.New("field of type Int does not have child fields"))
 }
 
 func (ec *executionContext) _RecordFXRateOverridePayload_rate(ctx context.Context, field graphql.CollectedField, obj *model.RecordFXRateOverridePayload) (ret graphql.Marshaler) {
@@ -15364,6 +17559,1166 @@ func (ec *executionContext) _RecordPriceOverridePayload_valuationsRecomputed(ctx
 }
 func (ec *executionContext) fieldContext_RecordPriceOverridePayload_valuationsRecomputed(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	return graphql.NewScalarFieldContext("RecordPriceOverridePayload", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _TaxLot_id(ctx context.Context, field graphql.CollectedField, obj *model.TaxLot) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxLot_id(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxLot_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxLot", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _TaxLot_instrumentId(ctx context.Context, field graphql.CollectedField, obj *model.TaxLot) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxLot_instrumentId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.InstrumentID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxLot_instrumentId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxLot", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _TaxLot_ticker(ctx context.Context, field graphql.CollectedField, obj *model.TaxLot) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxLot_ticker(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Ticker, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxLot_ticker(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxLot", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _TaxLot_name(ctx context.Context, field graphql.CollectedField, obj *model.TaxLot) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxLot_name(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Name, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxLot_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxLot", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _TaxLot_openTransactionId(ctx context.Context, field graphql.CollectedField, obj *model.TaxLot) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxLot_openTransactionId(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.OpenTransactionID, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNID2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxLot_openTransactionId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxLot", field, false, false, errors.New("field of type ID does not have child fields"))
+}
+
+func (ec *executionContext) _TaxLot_acquiredDate(ctx context.Context, field graphql.CollectedField, obj *model.TaxLot) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxLot_acquiredDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.AcquiredDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxLot_acquiredDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxLot", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _TaxLot_closedDate(ctx context.Context, field graphql.CollectedField, obj *model.TaxLot) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxLot_closedDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ClosedDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *string) graphql.Marshaler {
+			return ec.marshalOString2ᚖstring(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_TaxLot_closedDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxLot", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _TaxLot_originalQuantity(ctx context.Context, field graphql.CollectedField, obj *model.TaxLot) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxLot_originalQuantity(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.OriginalQuantity, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxLot_originalQuantity(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxLot", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _TaxLot_remainingQuantity(ctx context.Context, field graphql.CollectedField, obj *model.TaxLot) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxLot_remainingQuantity(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.RemainingQuantity, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxLot_remainingQuantity(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxLot", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _TaxLot_costBasis(ctx context.Context, field graphql.CollectedField, obj *model.TaxLot) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxLot_costBasis(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CostBasis, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxLot_costBasis(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaxLot",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaxLot_costBasisBase(ctx context.Context, field graphql.CollectedField, obj *model.TaxLot) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxLot_costBasisBase(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CostBasisBase, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxLot_costBasisBase(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaxLot",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaxLot_unitCostBase(ctx context.Context, field graphql.CollectedField, obj *model.TaxLot) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxLot_unitCostBase(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.UnitCostBase, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxLot_unitCostBase(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaxLot",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaxLot_currentPrice(ctx context.Context, field graphql.CollectedField, obj *model.TaxLot) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxLot_currentPrice(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CurrentPrice, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxLot_currentPrice(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaxLot",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaxLot_marketValueBase(ctx context.Context, field graphql.CollectedField, obj *model.TaxLot) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxLot_marketValueBase(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.MarketValueBase, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxLot_marketValueBase(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaxLot",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaxLot_unrealizedPnlBase(ctx context.Context, field graphql.CollectedField, obj *model.TaxLot) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxLot_unrealizedPnlBase(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.UnrealizedPnlBase, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxLot_unrealizedPnlBase(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaxLot",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaxLot_unrealizedPnlPercent(ctx context.Context, field graphql.CollectedField, obj *model.TaxLot) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxLot_unrealizedPnlPercent(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.UnrealizedPnlPercent, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxLot_unrealizedPnlPercent(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxLot", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _TaxLot_holdingPeriodDays(ctx context.Context, field graphql.CollectedField, obj *model.TaxLot) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxLot_holdingPeriodDays(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.HoldingPeriodDays, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v int) graphql.Marshaler {
+			return ec.marshalNInt2int(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxLot_holdingPeriodDays(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxLot", field, false, false, errors.New("field of type Int does not have child fields"))
+}
+
+func (ec *executionContext) _TaxLot_termClassification(ctx context.Context, field graphql.CollectedField, obj *model.TaxLot) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxLot_termClassification(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TermClassification, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.HoldingTermClassification) graphql.Marshaler {
+			return ec.marshalNHoldingTermClassification2bffᚋgraphᚋmodelᚐHoldingTermClassification(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxLot_termClassification(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxLot", field, false, false, errors.New("field of type HoldingTermClassification does not have child fields"))
+}
+
+func (ec *executionContext) _TaxLot_isCgtDiscountEligible(ctx context.Context, field graphql.CollectedField, obj *model.TaxLot) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxLot_isCgtDiscountEligible(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.IsCgtDiscountEligible, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxLot_isCgtDiscountEligible(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxLot", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _TaxLot_isLossHarvestingCandidate(ctx context.Context, field graphql.CollectedField, obj *model.TaxLot) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxLot_isLossHarvestingCandidate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.IsLossHarvestingCandidate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxLot_isLossHarvestingCandidate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxLot", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _TaxLot_hasWashSaleRisk(ctx context.Context, field graphql.CollectedField, obj *model.TaxLot) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxLot_hasWashSaleRisk(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.HasWashSaleRisk, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v bool) graphql.Marshaler {
+			return ec.marshalNBoolean2bool(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxLot_hasWashSaleRisk(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxLot", field, false, false, errors.New("field of type Boolean does not have child fields"))
+}
+
+func (ec *executionContext) _TaxOffsetsSummary_frankingCreditsOffset(ctx context.Context, field graphql.CollectedField, obj *model.TaxOffsetsSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxOffsetsSummary_frankingCreditsOffset(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FrankingCreditsOffset, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxOffsetsSummary_frankingCreditsOffset(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaxOffsetsSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaxOffsetsSummary_foreignTaxOffsets(ctx context.Context, field graphql.CollectedField, obj *model.TaxOffsetsSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxOffsetsSummary_foreignTaxOffsets(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ForeignTaxOffsets, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxOffsetsSummary_foreignTaxOffsets(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaxOffsetsSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaxOffsetsSummary_totalAvailableOffsets(ctx context.Context, field graphql.CollectedField, obj *model.TaxOffsetsSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxOffsetsSummary_totalAvailableOffsets(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TotalAvailableOffsets, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxOffsetsSummary_totalAvailableOffsets(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaxOffsetsSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaxReport_summary(ctx context.Context, field graphql.CollectedField, obj *model.TaxReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxReport_summary(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Summary, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.TaxReportSummary) graphql.Marshaler {
+			return ec.marshalNTaxReportSummary2ᚖbffᚋgraphᚋmodelᚐTaxReportSummary(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxReport_summary(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaxReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_TaxReportSummary(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaxReport_disposals(ctx context.Context, field graphql.CollectedField, obj *model.TaxReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxReport_disposals(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.Disposals, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.RealizedDisposal) graphql.Marshaler {
+			return ec.marshalNRealizedDisposal2ᚕᚖbffᚋgraphᚋmodelᚐRealizedDisposalᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxReport_disposals(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaxReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_RealizedDisposal(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaxReport_openLots(ctx context.Context, field graphql.CollectedField, obj *model.TaxReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxReport_openLots(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.OpenLots, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v []*model.TaxLot) graphql.Marshaler {
+			return ec.marshalNTaxLot2ᚕᚖbffᚋgraphᚋmodelᚐTaxLotᚄ(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxReport_openLots(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaxReport",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_TaxLot(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaxReport_fromDate(ctx context.Context, field graphql.CollectedField, obj *model.TaxReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxReport_fromDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FromDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxReport_fromDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxReport", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _TaxReport_toDate(ctx context.Context, field graphql.CollectedField, obj *model.TaxReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxReport_toDate(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.ToDate, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxReport_toDate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxReport", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _TaxReport_fiscalYearLabel(ctx context.Context, field graphql.CollectedField, obj *model.TaxReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxReport_fiscalYearLabel(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FiscalYearLabel, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxReport_fiscalYearLabel(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxReport", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _TaxReport_baseCurrency(ctx context.Context, field graphql.CollectedField, obj *model.TaxReport) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxReport_baseCurrency(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.BaseCurrency, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxReport_baseCurrency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxReport", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _TaxReportSummary_taxableIncome(ctx context.Context, field graphql.CollectedField, obj *model.TaxReportSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxReportSummary_taxableIncome(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TaxableIncome, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.TaxableIncomeSummary) graphql.Marshaler {
+			return ec.marshalNTaxableIncomeSummary2ᚖbffᚋgraphᚋmodelᚐTaxableIncomeSummary(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxReportSummary_taxableIncome(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaxReportSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_TaxableIncomeSummary(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaxReportSummary_capitalGains(ctx context.Context, field graphql.CollectedField, obj *model.TaxReportSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxReportSummary_capitalGains(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CapitalGains, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.CapitalGainsSummary) graphql.Marshaler {
+			return ec.marshalNCapitalGainsSummary2ᚖbffᚋgraphᚋmodelᚐCapitalGainsSummary(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxReportSummary_capitalGains(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaxReportSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_CapitalGainsSummary(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaxReportSummary_taxOffsets(ctx context.Context, field graphql.CollectedField, obj *model.TaxReportSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxReportSummary_taxOffsets(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TaxOffsets, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.TaxOffsetsSummary) graphql.Marshaler {
+			return ec.marshalNTaxOffsetsSummary2ᚖbffᚋgraphᚋmodelᚐTaxOffsetsSummary(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxReportSummary_taxOffsets(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaxReportSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_TaxOffsetsSummary(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaxReportSummary_fiscalYearLabel(ctx context.Context, field graphql.CollectedField, obj *model.TaxReportSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxReportSummary_fiscalYearLabel(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FiscalYearLabel, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxReportSummary_fiscalYearLabel(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxReportSummary", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _TaxReportSummary_baseCurrency(ctx context.Context, field graphql.CollectedField, obj *model.TaxReportSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxReportSummary_baseCurrency(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.BaseCurrency, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v string) graphql.Marshaler {
+			return ec.marshalNString2string(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxReportSummary_baseCurrency(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxReportSummary", field, false, false, errors.New("field of type String does not have child fields"))
+}
+
+func (ec *executionContext) _TaxableIncomeSummary_dividendAndInterestIncome(ctx context.Context, field graphql.CollectedField, obj *model.TaxableIncomeSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxableIncomeSummary_dividendAndInterestIncome(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DividendAndInterestIncome, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxableIncomeSummary_dividendAndInterestIncome(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaxableIncomeSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaxableIncomeSummary_netCapitalGains(ctx context.Context, field graphql.CollectedField, obj *model.TaxableIncomeSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxableIncomeSummary_netCapitalGains(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.NetCapitalGains, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxableIncomeSummary_netCapitalGains(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaxableIncomeSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaxableIncomeSummary_frankingCredits(ctx context.Context, field graphql.CollectedField, obj *model.TaxableIncomeSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxableIncomeSummary_frankingCredits(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FrankingCredits, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxableIncomeSummary_frankingCredits(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaxableIncomeSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaxableIncomeSummary_totalAssessableIncome(ctx context.Context, field graphql.CollectedField, obj *model.TaxableIncomeSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxableIncomeSummary_totalAssessableIncome(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.TotalAssessableIncome, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxableIncomeSummary_totalAssessableIncome(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TaxableIncomeSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TaxableIncomeSummary_dividendInterestRatioPct(ctx context.Context, field graphql.CollectedField, obj *model.TaxableIncomeSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxableIncomeSummary_dividendInterestRatioPct(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.DividendInterestRatioPct, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxableIncomeSummary_dividendInterestRatioPct(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxableIncomeSummary", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _TaxableIncomeSummary_capitalGainsRatioPct(ctx context.Context, field graphql.CollectedField, obj *model.TaxableIncomeSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxableIncomeSummary_capitalGainsRatioPct(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.CapitalGainsRatioPct, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxableIncomeSummary_capitalGainsRatioPct(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxableIncomeSummary", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
+func (ec *executionContext) _TaxableIncomeSummary_frankingCreditsRatioPct(ctx context.Context, field graphql.CollectedField, obj *model.TaxableIncomeSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TaxableIncomeSummary_frankingCreditsRatioPct(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FrankingCreditsRatioPct, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v model.Decimal) graphql.Marshaler {
+			return ec.marshalNDecimal2bffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_TaxableIncomeSummary_frankingCreditsRatioPct(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TaxableIncomeSummary", field, false, false, errors.New("field of type Decimal does not have child fields"))
 }
 
 func (ec *executionContext) _TransactionItem_id(ctx context.Context, field graphql.CollectedField, obj *model.TransactionItem) (ret graphql.Marshaler) {
@@ -18948,6 +22303,74 @@ func (ec *executionContext) _BenchmarkMetrics(ctx context.Context, sel ast.Selec
 	return out
 }
 
+var capitalGainsSummaryImplementors = []string{"CapitalGainsSummary"}
+
+func (ec *executionContext) _CapitalGainsSummary(ctx context.Context, sel ast.SelectionSet, obj *model.CapitalGainsSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, capitalGainsSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("CapitalGainsSummary")
+		case "totalCapitalGains":
+			out.Values[i] = ec._CapitalGainsSummary_totalCapitalGains(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "lossesApplied":
+			out.Values[i] = ec._CapitalGainsSummary_lossesApplied(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cgtDiscountAmount":
+			out.Values[i] = ec._CapitalGainsSummary_cgtDiscountAmount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "netCapitalGain":
+			out.Values[i] = ec._CapitalGainsSummary_netCapitalGain(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "cgtDiscountRatePct":
+			out.Values[i] = ec._CapitalGainsSummary_cgtDiscountRatePct(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "gainDisposalsCount":
+			out.Values[i] = ec._CapitalGainsSummary_gainDisposalsCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "lossDisposalsCount":
+			out.Values[i] = ec._CapitalGainsSummary_lossDisposalsCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
 var cashFlowCategoryBreakdownImplementors = []string{"CashFlowCategoryBreakdown"}
 
 func (ec *executionContext) _CashFlowCategoryBreakdown(ctx context.Context, sel ast.SelectionSet, obj *model.CashFlowCategoryBreakdown) graphql.Marshaler {
@@ -22261,6 +25684,94 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "taxReport":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_taxReport(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "taxLots":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_taxLots(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "realizedCapitalGainsReport":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_realizedCapitalGainsReport(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "exportTaxScheduleCSV":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_exportTaxScheduleCSV(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "__type":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Query___type(ctx, field)
@@ -22274,6 +25785,260 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 			})
 			if out.Values[i] == graphql.RequiredNull {
 				atomic.AddUint32(&out.Invalids, 1)
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var realizedDisposalImplementors = []string{"RealizedDisposal"}
+
+func (ec *executionContext) _RealizedDisposal(ctx context.Context, sel ast.SelectionSet, obj *model.RealizedDisposal) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, realizedDisposalImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RealizedDisposal")
+		case "disposalId":
+			out.Values[i] = ec._RealizedDisposal_disposalId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "taxLotId":
+			out.Values[i] = ec._RealizedDisposal_taxLotId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "sellTransactionId":
+			out.Values[i] = ec._RealizedDisposal_sellTransactionId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "instrumentId":
+			out.Values[i] = ec._RealizedDisposal_instrumentId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "ticker":
+			out.Values[i] = ec._RealizedDisposal_ticker(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._RealizedDisposal_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "acquiredDate":
+			out.Values[i] = ec._RealizedDisposal_acquiredDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "disposedDate":
+			out.Values[i] = ec._RealizedDisposal_disposedDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "quantityDisposed":
+			out.Values[i] = ec._RealizedDisposal_quantityDisposed(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "costBasisRelievedBase":
+			out.Values[i] = ec._RealizedDisposal_costBasisRelievedBase(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "proceedsBase":
+			out.Values[i] = ec._RealizedDisposal_proceedsBase(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "realizedPnlBase":
+			out.Values[i] = ec._RealizedDisposal_realizedPnlBase(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "realizedPnlPercent":
+			out.Values[i] = ec._RealizedDisposal_realizedPnlPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "holdingPeriodDays":
+			out.Values[i] = ec._RealizedDisposal_holdingPeriodDays(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "termClassification":
+			out.Values[i] = ec._RealizedDisposal_termClassification(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isCgtDiscountEligible":
+			out.Values[i] = ec._RealizedDisposal_isCgtDiscountEligible(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "discountedTaxablePnlBase":
+			out.Values[i] = ec._RealizedDisposal_discountedTaxablePnlBase(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var realizedGainsReportImplementors = []string{"RealizedGainsReport"}
+
+func (ec *executionContext) _RealizedGainsReport(ctx context.Context, sel ast.SelectionSet, obj *model.RealizedGainsReport) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, realizedGainsReportImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RealizedGainsReport")
+		case "summary":
+			out.Values[i] = ec._RealizedGainsReport_summary(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "disposals":
+			out.Values[i] = ec._RealizedGainsReport_disposals(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fromDate":
+			out.Values[i] = ec._RealizedGainsReport_fromDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "toDate":
+			out.Values[i] = ec._RealizedGainsReport_toDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "baseCurrency":
+			out.Values[i] = ec._RealizedGainsReport_baseCurrency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var realizedGainsSummaryImplementors = []string{"RealizedGainsSummary"}
+
+func (ec *executionContext) _RealizedGainsSummary(ctx context.Context, sel ast.SelectionSet, obj *model.RealizedGainsSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, realizedGainsSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("RealizedGainsSummary")
+		case "totalProceedsBase":
+			out.Values[i] = ec._RealizedGainsSummary_totalProceedsBase(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalCostBasisRelieved":
+			out.Values[i] = ec._RealizedGainsSummary_totalCostBasisRelieved(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "grossRealizedGainsBase":
+			out.Values[i] = ec._RealizedGainsSummary_grossRealizedGainsBase(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "grossRealizedLossesBase":
+			out.Values[i] = ec._RealizedGainsSummary_grossRealizedLossesBase(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "netRealizedPnlBase":
+			out.Values[i] = ec._RealizedGainsSummary_netRealizedPnlBase(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "shortTermGainsBase":
+			out.Values[i] = ec._RealizedGainsSummary_shortTermGainsBase(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "longTermGainsBase":
+			out.Values[i] = ec._RealizedGainsSummary_longTermGainsBase(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "discountedTaxableGainBase":
+			out.Values[i] = ec._RealizedGainsSummary_discountedTaxableGainBase(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalDisposalCount":
+			out.Values[i] = ec._RealizedGainsSummary_totalDisposalCount(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
 			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
@@ -22358,6 +26123,386 @@ func (ec *executionContext) _RecordPriceOverridePayload(ctx context.Context, sel
 			}
 		case "valuationsRecomputed":
 			out.Values[i] = ec._RecordPriceOverridePayload_valuationsRecomputed(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var taxLotImplementors = []string{"TaxLot"}
+
+func (ec *executionContext) _TaxLot(ctx context.Context, sel ast.SelectionSet, obj *model.TaxLot) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, taxLotImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TaxLot")
+		case "id":
+			out.Values[i] = ec._TaxLot_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "instrumentId":
+			out.Values[i] = ec._TaxLot_instrumentId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "ticker":
+			out.Values[i] = ec._TaxLot_ticker(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "name":
+			out.Values[i] = ec._TaxLot_name(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "openTransactionId":
+			out.Values[i] = ec._TaxLot_openTransactionId(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "acquiredDate":
+			out.Values[i] = ec._TaxLot_acquiredDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "closedDate":
+			out.Values[i] = ec._TaxLot_closedDate(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "originalQuantity":
+			out.Values[i] = ec._TaxLot_originalQuantity(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "remainingQuantity":
+			out.Values[i] = ec._TaxLot_remainingQuantity(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "costBasis":
+			out.Values[i] = ec._TaxLot_costBasis(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "costBasisBase":
+			out.Values[i] = ec._TaxLot_costBasisBase(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "unitCostBase":
+			out.Values[i] = ec._TaxLot_unitCostBase(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "currentPrice":
+			out.Values[i] = ec._TaxLot_currentPrice(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "marketValueBase":
+			out.Values[i] = ec._TaxLot_marketValueBase(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "unrealizedPnlBase":
+			out.Values[i] = ec._TaxLot_unrealizedPnlBase(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "unrealizedPnlPercent":
+			out.Values[i] = ec._TaxLot_unrealizedPnlPercent(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "holdingPeriodDays":
+			out.Values[i] = ec._TaxLot_holdingPeriodDays(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "termClassification":
+			out.Values[i] = ec._TaxLot_termClassification(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isCgtDiscountEligible":
+			out.Values[i] = ec._TaxLot_isCgtDiscountEligible(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "isLossHarvestingCandidate":
+			out.Values[i] = ec._TaxLot_isLossHarvestingCandidate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "hasWashSaleRisk":
+			out.Values[i] = ec._TaxLot_hasWashSaleRisk(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var taxOffsetsSummaryImplementors = []string{"TaxOffsetsSummary"}
+
+func (ec *executionContext) _TaxOffsetsSummary(ctx context.Context, sel ast.SelectionSet, obj *model.TaxOffsetsSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, taxOffsetsSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TaxOffsetsSummary")
+		case "frankingCreditsOffset":
+			out.Values[i] = ec._TaxOffsetsSummary_frankingCreditsOffset(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "foreignTaxOffsets":
+			out.Values[i] = ec._TaxOffsetsSummary_foreignTaxOffsets(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalAvailableOffsets":
+			out.Values[i] = ec._TaxOffsetsSummary_totalAvailableOffsets(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var taxReportImplementors = []string{"TaxReport"}
+
+func (ec *executionContext) _TaxReport(ctx context.Context, sel ast.SelectionSet, obj *model.TaxReport) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, taxReportImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TaxReport")
+		case "summary":
+			out.Values[i] = ec._TaxReport_summary(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "disposals":
+			out.Values[i] = ec._TaxReport_disposals(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "openLots":
+			out.Values[i] = ec._TaxReport_openLots(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fromDate":
+			out.Values[i] = ec._TaxReport_fromDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "toDate":
+			out.Values[i] = ec._TaxReport_toDate(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fiscalYearLabel":
+			out.Values[i] = ec._TaxReport_fiscalYearLabel(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "baseCurrency":
+			out.Values[i] = ec._TaxReport_baseCurrency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var taxReportSummaryImplementors = []string{"TaxReportSummary"}
+
+func (ec *executionContext) _TaxReportSummary(ctx context.Context, sel ast.SelectionSet, obj *model.TaxReportSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, taxReportSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TaxReportSummary")
+		case "taxableIncome":
+			out.Values[i] = ec._TaxReportSummary_taxableIncome(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "capitalGains":
+			out.Values[i] = ec._TaxReportSummary_capitalGains(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "taxOffsets":
+			out.Values[i] = ec._TaxReportSummary_taxOffsets(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "fiscalYearLabel":
+			out.Values[i] = ec._TaxReportSummary_fiscalYearLabel(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "baseCurrency":
+			out.Values[i] = ec._TaxReportSummary_baseCurrency(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.Deferred, int32(min(len(deferLabelToView), math.MaxInt32)))
+
+	ec.ProcessDeferredGroup(graphql.DeferredGroup{
+		Defers:   deferLabelToView,
+		Path:     graphql.GetPath(ctx),
+		FieldSet: deferredFieldSet,
+		Context:  ctx,
+	})
+
+	return out
+}
+
+var taxableIncomeSummaryImplementors = []string{"TaxableIncomeSummary"}
+
+func (ec *executionContext) _TaxableIncomeSummary(ctx context.Context, sel ast.SelectionSet, obj *model.TaxableIncomeSummary) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, taxableIncomeSummaryImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferredFieldSet := graphql.NewFieldSet(nil)
+	deferLabelToView := make(map[string]*graphql.FieldSetView)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("TaxableIncomeSummary")
+		case "dividendAndInterestIncome":
+			out.Values[i] = ec._TaxableIncomeSummary_dividendAndInterestIncome(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "netCapitalGains":
+			out.Values[i] = ec._TaxableIncomeSummary_netCapitalGains(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "frankingCredits":
+			out.Values[i] = ec._TaxableIncomeSummary_frankingCredits(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "totalAssessableIncome":
+			out.Values[i] = ec._TaxableIncomeSummary_totalAssessableIncome(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "dividendInterestRatioPct":
+			out.Values[i] = ec._TaxableIncomeSummary_dividendInterestRatioPct(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "capitalGainsRatioPct":
+			out.Values[i] = ec._TaxableIncomeSummary_capitalGainsRatioPct(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "frankingCreditsRatioPct":
+			out.Values[i] = ec._TaxableIncomeSummary_frankingCreditsRatioPct(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
@@ -23320,6 +27465,16 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
+func (ec *executionContext) marshalNCapitalGainsSummary2ᚖbffᚋgraphᚋmodelᚐCapitalGainsSummary(ctx context.Context, sel ast.SelectionSet, v *model.CapitalGainsSummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._CapitalGainsSummary(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNCashFlowCategory2bffᚋgraphᚋmodelᚐCashFlowCategory(ctx context.Context, v any) (model.CashFlowCategory, error) {
 	var res model.CashFlowCategory
 	err := res.UnmarshalGQL(v)
@@ -23780,6 +27935,16 @@ func (ec *executionContext) marshalNHistoryTimeframe2bffᚋgraphᚋmodelᚐHisto
 	return v
 }
 
+func (ec *executionContext) unmarshalNHoldingTermClassification2bffᚋgraphᚋmodelᚐHoldingTermClassification(ctx context.Context, v any) (model.HoldingTermClassification, error) {
+	var res model.HoldingTermClassification
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNHoldingTermClassification2bffᚋgraphᚋmodelᚐHoldingTermClassification(ctx context.Context, sel ast.SelectionSet, v model.HoldingTermClassification) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) marshalNHoldingYieldItem2ᚕᚖbffᚋgraphᚋmodelᚐHoldingYieldItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.HoldingYieldItem) graphql.Marshaler {
 	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
 		fc := graphql.GetFieldContext(ctx)
@@ -24108,6 +28273,52 @@ func (ec *executionContext) marshalNPortfolioHistory2ᚖbffᚋgraphᚋmodelᚐPo
 	return ec._PortfolioHistory(ctx, sel, v)
 }
 
+func (ec *executionContext) marshalNRealizedDisposal2ᚕᚖbffᚋgraphᚋmodelᚐRealizedDisposalᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RealizedDisposal) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNRealizedDisposal2ᚖbffᚋgraphᚋmodelᚐRealizedDisposal(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNRealizedDisposal2ᚖbffᚋgraphᚋmodelᚐRealizedDisposal(ctx context.Context, sel ast.SelectionSet, v *model.RealizedDisposal) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._RealizedDisposal(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNRealizedGainsReport2ᚖbffᚋgraphᚋmodelᚐRealizedGainsReport(ctx context.Context, sel ast.SelectionSet, v *model.RealizedGainsReport) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._RealizedGainsReport(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNRealizedGainsSummary2ᚖbffᚋgraphᚋmodelᚐRealizedGainsSummary(ctx context.Context, sel ast.SelectionSet, v *model.RealizedGainsSummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._RealizedGainsSummary(ctx, sel, v)
+}
+
 func (ec *executionContext) unmarshalNRecordFXRateOverrideInput2bffᚋgraphᚋmodelᚐRecordFXRateOverrideInput(ctx context.Context, v any) (model.RecordFXRateOverrideInput, error) {
 	res, err := ec.unmarshalInputRecordFXRateOverrideInput(ctx, v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -24186,6 +28397,72 @@ func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalNTaxLot2ᚕᚖbffᚋgraphᚋmodelᚐTaxLotᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TaxLot) graphql.Marshaler {
+	ret := graphql.MarshalSliceConcurrently(ctx, len(v), 0, false, func(ctx context.Context, i int) graphql.Marshaler {
+		fc := graphql.GetFieldContext(ctx)
+		fc.Result = &v[i]
+		return ec.marshalNTaxLot2ᚖbffᚋgraphᚋmodelᚐTaxLot(ctx, sel, v[i])
+	})
+
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+
+	return ret
+}
+
+func (ec *executionContext) marshalNTaxLot2ᚖbffᚋgraphᚋmodelᚐTaxLot(ctx context.Context, sel ast.SelectionSet, v *model.TaxLot) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TaxLot(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNTaxOffsetsSummary2ᚖbffᚋgraphᚋmodelᚐTaxOffsetsSummary(ctx context.Context, sel ast.SelectionSet, v *model.TaxOffsetsSummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TaxOffsetsSummary(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNTaxReport2ᚖbffᚋgraphᚋmodelᚐTaxReport(ctx context.Context, sel ast.SelectionSet, v *model.TaxReport) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TaxReport(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNTaxReportSummary2ᚖbffᚋgraphᚋmodelᚐTaxReportSummary(ctx context.Context, sel ast.SelectionSet, v *model.TaxReportSummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TaxReportSummary(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNTaxableIncomeSummary2ᚖbffᚋgraphᚋmodelᚐTaxableIncomeSummary(ctx context.Context, sel ast.SelectionSet, v *model.TaxableIncomeSummary) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			graphql.AddErrorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._TaxableIncomeSummary(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNTransactionItem2ᚕᚖbffᚋgraphᚋmodelᚐTransactionItemᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.TransactionItem) graphql.Marshaler {
@@ -24639,6 +28916,22 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	_ = ctx
 	res := graphql.MarshalString(*v)
 	return res
+}
+
+func (ec *executionContext) unmarshalOTaxLotStatus2ᚖbffᚋgraphᚋmodelᚐTaxLotStatus(ctx context.Context, v any) (*model.TaxLotStatus, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.TaxLotStatus)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOTaxLotStatus2ᚖbffᚋgraphᚋmodelᚐTaxLotStatus(ctx context.Context, sel ast.SelectionSet, v *model.TaxLotStatus) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) unmarshalOTransactionType2ᚖbffᚋgraphᚋmodelᚐTransactionType(ctx context.Context, v any) (*model.TransactionType, error) {

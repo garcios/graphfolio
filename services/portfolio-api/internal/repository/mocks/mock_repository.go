@@ -250,6 +250,21 @@ func (mr *MockRepositoryMockRecorder) GetBenchmarkPricesWithFX(ctx, instrumentID
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBenchmarkPricesWithFX", reflect.TypeOf((*MockRepository)(nil).GetBenchmarkPricesWithFX), ctx, instrumentID, quoteCurrency, baseCurrency, fromDate, toDate)
 }
 
+// GetBuyTransactionDates mocks base method.
+func (m *MockRepository) GetBuyTransactionDates(ctx context.Context, portfolioID uuid.UUID) (map[uuid.UUID][]time.Time, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetBuyTransactionDates", ctx, portfolioID)
+	ret0, _ := ret[0].(map[uuid.UUID][]time.Time)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetBuyTransactionDates indicates an expected call of GetBuyTransactionDates.
+func (mr *MockRepositoryMockRecorder) GetBuyTransactionDates(ctx, portfolioID any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetBuyTransactionDates", reflect.TypeOf((*MockRepository)(nil).GetBuyTransactionDates), ctx, portfolioID)
+}
+
 // GetCashBalances mocks base method.
 func (m *MockRepository) GetCashBalances(ctx context.Context, portfolioID uuid.UUID) ([]domain.CashBalance, error) {
 	m.ctrl.T.Helper()
@@ -513,6 +528,54 @@ func (m *MockRepository) GetPortfolioValuations(ctx context.Context, portfolioID
 func (mr *MockRepositoryMockRecorder) GetPortfolioValuations(ctx, portfolioID, fromDate any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPortfolioValuations", reflect.TypeOf((*MockRepository)(nil).GetPortfolioValuations), ctx, portfolioID, fromDate)
+}
+
+// GetRealizedDisposals mocks base method.
+func (m *MockRepository) GetRealizedDisposals(ctx context.Context, portfolioID uuid.UUID, fromDate, toDate time.Time) ([]domain.LotDisposal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRealizedDisposals", ctx, portfolioID, fromDate, toDate)
+	ret0, _ := ret[0].([]domain.LotDisposal)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRealizedDisposals indicates an expected call of GetRealizedDisposals.
+func (mr *MockRepositoryMockRecorder) GetRealizedDisposals(ctx, portfolioID, fromDate, toDate any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRealizedDisposals", reflect.TypeOf((*MockRepository)(nil).GetRealizedDisposals), ctx, portfolioID, fromDate, toDate)
+}
+
+// GetTaxLots mocks base method.
+func (m *MockRepository) GetTaxLots(ctx context.Context, portfolioID uuid.UUID, instrumentID *uuid.UUID, status domain.TaxLotStatus) ([]domain.TaxLot, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTaxLots", ctx, portfolioID, instrumentID, status)
+	ret0, _ := ret[0].([]domain.TaxLot)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetTaxLots indicates an expected call of GetTaxLots.
+func (mr *MockRepositoryMockRecorder) GetTaxLots(ctx, portfolioID, instrumentID, status any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTaxLots", reflect.TypeOf((*MockRepository)(nil).GetTaxLots), ctx, portfolioID, instrumentID, status)
+}
+
+// GetTaxReportIncomeAndOffsets mocks base method.
+func (m *MockRepository) GetTaxReportIncomeAndOffsets(ctx context.Context, portfolioID uuid.UUID, fromDate, toDate time.Time) (decimal.Decimal, decimal.Decimal, decimal.Decimal, decimal.Decimal, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetTaxReportIncomeAndOffsets", ctx, portfolioID, fromDate, toDate)
+	ret0, _ := ret[0].(decimal.Decimal)
+	ret1, _ := ret[1].(decimal.Decimal)
+	ret2, _ := ret[2].(decimal.Decimal)
+	ret3, _ := ret[3].(decimal.Decimal)
+	ret4, _ := ret[4].(error)
+	return ret0, ret1, ret2, ret3, ret4
+}
+
+// GetTaxReportIncomeAndOffsets indicates an expected call of GetTaxReportIncomeAndOffsets.
+func (mr *MockRepositoryMockRecorder) GetTaxReportIncomeAndOffsets(ctx, portfolioID, fromDate, toDate any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetTaxReportIncomeAndOffsets", reflect.TypeOf((*MockRepository)(nil).GetTaxReportIncomeAndOffsets), ctx, portfolioID, fromDate, toDate)
 }
 
 // GetTransactionByID mocks base method.

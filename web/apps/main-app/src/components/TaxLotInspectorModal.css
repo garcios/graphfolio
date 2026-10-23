@@ -1,0 +1,275 @@
+/* ==========================================================================
+   Tax Lot Inspector Modal Styling
+   ========================================================================== */
+
+.tax-inspector-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  animation: fadeInModal 0.2s ease-out;
+}
+
+@keyframes fadeInModal {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.tax-inspector-modal {
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 1100px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  animation: slideUpModal 0.25s ease-out;
+}
+
+@keyframes slideUpModal {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.tax-inspector-header {
+  padding: 24px 28px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(30, 41, 59, 0.4);
+}
+
+.tax-inspector-title-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.inspector-ticker-badge {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #818cf8;
+  background: rgba(99, 102, 241, 0.15);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  padding: 4px 12px;
+  border-radius: 8px;
+  letter-spacing: 0.05em;
+}
+
+.tax-inspector-title-group h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 4px 0;
+}
+
+.tax-inspector-title-group p {
+  font-size: 0.8125rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.tax-inspector-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  line-height: 1;
+}
+
+.tax-inspector-close-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Modal Summary Strip */
+.tax-inspector-summary-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  padding: 20px 28px;
+  background: rgba(15, 23, 42, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.summary-metric-box {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summary-metric-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+}
+
+.summary-metric-value {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.summary-metric-value.positive {
+  color: #34d399;
+}
+
+.summary-metric-value.negative {
+  color: #f87171;
+}
+
+/* Controls Bar */
+.tax-inspector-controls {
+  padding: 16px 28px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(15, 23, 42, 0.3);
+}
+
+.inspector-filter-pills {
+  display: flex;
+  gap: 8px;
+}
+
+.filter-pill {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-pill:hover {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.filter-pill.active {
+  background: rgba(99, 102, 241, 0.2);
+  color: #818cf8;
+  border-color: rgba(99, 102, 241, 0.4);
+}
+
+/* Table Area */
+.tax-inspector-table-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0 28px 24px 28px;
+}
+
+.inspector-lots-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.8125rem;
+}
+
+.inspector-lots-table th {
+  position: sticky;
+  top: 0;
+  background: #0f172a;
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 14px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: right;
+  z-index: 10;
+}
+
+.inspector-lots-table th:first-child,
+.inspector-lots-table th:nth-child(2),
+.inspector-lots-table th:nth-child(3) {
+  text-align: left;
+}
+
+.inspector-lots-table td {
+  padding: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: #ffffff;
+  text-align: right;
+  vertical-align: middle;
+}
+
+.inspector-lots-table td:first-child,
+.inspector-lots-table td:nth-child(2),
+.inspector-lots-table td:nth-child(3) {
+  text-align: left;
+}
+
+.inspector-lots-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.inspector-lots-table tr.closed-lot-row td {
+  opacity: 0.65;
+}
+
+/* Badges */
+.parcel-status-badge {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  display: inline-block;
+}
+
+.parcel-status-badge.open {
+  background: rgba(52, 211, 153, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(52, 211, 153, 0.3);
+}
+
+.parcel-status-badge.closed {
+  background: rgba(148, 163, 184, 0.15);
+  color: #94a3b8;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.inspector-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  color: #94a3b8;
+  text-align: center;
+  gap: 8px;
+}

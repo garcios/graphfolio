@@ -94,5 +94,11 @@ type Repository interface {
 	GetDividendCalendarSchedules(ctx context.Context, instrumentIDs []uuid.UUID, fromDate, toDate time.Time) ([]domain.DividendSchedule, error)
 	ListDividendSchedulesByInstrument(ctx context.Context, instrumentID uuid.UUID) ([]domain.DividendSchedule, error)
 	GetEntitledSharesForExDate(ctx context.Context, portfolioID uuid.UUID, instrumentID uuid.UUID, exDate time.Time) (decimal.Decimal, error)
+
+	// Tax Lot Inspector & Capital Gains
+	GetTaxLots(ctx context.Context, portfolioID uuid.UUID, instrumentID *uuid.UUID, status domain.TaxLotStatus) ([]domain.TaxLot, error)
+	GetRealizedDisposals(ctx context.Context, portfolioID uuid.UUID, fromDate, toDate time.Time) ([]domain.LotDisposal, error)
+	GetTaxReportIncomeAndOffsets(ctx context.Context, portfolioID uuid.UUID, fromDate, toDate time.Time) (dividendIncome, interestIncome, frankingCredits, foreignTaxOffsets decimal.Decimal, err error)
+	GetBuyTransactionDates(ctx context.Context, portfolioID uuid.UUID) (map[uuid.UUID][]time.Time, error)
 }
 

@@ -122,29 +122,6 @@ type BatchImportResult struct {
 	Portfolio     *PortfolioSummary
 }
 
-type TaxLot struct {
-	ID                uuid.UUID
-	PortfolioID       uuid.UUID
-	InstrumentID      uuid.UUID
-	OpenTransactionID uuid.UUID
-	AcquiredDate      time.Time
-	OriginalQuantity  decimal.Decimal
-	RemainingQuantity decimal.Decimal
-	CostBasis         decimal.Decimal
-	CostBasisBase     decimal.Decimal
-	ClosedDate        *time.Time
-}
-
-type LotDisposal struct {
-	ID                    uuid.UUID
-	TaxLotID              uuid.UUID
-	SellTransactionID     uuid.UUID
-	Quantity              decimal.Decimal
-	CostBasisReleased     decimal.Decimal
-	CostBasisReleasedBase decimal.Decimal
-	ProceedsBase          decimal.Decimal
-	RealizedPnLBase       decimal.Decimal
-}
 
 type CorporateActionType string
 

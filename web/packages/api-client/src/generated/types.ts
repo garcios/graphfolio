@@ -14,7 +14,9 @@ export default {
         60,
         72,
         77,
-        78
+        78,
+        86,
+        87
     ],
     "types": {
         "Decimal": {},
@@ -434,6 +436,59 @@ export default {
                     "input": [
                         83,
                         "DRIPSimulationInput!"
+                    ]
+                }
+            ],
+            "taxReport": [
+                94,
+                {
+                    "financialYear": [
+                        14
+                    ],
+                    "fromDate": [
+                        2
+                    ],
+                    "toDate": [
+                        2
+                    ]
+                }
+            ],
+            "taxLots": [
+                88,
+                {
+                    "instrumentId": [
+                        11
+                    ],
+                    "status": [
+                        86
+                    ]
+                }
+            ],
+            "realizedCapitalGainsReport": [
+                96,
+                {
+                    "financialYear": [
+                        14
+                    ],
+                    "fromDate": [
+                        2
+                    ],
+                    "toDate": [
+                        2
+                    ]
+                }
+            ],
+            "exportTaxScheduleCSV": [
+                2,
+                {
+                    "financialYear": [
+                        14
+                    ],
+                    "fromDate": [
+                        2
+                    ],
+                    "toDate": [
+                        2
                     ]
                 }
             ],
@@ -2149,6 +2204,296 @@ export default {
             ],
             "dripBenefitAmount": [
                 0
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "TaxLotStatus": {},
+        "HoldingTermClassification": {},
+        "TaxLot": {
+            "id": [
+                11
+            ],
+            "instrumentId": [
+                11
+            ],
+            "ticker": [
+                2
+            ],
+            "name": [
+                2
+            ],
+            "openTransactionId": [
+                11
+            ],
+            "acquiredDate": [
+                2
+            ],
+            "closedDate": [
+                2
+            ],
+            "originalQuantity": [
+                0
+            ],
+            "remainingQuantity": [
+                0
+            ],
+            "costBasis": [
+                1
+            ],
+            "costBasisBase": [
+                1
+            ],
+            "unitCostBase": [
+                1
+            ],
+            "currentPrice": [
+                1
+            ],
+            "marketValueBase": [
+                1
+            ],
+            "unrealizedPnlBase": [
+                1
+            ],
+            "unrealizedPnlPercent": [
+                0
+            ],
+            "holdingPeriodDays": [
+                14
+            ],
+            "termClassification": [
+                87
+            ],
+            "isCgtDiscountEligible": [
+                9
+            ],
+            "isLossHarvestingCandidate": [
+                9
+            ],
+            "hasWashSaleRisk": [
+                9
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "RealizedDisposal": {
+            "disposalId": [
+                11
+            ],
+            "taxLotId": [
+                11
+            ],
+            "sellTransactionId": [
+                11
+            ],
+            "instrumentId": [
+                11
+            ],
+            "ticker": [
+                2
+            ],
+            "name": [
+                2
+            ],
+            "acquiredDate": [
+                2
+            ],
+            "disposedDate": [
+                2
+            ],
+            "quantityDisposed": [
+                0
+            ],
+            "costBasisRelievedBase": [
+                1
+            ],
+            "proceedsBase": [
+                1
+            ],
+            "realizedPnlBase": [
+                1
+            ],
+            "realizedPnlPercent": [
+                0
+            ],
+            "holdingPeriodDays": [
+                14
+            ],
+            "termClassification": [
+                87
+            ],
+            "isCgtDiscountEligible": [
+                9
+            ],
+            "discountedTaxablePnlBase": [
+                1
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "TaxableIncomeSummary": {
+            "dividendAndInterestIncome": [
+                1
+            ],
+            "netCapitalGains": [
+                1
+            ],
+            "frankingCredits": [
+                1
+            ],
+            "totalAssessableIncome": [
+                1
+            ],
+            "dividendInterestRatioPct": [
+                0
+            ],
+            "capitalGainsRatioPct": [
+                0
+            ],
+            "frankingCreditsRatioPct": [
+                0
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "CapitalGainsSummary": {
+            "totalCapitalGains": [
+                1
+            ],
+            "lossesApplied": [
+                1
+            ],
+            "cgtDiscountAmount": [
+                1
+            ],
+            "netCapitalGain": [
+                1
+            ],
+            "cgtDiscountRatePct": [
+                0
+            ],
+            "gainDisposalsCount": [
+                14
+            ],
+            "lossDisposalsCount": [
+                14
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "TaxOffsetsSummary": {
+            "frankingCreditsOffset": [
+                1
+            ],
+            "foreignTaxOffsets": [
+                1
+            ],
+            "totalAvailableOffsets": [
+                1
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "TaxReportSummary": {
+            "taxableIncome": [
+                90
+            ],
+            "capitalGains": [
+                91
+            ],
+            "taxOffsets": [
+                92
+            ],
+            "fiscalYearLabel": [
+                2
+            ],
+            "baseCurrency": [
+                2
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "TaxReport": {
+            "summary": [
+                93
+            ],
+            "disposals": [
+                89
+            ],
+            "openLots": [
+                88
+            ],
+            "fromDate": [
+                2
+            ],
+            "toDate": [
+                2
+            ],
+            "fiscalYearLabel": [
+                2
+            ],
+            "baseCurrency": [
+                2
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "RealizedGainsSummary": {
+            "totalProceedsBase": [
+                1
+            ],
+            "totalCostBasisRelieved": [
+                1
+            ],
+            "grossRealizedGainsBase": [
+                1
+            ],
+            "grossRealizedLossesBase": [
+                1
+            ],
+            "netRealizedPnlBase": [
+                1
+            ],
+            "shortTermGainsBase": [
+                1
+            ],
+            "longTermGainsBase": [
+                1
+            ],
+            "discountedTaxableGainBase": [
+                1
+            ],
+            "totalDisposalCount": [
+                14
+            ],
+            "__typename": [
+                2
+            ]
+        },
+        "RealizedGainsReport": {
+            "summary": [
+                95
+            ],
+            "disposals": [
+                89
+            ],
+            "fromDate": [
+                2
+            ],
+            "toDate": [
+                2
+            ],
+            "baseCurrency": [
+                2
             ],
             "__typename": [
                 2

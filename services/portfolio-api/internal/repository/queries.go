@@ -930,4 +930,127 @@ FROM portfolio.benchmarks b
 JOIN portfolio.instruments i ON b.instrument_id = i.id
 WHERE i.is_active = true
 ORDER BY b.display_order ASC;`
+
+	getTaxLotsSQL = `
+SELECT 
+    tl.id,
+    tl.portfolio_id,
+    tl.instrument_id,
+    i.symbol,
+    i.name,
+    tl.open_transaction_id,
+    tl.acquired_date,
+    tl.closed_date,
+    tl.original_quantity,
+    tl.remaining_quantity,
+    tl.cost_basis,
+    tl.cost_basis_base,
+    COALESCE(ld.cost_basis_released, 0) AS cost_basis_released,
+    COALESCE(ld.cost_basis_released_base, 0) AS cost_basis_released_base,
+    COALESCE(curr_p.close, 0) AS current_price,
+    COALESCE(
+        direct_fx.rate,
+        CASE WHEN inverse_fx.rate > 0 THEN 1.0 / inverse_fx.rate ELSE NULL END,
+        1.0
+    ) AS fx_rate_to_base
+FROM portfolio.tax_lots tl
+JOIN portfolio.instruments i ON i.id = tl.instrument_id
+JOIN portfolio.portfolios p ON p.id = tl.portfolio_id
+LEFT JOIN (
+    SELECT tax_lot_id, 
+           SUM(cost_basis_released) AS cost_basis_released,
+           SUM(cost_basis_released_base) AS cost_basis_released_base
+    FROM portfolio.lot_disposals
+    GROUP BY tax_lot_id
+) ld ON ld.tax_lot_id = tl.id
+LEFT JOIN LATERAL (
+    SELECT close 
+    FROM portfolio.instrument_prices 
+    WHERE instrument_id = tl.instrument_id 
+    ORDER BY price_date DESC LIMIT 1
+) curr_p ON true
+LEFT JOIN LATERAL (
+    SELECT rate 
+    FROM portfolio.fx_rates 
+    WHERE base_currency = i.currency_code 
+      AND quote_currency = p.base_currency 
+    ORDER BY rate_date DESC LIMIT 1
+) direct_fx ON (i.currency_code <> p.base_currency)
+LEFT JOIN LATERAL (
+    SELECT rate 
+    FROM portfolio.fx_rates 
+    WHERE base_currency = p.base_currency 
+      AND quote_currency = i.currency_code 
+    ORDER BY rate_date DESC LIMIT 1
+) inverse_fx ON (i.currency_code <> p.base_currency)
+WHERE tl.portfolio_id = $1
+  AND ($2::uuid IS NULL OR tl.instrument_id = $2)
+  AND (
+      $3 = 'ALL' OR
+      ($3 = 'OPEN' AND tl.remaining_quantity > 0) OR
+      ($3 = 'CLOSED' AND tl.remaining_quantity = 0)
+  )
+ORDER BY tl.acquired_date ASC, tl.id ASC;`
+
+	getRealizedDisposalsSQL = `
+SELECT 
+    ld.id AS disposal_id,
+    ld.tax_lot_id,
+    ld.sell_transaction_id,
+    tl.instrument_id,
+    i.symbol,
+    i.name,
+    tl.acquired_date,
+    tx_sell.trade_date AS disposed_date,
+    ld.quantity,
+    ld.cost_basis_released,
+    ld.cost_basis_released_base,
+    ld.proceeds_base,
+    ld.realized_pnl_base
+FROM portfolio.lot_disposals ld
+JOIN portfolio.tax_lots tl ON tl.id = ld.tax_lot_id
+JOIN portfolio.transactions tx_sell ON tx_sell.id = ld.sell_transaction_id
+JOIN portfolio.instruments i ON i.id = tl.instrument_id
+JOIN portfolio.portfolios p ON p.id = tl.portfolio_id
+WHERE tl.portfolio_id = $1
+  AND tx_sell.trade_date >= $2
+  AND tx_sell.trade_date <= $3
+ORDER BY tx_sell.trade_date ASC, ld.id ASC;`
+
+	getTaxReportIncomeAndOffsetsSQL = `
+SELECT 
+    COALESCE(SUM(CASE WHEN tx.type = 'DIVIDEND' THEN tx.amount * COALESCE(tx.fx_rate_to_base, 1.0) ELSE 0 END), 0) AS dividend_income_base,
+    COALESCE(SUM(CASE WHEN tx.type = 'INTEREST' THEN tx.amount * COALESCE(tx.fx_rate_to_base, 1.0) ELSE 0 END), 0) AS interest_income_base,
+    COALESCE(SUM(COALESCE(tx.withholding_tax, 0) * COALESCE(tx.fx_rate_to_base, 1.0)), 0) AS foreign_tax_offsets_base,
+    COALESCE(SUM(
+        CASE 
+            WHEN tx.type = 'DIVIDEND' AND COALESCE(ds.franking_percentage, 0) > 0 THEN
+                (tx.amount * COALESCE(tx.fx_rate_to_base, 1.0)) * (ds.franking_percentage / 100.0) * (0.30 / 0.70)
+            ELSE 0 
+        END
+    ), 0) AS franking_credits_base
+FROM portfolio.transactions tx
+JOIN portfolio.portfolios p ON p.id = tx.portfolio_id
+LEFT JOIN LATERAL (
+    SELECT franking_percentage
+    FROM portfolio.dividend_schedules
+    WHERE instrument_id = tx.instrument_id
+      AND (
+          payment_date = tx.trade_date OR
+          ex_date <= tx.trade_date
+      )
+    ORDER BY ex_date DESC LIMIT 1
+) ds ON (tx.instrument_id IS NOT NULL)
+WHERE tx.portfolio_id = $1
+  AND tx.trade_date >= $2
+  AND tx.trade_date <= $3
+  AND tx.type IN ('DIVIDEND', 'INTEREST');`
+
+	getBuyTransactionDatesSQL = `
+SELECT instrument_id, trade_date
+FROM portfolio.transactions
+WHERE portfolio_id = $1
+  AND type = 'BUY'
+ORDER BY trade_date ASC;`
 )
+

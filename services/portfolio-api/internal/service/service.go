@@ -70,6 +70,11 @@ type PortfolioService interface {
 	GetDividendCalendar(ctx context.Context, userID string, year, month int) ([]domain.DividendCalendarEvent, error)
 	GetDividendYieldAnalytics(ctx context.Context, userID string) (*domain.DividendYieldAnalytics, error)
 	SimulateDRIP(ctx context.Context, userID string, input domain.DRIPSimulationInput) (*domain.DRIPSimulationResult, error)
+
+	// Tax Lot Inspector, Capital Gains & Annual Tax Report
+	ListTaxLots(ctx context.Context, userID string, instrumentID *string, status domain.TaxLotStatus) ([]domain.TaxLot, error)
+	GetRealizedGainsReport(ctx context.Context, userID string, fromDate, toDate *string, fiscalYear *int32) (*domain.RealizedGainsReport, error)
+	GetTaxReport(ctx context.Context, userID string, fiscalYear *int32, fromDate, toDate *string) (*domain.TaxReport, error)
 }
 
 
