@@ -2354,3 +2354,158 @@ func (r *PostgresRepository) GetEntitledSharesForExDate(ctx context.Context, por
 	return shares, nil
 }
 
+func (r *PostgresRepository) GetTaxLots(ctx context.Context, portfolioID uuid.UUID, instrumentID *uuid.UUID, status domain.TaxLotStatus) ([]domain.TaxLot, error) {
+	statusStr := string(status)
+	if statusStr == "" || statusStr == string(domain.TaxLotStatusUnspecified) {
+		statusStr = string(domain.TaxLotStatusAll)
+	}
+
+	rows, err := r.pool.Query(ctx, getTaxLotsSQL, portfolioID, instrumentID, statusStr)
+	if err != nil {
+		return nil, fmt.Errorf("repository: query tax lots failed: %w", err)
+	}
+	defer rows.Close()
+
+	now := time.Now().UTC()
+	var lots []domain.TaxLot
+	for rows.Next() {
+		var tl domain.TaxLot
+		var costBasisReleased, costBasisReleasedBase decimal.Decimal
+		var currentPrice, fxRateToBase decimal.Decimal
+
+		err := rows.Scan(
+			&tl.ID,
+			&tl.PortfolioID,
+			&tl.InstrumentID,
+			&tl.Ticker,
+			&tl.Name,
+			&tl.OpenTransactionID,
+			&tl.AcquiredDate,
+			&tl.ClosedDate,
+			&tl.OriginalQuantity,
+			&tl.RemainingQuantity,
+			&tl.CostBasis,
+			&tl.CostBasisBase,
+			&costBasisReleased,
+			&costBasisReleasedBase,
+			&currentPrice,
+			&fxRateToBase,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("repository: scan tax lot failed: %w", err)
+		}
+
+		origCostBasisBase := tl.CostBasisBase.Add(costBasisReleasedBase)
+		tl.UnitCostBase = decimal.Zero
+		if tl.OriginalQuantity.IsPositive() {
+			tl.UnitCostBase = origCostBasisBase.Div(tl.OriginalQuantity).Round(6)
+		}
+		tl.CurrentPrice = currentPrice
+
+		evalDate := now
+		if tl.ClosedDate != nil {
+			evalDate = *tl.ClosedDate
+		}
+
+		tl.HoldingPeriodDays = domain.CalculateHoldingDays(tl.AcquiredDate, evalDate)
+		tl.IsCGTDiscountEligible = domain.IsCGTDiscountEligible(tl.AcquiredDate, evalDate)
+		tl.TermClassification = domain.ClassifyHoldingTerm(tl.AcquiredDate, evalDate)
+
+		if tl.RemainingQuantity.IsPositive() {
+			tl.MarketValueBase = tl.RemainingQuantity.Mul(currentPrice).Mul(fxRateToBase).Round(2)
+			tl.UnrealizedPnLBase = tl.MarketValueBase.Sub(tl.CostBasisBase).Round(2)
+			if tl.CostBasisBase.IsPositive() {
+				tl.UnrealizedPnLPercent = tl.UnrealizedPnLBase.Div(tl.CostBasisBase).Mul(decimal.NewFromInt(100)).Round(2)
+			}
+			tl.IsLossHarvestCandidate = domain.IsLossHarvestingCandidate(tl.UnrealizedPnLBase, tl.CostBasisBase)
+		} else {
+			tl.MarketValueBase = decimal.Zero
+			tl.UnrealizedPnLBase = decimal.Zero
+			tl.UnrealizedPnLPercent = decimal.Zero
+			tl.IsLossHarvestCandidate = false
+		}
+
+		lots = append(lots, tl)
+	}
+
+	return lots, rows.Err()
+}
+
+func (r *PostgresRepository) GetRealizedDisposals(ctx context.Context, portfolioID uuid.UUID, fromDate, toDate time.Time) ([]domain.LotDisposal, error) {
+	rows, err := r.pool.Query(ctx, getRealizedDisposalsSQL, portfolioID, fromDate, toDate)
+	if err != nil {
+		return nil, fmt.Errorf("repository: query realized disposals failed: %w", err)
+	}
+	defer rows.Close()
+
+	var disposals []domain.LotDisposal
+	for rows.Next() {
+		var d domain.LotDisposal
+		err := rows.Scan(
+			&d.ID,
+			&d.TaxLotID,
+			&d.SellTransactionID,
+			&d.InstrumentID,
+			&d.Ticker,
+			&d.Name,
+			&d.AcquiredDate,
+			&d.DisposedDate,
+			&d.Quantity,
+			&d.CostBasisReleased,
+			&d.CostBasisReleasedBase,
+			&d.ProceedsBase,
+			&d.RealizedPnLBase,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("repository: scan realized disposal failed: %w", err)
+		}
+
+		d.HoldingPeriodDays = domain.CalculateHoldingDays(d.AcquiredDate, d.DisposedDate)
+		d.IsCGTDiscountEligible = domain.IsCGTDiscountEligible(d.AcquiredDate, d.DisposedDate)
+		d.TermClassification = domain.ClassifyHoldingTerm(d.AcquiredDate, d.DisposedDate)
+
+		d.RealizedPnLPercent = decimal.Zero
+		if d.CostBasisReleasedBase.IsPositive() {
+			d.RealizedPnLPercent = d.RealizedPnLBase.Div(d.CostBasisReleasedBase).Mul(decimal.NewFromInt(100)).Round(2)
+		}
+
+		d.DiscountedTaxablePnLBase = d.RealizedPnLBase
+		if d.IsCGTDiscountEligible && d.RealizedPnLBase.IsPositive() {
+			d.DiscountedTaxablePnLBase = d.RealizedPnLBase.Mul(decimal.NewFromFloat(0.50)).Round(2)
+		}
+
+		disposals = append(disposals, d)
+	}
+
+	return disposals, rows.Err()
+}
+
+func (r *PostgresRepository) GetTaxReportIncomeAndOffsets(ctx context.Context, portfolioID uuid.UUID, fromDate, toDate time.Time) (dividendIncome, interestIncome, frankingCredits, foreignTaxOffsets decimal.Decimal, err error) {
+	row := r.pool.QueryRow(ctx, getTaxReportIncomeAndOffsetsSQL, portfolioID, fromDate, toDate)
+	err = row.Scan(&dividendIncome, &interestIncome, &foreignTaxOffsets, &frankingCredits)
+	if err != nil {
+		return decimal.Zero, decimal.Zero, decimal.Zero, decimal.Zero, fmt.Errorf("repository: query income and offsets failed: %w", err)
+	}
+	return dividendIncome, interestIncome, frankingCredits, foreignTaxOffsets, nil
+}
+
+func (r *PostgresRepository) GetBuyTransactionDates(ctx context.Context, portfolioID uuid.UUID) (map[uuid.UUID][]time.Time, error) {
+	rows, err := r.pool.Query(ctx, getBuyTransactionDatesSQL, portfolioID)
+	if err != nil {
+		return nil, fmt.Errorf("repository: query buy dates failed: %w", err)
+	}
+	defer rows.Close()
+
+	result := make(map[uuid.UUID][]time.Time)
+	for rows.Next() {
+		var instID uuid.UUID
+		var tradeDate time.Time
+		if err := rows.Scan(&instID, &tradeDate); err != nil {
+			return nil, fmt.Errorf("repository: scan buy date failed: %w", err)
+		}
+		result[instID] = append(result[instID], tradeDate)
+	}
+	return result, rows.Err()
+}
+
+

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CashFlowReport } from './CashFlowReport';
 import { DividendCalendar } from './DividendCalendar';
+import { TaxLotsReport } from './TaxLotsReport';
 import './ReportsView.css';
 
 export type ReportType = 'cash-flow' | 'tax-lots' | 'dividends' | 'owner-earnings';
@@ -37,12 +38,10 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
 
           <button
             type="button"
-            className="reports-nav-btn disabled"
-            title="Tax Lots & Capital Gains Report (Coming Soon in Feature #22)"
-            disabled
+            className={`reports-nav-btn ${activeReport === 'tax-lots' ? 'active' : ''}`}
+            onClick={() => setActiveReport('tax-lots')}
           >
             <span>📜 Tax Lots & CGT</span>
-            <span className="report-soon-badge">SOON</span>
           </button>
 
           <button
@@ -68,6 +67,13 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
       <div className="reports-content">
         {activeReport === 'cash-flow' && (
           <CashFlowReport
+            preferredCurrency={preferredCurrency}
+            financialYearEndMonth={financialYearEndMonth}
+            financialYearEndDay={financialYearEndDay}
+          />
+        )}
+        {activeReport === 'tax-lots' && (
+          <TaxLotsReport
             preferredCurrency={preferredCurrency}
             financialYearEndMonth={financialYearEndMonth}
             financialYearEndDay={financialYearEndDay}

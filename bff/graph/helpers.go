@@ -1044,4 +1044,171 @@ func toModelDRIPSimulationResult(resp *pb.SimulateDRIPResponse) *model.DRIPSimul
 	}
 }
 
+func toModelHoldingTermClassification(term pb.HoldingTermClassification) model.HoldingTermClassification {
+	if term == pb.HoldingTermClassification_HOLDING_TERM_LONG_TERM {
+		return model.HoldingTermClassificationLongTerm
+	}
+	return model.HoldingTermClassificationShortTerm
+}
+
+func toProtoTaxLotStatus(status *model.TaxLotStatus) pb.TaxLotStatus {
+	if status == nil {
+		return pb.TaxLotStatus_TAX_LOT_STATUS_ALL
+	}
+	switch *status {
+	case model.TaxLotStatusOpen:
+		return pb.TaxLotStatus_TAX_LOT_STATUS_OPEN
+	case model.TaxLotStatusClosed:
+		return pb.TaxLotStatus_TAX_LOT_STATUS_CLOSED
+	default:
+		return pb.TaxLotStatus_TAX_LOT_STATUS_ALL
+	}
+}
+
+func toModelTaxLot(item *pb.TaxLotItem) *model.TaxLot {
+	if item == nil {
+		return nil
+	}
+	var closedDate *string
+	if item.GetClosedDate() != "" {
+		s := item.GetClosedDate()
+		closedDate = &s
+	}
+
+	return &model.TaxLot{
+		ID:                        item.GetId(),
+		InstrumentID:              item.GetInstrumentId(),
+		Ticker:                    item.GetTicker(),
+		Name:                      item.GetName(),
+		OpenTransactionID:         item.GetOpenTransactionId(),
+		AcquiredDate:              item.GetAcquiredDate(),
+		ClosedDate:                closedDate,
+		OriginalQuantity:          toModelDecimal(item.GetOriginalQuantity()),
+		RemainingQuantity:         toModelDecimal(item.GetRemainingQuantity()),
+		CostBasis:                 toModelMoney(item.GetCostBasis()),
+		CostBasisBase:             toModelMoney(item.GetCostBasisBase()),
+		UnitCostBase:              toModelMoney(item.GetUnitCostBase()),
+		CurrentPrice:              toModelMoney(item.GetCurrentPrice()),
+		MarketValueBase:           toModelMoney(item.GetMarketValueBase()),
+		UnrealizedPnlBase:         toModelMoney(item.GetUnrealizedPnlBase()),
+		UnrealizedPnlPercent:      toModelDecimal(item.GetUnrealizedPnlPercent()),
+		HoldingPeriodDays:         int(item.GetHoldingPeriodDays()),
+		TermClassification:        toModelHoldingTermClassification(item.GetTermClassification()),
+		IsCgtDiscountEligible:     item.GetIsCgtDiscountEligible(),
+		IsLossHarvestingCandidate: item.GetIsLossHarvestingCandidate(),
+		HasWashSaleRisk:           item.GetHasWashSaleRisk(),
+	}
+}
+
+func toModelRealizedDisposal(item *pb.RealizedDisposalItem) *model.RealizedDisposal {
+	if item == nil {
+		return nil
+	}
+	return &model.RealizedDisposal{
+		DisposalID:               item.GetDisposalId(),
+		TaxLotID:                 item.GetTaxLotId(),
+		SellTransactionID:        item.GetSellTransactionId(),
+		InstrumentID:             item.GetInstrumentId(),
+		Ticker:                   item.GetTicker(),
+		Name:                     item.GetName(),
+		AcquiredDate:             item.GetAcquiredDate(),
+		DisposedDate:             item.GetDisposedDate(),
+		QuantityDisposed:         toModelDecimal(item.GetQuantityDisposed()),
+		CostBasisRelievedBase:    toModelMoney(item.GetCostBasisRelievedBase()),
+		ProceedsBase:             toModelMoney(item.GetProceedsBase()),
+		RealizedPnlBase:          toModelMoney(item.GetRealizedPnlBase()),
+		RealizedPnlPercent:       toModelDecimal(item.GetRealizedPnlPercent()),
+		HoldingPeriodDays:        int(item.GetHoldingPeriodDays()),
+		TermClassification:       toModelHoldingTermClassification(item.GetTermClassification()),
+		IsCgtDiscountEligible:    item.GetIsCgtDiscountEligible(),
+		DiscountedTaxablePnlBase: toModelMoney(item.GetDiscountedTaxablePnlBase()),
+	}
+}
+
+func toModelTaxReport(resp *pb.GetTaxReportResponse) *model.TaxReport {
+	if resp == nil {
+		return nil
+	}
+	summary := resp.GetSummary()
+	taxableInc := summary.GetTaxableIncome()
+	cgt := summary.GetCapitalGains()
+	offsets := summary.GetTaxOffsets()
+
+	disposals := make([]*model.RealizedDisposal, len(resp.GetDisposals()))
+	for i, d := range resp.GetDisposals() {
+		disposals[i] = toModelRealizedDisposal(d)
+	}
+
+	openLots := make([]*model.TaxLot, len(resp.GetOpenLots()))
+	for i, l := range resp.GetOpenLots() {
+		openLots[i] = toModelTaxLot(l)
+	}
+
+	return &model.TaxReport{
+		Summary: &model.TaxReportSummary{
+			TaxableIncome: &model.TaxableIncomeSummary{
+				DividendAndInterestIncome: toModelMoney(taxableInc.GetDividendAndInterestIncome()),
+				NetCapitalGains:            toModelMoney(taxableInc.GetNetCapitalGains()),
+				FrankingCredits:            toModelMoney(taxableInc.GetFrankingCredits()),
+				TotalAssessableIncome:      toModelMoney(taxableInc.GetTotalAssessableIncome()),
+				DividendInterestRatioPct:  toModelDecimal(taxableInc.GetDividendInterestRatioPct()),
+				CapitalGainsRatioPct:      toModelDecimal(taxableInc.GetCapitalGainsRatioPct()),
+				FrankingCreditsRatioPct:   toModelDecimal(taxableInc.GetFrankingCreditsRatioPct()),
+			},
+			CapitalGains: &model.CapitalGainsSummary{
+				TotalCapitalGains:  toModelMoney(cgt.GetTotalCapitalGains()),
+				LossesApplied:      toModelMoney(cgt.GetLossesApplied()),
+				CgtDiscountAmount:  toModelMoney(cgt.GetCgtDiscountAmount()),
+				NetCapitalGain:     toModelMoney(cgt.GetNetCapitalGain()),
+				CgtDiscountRatePct: toModelDecimal(cgt.GetCgtDiscountRatePct()),
+				GainDisposalsCount: int(cgt.GetGainDisposalsCount()),
+				LossDisposalsCount: int(cgt.GetLossDisposalsCount()),
+			},
+			TaxOffsets: &model.TaxOffsetsSummary{
+				FrankingCreditsOffset: toModelMoney(offsets.GetFrankingCreditsOffset()),
+				ForeignTaxOffsets:     toModelMoney(offsets.GetForeignTaxOffsets()),
+				TotalAvailableOffsets: toModelMoney(offsets.GetTotalAvailableOffsets()),
+			},
+			FiscalYearLabel: summary.GetFiscalYearLabel(),
+			BaseCurrency:    summary.GetBaseCurrency(),
+		},
+		Disposals:       disposals,
+		OpenLots:        openLots,
+		FromDate:        resp.GetFromDate(),
+		ToDate:          resp.GetToDate(),
+		FiscalYearLabel: resp.GetFiscalYearLabel(),
+		BaseCurrency:    resp.GetBaseCurrency(),
+	}
+}
+
+func toModelRealizedGainsReport(resp *pb.GetRealizedGainsReportResponse) *model.RealizedGainsReport {
+	if resp == nil {
+		return nil
+	}
+	summary := resp.GetSummary()
+	disposals := make([]*model.RealizedDisposal, len(resp.GetDisposals()))
+	for i, d := range resp.GetDisposals() {
+		disposals[i] = toModelRealizedDisposal(d)
+	}
+
+	return &model.RealizedGainsReport{
+		Summary: &model.RealizedGainsSummary{
+			TotalProceedsBase:         toModelMoney(summary.GetTotalProceedsBase()),
+			TotalCostBasisRelieved:     toModelMoney(summary.GetTotalCostBasisRelieved()),
+			GrossRealizedGainsBase:     toModelMoney(summary.GetGrossRealizedGainsBase()),
+			GrossRealizedLossesBase:    toModelMoney(summary.GetGrossRealizedLossesBase()),
+			NetRealizedPnlBase:         toModelMoney(summary.GetNetRealizedPnlBase()),
+			ShortTermGainsBase:         toModelMoney(summary.GetShortTermGainsBase()),
+			LongTermGainsBase:          toModelMoney(summary.GetLongTermGainsBase()),
+			DiscountedTaxableGainBase:  toModelMoney(summary.GetDiscountedTaxableGainBase()),
+			TotalDisposalCount:         int(summary.GetTotalDisposalCount()),
+		},
+		Disposals:    disposals,
+		FromDate:     resp.GetFromDate(),
+		ToDate:       resp.GetToDate(),
+		BaseCurrency: resp.GetBaseCurrency(),
+	}
+}
+
+
 

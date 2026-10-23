@@ -177,6 +177,12 @@ type Query {
   dividendCalendar(year: Int!, month: Int!): [DividendCalendarEvent!]!
   dividendYieldAnalytics: DividendYieldAnalytics!
   simulateDRIP(input: DRIPSimulationInput!): DRIPSimulationResult!
+
+  # Tax Lot Inspector, Capital Gains & Annual Tax Report
+  taxReport(financialYear: Int, fromDate: String, toDate: String): TaxReport!
+  taxLots(instrumentId: ID, status: TaxLotStatus): [TaxLot!]!
+  realizedCapitalGainsReport(financialYear: Int, fromDate: String, toDate: String): RealizedGainsReport!
+  exportTaxScheduleCSV(financialYear: Int, fromDate: String, toDate: String): String!
 }
 
 enum HistoryTimeframe {
@@ -888,6 +894,130 @@ type DRIPSimulationResult {
   terminalCashValue: Decimal!
   dripBenefitAmount: Decimal!
 }
+
+# ------------------------------------------------------------------
+# Tax Lot Inspector & Capital Gains Types
+# ------------------------------------------------------------------
+
+enum TaxLotStatus {
+  OPEN
+  CLOSED
+  ALL
+}
+
+enum HoldingTermClassification {
+  SHORT_TERM
+  LONG_TERM
+}
+
+type TaxLot {
+  id: ID!
+  instrumentId: ID!
+  ticker: String!
+  name: String!
+  openTransactionId: ID!
+  acquiredDate: String!
+  closedDate: String
+  originalQuantity: Decimal!
+  remainingQuantity: Decimal!
+  costBasis: Money!
+  costBasisBase: Money!
+  unitCostBase: Money!
+  currentPrice: Money!
+  marketValueBase: Money!
+  unrealizedPnlBase: Money!
+  unrealizedPnlPercent: Decimal!
+  holdingPeriodDays: Int!
+  termClassification: HoldingTermClassification!
+  isCgtDiscountEligible: Boolean!
+  isLossHarvestingCandidate: Boolean!
+  hasWashSaleRisk: Boolean!
+}
+
+type RealizedDisposal {
+  disposalId: ID!
+  taxLotId: ID!
+  sellTransactionId: ID!
+  instrumentId: ID!
+  ticker: String!
+  name: String!
+  acquiredDate: String!
+  disposedDate: String!
+  quantityDisposed: Decimal!
+  costBasisRelievedBase: Money!
+  proceedsBase: Money!
+  realizedPnlBase: Money!
+  realizedPnlPercent: Decimal!
+  holdingPeriodDays: Int!
+  termClassification: HoldingTermClassification!
+  isCgtDiscountEligible: Boolean!
+  discountedTaxablePnlBase: Money!
+}
+
+type TaxableIncomeSummary {
+  dividendAndInterestIncome: Money!
+  netCapitalGains: Money!
+  frankingCredits: Money!
+  totalAssessableIncome: Money!
+  dividendInterestRatioPct: Decimal!
+  capitalGainsRatioPct: Decimal!
+  frankingCreditsRatioPct: Decimal!
+}
+
+type CapitalGainsSummary {
+  totalCapitalGains: Money!
+  lossesApplied: Money!
+  cgtDiscountAmount: Money!
+  netCapitalGain: Money!
+  cgtDiscountRatePct: Decimal!
+  gainDisposalsCount: Int!
+  lossDisposalsCount: Int!
+}
+
+type TaxOffsetsSummary {
+  frankingCreditsOffset: Money!
+  foreignTaxOffsets: Money!
+  totalAvailableOffsets: Money!
+}
+
+type TaxReportSummary {
+  taxableIncome: TaxableIncomeSummary!
+  capitalGains: CapitalGainsSummary!
+  taxOffsets: TaxOffsetsSummary!
+  fiscalYearLabel: String!
+  baseCurrency: String!
+}
+
+type TaxReport {
+  summary: TaxReportSummary!
+  disposals: [RealizedDisposal!]!
+  openLots: [TaxLot!]!
+  fromDate: String!
+  toDate: String!
+  fiscalYearLabel: String!
+  baseCurrency: String!
+}
+
+type RealizedGainsSummary {
+  totalProceedsBase: Money!
+  totalCostBasisRelieved: Money!
+  grossRealizedGainsBase: Money!
+  grossRealizedLossesBase: Money!
+  netRealizedPnlBase: Money!
+  shortTermGainsBase: Money!
+  longTermGainsBase: Money!
+  discountedTaxableGainBase: Money!
+  totalDisposalCount: Int!
+}
+
+type RealizedGainsReport {
+  summary: RealizedGainsSummary!
+  disposals: [RealizedDisposal!]!
+  fromDate: String!
+  toDate: String!
+  baseCurrency: String!
+}
+
 
 
 

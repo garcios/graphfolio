@@ -98,6 +98,16 @@ type BenchmarkMetrics struct {
 	InformationRatio                 *Decimal `json:"informationRatio,omitempty"`
 }
 
+type CapitalGainsSummary struct {
+	TotalCapitalGains  *Money  `json:"totalCapitalGains"`
+	LossesApplied      *Money  `json:"lossesApplied"`
+	CgtDiscountAmount  *Money  `json:"cgtDiscountAmount"`
+	NetCapitalGain     *Money  `json:"netCapitalGain"`
+	CgtDiscountRatePct Decimal `json:"cgtDiscountRatePct"`
+	GainDisposalsCount int     `json:"gainDisposalsCount"`
+	LossDisposalsCount int     `json:"lossDisposalsCount"`
+}
+
 type CashFlowCategoryBreakdown struct {
 	Deposits      *Money `json:"deposits"`
 	Dividends     *Money `json:"dividends"`
@@ -536,6 +546,46 @@ type PortfolioHistory struct {
 type Query struct {
 }
 
+type RealizedDisposal struct {
+	DisposalID               string                    `json:"disposalId"`
+	TaxLotID                 string                    `json:"taxLotId"`
+	SellTransactionID        string                    `json:"sellTransactionId"`
+	InstrumentID             string                    `json:"instrumentId"`
+	Ticker                   string                    `json:"ticker"`
+	Name                     string                    `json:"name"`
+	AcquiredDate             string                    `json:"acquiredDate"`
+	DisposedDate             string                    `json:"disposedDate"`
+	QuantityDisposed         Decimal                   `json:"quantityDisposed"`
+	CostBasisRelievedBase    *Money                    `json:"costBasisRelievedBase"`
+	ProceedsBase             *Money                    `json:"proceedsBase"`
+	RealizedPnlBase          *Money                    `json:"realizedPnlBase"`
+	RealizedPnlPercent       Decimal                   `json:"realizedPnlPercent"`
+	HoldingPeriodDays        int                       `json:"holdingPeriodDays"`
+	TermClassification       HoldingTermClassification `json:"termClassification"`
+	IsCgtDiscountEligible    bool                      `json:"isCgtDiscountEligible"`
+	DiscountedTaxablePnlBase *Money                    `json:"discountedTaxablePnlBase"`
+}
+
+type RealizedGainsReport struct {
+	Summary      *RealizedGainsSummary `json:"summary"`
+	Disposals    []*RealizedDisposal   `json:"disposals"`
+	FromDate     string                `json:"fromDate"`
+	ToDate       string                `json:"toDate"`
+	BaseCurrency string                `json:"baseCurrency"`
+}
+
+type RealizedGainsSummary struct {
+	TotalProceedsBase         *Money `json:"totalProceedsBase"`
+	TotalCostBasisRelieved    *Money `json:"totalCostBasisRelieved"`
+	GrossRealizedGainsBase    *Money `json:"grossRealizedGainsBase"`
+	GrossRealizedLossesBase   *Money `json:"grossRealizedLossesBase"`
+	NetRealizedPnlBase        *Money `json:"netRealizedPnlBase"`
+	ShortTermGainsBase        *Money `json:"shortTermGainsBase"`
+	LongTermGainsBase         *Money `json:"longTermGainsBase"`
+	DiscountedTaxableGainBase *Money `json:"discountedTaxableGainBase"`
+	TotalDisposalCount        int    `json:"totalDisposalCount"`
+}
+
 type RecordFXRateOverrideInput struct {
 	BaseCurrency        string  `json:"baseCurrency"`
 	QuoteCurrency       string  `json:"quoteCurrency"`
@@ -568,6 +618,64 @@ type RegisterInput struct {
 	Password        string `json:"password"`
 	DisplayName     string `json:"displayName"`
 	DisplayCurrency string `json:"displayCurrency"`
+}
+
+type TaxLot struct {
+	ID                        string                    `json:"id"`
+	InstrumentID              string                    `json:"instrumentId"`
+	Ticker                    string                    `json:"ticker"`
+	Name                      string                    `json:"name"`
+	OpenTransactionID         string                    `json:"openTransactionId"`
+	AcquiredDate              string                    `json:"acquiredDate"`
+	ClosedDate                *string                   `json:"closedDate,omitempty"`
+	OriginalQuantity          Decimal                   `json:"originalQuantity"`
+	RemainingQuantity         Decimal                   `json:"remainingQuantity"`
+	CostBasis                 *Money                    `json:"costBasis"`
+	CostBasisBase             *Money                    `json:"costBasisBase"`
+	UnitCostBase              *Money                    `json:"unitCostBase"`
+	CurrentPrice              *Money                    `json:"currentPrice"`
+	MarketValueBase           *Money                    `json:"marketValueBase"`
+	UnrealizedPnlBase         *Money                    `json:"unrealizedPnlBase"`
+	UnrealizedPnlPercent      Decimal                   `json:"unrealizedPnlPercent"`
+	HoldingPeriodDays         int                       `json:"holdingPeriodDays"`
+	TermClassification        HoldingTermClassification `json:"termClassification"`
+	IsCgtDiscountEligible     bool                      `json:"isCgtDiscountEligible"`
+	IsLossHarvestingCandidate bool                      `json:"isLossHarvestingCandidate"`
+	HasWashSaleRisk           bool                      `json:"hasWashSaleRisk"`
+}
+
+type TaxOffsetsSummary struct {
+	FrankingCreditsOffset *Money `json:"frankingCreditsOffset"`
+	ForeignTaxOffsets     *Money `json:"foreignTaxOffsets"`
+	TotalAvailableOffsets *Money `json:"totalAvailableOffsets"`
+}
+
+type TaxReport struct {
+	Summary         *TaxReportSummary   `json:"summary"`
+	Disposals       []*RealizedDisposal `json:"disposals"`
+	OpenLots        []*TaxLot           `json:"openLots"`
+	FromDate        string              `json:"fromDate"`
+	ToDate          string              `json:"toDate"`
+	FiscalYearLabel string              `json:"fiscalYearLabel"`
+	BaseCurrency    string              `json:"baseCurrency"`
+}
+
+type TaxReportSummary struct {
+	TaxableIncome   *TaxableIncomeSummary `json:"taxableIncome"`
+	CapitalGains    *CapitalGainsSummary  `json:"capitalGains"`
+	TaxOffsets      *TaxOffsetsSummary    `json:"taxOffsets"`
+	FiscalYearLabel string                `json:"fiscalYearLabel"`
+	BaseCurrency    string                `json:"baseCurrency"`
+}
+
+type TaxableIncomeSummary struct {
+	DividendAndInterestIncome *Money  `json:"dividendAndInterestIncome"`
+	NetCapitalGains           *Money  `json:"netCapitalGains"`
+	FrankingCredits           *Money  `json:"frankingCredits"`
+	TotalAssessableIncome     *Money  `json:"totalAssessableIncome"`
+	DividendInterestRatioPct  Decimal `json:"dividendInterestRatioPct"`
+	CapitalGainsRatioPct      Decimal `json:"capitalGainsRatioPct"`
+	FrankingCreditsRatioPct   Decimal `json:"frankingCreditsRatioPct"`
 }
 
 type TransactionItem struct {
@@ -1098,6 +1206,61 @@ func (e HistoryTimeframe) MarshalJSON() ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+type HoldingTermClassification string
+
+const (
+	HoldingTermClassificationShortTerm HoldingTermClassification = "SHORT_TERM"
+	HoldingTermClassificationLongTerm  HoldingTermClassification = "LONG_TERM"
+)
+
+var AllHoldingTermClassification = []HoldingTermClassification{
+	HoldingTermClassificationShortTerm,
+	HoldingTermClassificationLongTerm,
+}
+
+func (e HoldingTermClassification) IsValid() bool {
+	switch e {
+	case HoldingTermClassificationShortTerm, HoldingTermClassificationLongTerm:
+		return true
+	}
+	return false
+}
+
+func (e HoldingTermClassification) String() string {
+	return string(e)
+}
+
+func (e *HoldingTermClassification) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = HoldingTermClassification(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid HoldingTermClassification", str)
+	}
+	return nil
+}
+
+func (e HoldingTermClassification) MarshalGQL(w io.Writer) {
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *HoldingTermClassification) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e HoldingTermClassification) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
 type SortDirection string
 
 const (
@@ -1148,6 +1311,63 @@ func (e *SortDirection) UnmarshalJSON(b []byte) error {
 }
 
 func (e SortDirection) MarshalJSON() ([]byte, error) {
+	var buf bytes.Buffer
+	e.MarshalGQL(&buf)
+	return buf.Bytes(), nil
+}
+
+type TaxLotStatus string
+
+const (
+	TaxLotStatusOpen   TaxLotStatus = "OPEN"
+	TaxLotStatusClosed TaxLotStatus = "CLOSED"
+	TaxLotStatusAll    TaxLotStatus = "ALL"
+)
+
+var AllTaxLotStatus = []TaxLotStatus{
+	TaxLotStatusOpen,
+	TaxLotStatusClosed,
+	TaxLotStatusAll,
+}
+
+func (e TaxLotStatus) IsValid() bool {
+	switch e {
+	case TaxLotStatusOpen, TaxLotStatusClosed, TaxLotStatusAll:
+		return true
+	}
+	return false
+}
+
+func (e TaxLotStatus) String() string {
+	return string(e)
+}
+
+func (e *TaxLotStatus) UnmarshalGQL(v any) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = TaxLotStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid TaxLotStatus", str)
+	}
+	return nil
+}
+
+func (e TaxLotStatus) MarshalGQL(w io.Writer) {
+	_, _ = fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+func (e *TaxLotStatus) UnmarshalJSON(b []byte) error {
+	s, err := strconv.Unquote(string(b))
+	if err != nil {
+		return err
+	}
+	return e.UnmarshalGQL(s)
+}
+
+func (e TaxLotStatus) MarshalJSON() ([]byte, error) {
 	var buf bytes.Buffer
 	e.MarshalGQL(&buf)
 	return buf.Bytes(), nil

@@ -29,7 +29,7 @@ This document catalogs all implemented features, in-progress components, and pla
 | **19** | **Ingestion Job History View (Admin Portal)** | **PLANNED** | Database, Proto, Svc, BFF, Web | [ingestion-job-history-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/ingestion-job-history-implementation-plan.md) |
 | **20** | **Asset Prices Date Range Filter & Pagination (Admin Portal)** | **DONE** | Web, BFF, Svc | [asset-prices-date-range-filter-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/asset-prices-date-range-filter-implementation-plan.md) |
 | **21** | **Multi-Broker CSV Ingestion & Cash Account Statements (CommSec & nabtrade)** | **DONE** | Proto, Svc, BFF, Web | [multi-broker-csv-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/multi-broker-csv-ingestion-implementation-plan.md), [cash-statement-csv-ingestion-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/cash-statement-csv-ingestion-implementation-plan.md) |
-| **22** | **Tax Lot Inspector & Capital Gains Reports** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
+| **22** | **Tax Lot Inspector & Capital Gains Reports** | **DONE** | Database, Proto, Svc, BFF, Web | [tax-lot-inspector-capital-gains-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/tax-lot-inspector-capital-gains-implementation-plan.md) |
 | **23** | **Dividend Calendar & Yield Analytics** | **ROADMAP** | Svc, BFF, Web | *(Future Plan)* |
 | **24** | **Real-Time Market Data & WebSocket Price Ticker** | **ROADMAP** | Market Data, Svc, Web | *(Future Plan)* |
 | **25** | **Investment Holding Return Attribution (Capital Gain, Income & Currency Gain/Loss)** | **DONE** | Proto, Svc, BFF, Web | [holding-return-attribution-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/holding-return-attribution-implementation-plan.md) |
@@ -684,7 +684,8 @@ This document catalogs all implemented features, in-progress components, and pla
 ## 4. Future Roadmap Ideas (`ROADMAP`)
 
 ### 4.1 Tax Lot Inspector & Capital Gains Reports
-- **Status**: **ROADMAP**
+- **Status**: **DONE**
+- **Plan**: [tax-lot-inspector-capital-gains-implementation-plan.md](file:///Users/oscargarcia/workspace/graphfolio/docs/plans/tax-lot-inspector-capital-gains-implementation-plan.md)
 - **Description**: Detailed inspection of individual tax lots (`portfolio.tax_lots`) and closed lot disposals (`portfolio.lot_disposals`). Enables investors to see which specific lot was sold, purchase date, holding period, and short-term vs long-term capital gains classification for annual tax filing.
 
 ### 4.2 Dividend Calendar & Yield Analytics

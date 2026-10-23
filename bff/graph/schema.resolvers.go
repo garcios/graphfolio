@@ -8,11 +8,14 @@ package graph
 import (
 	"bff/graph/model"
 	"bff/internal/auth"
+	"bytes"
 	"context"
+	"encoding/csv"
 	"fmt"
 	pb "graphfolio/proto/portfolio/v1"
 	userpb "graphfolio/proto/user/v1"
 
+	"github.com/shopspring/decimal"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -1047,6 +1050,177 @@ func (r *queryResolver) SimulateDrip(ctx context.Context, input model.DRIPSimula
 	}
 
 	return toModelDRIPSimulationResult(resp), nil
+}
+
+// TaxReport is the resolver for the taxReport field.
+func (r *queryResolver) TaxReport(ctx context.Context, financialYear *int, fromDate *string, toDate *string) (*model.TaxReport, error) {
+	req := &pb.GetTaxReportRequest{
+		UserId: r.resolveUserID(ctx),
+	}
+	if financialYear != nil {
+		fy := int32(*financialYear)
+		req.FiscalYear = &fy
+	}
+	if fromDate != nil && *fromDate != "" {
+		req.FromDate = fromDate
+	}
+	if toDate != nil && *toDate != "" {
+		req.ToDate = toDate
+	}
+
+	resp, err := r.PortfolioClient.GetTaxReport(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get tax report: %w", err)
+	}
+
+	return toModelTaxReport(resp), nil
+}
+
+// TaxLots is the resolver for the taxLots field.
+func (r *queryResolver) TaxLots(ctx context.Context, instrumentID *string, status *model.TaxLotStatus) ([]*model.TaxLot, error) {
+	req := &pb.ListTaxLotsRequest{
+		UserId:       r.resolveUserID(ctx),
+		InstrumentId: instrumentID,
+		Status:       toProtoTaxLotStatus(status),
+	}
+
+	resp, err := r.PortfolioClient.ListTaxLots(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list tax lots: %w", err)
+	}
+
+	lots := make([]*model.TaxLot, len(resp.GetTaxLots()))
+	for i, l := range resp.GetTaxLots() {
+		lots[i] = toModelTaxLot(l)
+	}
+	return lots, nil
+}
+
+// RealizedCapitalGainsReport is the resolver for the realizedCapitalGainsReport field.
+func (r *queryResolver) RealizedCapitalGainsReport(ctx context.Context, financialYear *int, fromDate *string, toDate *string) (*model.RealizedGainsReport, error) {
+	req := &pb.GetRealizedGainsReportRequest{
+		UserId: r.resolveUserID(ctx),
+	}
+	if financialYear != nil {
+		fy := int32(*financialYear)
+		req.FiscalYear = &fy
+	}
+	if fromDate != nil && *fromDate != "" {
+		req.FromDate = fromDate
+	}
+	if toDate != nil && *toDate != "" {
+		req.ToDate = toDate
+	}
+
+	resp, err := r.PortfolioClient.GetRealizedGainsReport(ctx, req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get realized gains report: %w", err)
+	}
+
+	return toModelRealizedGainsReport(resp), nil
+}
+
+// ExportTaxScheduleCSV is the resolver for the exportTaxScheduleCSV field.
+func (r *queryResolver) ExportTaxScheduleCSV(ctx context.Context, financialYear *int, fromDate *string, toDate *string) (string, error) {
+	req := &pb.GetTaxReportRequest{
+		UserId: r.resolveUserID(ctx),
+	}
+	if financialYear != nil {
+		fy := int32(*financialYear)
+		req.FiscalYear = &fy
+	}
+	if fromDate != nil && *fromDate != "" {
+		req.FromDate = fromDate
+	}
+	if toDate != nil && *toDate != "" {
+		req.ToDate = toDate
+	}
+
+	resp, err := r.PortfolioClient.GetTaxReport(ctx, req)
+	if err != nil {
+		return "", fmt.Errorf("failed to get tax report for export: %w", err)
+	}
+
+	var buf bytes.Buffer
+	writer := csv.NewWriter(&buf)
+
+	headers := []string{
+		"Sell Date",
+		"Asset",
+		"Ticker",
+		"Acquisition Date",
+		"Holding Days",
+		"Term",
+		"Quantity Disposed",
+		"Relieved Cost Basis (Base)",
+		"Gross Proceeds (Base)",
+		"Net Capital Gain/Loss (Base)",
+		"CGT Discount (50%)",
+		"Taxable Net Gain",
+	}
+	if err := writer.Write(headers); err != nil {
+		return "", fmt.Errorf("failed to write CSV header: %w", err)
+	}
+
+	for _, d := range resp.GetDisposals() {
+		termStr := "SHORT_TERM"
+		if d.GetTermClassification() == pb.HoldingTermClassification_HOLDING_TERM_LONG_TERM {
+			termStr = "LONG_TERM"
+		}
+		cgtDiscountStr := "0.00"
+		if d.GetIsCgtDiscountEligible() && d.GetRealizedPnlBase() != nil && d.GetRealizedPnlBase().GetAmount() != nil {
+			pnl, err := decimal.NewFromString(d.GetRealizedPnlBase().GetAmount().GetValue())
+			if err == nil && pnl.IsPositive() {
+				cgtDiscountStr = pnl.Mul(decimal.NewFromFloat(0.50)).Round(2).StringFixed(2)
+			}
+		}
+
+		costBasisStr := "0.00"
+		if d.GetCostBasisRelievedBase() != nil && d.GetCostBasisRelievedBase().GetAmount() != nil {
+			costBasisStr = d.GetCostBasisRelievedBase().GetAmount().GetValue()
+		}
+		proceedsStr := "0.00"
+		if d.GetProceedsBase() != nil && d.GetProceedsBase().GetAmount() != nil {
+			proceedsStr = d.GetProceedsBase().GetAmount().GetValue()
+		}
+		pnlStr := "0.00"
+		if d.GetRealizedPnlBase() != nil && d.GetRealizedPnlBase().GetAmount() != nil {
+			pnlStr = d.GetRealizedPnlBase().GetAmount().GetValue()
+		}
+		discountedStr := pnlStr
+		if d.GetDiscountedTaxablePnlBase() != nil && d.GetDiscountedTaxablePnlBase().GetAmount() != nil {
+			discountedStr = d.GetDiscountedTaxablePnlBase().GetAmount().GetValue()
+		}
+		qtyStr := "0"
+		if d.GetQuantityDisposed() != nil {
+			qtyStr = d.GetQuantityDisposed().GetValue()
+		}
+
+		row := []string{
+			d.GetDisposedDate(),
+			d.GetName(),
+			d.GetTicker(),
+			d.GetAcquiredDate(),
+			fmt.Sprintf("%d", d.GetHoldingPeriodDays()),
+			termStr,
+			qtyStr,
+			costBasisStr,
+			proceedsStr,
+			pnlStr,
+			cgtDiscountStr,
+			discountedStr,
+		}
+		if err := writer.Write(row); err != nil {
+			return "", fmt.Errorf("failed to write CSV row: %w", err)
+		}
+	}
+
+	writer.Flush()
+	if err := writer.Error(); err != nil {
+		return "", fmt.Errorf("failed to flush CSV writer: %w", err)
+	}
+
+	return buf.String(), nil
 }
 
 // Mutation returns MutationResolver implementation.

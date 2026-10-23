@@ -132,6 +132,30 @@ type fakePortfolioClient struct {
 	getDividendCalendarFn           func(ctx context.Context, in *pb.GetDividendCalendarRequest) (*pb.GetDividendCalendarResponse, error)
 	getDividendYieldAnalyticsFn     func(ctx context.Context, in *pb.GetDividendYieldAnalyticsRequest) (*pb.GetDividendYieldAnalyticsResponse, error)
 	simulateDRIPFn                  func(ctx context.Context, in *pb.SimulateDRIPRequest) (*pb.SimulateDRIPResponse, error)
+	listTaxLotsFn                   func(ctx context.Context, in *pb.ListTaxLotsRequest) (*pb.ListTaxLotsResponse, error)
+	getRealizedGainsReportFn        func(ctx context.Context, in *pb.GetRealizedGainsReportRequest) (*pb.GetRealizedGainsReportResponse, error)
+	getTaxReportFn                  func(ctx context.Context, in *pb.GetTaxReportRequest) (*pb.GetTaxReportResponse, error)
+}
+
+func (f *fakePortfolioClient) ListTaxLots(ctx context.Context, in *pb.ListTaxLotsRequest, opts ...grpc.CallOption) (*pb.ListTaxLotsResponse, error) {
+	if f.listTaxLotsFn != nil {
+		return f.listTaxLotsFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakePortfolioClient) GetRealizedGainsReport(ctx context.Context, in *pb.GetRealizedGainsReportRequest, opts ...grpc.CallOption) (*pb.GetRealizedGainsReportResponse, error) {
+	if f.getRealizedGainsReportFn != nil {
+		return f.getRealizedGainsReportFn(ctx, in)
+	}
+	return nil, nil
+}
+
+func (f *fakePortfolioClient) GetTaxReport(ctx context.Context, in *pb.GetTaxReportRequest, opts ...grpc.CallOption) (*pb.GetTaxReportResponse, error) {
+	if f.getTaxReportFn != nil {
+		return f.getTaxReportFn(ctx, in)
+	}
+	return nil, nil
 }
 
 func (f *fakePortfolioClient) CreatePortfolio(ctx context.Context, in *pb.CreatePortfolioRequest, opts ...grpc.CallOption) (*pb.CreatePortfolioResponse, error) {
@@ -3659,6 +3683,109 @@ func TestQueryResolver_SimulateDRIP(t *testing.T) {
 		}
 	})
 }
+
+func TestQueryResolver_TaxReport(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully resolves tax report", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			getTaxReportFn: func(ctx context.Context, in *pb.GetTaxReportRequest) (*pb.GetTaxReportResponse, error) {
+				return &pb.GetTaxReportResponse{
+					Summary: &pb.TaxReportSummary{
+						TaxableIncome: &pb.TaxableIncomeSummary{
+							DividendAndInterestIncome: decimalpb.MoneyToProto(decimal.NewFromFloat(2966.80), "AUD"),
+							NetCapitalGains:            decimalpb.MoneyToProto(decimal.NewFromFloat(2857.41), "AUD"),
+							FrankingCredits:            decimalpb.MoneyToProto(decimal.NewFromFloat(300.33), "AUD"),
+							TotalAssessableIncome:      decimalpb.MoneyToProto(decimal.NewFromFloat(6124.54), "AUD"),
+							DividendInterestRatioPct:  decimalpb.ToProto(decimal.NewFromFloat(48.44)),
+							CapitalGainsRatioPct:      decimalpb.ToProto(decimal.NewFromFloat(46.66)),
+							FrankingCreditsRatioPct:   decimalpb.ToProto(decimal.NewFromFloat(4.90)),
+						},
+						CapitalGains: &pb.CapitalGainsSummary{
+							TotalCapitalGains:  decimalpb.MoneyToProto(decimal.NewFromFloat(6064.99), "AUD"),
+							LossesApplied:      decimalpb.MoneyToProto(decimal.NewFromFloat(350.17), "AUD"),
+							CgtDiscountAmount:  decimalpb.MoneyToProto(decimal.NewFromFloat(2857.41), "AUD"),
+							NetCapitalGain:     decimalpb.MoneyToProto(decimal.NewFromFloat(2857.41), "AUD"),
+							CgtDiscountRatePct: decimalpb.ToProto(decimal.NewFromInt(50)),
+							GainDisposalsCount: 1,
+							LossDisposalsCount: 1,
+						},
+						TaxOffsets: &pb.TaxOffsetsSummary{
+							FrankingCreditsOffset: decimalpb.MoneyToProto(decimal.NewFromFloat(300.33), "AUD"),
+							ForeignTaxOffsets:     decimalpb.MoneyToProto(decimal.NewFromFloat(324.18), "AUD"),
+							TotalAvailableOffsets: decimalpb.MoneyToProto(decimal.NewFromFloat(624.51), "AUD"),
+						},
+						FiscalYearLabel: "FY2025-2026",
+						BaseCurrency:    "AUD",
+					},
+					FromDate:        "2025-07-01",
+					ToDate:          "2026-06-30",
+					FiscalYearLabel: "FY2025-2026",
+					BaseCurrency:    "AUD",
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		fy := 2026
+		res, err := resolver.Query().TaxReport(ctx, &fy, nil, nil)
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if res.FiscalYearLabel != "FY2025-2026" {
+			t.Errorf("expected FY2025-2026, got %s", res.FiscalYearLabel)
+		}
+		if decimal.Decimal(res.Summary.TaxableIncome.TotalAssessableIncome.Amount).String() != "6124.54" {
+			t.Errorf("expected 6124.54, got %s", decimal.Decimal(res.Summary.TaxableIncome.TotalAssessableIncome.Amount).String())
+		}
+	})
+}
+
+func TestQueryResolver_ExportTaxScheduleCSV(t *testing.T) {
+	ctx := context.Background()
+
+	t.Run("successfully exports RFC 4180 CSV", func(t *testing.T) {
+		fakeClient := &fakePortfolioClient{
+			getTaxReportFn: func(ctx context.Context, in *pb.GetTaxReportRequest) (*pb.GetTaxReportResponse, error) {
+				return &pb.GetTaxReportResponse{
+					Disposals: []*pb.RealizedDisposalItem{
+						{
+							DisposalId:                 "disp-1",
+							TaxLotId:                   "lot-1",
+							SellTransactionId:          "tx-1",
+							InstrumentId:               "inst-1",
+							Ticker:                     "BHP",
+							Name:                       "BHP Group Ltd",
+							AcquiredDate:               "2024-03-15",
+							DisposedDate:               "2025-03-16",
+							QuantityDisposed:           decimalpb.ToProto(decimal.NewFromInt(100)),
+							CostBasisRelievedBase:      decimalpb.MoneyToProto(decimal.NewFromFloat(3000.00), "AUD"),
+							ProceedsBase:               decimalpb.MoneyToProto(decimal.NewFromFloat(5000.00), "AUD"),
+							RealizedPnlBase:            decimalpb.MoneyToProto(decimal.NewFromFloat(2000.00), "AUD"),
+							RealizedPnlPercent:         decimalpb.ToProto(decimal.NewFromFloat(66.67)),
+							HoldingPeriodDays:          366,
+							TermClassification:         pb.HoldingTermClassification_HOLDING_TERM_LONG_TERM,
+							IsCgtDiscountEligible:      true,
+							DiscountedTaxablePnlBase:   decimalpb.MoneyToProto(decimal.NewFromFloat(1000.00), "AUD"),
+						},
+					},
+					BaseCurrency: "AUD",
+				}, nil
+			},
+		}
+
+		resolver := &Resolver{PortfolioClient: fakeClient}
+		fy := 2026
+		csvStr, err := resolver.Query().ExportTaxScheduleCSV(ctx, &fy, nil, nil)
+		if err != nil {
+			t.Fatalf("expected no error, got: %v", err)
+		}
+		if csvStr == "" {
+			t.Fatal("expected non-empty CSV string")
+		}
+	})
+}
+
 
 
 
