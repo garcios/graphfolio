@@ -236,3 +236,70 @@ func TestSimulateDRIPCompounding(t *testing.T) {
 		t.Errorf("expected DRIP benefit amount to equal difference (%s), got %s", diff, res.DRIPBenefitAmount)
 	}
 }
+
+func TestCalculateForwardYieldAnalytics_UsesHoldingFXRateToBase(t *testing.T) {
+	now, _ := time.Parse("2006-01-02", "2026-10-23")
+	instID := uuid.New()
+
+	holdings := []domain.HoldingWithPrice{
+		{
+			InstrumentID:       instID,
+			Ticker:             "SAP.DE",
+			Name:               "SAP SE",
+			InstrumentCurrency: "EUR",
+			Quantity:           decimal.RequireFromString("100"),
+			LatestPrice:        decimal.RequireFromString("50.00"), // 5000 EUR
+			FXRateToBase:       decimal.RequireFromString("1.10"),  // 1 EUR = 1.10 USD -> 5500 USD
+		},
+	}
+
+	sched := domain.DividendSchedule{
+		ID:             uuid.New(),
+		InstrumentID:   instID,
+		AmountPerShare: decimal.RequireFromString("2.00"),
+		CurrencyCode:   "EUR",
+		Frequency:      domain.DividendFreqAnnual,
+		ExDate:         now.AddDate(0, 1, 0),
+		PaymentDate:    now.AddDate(0, 1, 15),
+	}
+
+	latestSchedules := map[uuid.UUID]domain.DividendSchedule{
+		instID: sched,
+	}
+
+	// fxRates map does NOT contain EUR
+	emptyFXRates := map[string]decimal.Decimal{}
+
+	analytics := domain.CalculateForwardYieldAnalytics(
+		holdings,
+		latestSchedules,
+		[]domain.DividendSchedule{sched},
+		nil,
+		nil,
+		nil,
+		emptyFXRates,
+		"USD",
+		now,
+	)
+
+	if analytics == nil {
+		t.Fatalf("expected non-nil analytics")
+	}
+
+	if len(analytics.HoldingsYield) != 1 {
+		t.Fatalf("expected 1 holding yield item, got %d", len(analytics.HoldingsYield))
+	}
+
+	item := analytics.HoldingsYield[0]
+	// Market value should be 100 * 50 * 1.10 = 5500 USD
+	expectedMarketVal := decimal.RequireFromString("5500.00")
+	if !item.CurrentMarketValue.Amount.Equal(expectedMarketVal) {
+		t.Errorf("expected CurrentMarketValue %s USD, got %s", expectedMarketVal, item.CurrentMarketValue.Amount)
+	}
+
+	// Projected annual cash: 100 * 2.00 * 1.10 = 220 USD
+	expectedDivBase := decimal.RequireFromString("220.00")
+	if !item.ProjectedAnnualCash.Amount.Equal(expectedDivBase) {
+		t.Errorf("expected ProjectedAnnualCash %s USD, got %s", expectedDivBase, item.ProjectedAnnualCash.Amount)
+	}
+}

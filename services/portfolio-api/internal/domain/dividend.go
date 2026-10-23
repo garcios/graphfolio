@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"math"
 	"time"
 
 	"github.com/google/uuid"
@@ -196,9 +197,13 @@ func CalculateForwardYieldAnalytics(
 		}
 		holdingsMap[h.InstrumentID] = h
 
-		fx := decimal.NewFromInt(1)
-		if r, ok := fxRates[h.InstrumentCurrency]; ok && r.IsPositive() {
-			fx = r
+		fx := h.FXRateToBase
+		if !fx.IsPositive() {
+			if r, ok := fxRates[h.InstrumentCurrency]; ok && r.IsPositive() {
+				fx = r
+			} else {
+				fx = decimal.NewFromInt(1)
+			}
 		}
 
 		mvBase := h.Quantity.Mul(h.LatestPrice).Mul(fx)
@@ -223,8 +228,15 @@ func CalculateForwardYieldAnalytics(
 			nextPay = &tPay
 		}
 
+		divFX := fx
+		if hasSched && sched.CurrencyCode != "" && sched.CurrencyCode != h.InstrumentCurrency {
+			if r, ok := fxRates[sched.CurrencyCode]; ok && r.IsPositive() {
+				divFX = r
+			}
+		}
+
 		annualDPS := AnnualizeDPS(dps, freq)
-		projCashBase := h.Quantity.Mul(annualDPS).Mul(fx)
+		projCashBase := h.Quantity.Mul(annualDPS).Mul(divFX)
 		totalForwardAnnualIncome = totalForwardAnnualIncome.Add(projCashBase)
 
 		currYield := decimal.Zero
@@ -321,7 +333,9 @@ func CalculateForwardYieldAnalytics(
 			continue
 		}
 		fx := decimal.NewFromInt(1)
-		if r, ok := fxRates[s.CurrencyCode]; ok && r.IsPositive() {
+		if h.FXRateToBase.IsPositive() && (s.CurrencyCode == "" || s.CurrencyCode == h.InstrumentCurrency) {
+			fx = h.FXRateToBase
+		} else if r, ok := fxRates[s.CurrencyCode]; ok && r.IsPositive() {
 			fx = r
 		}
 		amountBase := h.Quantity.Mul(s.AmountPerShare).Mul(fx)
@@ -344,8 +358,11 @@ func CalculateForwardYieldAnalytics(
 		if !ok || !shares.IsPositive() {
 			continue
 		}
+		h, exists := holdingsMap[s.InstrumentID]
 		fx := decimal.NewFromInt(1)
-		if r, ok := fxRates[s.CurrencyCode]; ok && r.IsPositive() {
+		if exists && h.FXRateToBase.IsPositive() && (s.CurrencyCode == "" || s.CurrencyCode == h.InstrumentCurrency) {
+			fx = h.FXRateToBase
+		} else if r, ok := fxRates[s.CurrencyCode]; ok && r.IsPositive() {
 			fx = r
 		}
 		whtRate := s.WithholdingTaxPct.DivRound(hundred, 4)
@@ -369,15 +386,7 @@ func pow1_3(x float64) float64 {
 	if x <= 0 {
 		return 0
 	}
-	// x^(1/3) using Newton-Raphson approximation
-	guess := x / 3.0
-	if guess < 1.0 {
-		guess = 1.0
-	}
-	for i := 0; i < 15; i++ {
-		guess = (2.0*guess + x/(guess*guess)) / 3.0
-	}
-	return guess
+	return math.Cbrt(x)
 }
 
 // SimulateDRIPCompounding models dual compounding strategies: 100% DRIP vs Cash Payout.
@@ -485,61 +494,6 @@ func powFloat(base, exp float64) float64 {
 	if base <= 0 {
 		return 0
 	}
-	// using math-free Taylor series / exponential for portability
-	// or standard exp(exp * ln(base))
-	return expFloat(exp * lnFloat(base))
-}
-
-func lnFloat(x float64) float64 {
-	if x <= 0 {
-		return 0
-	}
-	// ln(x) using rapid expansion
-	n := 0
-	for x > 2.0 {
-		x /= 2.0
-		n++
-	}
-	for x < 0.5 {
-		x *= 2.0
-		n--
-	}
-	// x is now in [0.5, 2.0]
-	// y = (x - 1) / (x + 1)
-	y := (x - 1.0) / (x + 1.0)
-	y2 := y * y
-	sum := y
-	term := y
-	for k := 3; k <= 19; k += 2 {
-		term *= y2
-		sum += term / float64(k)
-	}
-	return 2.0*sum + float64(n)*0.69314718056
-}
-
-func expFloat(x float64) float64 {
-	// e^x using Taylor series
-	// Range reduction: e^(k*ln2 + r) = 2^k * e^r
-	k := int(x / 0.69314718056)
-	r := x - float64(k)*0.69314718056
-	// e^r for r in ~[-0.35, 0.35]
-	term := 1.0
-	sum := 1.0
-	for i := 1; i <= 15; i++ {
-		term *= r / float64(i)
-		sum += term
-	}
-	// scale by 2^k
-	scale := 1.0
-	if k > 0 {
-		for i := 0; i < k; i++ {
-			scale *= 2.0
-		}
-	} else if k < 0 {
-		for i := 0; i < -k; i++ {
-			scale /= 2.0
-		}
-	}
-	return sum * scale
+	return math.Pow(base, exp)
 }
 

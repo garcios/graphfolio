@@ -202,6 +202,8 @@ export const Dashboard = () => {
         displayName: true,
         displayCurrency: true,
         theme: true,
+        financialYearEndMonth: true,
+        financialYearEndDay: true,
       },
       supportedCurrencies: {
         code: true,
@@ -737,7 +739,11 @@ export const Dashboard = () => {
           }}
         />
       ) : (
-        <ReportsView preferredCurrency={userPrefs?.displayCurrency} />
+        <ReportsView
+          preferredCurrency={userPrefs?.displayCurrency}
+          financialYearEndMonth={userPrefs?.financialYearEndMonth}
+          financialYearEndDay={userPrefs?.financialYearEndDay}
+        />
       )}
 
       <AddTransactionModal

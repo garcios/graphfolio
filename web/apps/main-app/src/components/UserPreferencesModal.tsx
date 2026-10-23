@@ -136,6 +136,8 @@ export function calculateFiscalYearBounds(
     prevLabel: prev.label,
     startDate: current.startDate,
     endDate: current.endDate,
+    prevStartDate: prev.startDate,
+    prevEndDate: prev.endDate,
   };
 }
 

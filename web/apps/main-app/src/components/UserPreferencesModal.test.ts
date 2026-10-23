@@ -17,6 +17,8 @@ describe('User Preferences EOFY Configuration (US-PREF-102)', () => {
       expect(bounds.prevPeriod).toBe('1 Jul 2023 – 30 Jun 2024 (FY24)');
       expect(bounds.currentLabel).toBe('FY25');
       expect(bounds.prevLabel).toBe('FY24');
+      expect(bounds.prevStartDate).toEqual(new Date(2023, 6, 1)); // 1 Jul 2023
+      expect(bounds.prevEndDate).toEqual(new Date(2024, 5, 30));   // 30 Jun 2024
     });
 
     it('calculates Australian financial year bounds on exact EOFY day (30 June 2025)', () => {

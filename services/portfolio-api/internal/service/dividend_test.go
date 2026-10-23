@@ -232,3 +232,73 @@ func TestPortfolioService_SimulateDRIP(t *testing.T) {
 		t.Errorf("expected 5 yearly points, got %d", len(res.Points))
 	}
 }
+
+func TestPortfolioService_SimulateDRIP_UsesHoldingsMarketValue(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockRepo := mocks.NewMockRepository(ctrl)
+
+	portfolioID := uuid.New()
+	userUUID := uuid.New()
+	userID := userUUID.String()
+
+	mockPortfolio := &domain.Portfolio{
+		ID:           portfolioID,
+		UserID:       userUUID,
+		BaseCurrency: "USD",
+	}
+
+	inst1 := uuid.New()
+	inst2 := uuid.New()
+	holdings := []domain.HoldingWithPrice{
+		{
+			InstrumentID:       inst1,
+			Ticker:             "AAPL",
+			Name:               "Apple Inc.",
+			InstrumentCurrency: "USD",
+			Quantity:           decimal.RequireFromString("10"),
+			LatestPrice:        decimal.RequireFromString("150.00"),
+			FXRateToBase:       decimal.NewFromInt(1),
+		},
+		{
+			InstrumentID:       inst2,
+			Ticker:             "BHP.AX",
+			Name:               "BHP Group",
+			InstrumentCurrency: "AUD",
+			Quantity:           decimal.RequireFromString("100"),
+			LatestPrice:        decimal.RequireFromString("30.00"),
+			FXRateToBase:       decimal.RequireFromString("0.65"), // 3000 AUD * 0.65 = 1950 USD
+		},
+	}
+
+	now := time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC)
+	svc := service.NewPortfolioService(mockRepo, service.WithNowFunc(func() time.Time { return now }))
+
+	mockRepo.EXPECT().FindPortfolioByUser(gomock.Any(), userID).Return(mockPortfolio, nil).Times(2)
+	mockRepo.EXPECT().GetHoldingsWithMarketData(gomock.Any(), portfolioID).Return(holdings, nil)
+	mockRepo.EXPECT().GetUpcomingDividendSchedules(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil, nil)
+	mockRepo.EXPECT().ListDividendSchedulesByInstrument(gomock.Any(), inst1).Return(nil, nil).AnyTimes()
+	mockRepo.EXPECT().ListDividendSchedulesByInstrument(gomock.Any(), inst2).Return(nil, nil).AnyTimes()
+	mockRepo.EXPECT().GetCashFXRates(gomock.Any(), "USD").Return(nil, nil)
+
+	input := domain.DRIPSimulationInput{
+		HorizonYears:           5,
+		DividendGrowthRatePct:  decimal.RequireFromString("5.0"),
+		CapitalAppreciationPct: decimal.RequireFromString("7.0"),
+	}
+
+	res, err := svc.SimulateDRIP(context.Background(), userID, input)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if res == nil {
+		t.Fatalf("expected non-nil result")
+	}
+
+	// Expected invested assets value: (10 * 150) + (100 * 30 * 0.65) = 1500 + 1950 = 3450 USD
+	expectedStartVal := decimal.RequireFromString("3450.00")
+	if !res.StartingPortfolioValue.Equal(expectedStartVal) {
+		t.Errorf("expected StartingPortfolioValue to be %s (live invested assets), got %s", expectedStartVal, res.StartingPortfolioValue)
+	}
+}
