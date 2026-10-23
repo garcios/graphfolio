@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"portfolio-api/internal/domain"
@@ -102,6 +103,32 @@ func ProcessLedger(
 			cashBalances[tx.CurrencyCode] = cashBalances[tx.CurrencyCode].Add(netIncome)
 			if tx.InstrumentID != nil {
 				dividendsByInstrument[*tx.InstrumentID] = dividendsByInstrument[*tx.InstrumentID].Add(netIncome.Mul(fxRate))
+			}
+
+		case domain.TxTypeFXConversion:
+			targetCurrency := parseFXTargetFromNotes(tx.Notes)
+			targetAmount := tx.Amount
+			if tx.Quantity != nil && tx.Quantity.IsPositive() {
+				targetAmount = *tx.Quantity
+			} else if tx.Price != nil && tx.Price.IsPositive() {
+				targetAmount = tx.Amount.Mul(*tx.Price)
+			}
+
+			// Debit source currency
+			cashBalances[tx.CurrencyCode] = cashBalances[tx.CurrencyCode].Sub(tx.Amount)
+
+			// Credit target currency
+			if targetCurrency != "" {
+				cashBalances[targetCurrency] = cashBalances[targetCurrency].Add(targetAmount)
+			}
+
+			// Deduct fee
+			if tx.Fee.IsPositive() {
+				feeCurr := tx.CurrencyCode
+				if tx.FeeCurrencyCode != nil && *tx.FeeCurrencyCode != "" {
+					feeCurr = *tx.FeeCurrencyCode
+				}
+				cashBalances[feeCurr] = cashBalances[feeCurr].Sub(tx.Fee)
 			}
 
 		case domain.TxTypeBuy, domain.TxTypeTransferIn:
@@ -355,4 +382,47 @@ func ProcessLedger(
 
 	_ = time.Now()
 	return allLots, allDisposals, holdings, cashList, nil
+}
+
+func parseFXTargetFromNotes(notes *string) string {
+	if notes == nil {
+		return ""
+	}
+	s := strings.TrimSpace(*notes)
+	upper := strings.ToUpper(s)
+	if strings.HasPrefix(upper, "TO:") {
+		rest := strings.TrimSpace(s[3:])
+		parts := strings.Split(rest, "|")
+		cand := strings.TrimSpace(parts[0])
+		if len(cand) == 3 {
+			return strings.ToUpper(cand)
+		}
+	}
+	if idx := strings.Index(s, "->"); idx != -1 {
+		rest := strings.TrimSpace(s[idx+2:])
+		parts := strings.Fields(rest)
+		if len(parts) > 0 && len(parts[0]) == 3 {
+			return strings.ToUpper(parts[0])
+		}
+	}
+	// Check for "TO <ccy>" or "TO <amount> <ccy>"
+	fields := strings.Fields(upper)
+	for i, f := range fields {
+		if (f == "TO" || f == "TO:") && i+1 < len(fields) {
+			cand := strings.Trim(fields[i+1], ":,;|")
+			if len(cand) == 3 {
+				return cand
+			}
+			if i+2 < len(fields) {
+				cand2 := strings.Trim(fields[i+2], ":,;|")
+				if len(cand2) == 3 {
+					return cand2
+				}
+			}
+		}
+	}
+	if len(s) == 3 {
+		return strings.ToUpper(s)
+	}
+	return ""
 }

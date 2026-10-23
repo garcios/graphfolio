@@ -211,6 +211,8 @@ func (s *portfolioService) UpdatePortfolioBaseCurrency(ctx context.Context, user
 		return nil, fmt.Errorf("service: failed to update portfolio base currency: %w", err)
 	}
 
+	_ = s.RebuildProjections(ctx, userID)
+
 	return s.GetPortfolioSummary(ctx, userID)
 }
 

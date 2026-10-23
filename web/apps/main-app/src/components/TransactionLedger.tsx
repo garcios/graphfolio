@@ -46,6 +46,7 @@ export const filterTypes: Array<{ label: string; value: string | null }> = [
   { label: 'Split', value: 'SPLIT' },
   { label: 'Deposit', value: 'DEPOSIT' },
   { label: 'Withdrawal', value: 'WITHDRAWAL' },
+  { label: 'FX Conv', value: 'FX_CONVERSION' },
 ];
 
 export function toggleSortDirection(current: 'DESC' | 'ASC'): 'DESC' | 'ASC' {
@@ -102,6 +103,8 @@ export function getBadgeClass(type: string): string {
       return 'badge-type deposit';
     case 'WITHDRAWAL':
       return 'badge-type withdrawal';
+    case 'FX_CONVERSION':
+      return 'badge-type fx';
     default:
       return 'badge-type other';
   }
@@ -117,6 +120,9 @@ export function getEmptyStateMessage(
   }
   if (selectedType === 'INTEREST') {
     return 'No interest transactions found for this portfolio.';
+  }
+  if (selectedType === 'FX_CONVERSION') {
+    return 'No foreign exchange conversion transactions found for this portfolio.';
   }
   if (trimmed) {
     return `No transactions found matching "${trimmed.toUpperCase()}".`;
@@ -506,7 +512,11 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
                       </td>
                       <td>
                         <div className="cell-asset">
-                          {tx.symbol ? (
+                          {tx.type === 'FX_CONVERSION' ? (
+                            <span className="asset-symbol">
+                              {tx.amount.currencyCode} &rarr; {tx.symbol || 'FX'}
+                            </span>
+                          ) : tx.symbol ? (
                             <>
                               <span className="asset-symbol">{tx.symbol}</span>
                               {tx.instrumentName && (

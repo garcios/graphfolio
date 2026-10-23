@@ -131,6 +131,13 @@
   box-shadow: 0 0 12px rgba(6, 182, 212, 0.45);
 }
 
+.type-tab.active.fx {
+  background: linear-gradient(135deg, #eab308, #ca8a04);
+  color: #000;
+  border-color: #facc15;
+  box-shadow: 0 0 12px rgba(234, 179, 8, 0.45);
+}
+
 .modal-form {
   padding: 1rem 1.75rem 1.75rem;
   display: flex;

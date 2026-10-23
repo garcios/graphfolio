@@ -65,11 +65,12 @@ type CashFlowItem struct {
 }
 
 type CashFlowSummary struct {
-	StartingCashBalance Money
-	TotalInflows        Money
-	TotalOutflows       Money
-	NetCashFlow         Money
-	EndingCashBalance   Money
+	StartingCashBalance  Money
+	TotalInflows         Money
+	TotalOutflows        Money
+	NetCashFlow          Money
+	UnrealizedFXGainLoss Money
+	EndingCashBalance    Money
 }
 
 type CashFlowCategoryBreakdown struct {
@@ -165,6 +166,15 @@ func CalculateTransactionCashImpact(
 		category = CategoryCapitalDeposits
 		amountBase = decimal.Zero
 		feeBase = decimal.Zero
+		taxBase = decimal.Zero
+
+	case TxTypeFXConversion:
+		// Currency conversion between cash accounts:
+		// Net capital impact on consolidated base portfolio is -feeBase
+		direction = FlowOutflow
+		category = CategoryFees
+		netImpact = feeBase.Neg()
+		amountBase = decimal.Zero
 		taxBase = decimal.Zero
 
 	default:

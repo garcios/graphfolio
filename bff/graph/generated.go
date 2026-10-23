@@ -145,11 +145,12 @@ type ComplexityRoot struct {
 	}
 
 	CashFlowSummary struct {
-		EndingCashBalance   func(childComplexity int) int
-		NetCashFlow         func(childComplexity int) int
-		StartingCashBalance func(childComplexity int) int
-		TotalInflows        func(childComplexity int) int
-		TotalOutflows       func(childComplexity int) int
+		EndingCashBalance    func(childComplexity int) int
+		NetCashFlow          func(childComplexity int) int
+		StartingCashBalance  func(childComplexity int) int
+		TotalInflows         func(childComplexity int) int
+		TotalOutflows        func(childComplexity int) int
+		UnrealizedFxGainLoss func(childComplexity int) int
 	}
 
 	ChangePasswordPayload struct {
@@ -1162,6 +1163,12 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.CashFlowSummary.TotalOutflows(childComplexity), true
+	case "CashFlowSummary.unrealizedFxGainLoss":
+		if e.ComplexityRoot.CashFlowSummary.UnrealizedFxGainLoss == nil {
+			break
+		}
+
+		return e.ComplexityRoot.CashFlowSummary.UnrealizedFxGainLoss(childComplexity), true
 
 	case "ChangePasswordPayload.message":
 		if e.ComplexityRoot.ChangePasswordPayload.Message == nil {
@@ -3661,6 +3668,8 @@ func (ec *executionContext) childFields_CashFlowSummary(ctx context.Context, fie
 		return ec.fieldContext_CashFlowSummary_netCashFlow(ctx, field)
 	case "endingCashBalance":
 		return ec.fieldContext_CashFlowSummary_endingCashBalance(ctx, field)
+	case "unrealizedFxGainLoss":
+		return ec.fieldContext_CashFlowSummary_unrealizedFxGainLoss(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type CashFlowSummary", field.Name)
 }
@@ -7443,6 +7452,38 @@ func (ec *executionContext) _CashFlowSummary_endingCashBalance(ctx context.Conte
 	)
 }
 func (ec *executionContext) fieldContext_CashFlowSummary_endingCashBalance(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CashFlowSummary",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CashFlowSummary_unrealizedFxGainLoss(ctx context.Context, field graphql.CollectedField, obj *model.CashFlowSummary) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_CashFlowSummary_unrealizedFxGainLoss(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.UnrealizedFxGainLoss, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalNMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		true,
+	)
+}
+func (ec *executionContext) fieldContext_CashFlowSummary_unrealizedFxGainLoss(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "CashFlowSummary",
 		Field:      field,
@@ -19175,6 +19216,11 @@ func (ec *executionContext) _CashFlowSummary(ctx context.Context, sel ast.Select
 			}
 		case "endingCashBalance":
 			out.Values[i] = ec._CashFlowSummary_endingCashBalance(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "unrealizedFxGainLoss":
+			out.Values[i] = ec._CashFlowSummary_unrealizedFxGainLoss(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

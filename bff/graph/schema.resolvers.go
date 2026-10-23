@@ -1049,7 +1049,6 @@ func (r *queryResolver) SimulateDrip(ctx context.Context, input model.DRIPSimula
 	return toModelDRIPSimulationResult(resp), nil
 }
 
-
 // Mutation returns MutationResolver implementation.
 func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 

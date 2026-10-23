@@ -40,7 +40,7 @@ type Repository interface {
 	UpdateTransaction(ctx context.Context, portfolioID uuid.UUID, tx domain.Transaction) (*domain.Transaction, error)
 	FindInstrumentBySymbol(ctx context.Context, symbol string) (*domain.Instrument, error)
 	ListActiveInstruments(ctx context.Context) ([]domain.Instrument, error)
-	GetFXRate(ctx context.Context, fromCurrency, toCurrency string) (decimal.Decimal, error)
+	GetFXRate(ctx context.Context, fromCurrency, toCurrency string, asOf ...time.Time) (decimal.Decimal, error)
 
 	// Admin: Asset Directory Management
 	ListAllInstruments(ctx context.Context, isActive *bool, search *string) ([]domain.Instrument, error)

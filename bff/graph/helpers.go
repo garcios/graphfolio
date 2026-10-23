@@ -586,11 +586,12 @@ func toModelCashFlowReport(resp *pb.GetCashFlowReportResponse) *model.CashFlowRe
 	}
 
 	summary := &model.CashFlowSummary{
-		StartingCashBalance: toModelMoney(resp.GetSummary().GetStartingCashBalance()),
-		TotalInflows:        toModelMoney(resp.GetSummary().GetTotalInflows()),
-		TotalOutflows:       toModelMoney(resp.GetSummary().GetTotalOutflows()),
-		NetCashFlow:         toModelMoney(resp.GetSummary().GetNetCashFlow()),
-		EndingCashBalance:   toModelMoney(resp.GetSummary().GetEndingCashBalance()),
+		StartingCashBalance:  toModelMoney(resp.GetSummary().GetStartingCashBalance()),
+		TotalInflows:         toModelMoney(resp.GetSummary().GetTotalInflows()),
+		TotalOutflows:        toModelMoney(resp.GetSummary().GetTotalOutflows()),
+		NetCashFlow:          toModelMoney(resp.GetSummary().GetNetCashFlow()),
+		EndingCashBalance:    toModelMoney(resp.GetSummary().GetEndingCashBalance()),
+		UnrealizedFxGainLoss: toModelMoney(resp.GetSummary().GetUnrealizedFxGainLoss()),
 	}
 
 	breakdown := &model.CashFlowCategoryBreakdown{

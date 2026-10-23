@@ -68,7 +68,7 @@ func (s *portfolioService) AddTransaction(ctx context.Context, input domain.AddT
 		}
 
 		if inst.CurrencyCode != portfolio.BaseCurrency {
-			rate, err := s.repo.GetFXRate(ctx, inst.CurrencyCode, portfolio.BaseCurrency)
+			rate, err := s.repo.GetFXRate(ctx, inst.CurrencyCode, portfolio.BaseCurrency, tradeDate)
 			if err == nil && rate.IsPositive() {
 				fxRateToBase = &rate
 			}
@@ -147,7 +147,7 @@ func (s *portfolioService) AddTransaction(ctx context.Context, input domain.AddT
 		}
 
 		if currencyCode != portfolio.BaseCurrency {
-			rate, err := s.repo.GetFXRate(ctx, currencyCode, portfolio.BaseCurrency)
+			rate, err := s.repo.GetFXRate(ctx, currencyCode, portfolio.BaseCurrency, tradeDate)
 			if err == nil && rate.IsPositive() {
 				fxRateToBase = &rate
 			}
@@ -201,7 +201,7 @@ func (s *portfolioService) AddTransaction(ctx context.Context, input domain.AddT
 		}
 
 		if currencyCode != portfolio.BaseCurrency {
-			rate, err := s.repo.GetFXRate(ctx, currencyCode, portfolio.BaseCurrency)
+			rate, err := s.repo.GetFXRate(ctx, currencyCode, portfolio.BaseCurrency, tradeDate)
 			if err == nil && rate.IsPositive() {
 				fxRateToBase = &rate
 			}
@@ -268,6 +268,105 @@ func (s *portfolioService) AddTransaction(ctx context.Context, input domain.AddT
 			CurrencyCode: currencyCode,
 			Fee:          fee,
 			Notes:        input.Notes,
+		}
+
+		savedTx, err := s.repo.InsertTransaction(ctx, tx)
+		if err != nil {
+			return nil, nil, fmt.Errorf("service: insert transaction: %w", err)
+		}
+
+		summary, err := s.postTransactionUpdate(ctx, userID, portfolio.ID, tradeDate)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		return savedTx, summary, nil
+
+	case domain.TxTypeFXConversion:
+		if input.Amount == nil || !input.Amount.IsPositive() {
+			return nil, nil, fmt.Errorf("service: positive source amount is required for FX_CONVERSION")
+		}
+
+		currencyCode = portfolio.BaseCurrency
+		if input.CurrencyCode != nil && *input.CurrencyCode != "" {
+			currencyCode = strings.ToUpper(strings.TrimSpace(*input.CurrencyCode))
+		}
+
+		targetCurrency := ""
+		if input.Symbol != nil && *input.Symbol != "" {
+			targetCurrency = strings.ToUpper(strings.TrimSpace(*input.Symbol))
+		}
+		if targetCurrency == "" && input.Notes != nil {
+			targetCurrency = parseFXTargetFromNotes(input.Notes)
+		}
+		if targetCurrency == "" {
+			return nil, nil, fmt.Errorf("service: target currency is required for FX_CONVERSION")
+		}
+		if currencyCode == targetCurrency {
+			return nil, nil, fmt.Errorf("service: source and target currency cannot be identical for FX_CONVERSION")
+		}
+
+		// Quantity represents target amount received
+		var targetAmount decimal.Decimal
+		if input.Quantity != nil && input.Quantity.IsPositive() {
+			targetAmount = *input.Quantity
+		} else if input.Price != nil && input.Price.IsPositive() {
+			targetAmount = input.Amount.Mul(*input.Price)
+		} else {
+			// Auto-lookup rate between source and target as of tradeDate
+			fxRate, err := s.repo.GetFXRate(ctx, currencyCode, targetCurrency, tradeDate)
+			if err == nil && fxRate.IsPositive() {
+				targetAmount = input.Amount.Mul(fxRate)
+			} else {
+				return nil, nil, fmt.Errorf("service: positive target quantity or rate is required for FX_CONVERSION")
+			}
+		}
+
+		// Calculate rate
+		rate := targetAmount.DivRound(*input.Amount, 8)
+		if input.Price != nil && input.Price.IsPositive() {
+			rate = *input.Price
+		}
+
+		// FX rate to portfolio base currency
+		if currencyCode != portfolio.BaseCurrency {
+			baseRate, err := s.repo.GetFXRate(ctx, currencyCode, portfolio.BaseCurrency, tradeDate)
+			if err == nil && baseRate.IsPositive() {
+				fxRateToBase = &baseRate
+			}
+		} else {
+			oneRate := decimal.NewFromInt(1)
+			fxRateToBase = &oneRate
+		}
+
+		feeCurrencyCode := currencyCode
+		if input.FeeCurrencyCode != nil && *input.FeeCurrencyCode != "" {
+			feeCurrencyCode = *input.FeeCurrencyCode
+		}
+
+		// Format notes with TO:<targetCurrency> tag for deterministic ledger replay
+		notesStr := fmt.Sprintf("TO:%s", targetCurrency)
+		if input.Notes != nil && strings.TrimSpace(*input.Notes) != "" {
+			cleanNote := strings.TrimSpace(*input.Notes)
+			if !strings.HasPrefix(cleanNote, "TO:") {
+				notesStr = fmt.Sprintf("TO:%s | %s", targetCurrency, cleanNote)
+			} else {
+				notesStr = cleanNote
+			}
+		}
+
+		tx := domain.Transaction{
+			PortfolioID:     portfolio.ID,
+			Type:            input.Type,
+			TradeDate:       tradeDate,
+			Quantity:        &targetAmount,
+			Price:           &rate,
+			Amount:          *input.Amount,
+			CurrencyCode:    currencyCode,
+			Fee:             fee,
+			FeeCurrencyCode: &feeCurrencyCode,
+			FXRateToBase:    fxRateToBase,
+			Notes:           &notesStr,
 		}
 
 		savedTx, err := s.repo.InsertTransaction(ctx, tx)
@@ -454,7 +553,7 @@ func (s *portfolioService) UpdateTransaction(ctx context.Context, input domain.U
 		}
 
 		if inst.CurrencyCode != portfolio.BaseCurrency {
-			rate, err := s.repo.GetFXRate(ctx, inst.CurrencyCode, portfolio.BaseCurrency)
+			rate, err := s.repo.GetFXRate(ctx, inst.CurrencyCode, portfolio.BaseCurrency, tradeDate)
 			if err == nil && rate.IsPositive() {
 				fxRateToBase = &rate
 			}
@@ -521,7 +620,7 @@ func (s *portfolioService) UpdateTransaction(ctx context.Context, input domain.U
 		}
 
 		if currencyCode != portfolio.BaseCurrency {
-			rate, err := s.repo.GetFXRate(ctx, currencyCode, portfolio.BaseCurrency)
+			rate, err := s.repo.GetFXRate(ctx, currencyCode, portfolio.BaseCurrency, tradeDate)
 			if err == nil && rate.IsPositive() {
 				fxRateToBase = &rate
 			}
@@ -587,7 +686,7 @@ func (s *portfolioService) UpdateTransaction(ctx context.Context, input domain.U
 		}
 
 		if currencyCode != portfolio.BaseCurrency {
-			rate, err := s.repo.GetFXRate(ctx, currencyCode, portfolio.BaseCurrency)
+			rate, err := s.repo.GetFXRate(ctx, currencyCode, portfolio.BaseCurrency, tradeDate)
 			if err == nil && rate.IsPositive() {
 				fxRateToBase = &rate
 			}
@@ -698,6 +797,115 @@ func (s *portfolioService) UpdateTransaction(ctx context.Context, input domain.U
 			Transaction:    *updatedTx,
 			Symbol:         &symbol,
 			InstrumentName: &instName,
+		}, summary, nil
+
+	case domain.TxTypeFXConversion:
+		if input.Amount == nil || !input.Amount.IsPositive() {
+			return nil, nil, fmt.Errorf("service: positive source amount is required for FX_CONVERSION")
+		}
+
+		currencyCode = portfolio.BaseCurrency
+		if input.CurrencyCode != nil && *input.CurrencyCode != "" {
+			currencyCode = strings.ToUpper(strings.TrimSpace(*input.CurrencyCode))
+		}
+
+		targetCurrency := ""
+		if input.Symbol != nil && *input.Symbol != "" {
+			targetCurrency = strings.ToUpper(strings.TrimSpace(*input.Symbol))
+		}
+		if targetCurrency == "" && input.Notes != nil {
+			targetCurrency = parseFXTargetFromNotes(input.Notes)
+		}
+		if targetCurrency == "" && oldTx.Notes != nil {
+			targetCurrency = parseFXTargetFromNotes(oldTx.Notes)
+		}
+		if targetCurrency == "" {
+			return nil, nil, fmt.Errorf("service: target currency is required for FX_CONVERSION")
+		}
+		if currencyCode == targetCurrency {
+			return nil, nil, fmt.Errorf("service: source and target currency cannot be identical for FX_CONVERSION")
+		}
+
+		// Quantity represents target amount received
+		var targetAmount decimal.Decimal
+		if input.Quantity != nil && input.Quantity.IsPositive() {
+			targetAmount = *input.Quantity
+		} else if input.Price != nil && input.Price.IsPositive() {
+			targetAmount = input.Amount.Mul(*input.Price)
+		} else {
+			fxRate, err := s.repo.GetFXRate(ctx, currencyCode, targetCurrency, tradeDate)
+			if err == nil && fxRate.IsPositive() {
+				targetAmount = input.Amount.Mul(fxRate)
+			} else {
+				return nil, nil, fmt.Errorf("service: positive target quantity or rate is required for FX_CONVERSION")
+			}
+		}
+
+		rate := targetAmount.DivRound(*input.Amount, 8)
+		if input.Price != nil && input.Price.IsPositive() {
+			rate = *input.Price
+		}
+
+		if currencyCode != portfolio.BaseCurrency {
+			baseRate, err := s.repo.GetFXRate(ctx, currencyCode, portfolio.BaseCurrency, tradeDate)
+			if err == nil && baseRate.IsPositive() {
+				fxRateToBase = &baseRate
+			}
+		} else {
+			oneRate := decimal.NewFromInt(1)
+			fxRateToBase = &oneRate
+		}
+
+		feeCurrencyCode := currencyCode
+		if input.FeeCurrencyCode != nil && *input.FeeCurrencyCode != "" {
+			feeCurrencyCode = *input.FeeCurrencyCode
+		}
+
+		notesStr := fmt.Sprintf("TO:%s", targetCurrency)
+		if input.Notes != nil && strings.TrimSpace(*input.Notes) != "" {
+			cleanNote := strings.TrimSpace(*input.Notes)
+			if !strings.HasPrefix(cleanNote, "TO:") {
+				notesStr = fmt.Sprintf("TO:%s | %s", targetCurrency, cleanNote)
+			} else {
+				notesStr = cleanNote
+			}
+		}
+
+		proposedTx := domain.Transaction{
+			ID:              oldTx.ID,
+			PortfolioID:     portfolio.ID,
+			Type:            input.Type,
+			TradeDate:       tradeDate,
+			Quantity:        &targetAmount,
+			Price:           &rate,
+			Amount:          *input.Amount,
+			CurrencyCode:    currencyCode,
+			Fee:             fee,
+			FeeCurrencyCode: &feeCurrencyCode,
+			FXRateToBase:    fxRateToBase,
+			ExternalRef:     oldTx.ExternalRef,
+			Notes:           &notesStr,
+		}
+
+		updatedTx, err := s.repo.UpdateTransaction(ctx, portfolio.ID, proposedTx)
+		if err != nil {
+			return nil, nil, fmt.Errorf("service: update transaction: %w", err)
+		}
+
+		earliestDate := oldTx.TradeDate
+		if tradeDate.Before(earliestDate) {
+			earliestDate = tradeDate
+		}
+		summary, err := s.postTransactionUpdate(ctx, userID, portfolio.ID, earliestDate)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		targetSym := targetCurrency
+		return &domain.TransactionWithInstrument{
+			Transaction:    *updatedTx,
+			Symbol:         &targetSym,
+			InstrumentName: nil,
 		}, summary, nil
 
 	default:
@@ -887,7 +1095,7 @@ func (s *portfolioService) BatchImportTransactions(ctx context.Context, input do
 			currencyCode = inst.CurrencyCode
 
 			if inst.CurrencyCode != portfolio.BaseCurrency {
-				rate, err := s.repo.GetFXRate(ctx, inst.CurrencyCode, portfolio.BaseCurrency)
+				rate, err := s.repo.GetFXRate(ctx, inst.CurrencyCode, portfolio.BaseCurrency, item.TradeDate)
 				if err == nil && rate.IsPositive() {
 					fxRate = &rate
 				}
@@ -895,7 +1103,7 @@ func (s *portfolioService) BatchImportTransactions(ctx context.Context, input do
 		} else if item.CurrencyCode != "" {
 			currencyCode = strings.ToUpper(strings.TrimSpace(item.CurrencyCode))
 			if currencyCode != portfolio.BaseCurrency {
-				rate, err := s.repo.GetFXRate(ctx, currencyCode, portfolio.BaseCurrency)
+				rate, err := s.repo.GetFXRate(ctx, currencyCode, portfolio.BaseCurrency, item.TradeDate)
 				if err == nil && rate.IsPositive() {
 					fxRate = &rate
 				}

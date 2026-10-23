@@ -398,6 +398,7 @@ export interface CashFlowSummary {
     totalOutflows: Money
     netCashFlow: Money
     endingCashBalance: Money
+    unrealizedFxGainLoss: Money
     __typename: 'CashFlowSummary'
 }
 
@@ -1095,6 +1096,7 @@ export interface CashFlowSummaryGenqlSelection{
     totalOutflows?: MoneyGenqlSelection
     netCashFlow?: MoneyGenqlSelection
     endingCashBalance?: MoneyGenqlSelection
+    unrealizedFxGainLoss?: MoneyGenqlSelection
     __typename?: boolean | number
     __scalar?: boolean | number
 }

@@ -125,6 +125,7 @@ export const CashFlowReport: React.FC<CashFlowReportProps> = ({
             totalOutflows: { amount: true, currencyCode: true },
             netCashFlow: { amount: true, currencyCode: true },
             endingCashBalance: { amount: true, currencyCode: true },
+            unrealizedFxGainLoss: { amount: true, currencyCode: true },
           },
           breakdown: {
             deposits: { amount: true, currencyCode: true },
@@ -505,7 +506,13 @@ export const CashFlowReport: React.FC<CashFlowReportProps> = ({
             <div className="cfr-kpi-card reconciled">
               <span className="cfr-kpi-label">Ending Cash</span>
               <span className="cfr-kpi-value">{formatMoney(summary?.endingCashBalance)}</span>
-              <span className="reconciled-badge">✓ Reconciled Balance</span>
+              {summary?.unrealizedFxGainLoss && Number(summary.unrealizedFxGainLoss.amount) !== 0 ? (
+                <span className="reconciled-badge" style={{ color: Number(summary.unrealizedFxGainLoss.amount) >= 0 ? '#34d399' : '#f87171' }}>
+                  {Number(summary.unrealizedFxGainLoss.amount) >= 0 ? '+' : ''}{formatMoney(summary.unrealizedFxGainLoss)} FX gain/loss
+                </span>
+              ) : (
+                <span className="reconciled-badge">✓ Reconciled Balance</span>
+              )}
             </div>
           </div>
 
