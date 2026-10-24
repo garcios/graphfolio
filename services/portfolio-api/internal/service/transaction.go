@@ -212,6 +212,14 @@ func (s *portfolioService) AddTransaction(ctx context.Context, input domain.AddT
 			feeCurrencyCode = *input.FeeCurrencyCode
 		}
 
+		frankingCredit := decimal.Zero
+		if input.FrankingCredit != nil {
+			if input.FrankingCredit.IsNegative() {
+				return nil, nil, fmt.Errorf("service: franking credit cannot be negative")
+			}
+			frankingCredit = *input.FrankingCredit
+		}
+
 		tx := domain.Transaction{
 			PortfolioID:     portfolio.ID,
 			InstrumentID:    instID,
@@ -223,6 +231,8 @@ func (s *portfolioService) AddTransaction(ctx context.Context, input domain.AddT
 			FeeCurrencyCode: &feeCurrencyCode,
 			FXRateToBase:    fxRateToBase,
 			Notes:           input.Notes,
+			FrankingCredit:  frankingCredit,
+			FrankingPct:     input.FrankingPct,
 		}
 
 		savedTx, err := s.repo.InsertTransaction(ctx, tx)
@@ -697,6 +707,18 @@ func (s *portfolioService) UpdateTransaction(ctx context.Context, input domain.U
 			feeCurrencyCode = *input.FeeCurrencyCode
 		}
 
+		frankingCredit := oldTx.FrankingCredit
+		if input.FrankingCredit != nil {
+			if input.FrankingCredit.IsNegative() {
+				return nil, nil, fmt.Errorf("service: franking credit cannot be negative")
+			}
+			frankingCredit = *input.FrankingCredit
+		}
+		frankingPct := oldTx.FrankingPct
+		if input.FrankingPct != nil {
+			frankingPct = input.FrankingPct
+		}
+
 		proposedTx := domain.Transaction{
 			ID:              oldTx.ID,
 			PortfolioID:     portfolio.ID,
@@ -710,6 +732,8 @@ func (s *portfolioService) UpdateTransaction(ctx context.Context, input domain.U
 			FXRateToBase:    fxRateToBase,
 			ExternalRef:     oldTx.ExternalRef,
 			Notes:           input.Notes,
+			FrankingCredit:  frankingCredit,
+			FrankingPct:     frankingPct,
 		}
 
 		if oldTx.Type == domain.TxTypeBuy {
@@ -1153,6 +1177,8 @@ func (s *portfolioService) BatchImportTransactions(ctx context.Context, input do
 			FXRateToBase:    fxRate,
 			ExternalRef:     extRefPtr,
 			Notes:           notesPtr,
+			FrankingCredit:  item.FrankingCredit,
+			FrankingPct:     item.FrankingPct,
 		}
 
 		txsToInsert = append(txsToInsert, tx)

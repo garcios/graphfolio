@@ -456,6 +456,21 @@ export async function parseNabtradeCSV(lines: string[], headerIdx: number): Prom
     const rawPrice = getCol(cells, ['price', 'unit price', 'average price']);
     const rawBrokerage = getCol(cells, ['brokerage', 'fees', 'brokerage (inc. gst)']);
     const rawConsideration = getCol(cells, ['total consideration', 'net amount', 'gross amount']);
+    const rawFrankingCredit = getCol(cells, [
+      'franking credit',
+      'franking credits',
+      'franked credit',
+      'franked credits',
+      'franking credit ($)',
+      'franked amount',
+    ]);
+    const rawFrankingPct = getCol(cells, [
+      'franking %',
+      'franking (%)',
+      'franking percentage',
+      'franked %',
+      'franked (%)',
+    ]);
 
     try {
       if (!rawTradeDate) throw new Error('Missing trade date');
@@ -500,6 +515,22 @@ export async function parseNabtradeCSV(lines: string[], headerIdx: number): Prom
         amount = (type === 'BUY' ? principal + parseFloat(fee) : principal - parseFloat(fee)).toFixed(2);
       }
 
+      let frankingCredit: string | undefined = undefined;
+      if (rawFrankingCredit) {
+        const cleaned = cleanCurrency(rawFrankingCredit);
+        if (parseFloat(cleaned) > 0) {
+          frankingCredit = cleaned;
+        }
+      }
+
+      let frankingPct: string | undefined = undefined;
+      if (rawFrankingPct) {
+        const cleaned = rawFrankingPct.replace(/%/g, '').trim();
+        if (!isNaN(parseFloat(cleaned))) {
+          frankingPct = cleaned;
+        }
+      }
+
       let externalRef: string;
       if (rawConfirm) {
         externalRef = `nabtrade:${rawConfirm}`;
@@ -521,6 +552,8 @@ export async function parseNabtradeCSV(lines: string[], headerIdx: number): Prom
         fee,
         currencyCode: 'AUD',
         notes: `Imported from nabtrade CSV (Conf: ${rawConfirm || 'N/A'})`,
+        frankingCredit,
+        frankingPct,
       });
     } catch (err: any) {
       errors.push({

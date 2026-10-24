@@ -219,6 +219,24 @@ func (s *PortfolioServer) AddTransaction(ctx context.Context, req *pb.AddTransac
 		notes = &n
 	}
 
+	var frankingCredit *decimal.Decimal
+	if req.GetFrankingCredit() != nil && req.GetFrankingCredit().GetAmount() != nil {
+		fc, _, err := decimalpb.MoneyFromProto(req.GetFrankingCredit())
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid franking credit: %v", err)
+		}
+		frankingCredit = &fc
+	}
+
+	var frankingPct *decimal.Decimal
+	if req.GetFrankingPct() != nil {
+		fp, err := decimalpb.FromProto(req.GetFrankingPct())
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid franking percentage: %v", err)
+		}
+		frankingPct = &fp
+	}
+
 	input := domain.AddTransactionInput{
 		UserID:          req.GetUserId(),
 		Type:            txType,
@@ -231,6 +249,8 @@ func (s *PortfolioServer) AddTransaction(ctx context.Context, req *pb.AddTransac
 		Fee:             fee,
 		FeeCurrencyCode: feeCurrency,
 		Notes:           notes,
+		FrankingCredit:  frankingCredit,
+		FrankingPct:     frankingPct,
 	}
 
 	tx, summary, err := s.svc.AddTransaction(ctx, input)
@@ -458,6 +478,12 @@ func (s *PortfolioServer) ListTransactions(ctx context.Context, req *pb.ListTran
 		if item.ExternalRef != nil {
 			protoItem.ExternalRef = *item.ExternalRef
 		}
+		if item.FrankingCredit.IsPositive() {
+			protoItem.FrankingCredit = decimalpb.MoneyToProto(item.FrankingCredit, item.CurrencyCode)
+		}
+		if item.FrankingPct != nil {
+			protoItem.FrankingPct = decimalpb.ToProto(*item.FrankingPct)
+		}
 		protoItems[i] = protoItem
 	}
 
@@ -622,6 +648,24 @@ func (s *PortfolioServer) UpdateTransaction(ctx context.Context, req *pb.UpdateT
 		notes = &n
 	}
 
+	var frankingCredit *decimal.Decimal
+	if req.GetFrankingCredit() != nil && req.GetFrankingCredit().GetAmount() != nil {
+		fc, _, err := decimalpb.MoneyFromProto(req.GetFrankingCredit())
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid franking credit: %v", err)
+		}
+		frankingCredit = &fc
+	}
+
+	var frankingPct *decimal.Decimal
+	if req.GetFrankingPct() != nil {
+		fp, err := decimalpb.FromProto(req.GetFrankingPct())
+		if err != nil {
+			return nil, status.Errorf(codes.InvalidArgument, "invalid franking percentage: %v", err)
+		}
+		frankingPct = &fp
+	}
+
 	input := domain.UpdateTransactionInput{
 		UserID:          userID,
 		TransactionID:   req.GetTransactionId(),
@@ -636,6 +680,8 @@ func (s *PortfolioServer) UpdateTransaction(ctx context.Context, req *pb.UpdateT
 		FeeCurrencyCode: feeCurrency,
 		Notes:           notes,
 		FXRateToBase:    fxRate,
+		FrankingCredit:  frankingCredit,
+		FrankingPct:     frankingPct,
 	}
 
 	item, summary, err := s.svc.UpdateTransaction(ctx, input)
@@ -681,6 +727,21 @@ func (s *PortfolioServer) UpdateTransaction(ctx context.Context, req *pb.UpdateT
 	}
 	if item.Price != nil {
 		protoItem.Price = decimalpb.MoneyToProto(*item.Price, item.CurrencyCode)
+	}
+	if item.WithholdingTax.IsPositive() {
+		protoItem.WithholdingTax = decimalpb.MoneyToProto(item.WithholdingTax, item.CurrencyCode)
+	}
+	if item.FXRateToBase != nil {
+		protoItem.FxRateToBase = decimalpb.ToProto(*item.FXRateToBase)
+	}
+	if item.ExternalRef != nil {
+		protoItem.ExternalRef = *item.ExternalRef
+	}
+	if item.FrankingCredit.IsPositive() {
+		protoItem.FrankingCredit = decimalpb.MoneyToProto(item.FrankingCredit, item.CurrencyCode)
+	}
+	if item.FrankingPct != nil {
+		protoItem.FrankingPct = decimalpb.ToProto(*item.FrankingPct)
 	}
 
 	return &pb.UpdateTransactionResponse{
@@ -812,6 +873,22 @@ func (s *PortfolioServer) BatchImportTransactions(ctx context.Context, req *pb.B
 			currencyCode = item.GetPrice().GetCurrencyCode()
 		}
 
+		var frankingCredit decimal.Decimal
+		if item.GetFrankingCredit() != nil {
+			fc, err := decimalpb.FromProto(item.GetFrankingCredit())
+			if err == nil {
+				frankingCredit = fc
+			}
+		}
+
+		var frankingPct *decimal.Decimal
+		if item.GetFrankingPct() != nil {
+			fp, err := decimalpb.FromProto(item.GetFrankingPct())
+			if err == nil {
+				frankingPct = &fp
+			}
+		}
+
 		items = append(items, domain.ImportTransactionItem{
 			Type:            txType,
 			Symbol:          item.GetSymbol(),
@@ -825,6 +902,8 @@ func (s *PortfolioServer) BatchImportTransactions(ctx context.Context, req *pb.B
 			CurrencyCode:    currencyCode,
 			ExternalRef:     item.GetExternalRef(),
 			Notes:           item.GetNotes(),
+			FrankingCredit:  frankingCredit,
+			FrankingPct:     frankingPct,
 		})
 	}
 

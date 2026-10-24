@@ -140,9 +140,12 @@ message AddTransactionRequest {
   string            trade_date = 4; // YYYY-MM-DD
   common.v1.Decimal quantity   = 5; // e.g. "10"
   common.v1.Money   price      = 6; // unit price
-  common.v1.Money   amount     = 7; // total cash flow / value
-  common.v1.Money   fee        = 8; // optional fee
-  string            notes      = 9;
+  common.v1.Money            amount            = 7; // total cash flow / value
+  common.v1.Money            fee               = 8; // optional fee
+  string                     notes             = 9;
+  optional string            fee_currency_code = 10;
+  optional common.v1.Money   franking_credit   = 11;
+  optional common.v1.Decimal franking_pct      = 12;
 }
 
 message AddTransactionResponse {
@@ -251,6 +254,8 @@ message TransactionItem {
   common.v1.Money   withholding_tax     = 12;
   common.v1.Decimal fx_rate_to_base     = 13;
   string            external_ref        = 14;
+  common.v1.Money   franking_credit     = 15;
+  common.v1.Decimal franking_pct        = 16;
 }
 
 message ListTransactionsRequest {
@@ -293,6 +298,8 @@ message UpdateTransactionRequest {
   optional common.v1.Decimal fx_rate_to_base  = 11; // Optional manual override
   optional string           currency_code     = 12; // Cash or execution currency code
   optional string           fee_currency_code = 13;
+  optional common.v1.Money   franking_credit   = 14;
+  optional common.v1.Decimal franking_pct      = 15;
 }
 
 message UpdateTransactionResponse {
@@ -581,9 +588,11 @@ message ImportTransactionItem {
   common.v1.Decimal quantity      = 5;
   common.v1.Money   price         = 6;
   common.v1.Money   amount        = 7;
-  common.v1.Money   fee           = 8;
-  string            external_ref  = 9; // e.g. "nabtrade:C10982347" or "cs_sha256..."
-  string            notes         = 10;
+  common.v1.Money            fee               = 8;
+  string                     external_ref      = 9; // e.g. "nabtrade:C10982347" or "cs_sha256..."
+  string                     notes             = 10;
+  optional common.v1.Decimal franking_credit   = 11;
+  optional common.v1.Decimal franking_pct      = 12;
 }
 
 message BatchImportTransactionsRequest {

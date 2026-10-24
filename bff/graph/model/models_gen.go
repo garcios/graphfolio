@@ -20,6 +20,8 @@ type AddTransactionInput struct {
 	Fee             *Decimal        `json:"fee,omitempty"`
 	FeeCurrencyCode *string         `json:"feeCurrencyCode,omitempty"`
 	Notes           *string         `json:"notes,omitempty"`
+	FrankingCredit  *Decimal        `json:"frankingCredit,omitempty"`
+	FrankingPct     *Decimal        `json:"frankingPct,omitempty"`
 }
 
 type AddTransactionPayload struct {
@@ -372,6 +374,8 @@ type ImportTransactionInput struct {
 	FeeCurrencyCode *string         `json:"feeCurrencyCode,omitempty"`
 	CurrencyCode    *string         `json:"currencyCode,omitempty"`
 	Notes           *string         `json:"notes,omitempty"`
+	FrankingCredit  *Decimal        `json:"frankingCredit,omitempty"`
+	FrankingPct     *Decimal        `json:"frankingPct,omitempty"`
 }
 
 type IngestionStatus struct {
@@ -693,6 +697,8 @@ type TransactionItem struct {
 	WithholdingTax *Money          `json:"withholdingTax,omitempty"`
 	FxRateToBase   *Decimal        `json:"fxRateToBase,omitempty"`
 	ExternalRef    *string         `json:"externalRef,omitempty"`
+	FrankingCredit *Money          `json:"frankingCredit,omitempty"`
+	FrankingPct    *Decimal        `json:"frankingPct,omitempty"`
 }
 
 type TransactionsConnection struct {
@@ -737,6 +743,8 @@ type UpdateTransactionInput struct {
 	Fee             *Decimal        `json:"fee,omitempty"`
 	FeeCurrencyCode *string         `json:"feeCurrencyCode,omitempty"`
 	Notes           *string         `json:"notes,omitempty"`
+	FrankingCredit  *Decimal        `json:"frankingCredit,omitempty"`
+	FrankingPct     *Decimal        `json:"frankingPct,omitempty"`
 }
 
 type UpdateTransactionPayload struct {

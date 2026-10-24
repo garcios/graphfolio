@@ -3,7 +3,106 @@ import { client } from '@graphfolio/api-client';
 import type { TransactionItem } from './TransactionLedger';
 import './AddTransactionModal.css';
 
-type TransactionType = 'BUY' | 'SELL' | 'DIVIDEND' | 'SPLIT' | 'DEPOSIT' | 'WITHDRAWAL';
+export type TransactionType = 'BUY' | 'SELL' | 'DIVIDEND' | 'SPLIT' | 'DEPOSIT' | 'WITHDRAWAL';
+
+export function validateUpdateTransaction(params: {
+  type: TransactionType;
+  symbol?: string;
+  quantity?: string;
+  price?: string;
+  amount?: string;
+  splitRatioTo?: string;
+  splitRatioFrom?: string;
+}) {
+  const { type, symbol, quantity, price, amount, splitRatioTo, splitRatioFrom } = params;
+  if (type === 'BUY' || type === 'SELL') {
+    if (!symbol) throw new Error('Please select or specify an asset/symbol.');
+    if (!quantity || parseFloat(quantity) <= 0) throw new Error('Quantity must be greater than zero.');
+    if (!price || parseFloat(price) < 0) throw new Error('Price cannot be negative.');
+  } else if (type === 'DEPOSIT' || type === 'WITHDRAWAL') {
+    if (!amount || parseFloat(amount) <= 0) throw new Error('Amount must be greater than zero.');
+  } else if (type === 'DIVIDEND') {
+    if (!symbol) throw new Error('Please select or specify a symbol for dividend.');
+    if (!amount || parseFloat(amount) <= 0) throw new Error('Amount must be greater than zero.');
+  } else if (type === 'SPLIT') {
+    if (!symbol) throw new Error('Please select or specify an asset for the stock split.');
+    const to = parseFloat(splitRatioTo || '2');
+    const from = parseFloat(splitRatioFrom || '1');
+    if (isNaN(to) || to <= 0) throw new Error('New shares ratio must be greater than zero.');
+    if (isNaN(from) || from <= 0) throw new Error('Old shares ratio must be greater than zero.');
+  }
+}
+
+export function buildUpdateTransactionPayload(params: {
+  type: TransactionType;
+  symbol: string;
+  tradeDate: string;
+  currencyCode: string;
+  quantity?: string;
+  price?: string;
+  amount?: string;
+  fee?: string;
+  feeCurrencyCode?: string;
+  notes?: string;
+  frankingCredit?: string;
+  frankingPct?: string;
+  splitRatioTo?: string;
+  splitRatioFrom?: string;
+}) {
+  const {
+    type,
+    symbol,
+    tradeDate,
+    currencyCode,
+    quantity,
+    price,
+    amount,
+    fee,
+    feeCurrencyCode,
+    notes,
+    frankingCredit,
+    frankingPct,
+    splitRatioTo,
+    splitRatioFrom,
+  } = params;
+
+  const input: any = {
+    type,
+    tradeDate,
+    currencyCode,
+    notes: notes || undefined,
+    fee: fee ? fee : undefined,
+    feeCurrencyCode: (type === 'BUY' || type === 'SELL') ? feeCurrencyCode : (feeCurrencyCode || undefined),
+  };
+
+  if (type === 'BUY' || type === 'SELL') {
+    input.symbol = symbol;
+    input.quantity = quantity;
+    input.price = price;
+    input.amount = amount || (parseFloat(quantity || '0') * parseFloat(price || '0')).toFixed(2);
+  } else if (type === 'DEPOSIT' || type === 'WITHDRAWAL') {
+    input.amount = amount;
+  } else if (type === 'DIVIDEND') {
+    input.symbol = symbol;
+    input.amount = amount;
+    if (frankingCredit && parseFloat(frankingCredit) > 0) {
+      input.frankingCredit = frankingCredit;
+    }
+    if (frankingPct && !isNaN(parseFloat(frankingPct))) {
+      input.frankingPct = frankingPct;
+    }
+  } else if (type === 'SPLIT') {
+    const to = parseFloat(splitRatioTo || '2');
+    const from = parseFloat(splitRatioFrom || '1');
+    const ratioMultiplier = (to / from).toFixed(8).replace(/\.?0+$/, '');
+    input.symbol = symbol;
+    input.quantity = ratioMultiplier;
+    input.price = '0.00';
+    input.amount = '0.00';
+  }
+
+  return input;
+}
 
 interface InstrumentOption {
   id: string;
@@ -49,8 +148,17 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
   const [amount, setAmount] = useState(transaction.amount?.amount || '');
   const [fee, setFee] = useState(transaction.fee?.amount || '0.00');
   const [feeCurrencyCode, setFeeCurrencyCode] = useState(transaction.fee?.currencyCode || preferredCurrency || 'USD');
-  const [currencyCode, setCurrencyCode] = useState(transaction.amount?.currencyCode || 'USD');
+  const [currencyCode, setCurrencyCode] = useState(
+    transaction.amount?.currencyCode || transaction.price?.currencyCode || preferredCurrency || 'USD'
+  );
   const [notes, setNotes] = useState(transaction.notes || '');
+  const [frankingCredit, setFrankingCredit] = useState(
+    (transaction as any).frankingCredit?.amount || ''
+  );
+  const [frankingPct, setFrankingPct] = useState(
+    (transaction as any).frankingPct ||
+      (transaction.symbol?.toUpperCase().endsWith('.AX') || transaction.amount?.currencyCode === 'AUD' ? '100' : '')
+  );
 
   const [splitRatioTo, setSplitRatioTo] = useState(transaction.quantity || '2');
   const [splitRatioFrom, setSplitRatioFrom] = useState('1');
@@ -137,6 +245,35 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
     const found = instruments.find((i) => i.symbol === sym);
     if (found) {
       setCurrencyCode(found.currencyCode);
+      if (sym.toUpperCase().endsWith('.AX') || found.currencyCode === 'AUD') {
+        setFrankingPct('100');
+        const amt = parseFloat(amount);
+        if (!isNaN(amt) && amt > 0) {
+          setFrankingCredit((amt * (0.30 / 0.70)).toFixed(2));
+        }
+      }
+    }
+  };
+
+  const handleFrankingPctChange = (pct: string) => {
+    setFrankingPct(pct);
+    const p = parseFloat(pct);
+    const amt = parseFloat(amount);
+    if (!isNaN(p) && !isNaN(amt) && amt > 0) {
+      const calcCredit = (amt * (p / 100) * (0.30 / 0.70)).toFixed(2);
+      setFrankingCredit(calcCredit);
+    }
+  };
+
+  const handleAmountChange = (val: string) => {
+    setAmount(val);
+    if (type === 'DIVIDEND' && frankingPct) {
+      const p = parseFloat(frankingPct);
+      const amt = parseFloat(val);
+      if (!isNaN(p) && !isNaN(amt) && amt > 0) {
+        const calcCredit = (amt * (p / 100) * (0.30 / 0.70)).toFixed(2);
+        setFrankingCredit(calcCredit);
+      }
     }
   };
 
@@ -146,52 +283,32 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
     setLoading(true);
 
     try {
-      // Validate inputs
-      if (type === 'BUY' || type === 'SELL') {
-        if (!symbol) throw new Error('Please select or specify an asset/symbol.');
-        if (!quantity || parseFloat(quantity) <= 0) throw new Error('Quantity must be greater than zero.');
-        if (!price || parseFloat(price) < 0) throw new Error('Price cannot be negative.');
-      } else if (type === 'DEPOSIT' || type === 'WITHDRAWAL') {
-        if (!amount || parseFloat(amount) <= 0) throw new Error('Amount must be greater than zero.');
-      } else if (type === 'DIVIDEND') {
-        if (!symbol) throw new Error('Please select or specify a symbol for dividend.');
-        if (!amount || parseFloat(amount) <= 0) throw new Error('Amount must be greater than zero.');
-      } else if (type === 'SPLIT') {
-        if (!symbol) throw new Error('Please select or specify an asset for the stock split.');
-        const to = parseFloat(splitRatioTo);
-        const from = parseFloat(splitRatioFrom);
-        if (isNaN(to) || to <= 0) throw new Error('New shares ratio must be greater than zero.');
-        if (isNaN(from) || from <= 0) throw new Error('Old shares ratio must be greater than zero.');
-      }
-
-      const input: any = {
+      validateUpdateTransaction({
         type,
+        symbol,
+        quantity,
+        price,
+        amount,
+        splitRatioTo,
+        splitRatioFrom,
+      });
+
+      const input = buildUpdateTransactionPayload({
+        type,
+        symbol,
         tradeDate,
         currencyCode,
-        notes: notes || undefined,
-        fee: fee ? fee : undefined,
-        feeCurrencyCode: (type === 'BUY' || type === 'SELL') ? feeCurrencyCode : (feeCurrencyCode || undefined),
-      };
-
-      if (type === 'BUY' || type === 'SELL') {
-        input.symbol = symbol;
-        input.quantity = quantity;
-        input.price = price;
-        input.amount = amount || (parseFloat(quantity) * parseFloat(price)).toFixed(2);
-      } else if (type === 'DEPOSIT' || type === 'WITHDRAWAL') {
-        input.amount = amount;
-      } else if (type === 'DIVIDEND') {
-        input.symbol = symbol;
-        input.amount = amount;
-      } else if (type === 'SPLIT') {
-        const to = parseFloat(splitRatioTo);
-        const from = parseFloat(splitRatioFrom);
-        const ratioMultiplier = (to / from).toFixed(8).replace(/\.?0+$/, '');
-        input.symbol = symbol;
-        input.quantity = ratioMultiplier;
-        input.price = '0.00';
-        input.amount = '0.00';
-      }
+        quantity,
+        price,
+        amount,
+        fee,
+        feeCurrencyCode,
+        notes,
+        frankingCredit,
+        frankingPct,
+        splitRatioTo,
+        splitRatioFrom,
+      });
 
       const res = await client.mutation({
         updateTransaction: {
@@ -212,6 +329,8 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
             fee: { amount: true, currencyCode: true },
             notes: true,
             createdAt: true,
+            frankingCredit: { amount: true, currencyCode: true },
+            frankingPct: true,
           },
           portfolio: {
             totalValue: { amount: true, currencyCode: true },
@@ -437,31 +556,68 @@ export const EditTransactionModal: React.FC<EditTransactionModalProps> = ({
 
           {/* DIVIDEND: Net Amount & Fee */}
           {type === 'DIVIDEND' && (
-            <div className="form-row">
-              <div className="form-group">
-                <label>Dividend Amount ({currencyCode})</label>
-                <input
-                  type="number"
-                  step="any"
-                  className="form-input"
-                  placeholder="e.g. 250.00"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  required
-                />
+            <>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Dividend Amount ({currencyCode})</label>
+                  <input
+                    type="number"
+                    step="any"
+                    className="form-input"
+                    placeholder="e.g. 250.00"
+                    value={amount}
+                    onChange={(e) => handleAmountChange(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Withholding Tax / Fee ({currencyCode})</label>
+                  <input
+                    type="number"
+                    step="any"
+                    className="form-input"
+                    placeholder="0.00"
+                    value={fee}
+                    onChange={(e) => setFee(e.target.value)}
+                  />
+                </div>
               </div>
-              <div className="form-group">
-                <label>Withholding Tax / Fee ({currencyCode})</label>
-                <input
-                  type="number"
-                  step="any"
-                  className="form-input"
-                  placeholder="0.00"
-                  value={fee}
-                  onChange={(e) => setFee(e.target.value)}
-                />
+
+              {/* Franking Credits & Percentage (DIVIDEND only) */}
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Franking %</label>
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    max="100"
+                    className="form-input"
+                    placeholder="100"
+                    value={frankingPct}
+                    onChange={(e) => handleFrankingPctChange(e.target.value)}
+                  />
+                  <span className="form-calculated-note">
+                    Australian corporate imputation percentage (0% to 100%)
+                  </span>
+                </div>
+                <div className="form-group">
+                  <label>Franking Credit ($)</label>
+                  <input
+                    type="number"
+                    step="any"
+                    min="0"
+                    className="form-input"
+                    placeholder="0.00"
+                    value={frankingCredit}
+                    onChange={(e) => setFrankingCredit(e.target.value)}
+                  />
+                  <span className="form-calculated-note">
+                    Auto-calculated: Amount &times; (Franking% / 100) &times; (30 / 70)
+                  </span>
+                </div>
               </div>
-            </div>
+            </>
           )}
 
           {/* CASH: Deposit & Withdrawal Amount & Fee */}

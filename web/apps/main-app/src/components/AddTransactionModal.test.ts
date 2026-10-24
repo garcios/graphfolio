@@ -229,4 +229,48 @@ describe('Add Transaction Modal - Interest Support (US-TX-107)', () => {
       });
     });
   });
+
+  describe('buildAddTransactionPayload for DIVIDEND with Franking Credits', () => {
+    it('builds a dividend payload with explicit franking credit and percentage', () => {
+      const payload = buildAddTransactionPayload({
+        type: 'DIVIDEND',
+        tradeDate: '2026-10-24',
+        currencyCode: 'AUD',
+        symbol: 'BHP.AX',
+        amount: '700.00',
+        frankingCredit: '300.00',
+        frankingPct: '100',
+      });
+
+      expect(payload).toEqual({
+        type: 'DIVIDEND',
+        tradeDate: '2026-10-24',
+        currencyCode: 'AUD',
+        symbol: 'BHP.AX',
+        amount: '700.00',
+        frankingCredit: '300.00',
+        frankingPct: '100',
+      });
+    });
+
+    it('omits franking fields when not provided or zero', () => {
+      const payload = buildAddTransactionPayload({
+        type: 'DIVIDEND',
+        tradeDate: '2026-10-24',
+        currencyCode: 'USD',
+        symbol: 'AAPL',
+        amount: '150.00',
+      });
+
+      expect(payload).toEqual({
+        type: 'DIVIDEND',
+        tradeDate: '2026-10-24',
+        currencyCode: 'USD',
+        symbol: 'AAPL',
+        amount: '150.00',
+      });
+      expect(payload.frankingCredit).toBeUndefined();
+      expect(payload.frankingPct).toBeUndefined();
+    });
+  });
 });

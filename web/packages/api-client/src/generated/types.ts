@@ -65,6 +65,12 @@ export default {
             "notes": [
                 2
             ],
+            "frankingCredit": [
+                0
+            ],
+            "frankingPct": [
+                0
+            ],
             "__typename": [
                 2
             ]
@@ -110,6 +116,12 @@ export default {
             ],
             "notes": [
                 2
+            ],
+            "frankingCredit": [
+                0
+            ],
+            "frankingPct": [
+                0
             ],
             "__typename": [
                 2
@@ -584,6 +596,12 @@ export default {
             "externalRef": [
                 2
             ],
+            "frankingCredit": [
+                1
+            ],
+            "frankingPct": [
+                0
+            ],
             "__typename": [
                 2
             ]
@@ -894,6 +912,12 @@ export default {
             ],
             "notes": [
                 2
+            ],
+            "frankingCredit": [
+                0
+            ],
+            "frankingPct": [
+                0
             ],
             "__typename": [
                 2

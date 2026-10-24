@@ -666,6 +666,8 @@ type ComplexityRoot struct {
 		CreatedAt      func(childComplexity int) int
 		ExternalRef    func(childComplexity int) int
 		Fee            func(childComplexity int) int
+		FrankingCredit func(childComplexity int) int
+		FrankingPct    func(childComplexity int) int
 		FxRateToBase   func(childComplexity int) int
 		ID             func(childComplexity int) int
 		InstrumentName func(childComplexity int) int
@@ -3757,6 +3759,18 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.ComplexityRoot.TransactionItem.Fee(childComplexity), true
+	case "TransactionItem.frankingCredit":
+		if e.ComplexityRoot.TransactionItem.FrankingCredit == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TransactionItem.FrankingCredit(childComplexity), true
+	case "TransactionItem.frankingPct":
+		if e.ComplexityRoot.TransactionItem.FrankingPct == nil {
+			break
+		}
+
+		return e.ComplexityRoot.TransactionItem.FrankingPct(childComplexity), true
 	case "TransactionItem.fxRateToBase":
 		if e.ComplexityRoot.TransactionItem.FxRateToBase == nil {
 			break
@@ -5269,6 +5283,10 @@ func (ec *executionContext) childFields_TransactionItem(ctx context.Context, fie
 		return ec.fieldContext_TransactionItem_fxRateToBase(ctx, field)
 	case "externalRef":
 		return ec.fieldContext_TransactionItem_externalRef(ctx, field)
+	case "frankingCredit":
+		return ec.fieldContext_TransactionItem_frankingCredit(ctx, field)
+	case "frankingPct":
+		return ec.fieldContext_TransactionItem_frankingPct(ctx, field)
 	}
 	return nil, fmt.Errorf("no field named %q was found under type TransactionItem", field.Name)
 }
@@ -19079,6 +19097,61 @@ func (ec *executionContext) fieldContext_TransactionItem_externalRef(_ context.C
 	return graphql.NewScalarFieldContext("TransactionItem", field, false, false, errors.New("field of type String does not have child fields"))
 }
 
+func (ec *executionContext) _TransactionItem_frankingCredit(ctx context.Context, field graphql.CollectedField, obj *model.TransactionItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TransactionItem_frankingCredit(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FrankingCredit, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Money) graphql.Marshaler {
+			return ec.marshalOMoney2ᚖbffᚋgraphᚋmodelᚐMoney(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_TransactionItem_frankingCredit(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "TransactionItem",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.childFields_Money(ctx, field)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _TransactionItem_frankingPct(ctx context.Context, field graphql.CollectedField, obj *model.TransactionItem) (ret graphql.Marshaler) {
+	return graphql.ResolveField(
+		ctx,
+		ec.OperationContext,
+		field,
+		func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return ec.fieldContext_TransactionItem_frankingPct(ctx, field)
+		},
+		func(ctx context.Context) (any, error) {
+			return obj.FrankingPct, nil
+		},
+		nil,
+		func(ctx context.Context, selections ast.SelectionSet, v *model.Decimal) graphql.Marshaler {
+			return ec.marshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, selections, v)
+		},
+		true,
+		false,
+	)
+}
+func (ec *executionContext) fieldContext_TransactionItem_frankingPct(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	return graphql.NewScalarFieldContext("TransactionItem", field, false, false, errors.New("field of type Decimal does not have child fields"))
+}
+
 func (ec *executionContext) _TransactionsConnection_items(ctx context.Context, field graphql.CollectedField, obj *model.TransactionsConnection) (ret graphql.Marshaler) {
 	return graphql.ResolveField(
 		ctx,
@@ -20819,7 +20892,7 @@ func (ec *executionContext) unmarshalInputAddTransactionInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"type", "symbol", "tradeDate", "quantity", "price", "amount", "currencyCode", "fee", "feeCurrencyCode", "notes"}
+	fieldsInOrder := [...]string{"type", "symbol", "tradeDate", "quantity", "price", "amount", "currencyCode", "fee", "feeCurrencyCode", "notes", "frankingCredit", "frankingPct"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -20896,6 +20969,20 @@ func (ec *executionContext) unmarshalInputAddTransactionInput(ctx context.Contex
 				return it, err
 			}
 			it.Notes = data
+		case "frankingCredit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("frankingCredit"))
+			data, err := ec.unmarshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FrankingCredit = data
+		case "frankingPct":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("frankingPct"))
+			data, err := ec.unmarshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FrankingPct = data
 		}
 	}
 	return it, nil
@@ -21157,7 +21244,7 @@ func (ec *executionContext) unmarshalInputImportTransactionInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"externalRef", "symbol", "type", "tradeDate", "settleDate", "quantity", "price", "amount", "fee", "feeCurrencyCode", "currencyCode", "notes"}
+	fieldsInOrder := [...]string{"externalRef", "symbol", "type", "tradeDate", "settleDate", "quantity", "price", "amount", "fee", "feeCurrencyCode", "currencyCode", "notes", "frankingCredit", "frankingPct"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -21248,6 +21335,20 @@ func (ec *executionContext) unmarshalInputImportTransactionInput(ctx context.Con
 				return it, err
 			}
 			it.Notes = data
+		case "frankingCredit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("frankingCredit"))
+			data, err := ec.unmarshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FrankingCredit = data
+		case "frankingPct":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("frankingPct"))
+			data, err := ec.unmarshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FrankingPct = data
 		}
 	}
 	return it, nil
@@ -21656,7 +21757,7 @@ func (ec *executionContext) unmarshalInputUpdateTransactionInput(ctx context.Con
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"type", "symbol", "tradeDate", "quantity", "price", "amount", "currencyCode", "fee", "feeCurrencyCode", "notes"}
+	fieldsInOrder := [...]string{"type", "symbol", "tradeDate", "quantity", "price", "amount", "currencyCode", "fee", "feeCurrencyCode", "notes", "frankingCredit", "frankingPct"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -21733,6 +21834,20 @@ func (ec *executionContext) unmarshalInputUpdateTransactionInput(ctx context.Con
 				return it, err
 			}
 			it.Notes = data
+		case "frankingCredit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("frankingCredit"))
+			data, err := ec.unmarshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FrankingCredit = data
+		case "frankingPct":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("frankingPct"))
+			data, err := ec.unmarshalODecimal2ᚖbffᚋgraphᚋmodelᚐDecimal(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.FrankingPct = data
 		}
 	}
 	return it, nil
@@ -26606,6 +26721,16 @@ func (ec *executionContext) _TransactionItem(ctx context.Context, sel ast.Select
 			}
 		case "externalRef":
 			out.Values[i] = ec._TransactionItem_externalRef(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "frankingCredit":
+			out.Values[i] = ec._TransactionItem_frankingCredit(ctx, field, obj)
+			if out.Values[i] == graphql.RequiredNull {
+				out.Invalids++
+			}
+		case "frankingPct":
+			out.Values[i] = ec._TransactionItem_frankingPct(ctx, field, obj)
 			if out.Values[i] == graphql.RequiredNull {
 				out.Invalids++
 			}

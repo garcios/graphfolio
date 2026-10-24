@@ -50,6 +50,24 @@ describe('CommSec CSV Parser', () => {
     expect(div.fee).toBe('0.00');
   });
 
+  it('parses dividend rows with explicit franking credit and percentage columns', async () => {
+    const lines = [
+      'Date,Type,Code,Units,Unit Price ($),Brokerage ($),Total Value ($),Franking Credit ($),Franking %',
+      '25/03/2024,Div,BHP,,,0.00,700.00,300.00,100%',
+    ];
+
+    const res = await parseCommSecCSV(lines, 0);
+    expect(res.validRows.length).toBe(1);
+    expect(res.errors.length).toBe(0);
+
+    const div = res.validRows[0];
+    expect(div.type).toBe('DIVIDEND');
+    expect(div.symbol).toBe('BHP');
+    expect(div.amount).toBe('700.00');
+    expect(div.frankingCredit).toBe('300.00');
+    expect(div.frankingPct).toBe('100');
+  });
+
   it('reconstructs total value if missing for Buy and Sell', async () => {
     const lines = [
       'Date,Type,Code,Units,Unit Price ($),Brokerage ($),Total Value ($)',

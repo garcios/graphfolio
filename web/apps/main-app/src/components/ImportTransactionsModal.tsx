@@ -164,6 +164,8 @@ export const ImportTransactionsModal: React.FC<ImportTransactionsModalProps> = (
                 fee: r.fee,
                 currencyCode: r.currencyCode,
                 notes: r.notes,
+                frankingCredit: r.frankingCredit || undefined,
+                frankingPct: r.frankingPct || undefined,
               })),
               skipDuplicates,
             },

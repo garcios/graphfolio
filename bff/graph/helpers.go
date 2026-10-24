@@ -246,6 +246,16 @@ func toModelTransactionItem(item *pb.TransactionItem) *model.TransactionItem {
 		externalRef = &ref
 	}
 
+	var frankingCredit *model.Money
+	if item.FrankingCredit != nil {
+		frankingCredit = toModelMoney(item.FrankingCredit)
+	}
+	var frankingPct *model.Decimal
+	if item.FrankingPct != nil {
+		d := toModelDecimal(item.FrankingPct)
+		frankingPct = &d
+	}
+
 	return &model.TransactionItem{
 		ID:             item.Id,
 		Type:           toModelTransactionType(item.Type),
@@ -261,6 +271,8 @@ func toModelTransactionItem(item *pb.TransactionItem) *model.TransactionItem {
 		WithholdingTax: withholdingTax,
 		FxRateToBase:   fxRateToBase,
 		ExternalRef:    externalRef,
+		FrankingCredit: frankingCredit,
+		FrankingPct:    frankingPct,
 	}
 }
 
