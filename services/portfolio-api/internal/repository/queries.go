@@ -271,7 +271,7 @@ WHERE c.code <> $1;`
 SELECT 
     id, portfolio_id, instrument_id, type, trade_date, quantity, price, amount,
     currency_code, fee, withholding_tax, fx_rate_to_base, external_ref, notes,
-    fee_currency_code
+    fee_currency_code, franking_credit, franking_pct
 FROM portfolio.transactions
 WHERE portfolio_id = $1
 ORDER BY trade_date ASC, id ASC;`
@@ -288,9 +288,9 @@ ORDER BY ex_date ASC, id ASC;`
 INSERT INTO portfolio.transactions (
     portfolio_id, instrument_id, type, trade_date, quantity, price, amount,
     currency_code, fee, withholding_tax, fx_rate_to_base, external_ref, notes,
-    fee_currency_code
+    fee_currency_code, franking_credit, franking_pct
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
 )
 RETURNING id;`
 
@@ -304,9 +304,9 @@ WHERE portfolio_id = $1
 INSERT INTO portfolio.transactions (
     portfolio_id, instrument_id, type, trade_date, settle_date,
     quantity, price, amount, currency_code, fee, fx_rate_to_base,
-    external_ref, notes, fee_currency_code
+    external_ref, notes, fee_currency_code, franking_credit, franking_pct
 ) VALUES (
-    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14
+    $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
 )
 ON CONFLICT (portfolio_id, external_ref) DO NOTHING
 RETURNING id;`
@@ -352,7 +352,7 @@ SELECT
     t.quantity, t.price, t.amount, t.currency_code, t.fee,
     t.withholding_tax, t.fx_rate_to_base, t.external_ref, t.notes,
     t.created_at, i.symbol, i.name AS instrument_name,
-    t.fee_currency_code,
+    t.fee_currency_code, t.franking_credit, t.franking_pct,
     COUNT(*) OVER() AS total_count
 FROM portfolio.transactions t
 LEFT JOIN portfolio.instruments i ON i.id = t.instrument_id
@@ -375,7 +375,7 @@ SELECT
     t.quantity, t.price, t.amount, t.currency_code, t.fee,
     t.withholding_tax, t.fx_rate_to_base, t.external_ref, t.notes,
     t.created_at, i.symbol, i.name AS instrument_name,
-    t.fee_currency_code,
+    t.fee_currency_code, t.franking_credit, t.franking_pct,
     COUNT(*) OVER() AS total_count
 FROM portfolio.transactions t
 LEFT JOIN portfolio.instruments i ON i.id = t.instrument_id
@@ -417,7 +417,7 @@ WHERE id = $1 AND portfolio_id = $2;`
 SELECT 
     id, portfolio_id, instrument_id, type, trade_date, quantity, price, amount,
     currency_code, fee, withholding_tax, fx_rate_to_base, external_ref, notes,
-    fee_currency_code
+    fee_currency_code, franking_credit, franking_pct
 FROM portfolio.transactions
 WHERE id = $1 AND portfolio_id = $2;`
 
@@ -434,10 +434,13 @@ SET
     fee               = $8,
     fee_currency_code = $9,
     fx_rate_to_base   = $10,
-    notes             = $11
-WHERE id = $12 AND portfolio_id = $13
+    notes             = $11,
+    franking_credit   = $12,
+    franking_pct      = $13
+WHERE id = $14 AND portfolio_id = $15
 RETURNING id, portfolio_id, instrument_id, type, trade_date, quantity, price, amount,
-          currency_code, fee, withholding_tax, fx_rate_to_base, external_ref, notes, fee_currency_code;`
+          currency_code, fee, withholding_tax, fx_rate_to_base, external_ref, notes, fee_currency_code,
+          franking_credit, franking_pct;`
 
 	listAllInstrumentsSQL = `
 SELECT id, symbol, exchange_code, name, asset_class, currency_code, isin, is_active
@@ -1024,8 +1027,14 @@ SELECT
     COALESCE(SUM(COALESCE(tx.withholding_tax, 0) * COALESCE(tx.fx_rate_to_base, 1.0)), 0) AS foreign_tax_offsets_base,
     COALESCE(SUM(
         CASE 
-            WHEN tx.type = 'DIVIDEND' AND COALESCE(ds.franking_percentage, 0) > 0 THEN
-                (tx.amount * COALESCE(tx.fx_rate_to_base, 1.0)) * (ds.franking_percentage / 100.0) * (0.30 / 0.70)
+            WHEN tx.type = 'DIVIDEND' THEN
+                CASE
+                    WHEN COALESCE(tx.franking_credit, 0) > 0 THEN
+                        tx.franking_credit * COALESCE(tx.fx_rate_to_base, 1.0)
+                    WHEN COALESCE(ds.franking_percentage, 0) > 0 THEN
+                        (tx.amount * COALESCE(tx.fx_rate_to_base, 1.0)) * (ds.franking_percentage / 100.0) * (0.30 / 0.70)
+                    ELSE 0
+                END
             ELSE 0 
         END
     ), 0) AS franking_credits_base
@@ -1037,7 +1046,7 @@ LEFT JOIN LATERAL (
     WHERE instrument_id = tx.instrument_id
       AND (
           payment_date = tx.trade_date OR
-          ex_date <= tx.trade_date
+          (ex_date <= tx.trade_date AND tx.trade_date <= ex_date + INTERVAL '45 days')
       )
     ORDER BY ex_date DESC LIMIT 1
 ) ds ON (tx.instrument_id IS NOT NULL)

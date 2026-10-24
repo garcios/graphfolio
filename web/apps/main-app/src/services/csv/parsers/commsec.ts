@@ -331,6 +331,22 @@ async function parseCommSecOrdersCSV(
     const rawPrice = getCol(cleanCells, ['unit price ($)', 'price', 'unit price']);
     const rawFee = getCol(cleanCells, ['brokerage ($)', 'brokerage (inc gst)', 'brokerage', 'fee']);
     const rawTotal = getCol(cleanCells, ['total value ($)', 'net consideration', 'value']);
+    const rawFrankingCredit = getCol(cleanCells, [
+      'franking credit',
+      'franking credits',
+      'franked credit',
+      'franked credits',
+      'franked amount',
+      'franked dividend',
+    ]);
+    const rawFrankingPct = getCol(cleanCells, [
+      'franking percentage',
+      'franking (%)',
+      'franking %',
+      'franked (%)',
+      'franked %',
+      'franking rate',
+    ]);
 
     try {
       if (!rawDate) throw new Error('Missing transaction date');
@@ -366,6 +382,22 @@ async function parseCommSecOrdersCSV(
         amount = (type === 'BUY' ? principal + parseFloat(fee) : principal - parseFloat(fee)).toFixed(2);
       }
 
+      let frankingCredit: string | undefined = undefined;
+      if (rawFrankingCredit) {
+        const cleaned = cleanCurrency(rawFrankingCredit);
+        if (parseFloat(cleaned) > 0) {
+          frankingCredit = cleaned;
+        }
+      }
+
+      let frankingPct: string | undefined = undefined;
+      if (rawFrankingPct) {
+        const cleaned = rawFrankingPct.replace(/%/g, '').trim();
+        if (!isNaN(parseFloat(cleaned))) {
+          frankingPct = cleaned;
+        }
+      }
+
       const hashSeed = `commsec:${tradeDate}:${symbol}:${type}:${quantity}:${amount}:${fee}`;
       const externalRef = `cs_${await generateIdempotentHash(hashSeed)}`;
 
@@ -381,6 +413,8 @@ async function parseCommSecOrdersCSV(
         fee,
         currencyCode: 'AUD',
         notes: `Imported from CommSec CSV (Row ${rowNum})`,
+        frankingCredit,
+        frankingPct,
       });
     } catch (err: any) {
       errors.push({

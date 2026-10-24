@@ -95,6 +95,7 @@ describe('CSV Exporter (export.ts)', () => {
 
       // Header row
       expect(lines[0]).toContain('Date,Type,Symbol,Instrument Name');
+      expect(lines[0]).toContain('Franking Credit,Franking %');
 
       // Row 1 should be the oldest: 2023-01-10 (DEPOSIT)
       expect(lines[1]).toContain('2023-01-10,DEPOSIT,,Cash');

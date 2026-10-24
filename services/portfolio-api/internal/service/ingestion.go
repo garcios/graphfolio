@@ -12,6 +12,7 @@ import (
 	"portfolio-api/internal/repository"
 
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 )
 
 // IngestionService coordinates fetching external market closing prices and FX fixing rates,
@@ -416,11 +417,42 @@ func (s *ingestionService) IngestDividendSchedules(ctx context.Context, options 
 		}
 
 		allEvents := marketdata.SynthesizeForwardEstimates(inst, upcoming, history, now)
-		if len(allEvents) == 0 {
+		if len(allEvents) == 0 && len(history) == 0 {
 			continue
 		}
 
 		var schedules []domain.DividendSchedule
+
+		// 1. Map historical distribution points to confirmed PAID schedules
+		frankingPct := decimal.Zero
+		if strings.HasSuffix(strings.ToUpper(inst.Symbol), ".AX") ||
+			strings.ToUpper(inst.Exchange) == "ASX" ||
+			strings.ToUpper(inst.Exchange) == "XASX" {
+			frankingPct = decimal.NewFromInt(100)
+		}
+		freq, _ := marketdata.DetectFrequency(history)
+
+		for _, hist := range history {
+			recDate := hist.Date.AddDate(0, 0, 1)
+			payDate := hist.Date.AddDate(0, 0, 14)
+			schedules = append(schedules, domain.DividendSchedule{
+				ID:                 uuid.New(),
+				InstrumentID:       inst.ID,
+				ExDate:             hist.Date,
+				RecordDate:         &recDate,
+				PaymentDate:        payDate,
+				AmountPerShare:     hist.Amount,
+				CurrencyCode:       inst.Currency,
+				Frequency:          domain.DividendFrequency(freq),
+				Status:             domain.DividendStatusPaid,
+				IsEstimated:        false,
+				IsOverride:         false,
+				FrankingPercentage: frankingPct,
+				WithholdingTaxPct:  decimal.Zero,
+				Source:             "historical_ingest",
+			})
+		}
+
 		for _, ev := range allEvents {
 			schedules = append(schedules, domain.DividendSchedule{
 				ID:                 uuid.New(),

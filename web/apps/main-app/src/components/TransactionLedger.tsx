@@ -26,6 +26,8 @@ export interface TransactionItem {
   withholdingTax?: Money | null;
   fxRateToBase?: string | null;
   externalRef?: string | null;
+  frankingCredit?: Money | null;
+  frankingPct?: string | null;
 }
 
 interface TransactionLedgerProps {
@@ -195,6 +197,8 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
               withholdingTax: { amount: true, currencyCode: true },
               fxRateToBase: true,
               externalRef: true,
+              frankingCredit: { amount: true, currencyCode: true },
+              frankingPct: true,
               notes: true,
               createdAt: true,
             },
@@ -338,6 +342,8 @@ export const TransactionLedger: React.FC<TransactionLedgerProps> = ({
           withholdingTax: { amount: true, currencyCode: true },
           fxRateToBase: true,
           externalRef: true,
+          frankingCredit: { amount: true, currencyCode: true },
+          frankingPct: true,
           notes: true,
           createdAt: true,
         },

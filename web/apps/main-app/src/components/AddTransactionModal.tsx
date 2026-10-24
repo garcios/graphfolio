@@ -71,6 +71,8 @@ export function buildAddTransactionPayload(params: {
   splitRatioTo?: string;
   splitRatioFrom?: string;
   targetCurrency?: string;
+  frankingCredit?: string;
+  frankingPct?: string;
 }) {
   const {
     type,
@@ -86,6 +88,8 @@ export function buildAddTransactionPayload(params: {
     splitRatioTo,
     splitRatioFrom,
     targetCurrency,
+    frankingCredit,
+    frankingPct,
   } = params;
 
   const input: any = {
@@ -107,6 +111,12 @@ export function buildAddTransactionPayload(params: {
   } else if (type === 'DIVIDEND') {
     input.symbol = symbol;
     input.amount = amount;
+    if (frankingCredit && parseFloat(frankingCredit) > 0) {
+      input.frankingCredit = frankingCredit;
+    }
+    if (frankingPct && !isNaN(parseFloat(frankingPct))) {
+      input.frankingPct = frankingPct;
+    }
   } else if (type === 'SPLIT') {
     const to = parseFloat(splitRatioTo || '2');
     const from = parseFloat(splitRatioFrom || '1');
@@ -174,6 +184,8 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   const [currencyCode, setCurrencyCode] = useState('USD');
   const [targetCurrency, setTargetCurrency] = useState('USD');
   const [notes, setNotes] = useState('');
+  const [frankingCredit, setFrankingCredit] = useState('');
+  const [frankingPct, setFrankingPct] = useState('100');
 
   if (preferredCurrency && preferredCurrency !== prevPreferredCurrency) {
     setPrevPreferredCurrency(preferredCurrency);
@@ -300,6 +312,35 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
     const found = instruments.find((i) => i.symbol === sym);
     if (found) {
       setCurrencyCode(found.currencyCode);
+      if (sym.toUpperCase().endsWith('.AX') || found.currencyCode === 'AUD') {
+        setFrankingPct('100');
+        const amt = parseFloat(amount);
+        if (!isNaN(amt) && amt > 0) {
+          setFrankingCredit((amt * (0.30 / 0.70)).toFixed(2));
+        }
+      }
+    }
+  };
+
+  const handleFrankingPctChange = (pct: string) => {
+    setFrankingPct(pct);
+    const p = parseFloat(pct);
+    const amt = parseFloat(amount);
+    if (!isNaN(p) && !isNaN(amt) && amt > 0) {
+      const calcCredit = (amt * (p / 100) * (0.30 / 0.70)).toFixed(2);
+      setFrankingCredit(calcCredit);
+    }
+  };
+
+  const handleAmountChange = (val: string) => {
+    setAmount(val);
+    if (type === 'DIVIDEND' && frankingPct) {
+      const p = parseFloat(frankingPct);
+      const amt = parseFloat(val);
+      if (!isNaN(p) && !isNaN(amt) && amt > 0) {
+        const calcCredit = (amt * (p / 100) * (0.30 / 0.70)).toFixed(2);
+        setFrankingCredit(calcCredit);
+      }
     }
   };
 
@@ -335,6 +376,8 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
         splitRatioTo,
         splitRatioFrom,
         targetCurrency,
+        frankingCredit: type === 'DIVIDEND' ? frankingCredit : undefined,
+        frankingPct: type === 'DIVIDEND' ? frankingPct : undefined,
       });
 
       const res = await client.mutation({
@@ -674,7 +717,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                   placeholder="0.00"
                   className="form-input"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) => handleAmountChange(e.target.value)}
                   required
                 />
                 {(type === 'BUY' || type === 'SELL') && (
@@ -711,6 +754,44 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Franking Credits & Imputation Percentage (DIVIDEND only) */}
+          {type === 'DIVIDEND' && (
+            <div className="form-row">
+              <div className="form-group">
+                <label>Franking %</label>
+                <input
+                  type="number"
+                  step="any"
+                  min="0"
+                  max="100"
+                  placeholder="100"
+                  className="form-input"
+                  value={frankingPct}
+                  onChange={(e) => handleFrankingPctChange(e.target.value)}
+                />
+                <span className="form-calculated-note">
+                  Australian corporate imputation percentage (0% to 100%)
+                </span>
+              </div>
+
+              <div className="form-group">
+                <label>Franking Credit ($)</label>
+                <input
+                  type="number"
+                  step="any"
+                  min="0"
+                  placeholder="0.00"
+                  className="form-input"
+                  value={frankingCredit}
+                  onChange={(e) => setFrankingCredit(e.target.value)}
+                />
+                <span className="form-calculated-note">
+                  Auto-calculated: Amount &times; (Franking% / 100) &times; (30 / 70)
+                </span>
+              </div>
             </div>
           )}
 

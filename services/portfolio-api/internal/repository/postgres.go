@@ -312,6 +312,8 @@ func (r *PostgresRepository) GetTransactions(ctx context.Context, portfolioID uu
 			&tx.ExternalRef,
 			&tx.Notes,
 			&tx.FeeCurrencyCode,
+			&tx.FrankingCredit,
+			&tx.FrankingPct,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("repository: scan transaction failed: %w", err)
@@ -467,6 +469,8 @@ func (r *PostgresRepository) InsertTransaction(ctx context.Context, tx domain.Tr
 		tx.ExternalRef,
 		tx.Notes,
 		tx.FeeCurrencyCode,
+		tx.FrankingCredit,
+		tx.FrankingPct,
 	)
 
 	var id uuid.UUID
@@ -525,6 +529,8 @@ func (r *PostgresRepository) BatchInsertTransactions(ctx context.Context, txs []
 			tx.ExternalRef,
 			tx.Notes,
 			tx.FeeCurrencyCode,
+			tx.FrankingCredit,
+			tx.FrankingPct,
 		)
 	}
 
@@ -611,6 +617,8 @@ func (r *PostgresRepository) ListTransactions(ctx context.Context, portfolioID u
 			&item.Symbol,
 			&item.InstrumentName,
 			&item.FeeCurrencyCode,
+			&item.FrankingCredit,
+			&item.FrankingPct,
 			&count,
 		)
 		if err != nil {
@@ -711,6 +719,8 @@ func (r *PostgresRepository) GetTransactionByID(ctx context.Context, portfolioID
 		&tx.ExternalRef,
 		&tx.Notes,
 		&tx.FeeCurrencyCode,
+		&tx.FrankingCredit,
+		&tx.FrankingPct,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -735,6 +745,8 @@ func (r *PostgresRepository) UpdateTransaction(ctx context.Context, portfolioID 
 		tx.FeeCurrencyCode,
 		tx.FXRateToBase,
 		tx.Notes,
+		tx.FrankingCredit,
+		tx.FrankingPct,
 		tx.ID,
 		portfolioID,
 	)
@@ -757,6 +769,8 @@ func (r *PostgresRepository) UpdateTransaction(ctx context.Context, portfolioID 
 		&updated.ExternalRef,
 		&updated.Notes,
 		&updated.FeeCurrencyCode,
+		&updated.FrankingCredit,
+		&updated.FrankingPct,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

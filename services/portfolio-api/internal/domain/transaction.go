@@ -41,6 +41,8 @@ type Transaction struct {
 	FXRateToBase    *decimal.Decimal
 	ExternalRef     *string
 	Notes           *string
+	FrankingCredit  decimal.Decimal
+	FrankingPct     *decimal.Decimal
 	CreatedAt       time.Time
 }
 
@@ -77,6 +79,8 @@ type AddTransactionInput struct {
 	Fee             *decimal.Decimal
 	FeeCurrencyCode *string
 	Notes           *string
+	FrankingCredit  *decimal.Decimal
+	FrankingPct     *decimal.Decimal
 }
 
 type UpdateTransactionInput struct {
@@ -93,6 +97,8 @@ type UpdateTransactionInput struct {
 	FeeCurrencyCode *string
 	Notes           *string
 	FXRateToBase    *decimal.Decimal
+	FrankingCredit  *decimal.Decimal
+	FrankingPct     *decimal.Decimal
 }
 
 type ImportTransactionItem struct {
@@ -108,6 +114,8 @@ type ImportTransactionItem struct {
 	CurrencyCode    string
 	ExternalRef     string
 	Notes           string
+	FrankingCredit  decimal.Decimal
+	FrankingPct     *decimal.Decimal
 }
 
 type BatchImportInput struct {

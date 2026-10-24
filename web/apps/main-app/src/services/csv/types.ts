@@ -21,6 +21,8 @@ export interface NormalizedTransactionRow {
   fee: string;              // Brokerage fee numeric string
   currencyCode: string;     // Default "AUD"
   notes?: string;           // Audit metadata (Broker name, original row)
+  frankingCredit?: string;  // Explicit franking credit amount
+  frankingPct?: string;     // Explicit franking percentage (0-100)
   isDuplicate?: boolean;    // Flagged by pre-flight check
 }
 

@@ -48,6 +48,12 @@ func (r *mutationResolver) AddTransaction(ctx context.Context, input model.AddTr
 	if input.Notes != nil {
 		req.Notes = *input.Notes
 	}
+	if input.FrankingCredit != nil {
+		req.FrankingCredit = toProtoMoney(input.FrankingCredit, currency)
+	}
+	if input.FrankingPct != nil {
+		req.FrankingPct = toProtoDecimal(input.FrankingPct)
+	}
 
 	resp, err := r.PortfolioClient.AddTransaction(ctx, req)
 	if err != nil {
@@ -106,6 +112,12 @@ func (r *mutationResolver) UpdateTransaction(ctx context.Context, id string, inp
 	}
 	if input.Notes != nil {
 		req.Notes = input.Notes
+	}
+	if input.FrankingCredit != nil {
+		req.FrankingCredit = toProtoMoney(input.FrankingCredit, currency)
+	}
+	if input.FrankingPct != nil {
+		req.FrankingPct = toProtoDecimal(input.FrankingPct)
 	}
 
 	resp, err := r.PortfolioClient.UpdateTransaction(ctx, req)
@@ -417,16 +429,18 @@ func (r *mutationResolver) ImportTransactions(ctx context.Context, input model.B
 		}
 
 		items = append(items, &pb.ImportTransactionItem{
-			Type:        toProtoTransactionType(item.Type),
-			Symbol:      item.Symbol,
-			TradeDate:   item.TradeDate,
-			SettleDate:  settleDate,
-			Quantity:    qty,
-			Price:       price,
-			Amount:      amount,
-			Fee:         fee,
-			ExternalRef: item.ExternalRef,
-			Notes:       notes,
+			Type:           toProtoTransactionType(item.Type),
+			Symbol:         item.Symbol,
+			TradeDate:      item.TradeDate,
+			SettleDate:     settleDate,
+			Quantity:       qty,
+			Price:          price,
+			Amount:         amount,
+			Fee:            fee,
+			ExternalRef:    item.ExternalRef,
+			Notes:          notes,
+			FrankingCredit: toProtoDecimal(item.FrankingCredit),
+			FrankingPct:    toProtoDecimal(item.FrankingPct),
 		})
 	}
 

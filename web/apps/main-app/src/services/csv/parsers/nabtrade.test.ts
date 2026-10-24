@@ -60,6 +60,24 @@ describe('nabtrade CSV Parser', () => {
     expect(res.validRows[0].externalRef).toMatch(/^nt_[a-f0-9]{32}$/);
   });
 
+  it('parses dividend rows with franking credit and percentage columns in domestic statements', async () => {
+    const lines = [
+      'Confirmation Number,Trade Date,Settlement Date,Transaction Type,Code,Quantity,Price,Brokerage,Total Consideration,Franking Credit,Franking %',
+      'DIV12345,18/04/2024,18/04/2024,DIVIDEND,CBA,0,0.00,0.00,1400.00,600.00,100%',
+    ];
+
+    const res = await parseNabtradeCSV(lines, 0);
+    expect(res.validRows.length).toBe(1);
+    expect(res.errors.length).toBe(0);
+
+    const row = res.validRows[0];
+    expect(row.type).toBe('DIVIDEND');
+    expect(row.symbol).toBe('CBA');
+    expect(row.amount).toBe('1400.00');
+    expect(row.frankingCredit).toBe('600.00');
+    expect(row.frankingPct).toBe('100');
+  });
+
   it('parses NAB International cash account CSV statements pairing dual debit/credit entries', async () => {
     const lines = [
       'Date,Description,Debit,Credit,Balance',
